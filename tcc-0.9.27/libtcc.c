@@ -1162,8 +1162,9 @@ PUB_FUNC int tcc_add_library_err(TCCState *s, const char *libname)
 ST_FUNC void tcc_add_pragma_libs(TCCState *s1)
 {
     int i;
-    for (i = 0; i < s1->nb_pragma_libs; i++)
+    for (i = 0; i < s1->nb_pragma_libs; i++){
         tcc_add_library_err(s1, s1->pragma_libs[i]);
+    }
 }
 
 LIBTCCAPI int tcc_add_symbol(TCCState *s, const char *name, const void *val)

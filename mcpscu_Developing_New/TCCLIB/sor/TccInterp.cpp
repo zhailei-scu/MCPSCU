@@ -61,7 +61,11 @@ int InterpCScript_DiffusorsDef(char* scriptStr){
 
   tcc_add_include_path(s, pathStream.str().c_str());
 
+  tcc_add_include_path(s,"/usr/include/aarch64-linux-gnu/");
+
   tcc_set_lib_path(s, pathStream.str().c_str());
+
+  tcc_add_library_path(s,"/usr/lib/aarch64-linux-gnu/");
 
 
   pathStream.clear();
@@ -213,7 +217,11 @@ int InterpCScript_ReactionsDef(char* scriptStr){
 
   tcc_add_include_path(s, pathStream.str().c_str());
 
+  tcc_add_include_path(s,"/usr/include/aarch64-linux-gnu/");
+
   tcc_set_lib_path(s, pathStream.str().c_str());
+
+  tcc_add_library_path(s,"/usr/lib/aarch64-linux-gnu/");
 
 
   pathStream.clear();
