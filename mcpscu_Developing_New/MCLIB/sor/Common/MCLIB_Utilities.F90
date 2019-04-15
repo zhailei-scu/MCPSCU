@@ -666,6 +666,32 @@ module MCLIB_UTILITIES
 
 
   !*************************************************************
+  function IsRangeCoverage(Range1From,Range1To,Range2From,Range2To) result(TheResult)
+    implicit none
+    !---Dummy Vars---
+    integer,intent(in)::Range1From
+    integer,intent(in)::Range1To
+    integer,intent(in)::Range2From
+    integer,intent(in)::Range2To
+    logical::TheResult
+    !---Body---
+
+    TheResult = .false.
+
+    if(Range1From .GE. Range2From .AND. Range1From .LE. Range2To) then
+        TheResult = .true.
+    else if(Range1To .GE. Range2From .AND. Range1To .LE. Range2To) then
+        TheResult = .true.
+    else if(Range2From .GE. Range1From .AND. Range2From .LE. Range1To) then
+        TheResult = .true.
+    else if(Range2To .GE. Range1From .AND. Range2To .LE. Range1To) then
+        TheResult = .true.
+    end if
+
+    return
+  end function
+
+  !*************************************************************
   subroutine AllocateOneDimi_Host(Array,Length,Name)
     implicit none
     !---Dummy Vars---

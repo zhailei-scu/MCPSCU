@@ -276,11 +276,15 @@ module MCLIB_TYPEDEF_DiffusorPropList
             DO J = I+1,ListCount
                 coverageCount = 0
                 DO IElement = 1,p_ATOMS_GROUPS_NUMBER
-                    if(RangesArray(IElement,(I -1)*2 + 2) .GE. RangesArray(IElement,(J -1)*2 + 1) .AND. &
-                       RangesArray(IElement,(I -1)*2 + 2) .GT. 0 .AND. RangesArray(IElement,(J -1)*2 + 1) .GT. 0) then
-                        coverageCount = coverageCount + 1
+                    if(RangesArray(IElement,(I -1)*2 + 2) .GT. 0 .AND. RangesArray(IElement,(J -1)*2 + 1) .GT. 0) then
+
+                        if(IsRangeCoverage(RangesArray(IElement,(I -1)*2 + 1),RangesArray(IElement,(I -1)*2 + 2), &
+                                           RangesArray(IElement,(J -1)*2 + 1),RangesArray(IElement,(J -1)*2 + 2))) then
+                            coverageCount = coverageCount + 1
+                        end if
                     end if
                 END DO
+
                 if(coverageCount .GE. UsedAtomsTypeCount) then
                     Diffusor = this%GetReadDiffusorByListIndex(I)
 
