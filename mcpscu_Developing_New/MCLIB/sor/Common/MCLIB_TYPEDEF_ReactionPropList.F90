@@ -114,10 +114,10 @@ module MCLIB_TYPEDEF_ReactionPropList
             stop
         end if
 
-        call AllocateArray_Host(RangesArray,p_ATOMS_GROUPS_NUMBER,2*ListCount,"RangesArray")
+        call AllocateArray_Host(RangesArray,p_ATOMS_GROUPS_NUMBER,2*2*ListCount,"RangesArray")
         RangesArray = 0
 
-        call AllocateArray_Host(tempSingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,2*ListCount,"tempSingleAtomsDivideArrays")
+        call AllocateArray_Host(tempSingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,2*2*ListCount,"tempSingleAtomsDivideArrays")
         tempSingleAtomsDivideArrays = 0
 
         UsedAtomsType = 0
