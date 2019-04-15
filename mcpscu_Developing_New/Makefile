@@ -1,0 +1,83 @@
+#choice compiler and compiling flags
+export comp       := pgfortran
+
+ifeq ($(origin ConfigName), undefined) 
+ConfigName := Release
+endif
+
+oflags_this := $(oflags)
+
+#####################################
+ifeq ($(operateSystem), CYGWIN)
+  export LIBDIRS    := $(mcpscusor)$(Segment)LIB$(Segment)sor$(Segment)f
+endif
+ifeq ($(operateSystem), LINUX)
+  export LIBDIRS    := $(mcpscusor)$(Segment)LIB$(Segment)sor$(Segment)f
+endif
+libnames          := RunningProfile CudaRandomC2F MiniUtilities RandGenerators
+
+ifeq ($(operateSystem), CYGWIN)
+  export TCCINTERDIRS := $(mcpscusor)$(Segment)TCCLIB$(Segment)sor
+endif
+ifeq ($(operateSystem), LINUX)
+  export TCCINTERDIRS := $(mcpscusor)$(Segment)TCCLIB$(Segment)sor
+endif
+tccinterlibnames := TCCLIB
+
+ifeq ($(operateSystem), CYGWIN)
+  export MSMLIBDIRS := $(mcpscusor)$(Segment)MSMLIB$(Segment)sor
+endif
+ifeq ($(operateSystem), LINUX)
+  export MSMLIBDIRS := $(mcpscusor)$(Segment)MSMLIB$(Segment)sor
+endif
+msmlibnames	  := MSMLIB
+
+ifeq ($(operateSystem), CYGWIN)
+  export MCLIBDIRS  := $(mcpscusor)$(Segment)MCLIB$(Segment)sor
+endif
+ifeq ($(operateSystem), LINUX)
+  export MCLIBDIRS  := $(mcpscusor)$(Segment)MCLIB$(Segment)sor
+endif
+mclibnames	  := Common CommonGPU MigCoaleModel AppShell
+
+ifeq ($(operateSystem), CYGWIN)
+  export LIBDIRD    := $(mcworkspace)$(Segment)LIB$(Segment)$(ConfigName)
+endif
+ifeq ($(operateSystem), LINUX)
+  export LIBDIRD    := $(mcworkspace)$(Segment)LIB$(Segment)$(ConfigName)
+endif
+
+all:
+#the basic library
+	$(MAKE) -f $(mcpscusor)$(Segment)LIB$(Segment)RunningProfile$(Segment)RunningProfile.mk
+	$(MAKE) -f $(mcpscusor)$(Segment)LIB$(Segment)CudaRandomC2F$(Segment)CudaRandomC2F.mk
+	$(MAKE) -f $(mcpscusor)$(Segment)LIB$(Segment)MiniUtilities$(Segment)MiniUtilities.mk
+	$(MAKE) -f $(mcpscusor)$(Segment)LIB$(Segment)RandGenerators$(Segment)RandGenerators.mk
+	
+#tcc interface library
+	$(MAKE) -f $(mcpscusor)$(Segment)TCCLIB$(Segment)TCCLIB.mk
+
+#the MSMLIB library
+	$(MAKE) -f $(mcpscusor)$(Segment)MSMLIB$(Segment)MSMLIB.mk
+#the common mc library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)Common$(Segment)Common.mk
+#the commonGPU mc library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)CommonGPU$(Segment)CommonGPU.mk
+#the MigCoale mc library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MigCoaleModel$(Segment)MigCoaleModel.mk
+#the BubbleGrowth mc library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)AppShell$(Segment)AppShell.mk
+
+############################################
+.PHONY: clean
+clean:
+	$(MAKE) clean -f $(mcpscusor)$(Segment)LIB$(Segment)RunningProfile$(Segment)RunningProfile.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)LIB$(Segment)CudaRandomC2F$(Segment)CudaRandomC2F.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)LIB$(Segment)MiniUtilities$(Segment)MiniUtilities.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)LIB$(Segment)RandGenerators$(Segment)RandGenerators.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)TCCLIB$(Segment)TCCLIB.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MSMLIB$(Segment)MSMLIB.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)Common$(Segment)Common.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)CommonGPU$(Segment)CommonGPU.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)MigCoaleModel$(Segment)MigCoaleModel.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)AppShell$(Segment)AppShell.mk

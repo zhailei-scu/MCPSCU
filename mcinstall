@@ -1,0 +1,103 @@
+#!/bin/bash
+#---- This is a install file for running of MCPCUS
+#---- a monte carlo parckage developed
+#---- at Sichuan University
+
+
+#---- Some Vars that users can modify ----
+TINYCCPATH=$PWD/tcc-0.9.27/
+
+
+#------------------------------
+VER=Developing_New
+FULLNAME=mcpscu_$VER 
+tar -xvf $FULLNAME.tar.bz2
+#---- set the envirenment variables
+OSVER=$(cat /proc/version | head -c 5)
+
+if [ "$OSVER" = "CYGWI" ]; then
+  OS=CYGWIN
+  #It is important to write the CUDA version and COMPUTCAPABILITY, or it would cause fatal error
+  CUDAVERSION=cuda8.0
+  COMPUTCAPABILITY=cc2x
+fi
+
+if [ "$OSVER" = "Linux" ]; then
+  OS=LINUX
+  #It is important to write the CUDA version and COMPUTCAPABILITY, or it would cause fatal error
+  CUDAVERSION=cuda8.0
+  COMPUTCAPABILITY=cc35
+fi
+
+MCPSCUINST=$PWD
+MCPSCUSOR=$MCPSCUINST/$FULLNAME
+MCWORKSPACE=$MCPSCUINST/mcworkspace/$FULLNAME
+mkdir -p $MCWORKSPACE
+
+sed -i '2,7{/mcpscusor=/d}' $MCPSCUSOR/mcbdlib
+sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/mcbdlib
+sed -i '2,7{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,7{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+
+sed -i '2,7{/tccpath=/d}' $MCPSCUSOR/mcbdlib
+sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/mcbdlib
+sed -i '2,7{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,7{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+
+sed -i '2,7{/mcworkspace=/d}' $MCPSCUSOR/mcbdlib
+sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/mcbdlib
+sed -i '2,7{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,7{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+
+sed -i '2,7{/cudaVersion=/d}' $MCPSCUSOR/mcbdlib
+sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/mcbdlib
+sed -i '2,7{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,7{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+
+sed -i '2,7{/computerCapability=/d}' $MCPSCUSOR/mcbdlib
+sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/mcbdlib
+sed -i '2,7{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,7{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+
+sed -i '2,7{/operateSystem=/d}' $MCPSCUSOR/mcbdlib
+sed -i "7i operateSystem=""$OS" $MCPSCUSOR/mcbdlib
+sed -i '2,7{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "7i operateSystem=""$OS" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,7{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "7i operateSystem=""$OS" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+
+#---- create mcworkspace
+rm $MCPSCUINST/mcapps
+ln -s $MCPSCUSOR/MCLIB/sor/APPLICATIONS $MCPSCUINST/mcapps
+rm $MCPSCUINST/mcanaly
+ln -s $MCPSCUSOR/MCLIB/sor/ANALYTOOLS $MCPSCUINST/mcanaly
+
+echo $FULLNAME "has been copied on the machine"
+echo "You should run $MCPSCUSOR/mcblib to build the library."
+echo "Then go to $MCPSCUINST/mcapps or $MCPSCUINST/mcanaly to build the applications or "
+echo "analysis tools that you interested."
+echo "Use \"mcbdapp+appname\" or \"mcbdtool+toolname\" to construct it."
+
+
+
+
+
+#----------Old------
+#echo "#--- the envirement variables for building MCPSCU" >> ~/.bashrc
+#echo "MCPSCUSOR=$MCPSCUINST/$FULLNAME; export MCPSCUSOR" >> ~/.bashrc
+#echo "MCPSCUAPP=\$MCPSCUSOR/MCLIB/APPLICATIONS; export MCPSCUAPP" >> ~/.bashrc
+#echo "MCPSCUANALY=\$MCPSCUSOR/MCLIB/ANALYTOOLS; export MCPSCUANALY" >> ~/.bashrc
+#echo "MCWORKSPACE=$MCPSCUINST/mcworkspace; export MCWORKSPACE" >> ~/.bashrc
+#echo "PATH=\$PATH:\$MCPSCUSOR:\$MCPSCUAPP:\$MCPSCUANALY:\$MCWORKSPACE/APPLICATIONS:\$MCWORKSPACE/ANALYTOOLS;" >> ~/.bashrc
+##echo "export PATH" >> ~/.bashrc
+#echo "#--- end section for MCPSCU" >> ~/.bashrc

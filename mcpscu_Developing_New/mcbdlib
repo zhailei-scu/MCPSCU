@@ -1,0 +1,152 @@
+#!/bin/bash
+mcpscusor=/d/ZhaiLei/mcpscu_2019_02_11
+tccpath=/d/ZhaiLei/tcc-0.9.27/
+mcworkspace=/d/ZhaiLei/mcworkspace/mcpscu_2019_02_11
+cudaVersion=cuda8.0
+computerCapability=cc2x
+operateSystem=CYGWIN
+
+if [ "$operateSystem" = "CYGWIN" ];then
+	
+  # In cygwin, the linker is VC's link.exe, so the c compiler should also be cl.exe(based on our test, the gcc's compiler result can
+  # not compatible with link.exe), to use the cl.exe in cygwin, we should include some search path such as  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE and 
+  # C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt are necessary, to got these path, we should call the batch file "%VS140COMNTOOLS%vsvars32.bat" to generate some 
+  # environment vars such as %INCLUDE%.
+  # However, the dos's generated environment vars cannot be inheritted in cygwin shell if we call the batch file "%VS140COMNTOOLS%vsvars32.bat" 
+  # in cygwin shell. So, we need some strategies to get these environment vars in cygwin shell. There are two ways:
+  # (method 1) Based on our test, dos generates environments cannot be inheritted by cygwin shell during shell is running, but if we called dos batch file before cygwin shell is created, 
+  #            it can be inheritted by cygwin shell.
+  #            we create an dos .bat file and write:
+  #                          call "%VS140COMNTOOLS%vsvars32.bat"
+  #                          C:\PROGRA~1\PGICE\win64\18.4\pgi.bat
+  #            in the .bat file and execute .bat in windows environment. This way would call "%VS140COMNTOOLS%vsvars32.bat" in dos, and a new PGI CYGWIN is called by dos,
+  #            so the pgi.bat can inhert the vsvars32.bat generated environment vars. So the new created pgiCE environment inhert the environment vars %INCLUDE%, so the cl.exe
+  #            can find it's head file succuessfully.
+  # (method 2) currently, we use method 2, we creat an dos .bat file GetWinEnv.dat :
+  #                          @echo off
+  #                          call "%VS140COMNTOOLS%vsvars32.bat"
+  #                          set winEnvFile=WinEnv.txt
+  #                          if exist %winEnvFile% (
+  #                             del %winEnvFile%
+  #                           )
+  #                          echo Include dirs are got   %INCLUDE%
+  #                          echo %INCLUDE% > WinEnv.txt
+  #           This simple dos bat file first call "%VS140COMNTOOLS%vsvars32.bat", then in dos environment get the environment %INCLUDE% and output to an txt file WinEnv.txt.
+  #           So, although the dos batch file generated environments cannot be inheritted by cygwin if we call dos batch file in cygwin shell, 
+  #           but we writted them to file and the cygwin shell would read them from the file. 
+  
+  # call the GetWinEnv.dat to create WinEnv.txt to store the environment.
+  chmod u+x GetWinEnv.bat
+  ./GetWinEnv.bat
+  export WinEnvFile="WinEnv.txt"
+  INCLUDE=""
+  if [ -f  $WinEnvFile ];then
+      # read dos generated environment vars from WinEnv.txt
+      for line in `cat $WinEnvFile`
+      do
+        INCLUDE=$INCLUDE"$line"" ";
+      done	
+      export INCLUDE="$INCLUDE"
+  else
+      echo "MCPSCU make ERROR: You must run the 'mcinstall' shell frist, to generate the WinEnv.txt for the compiler process."
+      exit 1 
+  fi
+	
+  export LIB_EXT=lib
+  # In fact, in windows, "/" is same with "\" for path
+  export Segment="/" 
+
+  #for cygwin, sometimes we need to convert cygwin path to windows path
+  # -m used to convert to C:/xxx like path,  can also use -w option to vonvert to C:\xxx like path
+  mcpscusor=`cygpath -p $mcpscusor -m -a`;   
+  tccpath=`cygpath -p $tccpath -m -a`;
+  mcworkspace=`cygpath -p $mcworkspace -m -a`;
+fi
+
+if [ "$operateSystem" = "LINUX" ];then
+    export LIB_EXT=a
+    export Segment="/"
+fi
+
+export mcpscusor
+export tccpath
+export mcworkspace
+export cudaVersion
+export computerCapability
+export operateSystem
+
+#Create the directory for the lib
+if [ ! -d $mcworkspace$Segment"LIB" ];then
+     mkdir -p $mcworkspace$Segment"LIB"
+fi
+
+echo $mcworkspace$Segment"LIB"
+
+cd $mcpscusor
+
+#Create or clear release version
+if [ $# = 0 -o "$1" = "-r" ];then
+     echo "Create release version for MCPSCU"
+     export ConfigName="Release"
+     if [ ! -d $mcworkspace$Segment"LIB"$Segment$ConfigName ];then
+          mkdir -p $mcworkspace$Segment"LIB"$Segment$ConfigName
+     fi
+fi
+
+if [ "$1" = "-c"  -o "$1" = "-rc"  ];then
+     echo "Clear release version for MCPSCU"
+     export ConfigName="Release"
+     if [ -d $mcworkspace$Segment"LIB"$Segment$ConfigName ];then
+          rm -rf $mcworkspace$Segment"LIB"$Segment$ConfigName
+     fi
+fi
+
+#Create or clear debug version
+if [ "$1" = "-d" ];then
+    echo "Create debug version for MCPSCU"
+    export ConfigName="Debug";
+    if [ ! -d $mcworkspace$Segment"LIB"$Segment$ConfigName ];then
+          mkdir $mcworkspace$Segment"LIB"$Segment$ConfigName
+    fi
+fi
+
+if [ "$1" = "-dc" ]; then 
+    echo "Clear debug version"
+    export ConfigName="Debug"; 
+    if [ -d $mcworkspace$Segment"LIB"$Segment$ConfigName ];then
+        rm -rf $mcworkspace$Segment"LIB"$Segment$ConfigName
+    fi
+fi
+
+#Set the compiler flag
+if [ "$ConfigName" = "Release" ];then 
+       # the compling option for CYGWIN
+       if [ "$operateSystem" = "CYGWIN" ]; then
+       	  export oflags="-fast -D $operateSystem -D NODEVRAN -Minform=warn -Minfo=all -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability";
+       # the compling option for Linux
+       elif [ "$operateSystem" = "LINUX" ]; then
+       	  export oflags="-fast -tp sandybridge-64 -D $operateSystem -Minform=warn -Minfo=all  -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability,nollvm";
+       fi        
+else
+       # the compling option for CYGWI
+       if [ "$operateSystem" = "CYGWIN" ]; then
+       	  export oflags="-g -Mcuda=$cudaVersion,$computerCapability,nodebug -D $operateSystem -D NODEVRAN";
+       elif [ "$operateSystem" = "LINUX" ]; then
+       	  export oflags="-g -Mcuda=$cudaVersion,$computerCapability,nollvm,nodebug -D $operateSystem -D NODEVRAN";
+       fi
+fi
+echo "with comipling option: "$oflags
+
+#Create or clear release version
+if [ $# = 0 -o "$1" = "-r" -o  "$1" = "-d" ];then
+     make -f Makefile
+fi
+
+#####
+if [ "$1" = "-help" ]; then 
+    echo "Usage: ./build [options]"
+    echo "       -d            create debug version"
+    echo "       -r(default)   create release version"
+    echo "       -dc           clear debug version"
+    echo "       -rc, -c       clear release version"
+fi

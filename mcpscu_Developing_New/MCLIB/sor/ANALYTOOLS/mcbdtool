@@ -1,0 +1,131 @@
+#!/bin/bash
+mcpscusor=/d/ZhaiLei/mcpscu_2019_02_11
+tccpath=/d/ZhaiLei/tcc-0.9.27/
+mcworkspace=/d/ZhaiLei/mcworkspace/mcpscu_2019_02_11
+cudaVersion=cuda8.0
+computerCapability=cc20
+operateSystem=CYGWIN
+
+if [ "$operateSystem" = "CYGWIN" ];then
+	export LIB_EXT=lib
+	export Segment="/"   # In fact, in windows, "/" is same with "\" for path
+	
+	#for cygwin, sometimes we need to convert cygwin path to windows path
+  	mcpscusor=`cygpath -p $mcpscusor -m -a`; # -m used to convert to C:/xxx like path,  can also use -w option to vonvert to C:\xxx like path
+  	tccpath=`cygpath -p $tccpath -m -a`;
+  	tccpath=$tccpath$Segment"win32"
+  	mcworkspace=`cygpath -p $mcworkspace -m -a`;
+  
+  	if [ -f $tccpath$Segment"libtcc.a" ];then
+	  mv $tccpath$Segment"libtcc.a" $tccpath$Segment"libtcc.lib"
+  	fi
+fi
+
+if [ "$operateSystem" = "LINUX" ];then
+	export LIB_EXT=a
+	export Segment="/"
+	
+  	if [ -f $tccpath$Segment"libtcc.lib" ];then
+	  mv $tccpath$Segment"libtcc.lib" $tccpath$Segment"libtcc.a"
+  	fi
+fi
+
+export mcpscusor
+export tccpath
+export mcworkspace
+export cudaVersion
+export computerCapability
+export operateSystem
+
+
+#Create the directory for the apptools
+if [ ! -d $mcworkspace$Segment"ANALYTOOLS" ];then
+     mkdir $mcworkspace$Segment"ANALYTOOLS"
+fi
+export tccinterlibnames="TCCLIB"
+export tcclibnames="tcc"
+export libnames="RunningProfile CudaRandomC2F MiniUtilities RandGenerators"
+export msmlibnames="MSMLIB"
+export mclibnames="AppShell MigCoaleModel CommonGPU Common"
+
+
+cleanFlag=""
+
+if [ $# = 1 ]; then
+    export ConfigName="Release"
+    echo "Release version to be created"
+    export  OBJNAME="$1"
+fi
+
+if [ $# -ge 2 ]; then 
+	
+    if [ "$1" = "-d" ]; then
+       export ConfigName="Debug";
+       echo "Debug version to be created"
+       export  OBJNAME="$2"
+    fi
+
+    if [ "$1" = "-r" ]; then
+       export ConfigName="Release"
+       echo "Release version to be created"
+       export  OBJNAME="$2"
+    fi
+
+    if [ "$1" = "-dc" ]; then
+       export ConfigName="Debug"; 
+       export  OBJNAME="$2"
+       cleanFlag="clean";
+    fi
+
+    if [ "$1" = "-rc" ]; then
+       export ConfigName="Release"; 
+       export  OBJNAME="$2"
+       cleanFlag="clean";
+    fi
+fi
+
+#Set the compiler flag
+if [ "$ConfigName" = "Release" ];then 
+       # the compling option for CYGWIN
+       if [ "$operateSystem" = "CYGWIN" ]; then
+       	  export oflags="-fast -D $operateSystem -D NODEVRAN -Minform=warn -Minfo=all -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability";
+       # the compling option for LINUX
+       elif [ "$operateSystem" = "LINUX" ]; then
+       	  export oflags="-fast -tp sandybridge-64 -D $operateSystem -Minform=warn -Minfo=all  -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability,nollvm";
+       fi        
+else
+       # the compling option for CYGWI
+       if [ "$operateSystem" = "CYGWIN" ]; then
+       	  export oflags="-g -Mcuda=$cudaVersion,$computerCapability,nodebug -D $operateSystem -D NODEVRAN";
+       elif [ "$operateSystem" = "LINUX" ]; then
+       	  export oflags="-g -Mcuda=$cudaVersion,$computerCapability,nollvm,nodebug -D $operateSystem -D NODEVRAN";
+       fi
+fi
+
+
+echo "with comipling option: "$oflags
+
+
+if [ ! -d $mcworkspace$Segment"ANALYTOOLS"$Segment$ConfigName ];then
+   mkdir $mcworkspace$Segment"ANALYTOOLS"$Segment$ConfigName
+fi
+
+if [ "$operateSystem" = "CYGWIN" ];then
+
+	if [ -f $tccpath$Segment"libtcc.dll" ];then
+		cp $tccpath$Segment"libtcc.dll" $mcworkspace$Segment"ANALYTOOLS"$Segment$ConfigName
+	else
+		echo "MCPSCU make ERROR: You must install the tcc in windows, the way to install the tcc in windows is: "
+		echo "(1) Unzip the tcc package in cygwin."
+		echo "(2) Open the 'VSTools Developer Command Prompt', for instance 'VS2015 x64 Native Tools Command Prompt' "
+		echo "    Note: !!! the version of VSTools Developer Command Prompt should equl with your system, in x64 system, "
+		echo "    You cannot!!! use the VS2015 x86 Native Tools Command Prompt, or the program would occur wrong."
+		echo "(3) WithIn 'VSTools Developer Command Prompt', enter to the director tcc-xxx\win32"
+		echo "(4) Run the command: 'build-tcc.bat -c cl' "   
+		
+	  exit 1 
+	fi
+fi
+
+make $cleanFlag -f $mcpscusor$Segment"MCLIB"$Segment"ANALYTOOLS"$Segment"Commom_makefile.mk"
+
