@@ -122,7 +122,7 @@ module MCLIB_TYPEDEF_ReactionPropList
 
         UsedAtomsType = 0
 
-        DO I = 1,ListCount
+        DO I = 1,2*ListCount
             DO IElement = 1,p_ATOMS_GROUPS_NUMBER
                 TheID = TheAtomsSetsRangesArray(I)%m_SetsRange(IElement)%m_ID
                 if(TheID .GT. 0) then
