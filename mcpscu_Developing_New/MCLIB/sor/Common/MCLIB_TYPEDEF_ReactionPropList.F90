@@ -1,5 +1,6 @@
 module MCLIB_TYPEDEF_ReactionPropList
     use MCLIB_TYPEDEF_REACTIONSVALUE
+    use MCLIB_TYPEDEF_ATOMSLIST
 
     implicit none
 
@@ -21,7 +22,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         Generic::Assignment(=)=>CopyReadReactionPropListFromOther
         Final::CleanReactionPropList
 
-    end type ReadReactionsList
+    end type ReadReactionPropList
 
     private::AppendOne_ReadReactionPropList
     private::AppendArray_ReadReactionPropList
@@ -50,11 +51,9 @@ module MCLIB_TYPEDEF_ReactionPropList
         integer,dimension(:,:),allocatable::SingleAtomsDivideArrays
         integer,dimension(:,:),allocatable::AtomsSetsRangesMarkArray
         type(AClusterList),dimension(:),pointer::ConstructClusterListsArray=>null()
-        type(AClusterList),pointer::ClusterListCursor=>null()
-        integer::ElementReactionRange1(p_ATOMS_GROUPS_NUMBER,2)
-        integer::ElementReactionRange2(p_ATOMS_GROUPS_NUMBER,2)
+        type(AClusterList),pointer::SubjectClusterListCursor=>null()
+        type(AClusterList),pointer::ObjectClusterListCursor=>null()
         integer::UsedAtomsType(p_ATOMS_GROUPS_NUMBER)
-        integer::UsedAtomsTypeCount
         type(ReadReactionPair)::Reaction
         integer::temp_MaxDivideGroups
         integer::tempMax
@@ -103,7 +102,6 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             TheAtomsSetsRangesArray(tempIndex) = ResolveSymbol2AtomsSetRange(cursor%Reaction%ObjectSymbol,BasicAtomsList)
 
-
             cursor=>cursor%next
 
         END DO
@@ -135,29 +133,47 @@ module MCLIB_TYPEDEF_ReactionPropList
             END DO
         END DO
 
-        UsedAtomsTypeCount = count(UsedAtomsType .GT. 0)
-
         !---Check the coverage---
         DO I = 1,ListCount
             DO J = I+1,ListCount
                 coverageCount = 0
 
                 DO IElement = 1,p_ATOMS_GROUPS_NUMBER
-                    if(RangesArray(IElement,(I -1)*2 + 2) .GT. 0 .AND. RangesArray(IElement,(J -1)*2 + 1) .GT. 0) then
 
-                        if(IsRangeCoverage(RangesArray(IElement,(I -1)*2 + 1),RangesArray(IElement,(I -1)*2 + 2), &
-                                           RangesArray(IElement,(J -1)*2 + 1),RangesArray(IElement,(J -1)*2 + 2)))
+                    if(UsedAtomsType(IElement) .GT. 0) then
+
+                        coverageOnElement = .false.
+
+                        if(IsRangeCoverage(RangesArray(IElement,(I -1)*4 + 1),RangesArray(IElement,(I -1)*4 + 2),       &
+                                           RangesArray(IElement,(J -1)*4 + 1),RangesArray(IElement,(J -1)*4 + 2)) .AND. &
+                           IsRangeCoverage(RangesArray(IElement,(I -1)*4 + 3),RangesArray(IElement,(I -1)*4 + 4),       &
+                                           RangesArray(IElement,(J -1)*4 + 3),RangesArray(IElement,(J -1)*4 + 4))) then
+
+                            coverageOnElement = .true.
+                        end if
+
+                        if(IsRangeCoverage(RangesArray(IElement,(I -1)*4 + 1),RangesArray(IElement,(I -1)*4 + 2),       &
+                                           RangesArray(IElement,(J -1)*4 + 3),RangesArray(IElement,(J -1)*4 + 4)) .AND. &
+                           IsRangeCoverage(RangesArray(IElement,(I -1)*4 + 3),RangesArray(IElement,(I -1)*4 + 4),       &
+                                           RangesArray(IElement,(J -1)*4 + 1),RangesArray(IElement,(J -1)*4 + 2))) then
+
+                            coverageOnElement = .true.
+                        end if
+
+                        if(coverageOnElement .eq. .true.) then
                             coverageCount = coverageCount + 1
                         end if
+                    else
+                        coverageCount = coverageCount + 1
                     end if
                 END DO
 
-                if(coverageCount .GE. UsedAtomsTypeCount) then
-                    Diffusor = this%GetReadDiffusorByListIndex(I)
+                if(coverageCount .GE. p_ATOMS_GROUPS_NUMBER) then
+                    Reaction = this%GetReadReactionByListIndex(I)
 
-                    write(*,*) "MCPSCUERROR: The diffusor define is overlapping between diffusor ",Diffusor%symbol
-                    Diffusor = this%GetReadDiffusorByListIndex(J)
-                    write(*,*) "and diffusor: ",Diffusor%symbol
+                    write(*,*) "MCPSCUERROR: The reaction define is overlapping between reactions pair: ",Reaction%SubjectSymbol,Reaction%ObjectSymbol
+                    Reaction = this%GetReadReactionByListIndex(J)
+                    write(*,*) "and reaction pair: ",Reaction%SubjectSymbol,Reaction%ObjectSymbol
                     pause
                     stop
                 end if
@@ -173,7 +189,7 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             if(tempMax .GT. 0) then
 
-                DO I = 1,2*ListCount
+                DO I = 1,4*ListCount
 
                     tempMin = minval(RangesArray(IElement,:),MASK=(RangesArray(IElement,:) .GT. 0))
 
@@ -206,7 +222,7 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             AtomsSetsRangesMarkArray = 0
 
-            DO tempIndex = 1,ListCount
+            DO tempIndex = 1,2*ListCount
 
                 DO IElement = 1,p_ATOMS_GROUPS_NUMBER
                     DO J = 1,DivideGroups_SingleElement(IElement)-1
@@ -277,23 +293,27 @@ module MCLIB_TYPEDEF_ReactionPropList
             end if
 
         else if(maxval(DivideGroups_SingleElement) .eq. 1) then
-            call AllocateArray_Host(SingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,2,"SingleAtomsDivideArrays")
+            call AllocateArray_Host(SingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,3,"SingleAtomsDivideArrays")
 
             DO IElement = 1,p_ATOMS_GROUPS_NUMBER
-                SingleAtomsDivideArrays(IElement,1) = max(tempSingleAtomsDivideArrays(IElement,1)-1,0)
-                SingleAtomsDivideArrays(IElement,2) = tempSingleAtomsDivideArrays(IElement,1)
+
+                if(UsedAtomsType(IElement) .GT. 0) then
+                    SingleAtomsDivideArrays(IElement,1) = max(tempSingleAtomsDivideArrays(IElement,1)-1,0)
+                    SingleAtomsDivideArrays(IElement,2) = tempSingleAtomsDivideArrays(IElement,1)
+                    SingleAtomsDivideArrays(IElement,3) = tempSingleAtomsDivideArrays(IElement,1) + 1
+                end if
             END DO
         else
             call AllocateArray_Host(SingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,1,"SingleAtomsDivideArrays")
             SingleAtomsDivideArrays = 0
         end if
 
-        !---Start to construct the diffusors map---
-        allocate(ConstructClusterListsArray(ListCount))
+        !---Start to construct the reactions map---
+        allocate(ConstructClusterListsArray(2*ListCount))
 
         Maplength = 0
 
-        DO tempIndex = 1,ListCount
+        DO tempIndex = 1,2*ListCount
 
             call ConstructClusterListsArray(tempIndex)%Clean_ClusterList()
 
@@ -302,23 +322,31 @@ module MCLIB_TYPEDEF_ReactionPropList
             Maplength = Maplength + ConstructClusterListsArray(tempIndex)%GetList_Count()
         END DO
 
-        call TheDiffusorTypesMap%constructor(SingleAtomsDivideArrays,Maplength)
+        call TheReactionsMap%constructor(SingleAtomsDivideArrays,Maplength)
 
-        !*********Note: The array TheAtomsSetsRangesArray need to response to this(ReadDiffusorList) one by one, so, please ensure*********
-        !*********The ConstructClusterListsArray is not modified after resolved from ReadDiffusorList***********
+        !*********Note: The array TheAtomsSetsRangesArray need to response to this(ReadReactionPropList) two by one, so, please ensure*********
+        !*********The ConstructClusterListsArray is not modified after resolved from ReadReactionPropList***********
         cursor=>this
         tempIndex = 0
         DO While(associated(cursor))
 
-            tempIndex = tempIndex + 1
+            if(ConstructClusterListsArray(tempIndex*2+1)%GetList_Count() .GT. 0 .AND. ConstructClusterListsArray(tempIndex*2+2)%GetList_Count() .GT. 0) then
+                SubjectClusterListCursor=>ConstructClusterListsArray(tempIndex*2+1)
+                DO While(associated(SubjectClusterListCursor))
 
-            if(ConstructClusterListsArray(tempIndex)%GetList_Count() .GT. 0) then
-                ClusterListCursor=>ConstructClusterListsArray(tempIndex)
-                DO While(associated(ClusterListCursor))
-                    call TheDiffusorTypesMap%put(ClusterListCursor%TheCluster,cursor%Diffusor%Convert2DiffusorValue())
-                    ClusterListCursor=>ClusterListCursor%next
+                    ObjectClusterListCursor=>ConstructClusterListsArray(tempIndex*2+2)
+
+                    DO While(associated(ObjectClusterListCursor))
+                        call TheReactionsMap%put(SubjectClusterListCursor%TheCluster,ObjectClusterListCursor%TheCluster,cursor%Reaction%Convert2ReactionValue())
+
+                        ObjectClusterListCursor=>ObjectClusterListCursor%next
+                    END DO
+
+                    SubjectClusterListCursor=>SubjectClusterListCursor%next
                 END DO
             end if
+
+            tempIndex = tempIndex + 1
 
             cursor=>cursor%next
         END DO
@@ -343,26 +371,29 @@ module MCLIB_TYPEDEF_ReactionPropList
 
         Nullify(cursor)
         cursor=>null()
-        Nullify(ClusterListCursor)
-        ClusterListCursor=>null()
+
+        Nullify(SubjectClusterListCursor)
+        SubjectClusterListCursor=>null()
+        Nullify(ObjectClusterListCursor)
+        ObjectClusterListCursor=>null()
 
         return
     end subroutine ConvertToReactionsMap
 
     !***************************************
-    subroutine CopyReadDiffusorPropListFromOther(this,otherOne)
+    subroutine CopyReadReactionPropListFromOther(this,otherOne)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadDiffusorPropList),intent(out),target::this
-        type(ReadDiffusorPropList),target,intent(in)::otherOne
+        CLASS(ReadReactionPropList),intent(out),target::this
+        type(ReadReactionPropList),target,intent(in)::otherOne
         !---Local Vars---
-        type(ReadDiffusorPropList),pointer::cursorOfOthers=>null()
-        type(ReadDiffusorPropList),pointer::cursorOfSelf=>null()
-        type(ReadDiffusorPropList),pointer::cursorOfSelfP=>null()
+        type(ReadReactionPropList),pointer::cursorOfOthers=>null()
+        type(ReadReactionPropList),pointer::cursorOfSelf=>null()
+        type(ReadReactionPropList),pointer::cursorOfSelfP=>null()
         !---Body---
         cursorOfSelf=>this
         if(.not. associated(cursorOfSelf)) then
-            write(*,*) "MCPSCUERROR: You need to allocate the ReadDiffusorPropList first!"
+            write(*,*) "MCPSCUERROR: You need to allocate the ReadReactionPropList first!"
             pause
             stop
         end if
@@ -373,16 +404,16 @@ module MCLIB_TYPEDEF_ReactionPropList
             return
         end if
 
-        call this%Clean_ReadDiffusorPropList()
+        call this%Clean_ReadReactionPropList()
 
-        this%Diffusor = otherOne%Diffusor
+        this%Reaction = otherOne%Reaction
 
         cursorOfOthers=>otherOne%next
         cursorOfSelfP=>this
         cursorOfSelf=>this%next
         DO While(associated(cursorOfOthers))
             allocate(cursorOfSelf)
-            cursorOfSelf%Diffusor = cursorOfOthers%Diffusor
+            cursorOfSelf%Reaction = cursorOfOthers%Reaction
             cursorOfSelfP%next=>cursorOfSelf
 
             cursorOfOthers=>cursorOfOthers%next
@@ -395,32 +426,39 @@ module MCLIB_TYPEDEF_ReactionPropList
         Nullify(cursorOfSelf)
         Nullify(cursorOfOthers)
         return
-    end subroutine CopyReadDiffusorPropListFromOther
+    end subroutine CopyReadReactionPropListFromOther
 
     !***************************************
-    subroutine AppendOne_ReadDiffusorPropList(this,newOne)
+    subroutine AppendOne_ReadReactionPropList(this,newOne)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadDiffusorPropList),target::this
-        type(ReadedDiffusorValue)::newOne
+        CLASS(ReadReactionPropList),target::this
+        type(ReadReactionPair)::newOne
         !---Local Vars---
-        type(ReadDiffusorPropList),pointer::cursor=>null(),cursorP=>null()
+        type(ReadReactionPropList),pointer::cursor=>null(),cursorP=>null()
         !---Body---
         cursorP=>this
         if(.not. associated(cursorP)) then
-            write(*,*) "MCPSCUERROR: You need to allocate the ReadDiffusorPropList first!"
+            write(*,*) "MCPSCUERROR: You need to allocate the ReadReactionPropList first!"
             pause
             stop
         end if
 
         if(this%GetList_Count() .LE. 0) then
             this%ListCount = 1
-            this%Diffusor = newOne
+            this%Reaction = newOne
         else
             cursor=>this%next
             cursorP=>this
-            if(IsStrEqual(cursorP%Diffusor%symbol,newOne%symbol)) then
-                write(*,*) "MCPSCUERROR: The Diffusor is dumplicated:",newOne%symbol
+            if(IsStrEqual(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol) .AND. IsStrEqual(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol)) then
+                write(*,*) "MCPSCUERROR: The Reaction is dumplicated: Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
+                pause
+                stop
+            end if
+
+            if(IsStrEqual(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol) .AND. IsStrEqual(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol)) then
+                write(*,*) "MCPSCUERROR: The Reaction is dumplicated for pairs Subject : ",cursorP%Reaction%SubjectSymbol," object: ",cursorP%Reaction%ObjectSymbol
+                write(*,*) "and : Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                 pause
                 stop
             end if
@@ -429,11 +467,19 @@ module MCLIB_TYPEDEF_ReactionPropList
                 cursor=>cursor%next
                 cursorP=>cursorP%next
 
-                if(IsStrEqual(cursorP%Diffusor%symbol,newOne%symbol)) then
-                    write(*,*) "MCPSCUERROR: The Diffusor is dumplicated:",newOne%symbol
+                if(IsStrEqual(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol) .AND. IsStrEqual(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol)) then
+                    write(*,*) "MCPSCUERROR: The Reaction is dumplicated: Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                     pause
                     stop
                 end if
+
+                if(IsStrEqual(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol) .AND. IsStrEqual(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol)) then
+                    write(*,*) "MCPSCUERROR: The Reaction is dumplicated for pairs Subject : ",cursorP%Reaction%SubjectSymbol," object: ",cursorP%Reaction%ObjectSymbol
+                    write(*,*) "and : Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
+                    pause
+                    stop
+                end if
+
             END DO
 
             this%ListCount = this%ListCount + 1
@@ -441,7 +487,7 @@ module MCLIB_TYPEDEF_ReactionPropList
             allocate(cursor)
             NUllify(cursor%next)
             ! The assignment(=) had been overrided
-            cursor%Diffusor = newOne
+            cursor%Reaction = newOne
             cursorP%next=>cursor
         end if
 
@@ -450,61 +496,59 @@ module MCLIB_TYPEDEF_ReactionPropList
         Nullify(cursor)
         cursor=>null()
         return
-    end subroutine AppendOne_ReadDiffusorPropList
+    end subroutine AppendOne_ReadReactionPropList
 
 
     !***************************************
-    subroutine AppendArray_ReadDiffusorPropList(this,DiffusorsArray,ArraySize)
+    subroutine AppendArray_ReadReactionPropList(this,ReactionsArray,ArraySize)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadDiffusorPropList),target::this
-        type(ReadedDiffusorValue),allocatable::DiffusorsArray(:)
+        CLASS(ReadReactionPropList),target::this
+        type(ReadReactionPair),allocatable::ReactionsArray(:)
         integer,intent(in)::ArraySize
         !---Local Vars---
-        type(ReadDiffusorPropList),pointer::cursor=>null()
-        type(ReadDiffusorPropList),pointer::cursorP=>null()
         integer::I
         !---Body---
         cursorP=>this
         if(.not. associated(cursorP)) then
-            write(*,*) "MCPSCUERROR: You need to allocate the ReadDiffusorPropList first!"
+            write(*,*) "MCPSCUERROR: You need to allocate the ReadReactionPropList first!"
             pause
             stop
         end if
 
-        if(ArraySize  .LE. 0 .or. size(DiffusorsArray) .LE. 0) then
-            write(*,*) "MCPSCUWARNING: No elements would be appended to diffusorList"
+        if(ArraySize  .LE. 0 .or. size(ReactionsArray) .LE. 0) then
+            write(*,*) "MCPSCUWARNING: No reaction pair would be appended to ReadReactionPropList"
             return
         end if
 
-        if(ArraySize .GT. size(DiffusorsArray)) then
-            write(*,*) "MCPSCUERROR: The aimmed size to appended to the diffusorList is greater than the Array size",ArraySize,size(DiffusorsArray)
+        if(ArraySize .GT. size(ReactionsArray)) then
+            write(*,*) "MCPSCUERROR: The aimmed size to appended to the ReadReactionPropList is greater than the Array size",ArraySize,size(ReactionsArray)
             pause
             stop
         end if
 
 
         DO I=1,ArraySize
-            call this%AppendOne_ReadDiffusorPropList(DiffusorsArray(I))
+            call this%AppendOne_ReadReactionPropList(ReactionsArray(I))
         END DO
 
         return
-    end subroutine AppendArray_ReadDiffusorPropList
+    end subroutine AppendArray_ReadReactionPropList
 
     !**************************************
-    function GetReadDiffusorByListIndex(this,ListIndex) result(Diffusor)
+    function GetReadReactionByListIndex(this,ListIndex) result(Reaction)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadDiffusorPropList),target::this
+        CLASS(ReadReactionPropList),target::this
         integer,intent(in)::ListIndex
-        type(ReadedDiffusorValue),intent(out)::Diffusor
+        type(ReadReactionPair),intent(out)::Reaction
         !---Local Vars---
         integer::tempIndex
-        type(ReadDiffusorPropList),pointer::cursor=>null()
+        type(ReadReactionPropList),pointer::cursor=>null()
         !---Body---
         cursor=>this
         if(.not. associated(cursor)) then
-            write(*,*) "MCPSCUERROR: You need to allocate the ReadDiffusorPropList first!"
+            write(*,*) "MCPSCUERROR: You need to allocate the ReadReactionPropList first!"
             pause
             stop
         end if
@@ -516,7 +560,7 @@ module MCLIB_TYPEDEF_ReactionPropList
             tempIndex = tempIndex + 1
 
             if(tempIndex .eq. ListIndex) then
-                Diffusor = cursor%Diffusor
+                Reaction = cursor%Reaction
                 exit
             end if
 
@@ -525,7 +569,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         END DO
 
         if(ListIndex .ne. tempIndex) then
-            write(*,*) "MCPSCUERROR: Cannot get the diffusor form diffusor list by index: ",ListIndex
+            write(*,*) "MCPSCUERROR: Cannot get the reaction pair form reaction list by index: ",ListIndex
             pause
             stop
         end if
@@ -533,44 +577,46 @@ module MCLIB_TYPEDEF_ReactionPropList
         Nullify(cursor)
         cursor=>null()
         return
-    end function GetReadDiffusorByListIndex
+    end function GetReadReactionByListIndex
 
 
     !**************************************
-    integer function GetReadDiffusorPropList_Count(this)
+    integer function GetReadReactionPropList_Count(this)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadDiffusorPropList),target::this
+        CLASS(ReadReactionPropList),target::this
         !---Local Vars---
-        type(ReadDiffusorPropList),pointer::cursor=>null()
+        type(ReadReactionPropList),pointer::cursor=>null()
         !---Body---
         cursor=>this
         if(.not. associated(cursor)) then
-            write(*,*) "MCPSCUERROR: You need to allocate the ReadDiffusorPropList first!"
+            write(*,*) "MCPSCUERROR: You need to allocate the ReadReactionPropList first!"
             pause
             stop
         end if
 
 
-        GetReadDiffusorPropList_Count = this%ListCount
+        GetReadReactionPropList_Count = this%ListCount
 
         return
-    end function
+    end function GetReadReactionPropList_Count
 
     !**************************************
-    subroutine PrintOutCheckingResult(this,hFile,BasicAtomsList,TheDiffusorTypesMap)
+    subroutine PrintOutCheckingResult(this,hFile,BasicAtomsList,TheReactionsMap)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadDiffusorPropList),intent(in),target::this
+        CLASS(ReadReactionPropList),intent(in),target::this
         integer,intent(in)::hFile
         type(AtomsList),intent(in)::BasicAtomsList
-        type(DiffusorTypesMap),intent(in)::TheDiffusorTypesMap
+        type(ReactionsMap),intent(in)::TheReactionsMap
         !---Local Vars---
         type(AtomsSetRange),dimension(:),allocatable::TheAtomsSetsRangesArray
-        type(ReadDiffusorPropList),pointer::cursor=>null()
-        type(AClusterList),target::ConstructClusterList
-        type(AClusterList),pointer::ClusterListCursor=>null()
-        type(DiffusorValue)::TheValue
+        type(ReadReactionPropList),pointer::cursor=>null()
+        type(AClusterList),target::SubjectConstructClusterList
+        type(AClusterList),pointer::SubjectClusterListCursor=>null()
+        type(AClusterList),target::ObjectConstructClusterList
+        type(AClusterList),pointer::ObjectClusterListCursor=>null()
+        type(ReactionValue)::TheValue
         integer::ListCount
         integer::tempIndex
         character*32::symbol
@@ -582,7 +628,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         cursor=>this
 
         if(.not. associated(cursor)) then
-            write(*,*) "MCPSCUERROR: You should allocate the ReadDiffusorPropList first!"
+            write(*,*) "MCPSCUERROR: You should allocate the ReadReactionPropList first!"
             pause
             stop
         end if
@@ -592,7 +638,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         if(ListCount .LE. 0) then
             return
         else
-            allocate(TheAtomsSetsRangesArray(ListCount))
+            allocate(TheAtomsSetsRangesArray(2*ListCount))
         end if
 
         tempIndex = 0
@@ -603,7 +649,13 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             call TheAtomsSetsRangesArray(tempIndex)%ReleaseSetsRange()
 
-            TheAtomsSetsRangesArray(tempIndex) = ResolveSymbol2AtomsSetRange(cursor%Diffusor%symbol,BasicAtomsList)
+            TheAtomsSetsRangesArray(tempIndex) = ResolveSymbol2AtomsSetRange(cursor%Reaction%SubjectSymbol,BasicAtomsList)
+
+            tempIndex = tempIndex + 1
+
+            call TheAtomsSetsRangesArray(tempIndex)%ReleaseSetsRange()
+
+            TheAtomsSetsRangesArray(tempIndex) = ResolveSymbol2AtomsSetRange(cursor%Reaction%ObjectSymbol,BasicAtomsList)
 
             cursor=>cursor%next
         END DO
@@ -612,12 +664,13 @@ module MCLIB_TYPEDEF_ReactionPropList
         tempIndex = 0
         DO While(associated(cursor))
 
-            tempIndex = tempIndex + 1
+            call SubjectConstructClusterList%Clean_ClusterList()
 
-            call ConstructClusterList%Clean_ClusterList()
+            SubjectConstructClusterList = TheAtomsSetsRangesArray(tempIndex*2+1)%AtomsSetRange2ClusterList(TheReactionsMap%SingleAtomsDivideArrays)
 
-            !---Construct the diffusor to determine the maps
-            ConstructClusterList = TheAtomsSetsRangesArray(tempIndex)%AtomsSetRange2ClusterList(TheDiffusorTypesMap%SingleAtomsDivideArrays)
+            call ObjectConstructClusterList%Clean_ClusterList()
+
+            ObjectConstructClusterList = TheAtomsSetsRangesArray(tempIndex*2+2)%AtomsSetRange2ClusterList(TheReactionsMap%SingleAtomsDivideArrays)
 
             write(*,*) "######################################################################"
 
@@ -673,6 +726,8 @@ module MCLIB_TYPEDEF_ReactionPropList
                     ClusterListCursor=>ClusterListCursor%next
                 END DO
             end if
+
+            tempIndex = tempIndex + 1
 
             cursor=>cursor%next
         END DO

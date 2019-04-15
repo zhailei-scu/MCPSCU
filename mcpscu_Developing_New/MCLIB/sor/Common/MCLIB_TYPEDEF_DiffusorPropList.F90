@@ -195,7 +195,6 @@ module MCLIB_TYPEDEF_DiffusorPropList
         type(AClusterList),dimension(:),pointer::ConstructClusterListsArray=>null()
         type(AClusterList),pointer::ClusterListCursor=>null()
         integer::UsedAtomsType(p_ATOMS_GROUPS_NUMBER)
-        integer::UsedAtomsTypeCount
         type(ReadedDiffusorValue)::Diffusor
         integer::temp_MaxDivideGroups
         integer::tempMax
@@ -269,23 +268,25 @@ module MCLIB_TYPEDEF_DiffusorPropList
             END DO
         END DO
 
-        UsedAtomsTypeCount = count(UsedAtomsType .GT. 0)
-
         !---Check the coverage---
         DO I = 1,ListCount
             DO J = I+1,ListCount
                 coverageCount = 0
                 DO IElement = 1,p_ATOMS_GROUPS_NUMBER
-                    if(RangesArray(IElement,(I -1)*2 + 2) .GT. 0 .AND. RangesArray(IElement,(J -1)*2 + 1) .GT. 0) then
+
+                    if(UsedAtomsType(IElement) .GT. 0) then
 
                         if(IsRangeCoverage(RangesArray(IElement,(I -1)*2 + 1),RangesArray(IElement,(I -1)*2 + 2), &
                                            RangesArray(IElement,(J -1)*2 + 1),RangesArray(IElement,(J -1)*2 + 2))) then
                             coverageCount = coverageCount + 1
                         end if
+                    else
+                        coverageCount = coverageCount + 1
                     end if
+
                 END DO
 
-                if(coverageCount .GE. UsedAtomsTypeCount) then
+                if(coverageCount .GE. p_ATOMS_GROUPS_NUMBER) then
                     Diffusor = this%GetReadDiffusorByListIndex(I)
 
                     write(*,*) "MCPSCUERROR: The diffusor define is overlapping between diffusor ",Diffusor%symbol
