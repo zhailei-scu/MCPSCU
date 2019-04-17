@@ -39,7 +39,7 @@ CDiffusorList* list = NULL;
 */
 
 #ifdef __cplusplus
-int InterpCScript(char* scriptStr){
+int InterpCScript_DiffusorsDef(char* scriptStr){
 
   TCCState *s = NULL;
 
@@ -111,7 +111,7 @@ int InterpCScript(char* scriptStr){
   return list->size;
 }
 #else
-int InterpCScript(char* scriptStr){
+int InterpCScript_DiffusorsDef(char* scriptStr){
 
   TCCState *s = NULL;
   char path[100];
@@ -170,7 +170,7 @@ int InterpCScript(char* scriptStr){
 /*
 --------------------------------------------------------
 */
-void GetInterpedArray(CDiffusorDef* theArray){
+void GetInterpedDiffusorsArray(CDiffusorDef* theArray){
 
   int I;
 

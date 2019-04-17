@@ -434,11 +434,71 @@ module MCLIB_TYPEDEF_GEOMETRY
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Local Vars---
         character*256::FilePath
+        character*256::STR
+        integer::LINE
+        integer::hFile
+        integer::ISeed
+        integer::N
+        character*20::STRTMP(10)
         !---Body---
+
+        LINE = 0
+
+        this%GrainNum = 0
 
         FilePath = INQUIREFILE(this%GBCfgFileName,Host_SimuCtrlParam%InputFilePath)
 
+        hFile = OpenExistedFile(FilePath)
 
+
+
+        DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!") )
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(adjustl(STR)) .LE. 0) then
+                cycle
+            end if
+
+            this%GrainNum = this%GrainNum + 1
+        END DO
+
+        if(this%GrainNum .LE. 0) then
+            write(*,*) "MCPSCUERROR: The grain number is less than 0"
+            pause
+            stop
+        end if
+
+        allocate(this%GrainSeeds(this%GrainNum))
+
+
+        Rewind(hFile)
+        LINE = 0
+
+        ISeed = 0
+
+        DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!") )
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(adjustl(STR)) .LE. 0) then
+                cycle
+            end if
+
+            ISeed = ISeed  +  1
+
+            call EXTRACT_NUMB(STR,3,N,STRTMP)
+
+            if(N .LT. 3) then
+                write(*,*) "MCPSCUERROR: The seed should be constructed by x, y and z, however, some dimension is lake at LINE: ",LINE
+                write(*,*) STR
+                pause
+                stop
+            end if
+
+            DO I = 1,3
+                this%GrainSeeds(ISeed)%m_POS(I) = DRSTR(STRTMP(I))
+            END DO
+
+        END DO
 
 
         return

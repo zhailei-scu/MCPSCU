@@ -45,6 +45,19 @@ module MCLIB_CONSTANTS
     integer, parameter::p_DEPT_DIS_BOX = 1                              ! boxed uniform distribution. The box is a subbox of simulated box
     integer, parameter::p_DEPT_DIS_GAS = 2                              ! Gauss distribution in Z-depth
 
+
+    !*** data structure defining an cluster
+    #ifdef ATOMSGROUP
+    integer, parameter::p_ATOMS_GROUPS_NUMBER = ATOMSGROUP
+    #else
+    integer, parameter::p_ATOMS_GROUPS_NUMBER = 3
+    #endif
+
+    character(len=1),parameter::p_ElementsTypeSpe = "@"
+    character(len=1),parameter::p_ElementsNumSpe = "#"
+    character(len=1),parameter::p_NumRangeSpe = "-"
+    character(len=3),parameter::p_InfStr = "INF"
+
     !*** The clusters type
     integer,parameter::p_NUMBER_OF_STATU = 6
     integer,parameter::p_ACTIVEFREE_STATU = 1

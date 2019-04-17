@@ -1,6 +1,6 @@
 module MCLIB_TYPEDEF_ATOMSLIST
     use MCLIB_CONSTANTS
-    use MCLIB_UTILITIES
+    use MCLIB_UTILITIES_FORMER
     implicit none
 
     type,public::ATOM

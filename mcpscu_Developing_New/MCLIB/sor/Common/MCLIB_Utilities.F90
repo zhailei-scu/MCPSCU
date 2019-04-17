@@ -1,8 +1,9 @@
 module MCLIB_UTILITIES
-
+  USE MCLIB_CONSTANTS
   USE MCLIB_TYPEDEF_ACLUSTER
-  use MiniUtilities,only:LENTRIM
+  use MCLIB_TYPEDEF_ATOMSLIST
   USE MCLIB_UTILITIES_FORMER
+  use MiniUtilities,only:LENTRIM,ISTR
   #ifdef MC_PROFILING
   USE MCLIB_TimeProfile
   #endif
@@ -58,584 +59,118 @@ module MCLIB_UTILITIES
   end interface DeAllocateArray_Host
 
   contains
-  !************************************************************
-  function INQUIREFILE(fileName,parentPath) result(truePath)
-    implicit none
-    !---Dummy Vars---
-    character*(*),intent(in)::fileName
-    character*(*),intent(in),optional::parentPath
-    character*256::truePath
-    !---Local Vars---
-    logical::exits
-    !---Body---
-    exits = .false.
 
-    truePath = adjustl(trim(fileName))
-    INQUIRE(FILE=truePath,EXIST=exits)
+  !*************************************************
+  function ResolveSymbol2AtomsSetRange(symbol,BasicAtomsList) result(TheAtomsSetRange)
+        implicit none
+        !---Dummy Vars---
+        character(*)::symbol
+        type(AtomsList),intent(in)::BasicAtomsList
+        type(AtomsSetRange)::TheAtomsSetRange
+        !---Local Vars---
+        character(len=20)::ElementsStrs(10)
+        character(len=20)::symbolANDNumRangeStr(2)
+        character(len=10)::NumRangeStr(2)
+        integer::ElemtsGroup
+        integer::SepNum
+        integer::ElementIndex
+        integer::I
+        !---Body---
 
-    if(present(parentPath) .AND. .not. exits) then
-        if(LENTRIM(adjustl(parentPath)) .LE. 0) then
-            truePath = adjustl(trim(fileName))
-        else
-            truePath = adjustl(trim(parentPath))//FolderSpe//adjustl(trim(fileName))
-        end if
+        ElementsStrs = ''
 
-        INQUIRE(FILE=truePath,EXIST=exits)
-    end if
+        call TheAtomsSetRange%ReleaseSetsRange()
 
-    if(.not. exits) then
-        write(*,*) "MCPSCU ERROR: The file do not exit :",fileName
-        pause
-        stop
-    end if
+        call separateStrByString(symbol,p_ElementsTypeSpe,ElementsStrs,ElemtsGroup)
 
-    return
-  end function INQUIREFILE
-
-  !************************************************************
-  function AvailableIOUnit() result(FileUnit)
-    implicit none
-    !---Dummy Vars---
-    integer,intent(out)::FileUnit
-    !---Local Vars---
-    logical::opened
-    !---Body---
-    opened = .true.
-
-    DO FileUnit = 10,99
-       INQUIRE(UNIT=FileUnit,OPENED=opened)
-       if(.not. opened) exit
-    END DO
-
-    return
-  end function AvailableIOUnit
-
-  !*********************************************************
-  function IsStrEqual(SubjectStr,ObjectStr) result(theResult)
-    implicit none
-    !---Dummy Vars---
-    character*(*),intent(in)::SubjectStr
-    character*(*),intent(in)::ObjectStr
-    logical,intent(out)::theResult
-    !---Local Vars---
-    character(len=256)::tempSubjectStr
-    character(len=256)::tempObjectStr
-    character,dimension(:),allocatable::tempSubjectStrAllo
-    character,dimension(:),allocatable::tempObjectStrAllo
-    integer::SubjectStrlength
-    integer::ObjectStrlength
-    logical::SubjectuseArray
-    logical::ObjectuseArray
-    integer::I
-    !---Body---
-
-    theResult = .true.
-
-    SubjectuseArray = .false.
-
-    ObjectuseArray = .false.
-
-    SubjectStrlength = LENTRIM(adjustl(SubjectStr))
-
-    ObjectStrlength = LENTRIM(adjustl(ObjectStr))
-
-    if(SubjectStrlength .ne. ObjectStrlength) then
-        theResult = .false.
-        return
-    end if
-
-    if(SubjectStrlength .GT. len(tempSubjectStr)) then
-        allocate(tempSubjectStrAllo(SubjectStrlength))
-        tempSubjectStrAllo = trim(adjustl(SubjectStr))
-        SubjectuseArray = .true.
-    end if
-
-    if(ObjectStrlength .GT. len(tempObjectStr)) then
-        allocate(tempObjectStrAllo(ObjectStrlength))
-        tempObjectStrAllo = trim(adjustl(ObjectStr))
-        ObjectuseArray = .true.
-    end if
-
-    tempSubjectStr = adjustl(trim(SubjectStr))
-    tempObjectStr = adjustl(trim(ObjectStr))
-
-    if(SubjectuseArray .AND. (.not. ObjectuseArray)) then
-        DO I = 1,SubjectStrlength
-            if(tempSubjectStrAllo(I) .ne. tempObjectStr(I:I)) then
-                theResult = .false.
-                exit
-            end if
-        END DO
-
-    else if((.not. SubjectuseArray) .AND. ObjectuseArray) then
-        DO I = 1,SubjectStrlength
-            if(tempSubjectStr(I:I) .ne. tempObjectStrAllo(I)) then
-                theResult = .false.
-                exit
-            end if
-        END DO
-
-    else if(SubjectuseArray .AND. ObjectuseArray) then
-        DO I = 1,SubjectStrlength
-            if(tempSubjectStrAllo(I) .ne. tempObjectStrAllo(I)) then
-                theResult = .false.
-                exit
-            end if
-        END DO
-    else
-        if(tempSubjectStr(1:SubjectStrlength) .ne. tempObjectStr(1:ObjectStrlength)) then
-            theResult = .false.
-        end if
-    end if
-
-    return
-  end function IsStrEqual
-
-  !****************************************************************
-  function GETINPUTSTRLINE_New(hFile,STR, LINE, FILTER) result(ExitFile)
-    ! This function is change from GETINPUTSTRLINE by Hou Qing, to add the ability to judge whether end of file
-    implicit none
-    !---Dummy Vars---
-    integer, intent(in)::hFile
-    integer, intent(inout)::LINE
-    character*(*)::STR
-    character*(*), intent(in)::FILTER
-    logical,intent(out)::ExitFile
-    !---Local Vars---
-    character*256::TSTR
-    character(len=1)::FC(5)=''
-    integer::I, IP, IC, LS
-    character*256::FMessage
-    integer::stat
-    !---Body---
-    ExitFile = .false.
-
-    FC= ''
-    do I=1, min(size(FC), len_trim(FILTER))
-        FC(I) = FILTER(I:I)
-    end do
-
-    LS = len(STR)
-    do while(.true.) !.NOT.EOF(hFile))
-        line = line + 1
-        read(hFile,fmt="(A256)",IOSTAT=stat,IOMSG=FMessage)TSTR
-
-        if(stat .eq. -1) then
-            ExitFile = .true.
-            exit
-        else if(stat .GT. 0) then
-            write(*,*) FMessage
+        if(ElemtsGroup .GT. p_ATOMS_GROUPS_NUMBER) then
+            write(*,*) "MCPSCUERROR: The kinds of atoms in cluster "//adjustl(trim(symbol))//" is ",ElemtsGroup
+            write(*,*) "MCPSCUERROR: Which has been greater than defined max atoms kinds: ",p_ATOMS_GROUPS_NUMBER
             pause
             stop
         end if
 
-        IP=0
-        STR = ""
-        do I=1, len_trim(TSTR)
-            IC = iachar(TSTR(I:I))
-            if(IC .GE. 20 .and. IC .LE. 126) then
-                IP = IP + 1
-                STR(IP:IP) = TSTR(I:I)
-                if(IP.GE.LS) return
-            end if
-        end do
-        STR = adjustL(STR)
-        if(len_trim(STR).le.0) cycle
-        if(any(FC .eq. STR(1:1))) cycle
-        !if(STR(1:1) .ne. '!' .AND. LEN_TRIM(STR) .GT. 0) then
-        return
-        !end if
-    end do
-  end function GETINPUTSTRLINE_New
+        DO I = 1,p_ATOMS_GROUPS_NUMBER
+            TheAtomsSetRange%m_SetsRange(I)%m_ID = I
+        END DO
 
-  !****************************************************************
-  subroutine RemoveComments(STR,FILTER)
-    implicit none
-    !---Dummy Vars---
-    character*(*)::STR
-    character*(*), intent(in)::FILTER
-    !---Local Vars---
-    character*256::FC
-    integer::I
-    integer::LS
-    integer::FilterLen
-    integer::FilterIndex
-    !---Body---
-    FC= ''
-    do I=1, min(len(FC), len(FILTER))
-        FC(I:I) = FILTER(I:I)
-    end do
+        DO I = 1,ElemtsGroup
 
-    FC = adjustl(FC)
-    FilterLen = LENTRIM(FC)
+            symbolANDNumRangeStr = ""
 
-    FilterIndex = INDEX(STR,FC(1:FilterLen),back=.false.)
+            NumRangeStr = ""
 
-    LS = len(STR)
-
-    if(FilterIndex .GT. 0) then
-        STR(FilterIndex:LS) = ""
-    end if
-
-    return
-  end subroutine RemoveComments
-
-  !*********************************************************
-  subroutine separateStrByString(STR,separateSTR,SegmentArray,segNumber)
-    !   ***Purpose: to sperate the string by the givin seperate character
-    !          STR: the string
-    !    separateSTR: the seperate string
-    ! SegmentArray: the result array
-    !    segNumber: the number of segments
-    implicit none
-    !---Dummy Vars---
-    character*(*), intent(in)::STR
-    character*(*), intent(in)::separateSTR
-    integer::segNumber
-    character*(*),dimension(:)::SegmentArray
-
-    !---Local Vars---
-    integer::IPosBefore,IPosAfter
-    integer::I,LastI
-    integer::Length,tempLength
-    integer::ArraySize
-
-    !---Body---
-
-    SegmentArray = ""
-
-    ArraySize = size(SegmentArray,DIM=1)
-
-    if(ArraySize .LE. 0) then
-        return
-    end if
-
-    Length = LENTRIM(adjustl(STR))
-
-    segNumber = 0
-    IPosBefore = 1
-    IPosAfter = 1
-    DO I = 1,Length
-
-      IPosAfter = INDEX(STR(IPosBefore:Length),separateSTR)
-
-      tempLength = IPosAfter - 1
-
-      if(tempLength .GT. 0) then
-
-        if(segNumber .GT. ArraySize) then
-            write(*,*) "MCPSCU ERROR: The size of segment array is not enough. Process would be stop.",ArraySize
-            write(*,*) STR
-            pause
-            stop
-        end if
-
-        segNumber = segNumber + 1
-        SegmentArray(segNumber)(1:tempLength) = STR(IPosBefore:IPosBefore+tempLength - 1)
-
-      else if(tempLength .LT. 0) then
-
-        if(IPosBefore .LE. Length) then
-            segNumber = segNumber + 1
-            SegmentArray(segNumber)(1:Length-IPosBefore+1) = STR(IPosBefore:Length)
-        end if
-        exit
-      end if
-
-      IPosBefore = IPosBefore + tempLength + 1
-
-    END DO
-
-    return
-  end subroutine separateStrByString
-
-  !*************************************************************
-  subroutine resolveLongFileName(FileLongName,FilePath,FileShortName)
-    !***     Purpose: to resolve the File Long Name(include full Path) to a pure Path and a pure file name
-    !   FileLongName: the File Long Name(include full Path)
-    !       FilePath: the pure file path
-    !  FileShortName: the pure file name
-    implicit none
-    !---Dummy Vars---
-    character*(*), intent(in)::FileLongName
-    character*256::FilePath
-    character*256::FileShortName
-    !---Local Vars---
-    character*256::tempLongName
-    integer::I,IFind,Length
-    character*2::CharacterSet1
-    character*2::CharacterSet2
-    character*2::CharacterSet3
-    !---Body---
-    CharacterSet1 = "\\"
-    CharacterSet2 = "\/"
-    CharacterSet3 = "//"
-
-    tempLongName = adjustl(trim(FileLongName))
-
-    Length = LENTRIM(tempLongName)
-    if(Length .LE. 0) then
-        return
-    end if
-
-    IFind = 0
-
-    IFind = max(SCAN(trim(tempLongName),CharacterSet1,.true.), &
-                SCAN(trim(tempLongName),CharacterSet2,.true.), &
-                SCAN(trim(tempLongName),CharacterSet3,.true.))
-
-    if(IFind .LE. 0) then
-        FilePath = ""
-        FileShortName = tempLongName
-    else if(IFind .eq. 1) then
-        FilePath = tempLongName(1:IFind)  ! the root path
-        FileShortName = tempLongName(IFind+1:Length)
-    else
-        FilePath = tempLongName(1:IFind-1)
-        FileShortName = tempLongName(IFind+1:Length)
-    end if
-
-    return
-  end subroutine resolveLongFileName
-
-  !****************************************
-  subroutine resolveExePrefixName(ExeFullName,ExePrefixName)
-    implicit none
-    !---Dummy Vars---
-    character*(*),intent(in)::ExeFullName
-    character*(*),intent(inout)::ExePrefixName
-    !---Local Vars---
-    character(len=128),dimension(10)::seperatedStrsArray
-    integer::seperatedNum
-    integer::I
-    !---Body---
-
-    seperatedStrsArray = ''
-
-    call separateStrByString(ExeFullName,".",seperatedStrsArray,seperatedNum)
-
-    ExePrefixName = ''
-
-    DO I = 1,seperatedNum
-        ExePrefixName = ExePrefixName(1:LENTRIM(adjustl(ExePrefixName)))//seperatedStrsArray(I)(1:LENTRIM(adjustl(seperatedStrsArray(I))))
-    END DO
-
-    return
-  end subroutine resolveExePrefixName
-
-  !*************************************************************
-  function OpenExistedFile(fileName,thePosition) result(fileUnit)
-    implicit none
-    !---Dummy Vars---
-    character*(*),intent(in)::fileName
-    character*(*),optional,intent(in)::thePosition
-    integer,intent(out)::fileUnit
-    !---Local Vars---
-    integer::ISTAT
-    character*256::openInfo
-    !---Body---
-    fileUnit = AvailableIOUnit()
-
-    if(present(thePosition)) then
-        open(Unit=fileUnit,File=fileName,STATUS="old",POSITION=thePosition(1:LENTRIM(thePosition)),iostat=ISTAT,IOMSG=openInfo)
-    else
-        open(Unit=fileUnit,File=fileName,STATUS="old",iostat=ISTAT,IOMSG=openInfo)
-    end if
-
-    if(ISTAT .ne. 0) then
-        write(*,*) "MCPSCUERROR: open file failed:",fileName
-        write(*,*) openInfo
-        pause
-        close(fileUnit)
-        stop
-    end if
-
-    return
-  end function OpenExistedFile
-
-  !*************************************************************
-  function CreateNewFile(fileName,thePosition) result(fileUnit)
-    implicit none
-    !---Dummy Vars---
-    character*(*),intent(in)::fileName
-    character*(*),optional,intent(in)::thePosition
-    integer,intent(out)::fileUnit
-    !---Local Vars---
-    integer::ISTAT
-    character*256::openInfo
-    !---Body---
-    fileUnit = AvailableIOUnit()
-
-    if(present(thePosition)) then
-        open(Unit=fileUnit,File=fileName,STATUS="replace",POSITION=thePosition(1:LENTRIM(thePosition)),iostat=ISTAT,IOMSG=openInfo)
-    else
-        open(Unit=fileUnit,File=fileName,STATUS="replace",iostat=ISTAT,IOMSG=openInfo)
-    end if
-
-    if(ISTAT .ne. 0) then
-        write(*,*) "MCPSCUERROR: create file failed:",fileName
-        write(*,*) openInfo
-        pause
-        close(fileUnit)
-        stop
-    end if
-
-    return
-  end function CreateNewFile
-
-  !*************************************************************
-  function CreateOrOpenExistedFile(fileName,thePosition) result(fileUnit)
-    implicit none
-    !---Dummy Vars---
-    character*(*),intent(in)::fileName
-    character*(*),optional,intent(in)::thePosition
-    integer,intent(out)::fileUnit
-    !---Local Vars---
-    integer::ISTAT
-    character*256::openInfo
-    logical::exits
-    !---Body---
-    exits = .false.
-
-    INQUIRE(FILE=fileName(1:LENTRIM(adjustl(fileName))),EXIST=exits)
-
-    fileUnit = AvailableIOUnit()
-
-    if(exits) then
-
-        if(present(thePosition)) then
-            fileUnit = OpenExistedFile(fileName(1:LENTRIM(fileName)),thePosition)
-        else
-            fileUnit = OpenExistedFile(fileName(1:LENTRIM(fileName)))
-        end if
-    else
-        if(present(thePosition)) then
-            fileUnit = CreateNewFile(fileName(1:LENTRIM(fileName)),thePosition)
-        else
-            fileUnit = CreateNewFile(fileName(1:LENTRIM(fileName)))
-        end if
-
-    end if
-
-    return
-  end function CreateOrOpenExistedFile
-
-!  !*****************************************************************
-!  function CreateDataFolder(distPath,parentPath) result(resultPath)
-!    implicit none
-!    !---Dummy Vars---
-!    character*(*)::distPath
-!    character*(*)::parentPath
-!    character*256::resultPath
-!    !---Local Vars---
-!    character*256::truePath
-!    logical::exits
-!    character(len=64),dimension(20)::seperatedStrsArray
-!    integer::segNumber
-!    character*256::resolvedParentPath
-!    integer::I
-!    logical::AbsolutePath
-!    !---Body---
-!    exits = .false.
-!
-!    AbsolutePath = .false.
-!
-!    truePath = adjustl(trim(distPath))
-!
-!    INQUIRE(FILE=truePath,EXIST=exits)
-!
-!    if(.not. exits) then
-!
-!        if(LENTRIM(adjustl(parentPath)) .GT. 0) then
-!            truePath = adjustl(trim(parentPath))//FolderSpe//adjustl(trim(distPath))
-!        else
-!            truePath = RelativeHead//FolderSpe//adjustl(trim(distPath))
-!        end if
-!
-!        if(truePath(1:1) .eq. FolderSpe) then
-!            AbsolutePath = .true.
-!        end if
-!
-!        seperatedStrsArray = ''
-!        call separateStrByString(truePath,FolderSpe,seperatedStrsArray,segNumber)
-!
-!        truePath = ''
-!
-!        DO I = 1,segNumber
-!
-!            if(LENTRIM(adjustl(truePath)) .GT. 0) then
-!                truePath = truePath(1:LENTRIM(adjustl(truePath)))//FolderSpe//seperatedStrsArray(I)(1:LENTRIM(adjustl(seperatedStrsArray(I))))
-!            else
-!                if(AbsolutePath .eq. .true.) then
-!                    truePath = FolderSpe//seperatedStrsArray(I)(1:LENTRIM(adjustl(seperatedStrsArray(I))))
-!                else
-!                    truePath = seperatedStrsArray(I)(1:LENTRIM(adjustl(seperatedStrsArray(I))))
-!                end if
-!
-!            end if
-!
-!            INQUIRE(FILE=adjustl(trim(truePath)),EXIST=exits)
-!
-!            if(.not. exits) then
-!                write(*,*) "MCPSCU: making data directory: ",truePath
-!                call SYSTEM("mkdir "//truePath(1:LENTRIM(truePath)))
-!            end if
-!
-!        END DO
-!
-!    end if
-!
-!    resultPath = adjustl(trim(truePath))
-!
-!    return
-!  end function CreateDataFolder
-
-  !*****************************************************************
-  function CreateDataFolder(distPath) result(resultPath)
-    implicit none
-    !---Dummy Vars---
-    character*(*),intent(in)::distPath
-    character*256::resultPath
-    !---Local Vars---
-    logical::exits
-    integer::Length
-    integer::I
-    !---Body---
-    exits = .false.
-
-    resultPath = adjustl(trim(distPath))
-
-    Length = LENTRIM(resultPath)
-
-    if(Length .GE. 2) then
-        if(resultPath(2:2) .eq. ":") then
-            INQUIRE(FILE=resultPath(1:2),EXIST=exits)
-            if(.not. exits) then
-                write(*,fmt="(A,A,A)") "MCPSCUERROR: The derive :",resultPath(1:1)," is not exit."
+            call separateStrByString(ElementsStrs(I),p_ElementsNumSpe,symbolANDNumRangeStr,SepNum)
+            if(SepNum .NE. 2) then
+                write(*,*) "MCPSCUERROR: The Element "//ElementsStrs(I)//" define is not correct"
+                write(*,*) "In cluster :",symbol
+                write(*,*) symbolANDNumRangeStr
                 pause
                 stop
             end if
-        end if
-    end if
 
-    DO I = 1,Length
-        if(iachar(resultPath(I:I)) .eq. 92 .or. &
-           iachar(resultPath(I:I)) .eq. 47) then
+            ElementIndex = BasicAtomsList%FindIndexBySymbol(symbolANDNumRangeStr(1))
 
-            resultPath(I:I) = FolderSpe
-
-            INQUIRE(FILE=resultPath(1:I-1),EXIST=exits)
-            if(.not. exits .AND. I .GT. 1) then
-                write(*,fmt="(A,A)") "MCPSCU Message: Create the Date Folder: ",resultPath(1:I-1)
-                call SYSTEM("mkdir "//resultPath(1:I-1))
+            if(ElementIndex .LE. 0) then
+                write(*,*) "MCPSCUERROR: The element symbol is not defineded: ",symbolANDNumRangeStr(1)
+                write(*,*) "In cluster: ",symbol
+                pause
+                stop
             end if
 
-        end if
-    END DO
+            if(TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From .GT. 0) then
+                write(*,*) "MCPSCUERROR: Cannot define two ranges for one same element in one cluster symbol: ",symbol
+                pause
+                stop
+            end if
 
+            if(ElementIndex .ne. TheAtomsSetRange%m_SetsRange(ElementIndex)%m_ID) then
+                write(*,*) "The pre-putted element index is not true"
+                write(*,*) "For cluster: ",symbol
+                write(*,*) "In position: ",ElementIndex
+                write(*,*) "The pre-putted element index is: ",TheAtomsSetRange%m_SetsRange(ElementIndex)%m_ID
+                pause
+                stop
+            end if
 
-    return
-  end function CreateDataFolder
+            call separateStrByString(symbolANDNumRangeStr(2),p_NumRangeSpe,NumRangeStr,SepNum)
+
+            if(SepNum .eq. 1) then
+                TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(1))
+                TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = ISTR(NumRangeStr(1))
+            else if(SepNum .LE. 0) then
+                write(*,*) "MCPSCUERROR: you must special the atoms compents number for cluster: ",symbol
+                pause
+                stop
+            else if(SepNum .GE. 3) then
+                write(*,*) "MCPSCUERROR: only up and down limits can be accepted, you have specialied too much limit for cluster :",symbol
+                pause
+                stop
+            else if(SepNum .eq. 2) then
+                if(IsStrEqual(NumRangeStr(2),p_InfStr)) then
+                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
+                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(1))
+                else if(IsStrEqual(NumRangeStr(1),p_InfStr)) then
+                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
+                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(2))
+                else
+                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = min(ISTR(NumRangeStr(1)),ISTR(NumRangeStr(2)))
+                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = max(ISTR(NumRangeStr(1)),ISTR(NumRangeStr(2)))
+                end if
+            end if
+
+            if(TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From .LE. 0 .AND. TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To .GT. 0) then
+                write(*,*) "MCPSCUERROR: The atoms number down limit cannot less than 1 in cluster: ",symbol
+                write(*,*) NumRangeStr
+                pause
+                stop
+            end if
+
+        END DO
+
+        return
+    end function ResolveSymbol2AtomsSetRange
+
 
   !****************************************************************
   real(kind=KMCDF) function Calc_RCUT_Old(MultiBox,CUTREGIONEXTEND,BOXVOLUM,NCAct,RMAX)
@@ -663,33 +198,6 @@ module MCLIB_UTILITIES
     #endif
     return
   end function Calc_RCUT_Old
-
-
-  !*************************************************************
-  function IsRangeCoverage(Range1From,Range1To,Range2From,Range2To) result(TheResult)
-    implicit none
-    !---Dummy Vars---
-    integer,intent(in)::Range1From
-    integer,intent(in)::Range1To
-    integer,intent(in)::Range2From
-    integer,intent(in)::Range2To
-    logical::TheResult
-    !---Body---
-
-    TheResult = .false.
-
-    if(Range1From .GE. Range2From .AND. Range1From .LE. Range2To) then
-        TheResult = .true.
-    else if(Range1To .GE. Range2From .AND. Range1To .LE. Range2To) then
-        TheResult = .true.
-    else if(Range2From .GE. Range1From .AND. Range2From .LE. Range1To) then
-        TheResult = .true.
-    else if(Range2To .GE. Range1From .AND. Range2To .LE. Range1To) then
-        TheResult = .true.
-    end if
-
-    return
-  end function
 
   !*************************************************************
   subroutine AllocateOneDimi_Host(Array,Length,Name)
@@ -1995,115 +1503,6 @@ module MCLIB_UTILITIES
         return
 
     end subroutine DumplicateArrayd_TwoDim
-
-    function BinarySearch_GE(InputNum,TheArray,LeftBound,RightBound) result(ResultIndex)
-        implicit none
-        !---Dummy Vars---
-        integer,intent(in)::InputNum
-        integer,dimension(:)::TheArray
-        integer,intent(in)::LeftBound
-        integer,intent(in)::RightBound
-        integer,intent(out)::ResultIndex
-        !---Local Vars---
-        integer::ILeft,IRight,IMiddle
-        !---Body---
-        ResultIndex = -1
-
-        ILeft = LeftBound
-        IRight = RightBound
-
-        DO While(ILeft .LE. IRight)
-
-            IMiddle = (ILeft+IRight)/2
-
-            if(InputNum .LE. TheArray(IMiddle)) then
-                if(IMiddle .eq. LeftBound .or. InputNum .GT. TheArray(IMiddle-1) ) then
-                    ResultIndex = IMiddle
-                    exit
-                else
-                    IRight = IMiddle - 1
-                    cycle
-                end if
-            else
-                ILeft = IMiddle + 1
-            end if
-
-        END DO
-
-        return
-    end function BinarySearch_GE
-
-    !*****************************************************
-    function BinarySearch_EQ(InputNum,TheArray,LeftBound,RightBound) result(ResultIndex)
-        implicit none
-        !---Dummy Vars---
-        integer,intent(in)::InputNum
-        integer,dimension(:)::TheArray
-        integer,intent(in)::LeftBound
-        integer,intent(in)::RightBound
-        integer,intent(out)::ResultIndex
-        !---Local Vars---
-        integer::ILeft,IRight,IMiddle
-        !---Body---
-        ResultIndex = -1
-
-        ILeft = LeftBound
-        IRight = RightBound
-
-        DO While(ILeft .LE. IRight)
-            IMiddle = (ILeft+IRight)/2
-
-            if(InputNum .LT. TheArray(IMiddle)) then
-                IRight = IMiddle - 1
-            else if(InputNum .GT. TheArray(IMiddle)) then
-                ILeft = IMiddle + 1
-            else
-                ResultIndex = IMiddle
-                exit
-            end if
-
-        END DO
-
-        return
-    end function BinarySearch_EQ
-
-    !**************************************************************
-    function RGAUSS0_WithCut(XMEAN,SD,LCut,RCut) result(TheResult)
-        implicit none
-        !---dummy vars---
-        real(kind=KMCDF)::XMEAN,SD
-        real(kind=KMCDF)::LCut,RCut
-        real(kind=KMCDF)::TheResult
-        !---Local vars---
-        integer::I
-        !---Body---
-        if(RCut .LE. LCut) then
-            write(*,*) "The right cut cannot less than left cut."
-            write(*,*) "LCut",LCut
-            write(*,*) "RCut",RCut
-            pause
-            stop
-        end if
-
-
-
-
-        DO While(.true.)
-            TheResult = RGAUSS0(XMEAN,SD)
-            if(TheResult .GE. LCut .AND. TheResult .LE. RCut) then
-                exit
-            end if
-        END DO
-
-        !TheResult = RGAUSS0(XMEAN,SD)
-        !if(TheResult .GT. RCut) then
-        !    TheResult = 2*RCut - TheResult - (RCut-LCut)*floor((TheResult-RCut)/(RCut-LCut))
-        !else if(TheResult .LT. LCut) then
-        !    TheResult = 2*LCut - TheResult - (RCut-LCut)*floor((LCut-TheResult)/(RCut-LCut))
-        !end if
-
-        return
-    end  function RGAUSS0_WithCut
 
 
 end module MCLIB_UTILITIES

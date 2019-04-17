@@ -5,13 +5,6 @@ module MCLIB_TYPEDEF_ACLUSTER
     USE MCLIB_CONSTANTS
     implicit none
 
-    !*** data structure defining an cluster
-    #ifdef ATOMSGROUP
-    integer, parameter::p_ATOMS_GROUPS_NUMBER = ATOMSGROUP
-    #else
-    integer, parameter::p_ATOMS_GROUPS_NUMBER = 3
-    #endif
-
     TYPE,PUBLIC::Single_AtomsSet
         integer::m_ID = 0
         integer::m_NA = 0

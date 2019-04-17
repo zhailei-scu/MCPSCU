@@ -1,6 +1,8 @@
 module MCLIB_TYPEDEF_ReactionPropList
     use MCLIB_TYPEDEF_REACTIONSVALUE
     use MCLIB_TYPEDEF_ATOMSLIST
+    use MCLIB_TYPEDEF_ACLUSTER
+    use MCLIB_UTILITIES
 
     implicit none
 
@@ -20,7 +22,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         procedure,non_overridable,pass,public::Clean_ReadReactionPropList
         procedure,non_overridable,pass,public::PrintOutCheckingResult
         Generic::Assignment(=)=>CopyReadReactionPropListFromOther
-        Final::CleanReactionPropList
+        Final::CleanReadReactionPropList
 
     end type ReadReactionPropList
 
@@ -32,7 +34,7 @@ module MCLIB_TYPEDEF_ReactionPropList
     private::CopyReadReactionPropListFromOther
     private::Clean_ReadReactionPropList
     private::PrintOutCheckingResult
-    private::CleanReactionPropList
+    private::CleanReadReactionPropList
 
     contains
 
@@ -619,7 +621,8 @@ module MCLIB_TYPEDEF_ReactionPropList
         type(ReactionValue)::TheValue
         integer::ListCount
         integer::tempIndex
-        character*32::symbol
+        character*32::SubjectSymbol
+        character*32::ObjectSymbol
         character*32::CNum
         character*32::CElements
         integer::IAtomsGroup
@@ -690,42 +693,59 @@ module MCLIB_TYPEDEF_ReactionPropList
                                                                                cursor%Reaction%ECRValueType, &
                                                                                cursor%Reaction%ECR
 
-            if(ConstructClusterList%GetList_Count() .GT. 0) then
-                ClusterListCursor=>ConstructClusterList
-                DO While(associated(ClusterListCursor))
-                    TheValue  = TheDiffusorTypesMap%get(ClusterListCursor%TheCluster)
+            if(SubjectConstructClusterList%GetList_Count() .GT. 0 .AND. ObjectConstructClusterList%GetList_Count()) then
+                SubjectClusterListCursor=>SubjectConstructClusterList
+                DO While(associated(SubjectClusterListCursor))
 
-                    symbol = ""
-                    DO IAtomsGroup = 1,p_ATOMS_GROUPS_NUMBER
-                        CNum = ""
-                        call BasicAtomsList%GetSymbolByIndex(IAtomsGroup,CElements)
-                        CElements = adjustl(CElements)
-                        write(CNum,*) ClusterListCursor%TheCluster%m_Atoms(IAtomsGroup)%m_NA
-                        CNum = adjustl(CNum)
-                        symbol = symbol(1:LENTRIM(symbol))//CElements(1:LENTRIM(CElements))//"#"//CNum(1:LENTRIM(CNum))
+                    ObjectClusterListCursor=>ObjectConstructClusterList
 
-                        if(IAtomsGroup .LT. p_ATOMS_GROUPS_NUMBER) then
-                            symbol = symbol(1:LENTRIM(symbol))//"@"
-                        end if
-                    END DO
+                    DO While(associated(ObjectClusterListCursor))
 
-                    symbol = adjustl(symbol)
+                        TheValue = TheReactionsMap%get(SubjectClusterListCursor%TheCluster,ObjectClusterListCursor%TheCluster)
 
-                    write(hFile,fmt="('! |--','The diffusor symbol =',A20,2x,  &
-                                      '!','CoefficentsGenerate way =',I1,2x, &
-                                      '!','DiffusionCiefficents value =',1PE10.4,2x, &
-                                      '!','PreFactor = ',1PE10.4,2x, &
-                                      '!','ActEnergy = ',1PE10.4,2x, &
-                                      '!','ECR Generate way =',I1,2x, &
-                                      '!','ECR Value =',1PE10.4)")             symbol, &
-                                                                               TheValue%DiffusorValueType, &
-                                                                               TheValue%DiffuseCoefficient_Value,  &
-                                                                               TheValue%PreFactor,          &
-                                                                               TheValue%ActEnergy,          &
-                                                                               TheValue%ECRValueType, &
+                        SubjectSymbol = ""
+                        ObjectSymbol = ""
+                        DO IAtomsGroup = 1,p_ATOMS_GROUPS_NUMBER
+                            CNum = ""
+                            call BasicAtomsList%GetSymbolByIndex(IAtomsGroup,CElements)
+                            CElements = adjustl(CElements)
+                            write(CNum,*) SubjectClusterListCursor%TheCluster%m_Atoms(IAtomsGroup)%m_NA
+                            CNum = adjustl(CNum)
+                            SubjectSymbol = SubjectSymbol(1:LENTRIM(SubjectSymbol))//CElements(1:LENTRIM(CElements))//"#"//CNum(1:LENTRIM(CNum))
+
+                            write(CNum,*) ObjectClusterListCursor%TheCluster%m_Atoms(IAtomsGroup)%m_NA
+                            CNum = adjustl(CNum)
+                            ObjectSymbol = ObjectSymbol(1:LENTRIM(ObjectSymbol))//CElements(1:LENTRIM(CElements))//"#"//CNum(1:LENTRIM(CNum))
+
+                            if(IAtomsGroup .LT. p_ATOMS_GROUPS_NUMBER) then
+                                SubjectSymbol = SubjectSymbol(1:LENTRIM(SubjectSymbol))//"@"
+                                ObjectSymbol = ObjectSymbol(1:LENTRIM(ObjectSymbol))//"@"
+                            end if
+                        END DO
+
+                        SubjectSymbol = adjustl(SubjectSymbol)
+                        ObjectSymbol = adjustl(ObjectSymbol)
+
+                        write(hFile,fmt="('! |--','The subject symbol =',A20,2x,  &
+                                          '!','The object symbol =',A20,2x,  &
+                                          '!','CoefficentsGenerate way =',I1,2x, &
+                                          '!','Reaction Coefficents value =',1PE10.4,2x, &
+                                          '!','PreFactor = ',1PE10.4,2x, &
+                                          '!','ActEnergy = ',1PE10.4,2x, &
+                                          '!','ECR Generate way =',I1,2x, &
+                                          '!','ECR Value =',1PE10.4)")         SubjectSymbol,                       &
+                                                                               ObjectSymbol,                        &
+                                                                               TheValue%ReactionCoefficientType,    &
+                                                                               TheValue%ReactionCoefficient_Value,  &
+                                                                               TheValue%PreFactor,                  &
+                                                                               TheValue%ActEnergy,                  &
+                                                                               TheValue%ECRValueType,               &
                                                                                TheValue%ECR
 
-                    ClusterListCursor=>ClusterListCursor%next
+                        ObjectClusterListCursor=>ObjectClusterListCursor%next
+                    END DO
+
+                    SubjectClusterListCursor=>SubjectClusterListCursor%next
                 END DO
             end if
 
@@ -738,21 +758,23 @@ module MCLIB_TYPEDEF_ReactionPropList
             deallocate(TheAtomsSetsRangesArray)
         end if
 
-        call ConstructClusterList%Clean_ClusterList()
+        call SubjectConstructClusterList%Clean_ClusterList()
+        Call ObjectConstructClusterList%Clean_ClusterList()
 
         Nullify(cursor)
-        Nullify(ClusterListCursor)
+        Nullify(SubjectClusterListCursor)
+        Nullify(ObjectClusterListCursor)
         return
     end subroutine PrintOutCheckingResult
 
     !**************************************
-    subroutine Clean_ReadDiffusorPropList(this)
+    subroutine Clean_ReadReactionPropList(this)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadDiffusorPropList),target::this
+        CLASS(ReadReactionPropList),target::this
         !---Local Vars---
-        type(ReadDiffusorPropList),pointer::cursor=>null()
-        type(ReadDiffusorPropList),pointer::next=>null()
+        type(ReadReactionPropList),pointer::cursor=>null()
+        type(ReadReactionPropList),pointer::next=>null()
         !---Body---
         cursor=>this
 
@@ -766,17 +788,15 @@ module MCLIB_TYPEDEF_ReactionPropList
 
         cursor=>this%next
 
-        call CleanReadedDiffusorValue(this%Diffusor)
+        call CleanReadedReactionValue(this%Reaction)
 
         DO While(associated(cursor))
             next=>cursor%next
-            call CleanReadedDiffusorValue(cursor%Diffusor)
+            call CleanReadedReactionValue(cursor%Reaction)
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next
         END DO
-
-        call CleanReadedDiffusorValue(this%Diffusor)
 
         this%next=>null()
 
@@ -788,28 +808,28 @@ module MCLIB_TYPEDEF_ReactionPropList
         next=>null()
 
         return
-    end subroutine Clean_ReadDiffusorPropList
+    end subroutine Clean_ReadReactionPropList
 
     !************************************
-    subroutine CleanReadDiffusorPropList(this)
+    subroutine CleanReadReactionPropList(this)
         implicit none
         !---Dummy Vars---
-        type(ReadDiffusorPropList)::this
+        type(ReadReactionPropList)::this
         !---Body---
 
-        call this%Clean_ReadDiffusorPropList()
+        call this%Clean_ReadReactionPropList()
 
         return
-    end subroutine CleanReadDiffusorPropList
+    end subroutine CleanReadReactionPropList
 
     !**************************************************
-    subroutine ResloveDiffusorsValueFromCScript(scriptStr,DiffusorProp_List)
+    subroutine ResloveReactionsValueFromCScript(scriptStr,ReactionProp_List)
         implicit none
         !---Dummy Vars---
         character(kind=c_char,len=10000)::scriptStr
-        type(ReadDiffusorPropList)::DiffusorProp_List
+        type(ReadReactionPropList)::ReactionProp_List
         !---Local Vars---
-        type(ReadedDiffusorValue),allocatable::FDiffusorDefArray(:)
+        type(ReadReactionPair),allocatable::FReactionsDefArray(:)
         integer(kind=c_int)::ArraySize
         !---Body---
 
@@ -823,11 +843,11 @@ module MCLIB_TYPEDEF_ReactionPropList
         call GetInterpedArray(FDiffusorDefArray)
 
 
-        call AppendArray_ReadDiffusorPropList(DiffusorProp_List,FDiffusorDefArray,ArraySize)
+        call AppendArray_ReadDiffusorPropList(ReactionProp_List,FReactionsDefArray,ArraySize)
 
 
         return
-    end subroutine ResloveDiffusorsValueFromCScript
+    end subroutine ResloveReactionsValueFromCScript
 
 
 

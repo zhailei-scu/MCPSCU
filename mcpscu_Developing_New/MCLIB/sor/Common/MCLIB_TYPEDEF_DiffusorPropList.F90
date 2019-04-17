@@ -8,11 +8,6 @@ module MCLIB_TYPEDEF_DiffusorPropList
     use MiniUtilities, only:ISTR
     implicit none
 
-    character(len=1),parameter,private::p_ElementsTypeSpe = "@"
-    character(len=1),parameter,private::p_ElementsNumSpe = "#"
-    character(len=1),parameter,private::p_NumRangeSpe = "-"
-    character(len=3),parameter,private::p_InfStr = "INF"
-
     type,public::ReadDiffusorPropList
 
         type(ReadedDiffusorValue)::Diffusor
@@ -35,26 +30,26 @@ module MCLIB_TYPEDEF_DiffusorPropList
 
     end type ReadDiffusorPropList
 
-    interface InterpCScript
+    interface InterpCScript_DiffusorsDef
 
-      function InterpCScript(scriptStr) result(ArraySize) bind(c,name="InterpCScript")
+      function InterpCScript_DiffusorsDef(scriptStr) result(ArraySize) bind(c,name="InterpCScript_DiffusorsDef")
         use iso_c_binding
         implicit none
         character(kind=c_char,len=10000)::scriptStr
         integer(kind=c_int)::ArraySize
-      end function InterpCScript
+      end function InterpCScript_DiffusorsDef
 
     end interface
 
-    interface GetInterpedArray
-      subroutine GetInterpedArray(FDiffusorDefArray) bind(c,name="GetInterpedArray")
+    interface GetInterpedDiffusorsArray
+      subroutine GetInterpedDiffusorsArray(FDiffusorDefArray) bind(c,name="GetInterpedDiffusorsArray")
         use iso_c_binding
         use MCLIB_TYPEDEF_DiffusorsValue
         implicit none
         type(ReadedDiffusorValue)::FDiffusorDefArray(*)
-      end subroutine GetInterpedArray
+      end subroutine GetInterpedDiffusorsArray
 
-    end interface GetInterpedArray
+    end interface GetInterpedDiffusorsArray
 
     private::AppendOne_ReadDiffusorPropList
     private::AppendArray_ReadDiffusorPropList
@@ -66,117 +61,6 @@ module MCLIB_TYPEDEF_DiffusorPropList
     private::CleanReadDiffusorPropList
 
     contains
-
-    !*************************************************
-    function ResolveSymbol2AtomsSetRange(symbol,BasicAtomsList) result(TheAtomsSetRange)
-        implicit none
-        !---Dummy Vars---
-        character(*)::symbol
-        type(AtomsList),intent(in)::BasicAtomsList
-        type(AtomsSetRange)::TheAtomsSetRange
-        !---Local Vars---
-        character(len=20)::ElementsStrs(10)
-        character(len=20)::symbolANDNumRangeStr(2)
-        character(len=10)::NumRangeStr(2)
-        integer::ElemtsGroup
-        integer::SepNum
-        integer::ElementIndex
-        integer::I
-        !---Body---
-
-        ElementsStrs = ''
-
-        call TheAtomsSetRange%ReleaseSetsRange()
-
-        call separateStrByString(symbol,p_ElementsTypeSpe,ElementsStrs,ElemtsGroup)
-
-        if(ElemtsGroup .GT. p_ATOMS_GROUPS_NUMBER) then
-            write(*,*) "MCPSCUERROR: The kinds of atoms in cluster "//adjustl(trim(symbol))//" is ",ElemtsGroup
-            write(*,*) "MCPSCUERROR: Which has been greater than defined max atoms kinds: ",p_ATOMS_GROUPS_NUMBER
-            pause
-            stop
-        end if
-
-        DO I = 1,p_ATOMS_GROUPS_NUMBER
-            TheAtomsSetRange%m_SetsRange(I)%m_ID = I
-        END DO
-
-        DO I = 1,ElemtsGroup
-
-            symbolANDNumRangeStr = ""
-
-            NumRangeStr = ""
-
-            call separateStrByString(ElementsStrs(I),p_ElementsNumSpe,symbolANDNumRangeStr,SepNum)
-            if(SepNum .NE. 2) then
-                write(*,*) "MCPSCUERROR: The Element "//ElementsStrs(I)//" define is not correct"
-                write(*,*) "In cluster :",symbol
-                write(*,*) symbolANDNumRangeStr
-                pause
-                stop
-            end if
-
-            ElementIndex = BasicAtomsList%FindIndexBySymbol(symbolANDNumRangeStr(1))
-
-            if(ElementIndex .LE. 0) then
-                write(*,*) "MCPSCUERROR: The element symbol is not defineded: ",symbolANDNumRangeStr(1)
-                write(*,*) "In cluster: ",symbol
-                pause
-                stop
-            end if
-
-            if(TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From .GT. 0) then
-                write(*,*) "MCPSCUERROR: Cannot define two ranges for one same element in one cluster symbol: ",symbol
-                pause
-                stop
-            end if
-
-            if(ElementIndex .ne. TheAtomsSetRange%m_SetsRange(ElementIndex)%m_ID) then
-                write(*,*) "The pre-putted element index is not true"
-                write(*,*) "For cluster: ",symbol
-                write(*,*) "In position: ",ElementIndex
-                write(*,*) "The pre-putted element index is: ",TheAtomsSetRange%m_SetsRange(ElementIndex)%m_ID
-                pause
-                stop
-            end if
-
-            call separateStrByString(symbolANDNumRangeStr(2),p_NumRangeSpe,NumRangeStr,SepNum)
-
-            if(SepNum .eq. 1) then
-                TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(1))
-                TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = ISTR(NumRangeStr(1))
-            else if(SepNum .LE. 0) then
-                write(*,*) "MCPSCUERROR: you must special the atoms compents number for cluster: ",symbol
-                pause
-                stop
-            else if(SepNum .GE. 3) then
-                write(*,*) "MCPSCUERROR: only up and down limits can be accepted, you have specialied too much limit for cluster :",symbol
-                pause
-                stop
-            else if(SepNum .eq. 2) then
-                if(IsStrEqual(NumRangeStr(2),p_InfStr)) then
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(1))
-                else if(IsStrEqual(NumRangeStr(1),p_InfStr)) then
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(2))
-                else
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = min(ISTR(NumRangeStr(1)),ISTR(NumRangeStr(2)))
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = max(ISTR(NumRangeStr(1)),ISTR(NumRangeStr(2)))
-                end if
-            end if
-
-            if(TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From .LE. 0 .AND. TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To .GT. 0) then
-                write(*,*) "MCPSCUERROR: The atoms number down limit cannot less than 1 in cluster: ",symbol
-                write(*,*) NumRangeStr
-                pause
-                stop
-            end if
-
-        END DO
-
-        return
-    end function ResolveSymbol2AtomsSetRange
 
     !*******************************************************
     subroutine ConvertToDiffusorsTypesMap(this,BasicAtomsList,TheDiffusorTypesMap)
@@ -890,14 +774,14 @@ module MCLIB_TYPEDEF_DiffusorPropList
         integer(kind=c_int)::ArraySize
         !---Body---
 
-        ArraySize = InterpCScript(scriptStr)
+        ArraySize = InterpCScript_DiffusorsDef(scriptStr)
 
         if(allocated(FDiffusorDefArray)) then
             deallocate(FDiffusorDefArray)
         end if
         allocate(FDiffusorDefArray(ArraySize))
 
-        call GetInterpedArray(FDiffusorDefArray)
+        call GetInterpedDiffusorsArray(FDiffusorDefArray)
 
 
         call AppendArray_ReadDiffusorPropList(DiffusorProp_List,FDiffusorDefArray,ArraySize)

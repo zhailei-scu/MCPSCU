@@ -6,7 +6,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-int InterpCScript(char* scriptStr);
+int InterpCScript_DiffusorsDef(char* scriptStr);
 #ifdef __cplusplus
 }
 #endif
@@ -15,7 +15,7 @@ int InterpCScript(char* scriptStr);
 #ifdef __cplusplus
 extern "C"{
 #endif
-void GetInterpedArray(CDiffusorDef* theArray);
+void GetInterpedDiffusorsArray(CDiffusorDef* theArray);
 #ifdef __cplusplus
 }
 #endif
