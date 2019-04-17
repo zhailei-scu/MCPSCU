@@ -1,5 +1,6 @@
 module MCLIB_TYPEDEF_GEOMETRY
     use MCLIB_CONSTANTS
+    use MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     implicit none
 
     integer, parameter::p_GBIniConfig_Simple = 0
@@ -45,7 +46,10 @@ module MCLIB_TYPEDEF_GEOMETRY
         real(kind=KMCDF)::GVolumINI = 0.D0
         real(kind=KMCDF)::GVolumSD = 0.D0
         !---Init by external file----
+        character*256::GBCfgFileName = ''
         !---Init by external function---
+
+        !---Seeds---
         type(GrainSeed),dimension(:),allocatable::GrainSeeds
 
         contains
@@ -287,12 +291,13 @@ module MCLIB_TYPEDEF_GEOMETRY
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
         real(kind=KMCDF),intent(in)::BOXBOUNDARY(3,2)
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Body---
         select case(this%GBInitType)
             case(p_GBIniConfig_Simple)
                 call this%ConstructGrainBoundary_Simple(BOXBOUNDARY)
             case(p_GBIniConfig_SpecialDistFromFile)
-                call this%ConstructGrainBoundary_SpecialDistFromFile()
+                call this%ConstructGrainBoundary_SpecialDistFromFile(Host_SimuCtrlParam)
             case(p_GBIniConfig_SpecialDistFromExteFunc)
                 call this%ConstructGrainBoundary_SpecialDistFromExteFunc()
             case default
@@ -422,11 +427,20 @@ module MCLIB_TYPEDEF_GEOMETRY
     end subroutine ConstructGrainBoundary_Simple_ByGVolumCtl
 
     !******************************************
-    subroutine ConstructGrainBoundary_SpecialDistFromFile(this)
+    subroutine ConstructGrainBoundary_SpecialDistFromFile(this,Host_SimuCtrlParam)
         implicit none
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        !---Local Vars---
+        character*256::FilePath
         !---Body---
+
+        FilePath = INQUIREFILE(this%GBCfgFileName,Host_SimuCtrlParam%InputFilePath)
+
+
+
+
         return
     end subroutine ConstructGrainBoundary_SpecialDistFromFile
 
@@ -545,6 +559,8 @@ module MCLIB_TYPEDEF_GEOMETRY
         this%GVolumINI = other%GVolumINI
         this%GVolumSD = other%GVolumSD
 
+        this%GBCfgFileName = other%GBCfgFileName
+
         if(allocated(this%GrainSeeds)) then
             deallocate(this%GrainSeeds)
         end if
@@ -573,6 +589,8 @@ module MCLIB_TYPEDEF_GEOMETRY
         this%SeedsDistSD = 0.D0
         this%GVolumINI = 0.D0
         this%GVolumSD = 0.D0
+
+        this%GBCfgFileName = ''
 
         return
     end subroutine

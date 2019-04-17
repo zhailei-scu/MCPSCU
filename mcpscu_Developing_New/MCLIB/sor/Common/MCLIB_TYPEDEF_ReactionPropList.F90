@@ -674,19 +674,21 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             write(*,*) "######################################################################"
 
-            write(hFile,fmt="('!','The diffusor symbol =',A20,2x,  &
+            write(hFile,fmt="('!','The reaction subject symbol =',A20,2x,  &
+                              '!','The reaction object symbol =',A20,2x,  &
                               '!','CoefficentsGenerate way =',I1,2x, &
-                              '!','DiffusionCiefficents value =',1PE10.4,2x, &
+                              '!','Reaction Coefficents value =',1PE10.4,2x, &
                               '!','PreFactor = ',1PE10.4,2x, &
                               '!','ActEnergy = ',1PE10.4,2x, &
                               '!','ECR Generate way =',I1,2x, &
-                              '!','ECR Value =',1PE10.4)")                     cursor%Diffusor%symbol, &
-                                                                               cursor%Diffusor%DiffusorValueType, &
-                                                                               cursor%Diffusor%DiffuseCoefficient_Value,  &
-                                                                               cursor%Diffusor%PreFactor, &
-                                                                               cursor%Diffusor%ActEnergy, &
-                                                                               cursor%Diffusor%ECRValueType, &
-                                                                               cursor%Diffusor%ECR
+                              '!','ECR Value =',1PE10.4)")                     cursor%Reaction%SubjectSymbol, &
+                                                                               cursor%Reaction%ObjectSymbol, &
+                                                                               cursor%Reaction%ReactionCoefficientType, &
+                                                                               cursor%Reaction%ReactionCoefficient_Value,  &
+                                                                               cursor%Reaction%PreFactor, &
+                                                                               cursor%Reaction%ActEnergy, &
+                                                                               cursor%Reaction%ECRValueType, &
+                                                                               cursor%Reaction%ECR
 
             if(ConstructClusterList%GetList_Count() .GT. 0) then
                 ClusterListCursor=>ConstructClusterList

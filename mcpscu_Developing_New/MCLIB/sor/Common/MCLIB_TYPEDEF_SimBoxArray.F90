@@ -142,7 +142,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     procedure,non_overridable,private,pass::Load_GB_SpecialDistFromFile
     procedure,non_overridable,private,pass::Load_GB_SpecialDistFromExteFunc
     procedure,non_overridable,public,pass::InitSimulationBox=>Init_SimulationBox
-    procedure,non_overridable,public,pass::ConstructGrainBoundary=>Construct_GranBoundary
     procedure,NON_OVERRIDABLE,pass,public::RescaleBoxes_CPU=>Rescale_Boxes_CPU
     procedure,NON_OVERRIDABLE,pass,public::SweepUnActiveMemory_CPU=>Sweep_UnActiveMemory_CPU
     procedure,non_overridable,pass,public::GetBoxesBasicStatistic_AllStatu_CPU
@@ -194,7 +193,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   private::Load_GB_SpecialDistFromFile
   private::Load_GB_SpecialDistFromExteFunc
   private::Init_SimulationBox
-  private::Construct_GranBoundary
   private::Expand_ClustersInfor_CPU_EqualNum
   private::Expand_ClustersInfor_CPU_BoxByBox
   private::Rescale_Boxes_CPU
@@ -456,22 +454,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call this%m_BoxesBasicStatistic%Init(Host_SimuCtrlParam%MultiBox)
 
-    call this%ConstructGrainBoundary()
+    call this%m_GrainBoundary%ConstructGrainBoundary(this%BOXBOUNDARY,Host_SimuCtrlParam)
 
-    return
-  end subroutine
-
-  !****************************************************************
-  subroutine Construct_GranBoundary(this)
-    implicit none
-    !---Dummy Vars---
-    CLASS(SimulationBoxes)::this
-    !---Local Vars---
-    real(kind=KMCDF)::BOXBOUNDARY(3,2)
-    !---Body---
-    BOXBOUNDARY = this%BOXBOUNDARY
-
-    call this%m_GrainBoundary%ConstructGrainBoundary(BOXBOUNDARY)
     return
   end subroutine
 
@@ -1385,36 +1369,26 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         select case(KEYWORD(1:LENTRIM(KEYWORD)))
             case("&ENDSUBCTL")
                 exit
-            case("&TYPE")
-                call EXTRACT_NUMB(STR,1,N,STRTEMP)
-                if(N .LT. 1) then
-                    write(*,*) "MCPSCUERROR: Too few parameters for grain boundary initialize type."
-                    write(*,*) "At line: ",LINE
-                    write(*,*) "You should special: &TYPE The grain boundary initial type = "
-                    pause
-                    stop
-                end if
-                this%m_GrainBoundary%GBInitType = ISTR(STRTEMP(1))
-                exit
+            case("&SIMPLEDISTSUBCTL")
+                this%m_GrainBoundary%GBInitType = p_GBIniConfig_Simple
+                call this%Load_GB_Simple(hBoxFile,*100)
+
+            case("&FILEDISTSUBCTL")
+                this%m_GrainBoundary%GBInitType = p_GBIniConfig_SpecialDistFromFile
+                call this%Load_GB_SpecialDistFromFile(hBoxFile,*100)
+
+            case("&EXTFUNCDISTSUBCTL")
+                this%m_GrainBoundary%GBInitType = p_GBIniConfig_SpecialDistFromExteFunc
+                call this%Load_GB_SpecialDistFromExteFunc(hBoxFile,*100)
+
             case default
-                write(*,*) "MCPSCUERROR: You must special the grain boundary initialize type first while setting the grain boundary !"
-                write(*,*) "By the way: &TYPE The grain boundary initial type = "
-                write(*,*) "However, the words you input is: ",STR
+                write(*,*) "MCPSCUERROR: unKnown type to for grain boundary distribution!"
+                write(*,*) KEYWORD
                 pause
                 stop
         end select
 
     END DO
-
-    select case(this%m_GrainBoundary%GBInitType)
-        case(p_GBIniConfig_Simple)
-            call this%Load_GB_Simple(hBoxFile,*100)
-        case(p_GBIniConfig_SpecialDistFromFile)
-            call this%Load_GB_SpecialDistFromFile(hBoxFile,*100)
-        case(p_GBIniConfig_SpecialDistFromExteFunc)
-            call this%Load_GB_SpecialDistFromExteFunc(hBoxFile,*100)
-        case default
-    end select
 
     return
     100 return 1
@@ -1422,44 +1396,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
   !*********************************************
   subroutine Load_GB_Simple(this,hBoxFile,*)
-    implicit none
-    !---Dummy Vars---
-    CLASS(SimulationBoxes)::this
-    integer,intent(in)::hBoxFile
-    !---Local Vars---
-    integer::LINE
-    integer::N
-    character*256::STR
-    character*32::KEYWORD
-    !---Body---
-
-    DO While(.true.)
-        call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
-        call RemoveComments(STR,"!")
-        STR = adjustl(STR)
-        call GETKEYWORD("&",STR,KEYWORD)
-        call UPCASE(KEYWORD)
-
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
-            case("&ENDSUBCTL")
-                exit
-            case("&DISTRIBUTIONSUBCTL")
-                call this%Load_GB_Simple_Distribution(hBoxFile,*100)
-            case default
-                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
-                write(*,*) "At box file Line: ",LINE
-                pause
-                stop
-        end select
-
-    END DO
-
-    return
-    100 return 1
-  end subroutine
-
-  !*********************************************
-  subroutine Load_GB_Simple_Distribution(this,hBoxFile,*)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
@@ -1509,7 +1445,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     return
 
     100 return 1
-  end subroutine
+  end subroutine Load_GB_Simple
 
   !*********************************************
   subroutine Load_GB_Simple_Distribution_ByGSeedCtl(this,hBoxFile,*)
@@ -1668,6 +1604,49 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationBoxes)::this
     integer,intent(in)::hBoxFile
     !---Local Vars---
+    integer::LINE
+    integer::N
+    character*256::STR
+    character*32::KEYWORD
+    character*10::STRTMP(10)
+    !---Body---
+
+    DO While(.true.)
+        call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
+        call RemoveComments(STR,"!")
+        STR = adjustl(STR)
+        call GETKEYWORD("&",STR,KEYWORD)
+        call UPCASE(KEYWORD)
+
+        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&ENDSUBCTL")
+                exit
+            case("&FGBDIST")
+                call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+
+                if(N. LT. 1) then
+                    write(*,*) "MCPSCUERROR: You must special the grain boundary configuration file path !"
+                    write(*,*) "At line : ",LINE
+                    pause
+                    stop
+                end if
+
+                if(LENTRIM(STRTMP(1)) .LE. 0) then
+                    write(*,*) "MCPSCUERROR: The grain boundary configuration file path is null !"
+                    pause
+                    stop
+                end if
+
+                this%m_GrainBoundary%GBCfgFileName = adjustl((trim(STRTMP(1))))
+            case default
+                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+                write(*,*) "At box file Line: ",LINE
+                pause
+                stop
+        end select
+
+    END DO
+
     return
     100 return 1
   end subroutine Load_GB_SpecialDistFromFile
