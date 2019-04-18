@@ -36,6 +36,8 @@
 		</Build>
 		<Unit filename="sor/DiffusorList.cpp" />
 		<Unit filename="sor/DiffusorList.h" />
+		<Unit filename="sor/ReactionsList.cpp" />
+		<Unit filename="sor/ReactionsList.h" />
 		<Unit filename="sor/TccInterp.cpp" />
 		<Unit filename="sor/TccInterp.h" />
 		<Extensions>

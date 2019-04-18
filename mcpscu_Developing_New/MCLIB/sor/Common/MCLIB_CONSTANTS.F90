@@ -58,6 +58,20 @@ module MCLIB_CONSTANTS
     character(len=1),parameter::p_NumRangeSpe = "-"
     character(len=3),parameter::p_InfStr = "INF"
 
+
+    integer,parameter::p_ReactionCoefficientTypesNum = 2
+    integer,parameter::p_ReactionCoefficient_ByValue = 1
+    integer,parameter::p_ReactionCoefficient_ByArrhenius = 2
+
+    integer,parameter::p_DiffuseCoefficientTypesNum = 3
+    integer,parameter::p_DiffuseCoefficient_ByValue = 1
+    integer,parameter::p_DiffuseCoefficient_ByArrhenius = 2
+    integer,parameter::p_DiffuseCoefficient_ByBCluster = 3
+
+    integer,parameter::p_ECRTypesNum = 2
+    integer,parameter::p_ECR_ByValue = 1
+    integer,parameter::p_ECR_ByBCluster = 2
+
     !*** The clusters type
     integer,parameter::p_NUMBER_OF_STATU = 6
     integer,parameter::p_ACTIVEFREE_STATU = 1

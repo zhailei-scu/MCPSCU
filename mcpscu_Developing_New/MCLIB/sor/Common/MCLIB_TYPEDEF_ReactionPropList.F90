@@ -26,6 +26,28 @@ module MCLIB_TYPEDEF_ReactionPropList
 
     end type ReadReactionPropList
 
+    interface InterpCScript_ReactionsDef
+        function InterpCScript_ReactionsDef(scriptStr) result(ArraySize) bind(c,name="InterpCScript_ReactionsDef")
+            use iso_c_binding
+            implicit none
+            !---Dummy Vars---
+            character(kind=c_char,len=10000)::scriptStr
+            integer(kind=c_int)::ArraySize
+        end function
+    end interface
+
+    interface GetInterpedReactionsArray
+        subroutine GetInterpedReactionsArray(FReactionsDefArray) bind(c,name="GetInterpedReactionsArray")
+            use iso_c_binding
+            use MCLIB_TYPEDEF_REACTIONSVALUE
+            implicit none
+            !---Dummy Vars---
+            type(ReadReactionPair)::FReactionsDefArray(*)
+        end subroutine
+
+    end interface
+
+
     private::AppendOne_ReadReactionPropList
     private::AppendArray_ReadReactionPropList
     private::GetReadReactionByListIndex
@@ -70,6 +92,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         integer::J
         integer::TheID
         integer::coverageCount
+        logical::coverageOnElement
         integer::Maplength
         !---Body---
         cursor=>this
@@ -510,6 +533,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         integer,intent(in)::ArraySize
         !---Local Vars---
         integer::I
+        type(ReadReactionPropList),pointer::cursor=>null(),cursorP=>null()
         !---Body---
         cursorP=>this
         if(.not. associated(cursorP)) then
@@ -788,11 +812,11 @@ module MCLIB_TYPEDEF_ReactionPropList
 
         cursor=>this%next
 
-        call CleanReadedReactionValue(this%Reaction)
+        call CleanReadedReactionPair(this%Reaction)
 
         DO While(associated(cursor))
             next=>cursor%next
-            call CleanReadedReactionValue(cursor%Reaction)
+            call CleanReadedReactionPair(cursor%Reaction)
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next
@@ -823,7 +847,7 @@ module MCLIB_TYPEDEF_ReactionPropList
     end subroutine CleanReadReactionPropList
 
     !**************************************************
-    subroutine ResloveReactionsValueFromCScript(scriptStr,ReactionProp_List)
+    subroutine ResloveReactionsFromCScript(scriptStr,ReactionProp_List)
         implicit none
         !---Dummy Vars---
         character(kind=c_char,len=10000)::scriptStr
@@ -833,21 +857,21 @@ module MCLIB_TYPEDEF_ReactionPropList
         integer(kind=c_int)::ArraySize
         !---Body---
 
-        ArraySize = InterpCScript(scriptStr)
+        ArraySize = InterpCScript_ReactionsDef(scriptStr)
 
-        if(allocated(FDiffusorDefArray)) then
-            deallocate(FDiffusorDefArray)
+        if(allocated(FReactionsDefArray)) then
+            deallocate(FReactionsDefArray)
         end if
-        allocate(FDiffusorDefArray(ArraySize))
+        allocate(FReactionsDefArray(ArraySize))
 
-        call GetInterpedArray(FDiffusorDefArray)
+        call GetInterpedReactionsArray(FReactionsDefArray)
 
 
-        call AppendArray_ReadDiffusorPropList(ReactionProp_List,FReactionsDefArray,ArraySize)
+        call AppendArray_ReadReactionPropList(ReactionProp_List,FReactionsDefArray,ArraySize)
 
 
         return
-    end subroutine ResloveReactionsValueFromCScript
+    end subroutine ResloveReactionsFromCScript
 
 
 

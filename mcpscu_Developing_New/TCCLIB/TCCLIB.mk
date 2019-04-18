@@ -83,7 +83,8 @@ endif
 
 #######################################################          
 nlist    :=  DiffusorList	\
-	           TccInterp
+             ReactionsList	\
+	     TccInterp
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
 cfiles   := $(foreach n, $(nlist), $(sor)$(Segment)$(n).cpp)
@@ -93,6 +94,9 @@ $(libname) : $(objects)
 	mv $(libname) $(tgt)
 
 $(tgt)$(Segment)DiffusorList.o : $(sor)$(Segment)DiffusorList.cpp
+	$(Ccomp) $(CP) $< $(Coflags) $(IncF)$(incdir) $(OutF) $@
+
+$(tgt)$(Segment)ReactionsList.o : $(sor)$(Segment)ReactionsList.cpp
 	$(Ccomp) $(CP) $< $(Coflags) $(IncF)$(incdir) $(OutF) $@
 
 $(tgt)$(Segment)TccInterp.o : $(sor)$(Segment)TccInterp.cpp

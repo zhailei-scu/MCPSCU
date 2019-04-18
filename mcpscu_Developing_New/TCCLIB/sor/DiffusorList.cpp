@@ -24,7 +24,7 @@ void copyCDiffusorDef(CDiffusorDef *Dest,CDiffusorDef *Source){
 }
 
 #ifdef __cplusplus
-void init(CDiffusorList **list){
+void InitDiffusorList(CDiffusorList **list){
   if(NULL == *list){
     *list = new CDiffusorList;
   }
@@ -33,7 +33,7 @@ void init(CDiffusorList **list){
   (*list)->next = NULL;
 }
 #else
-void init(CDiffusorList **list){
+void InitDiffusorList(CDiffusorList **list){
   if(NULL == *list){
     *list = malloc(sizeof(CDiffusorList));
   }
@@ -44,7 +44,7 @@ void init(CDiffusorList **list){
 #endif
 
 #ifdef __cplusplus
-void append(CDiffusorList *list, CDiffusorDef *element){
+void AppendDiffusor(CDiffusorList *list, CDiffusorDef *element){
   CDiffusorList *cursor = NULL;
   if(0==list->size){
     copyCDiffusorDef(&(list->data),element);
@@ -63,7 +63,7 @@ void append(CDiffusorList *list, CDiffusorDef *element){
 
 }
 #else
-void append(CDiffusorList *list, CDiffusorDef *element){
+void AppendDiffusor(CDiffusorList *list, CDiffusorDef *element){
   CDiffusorList *cursor = NULL;
   if(0==list->size){
     copyCDiffusorDef(&(list->data),element);

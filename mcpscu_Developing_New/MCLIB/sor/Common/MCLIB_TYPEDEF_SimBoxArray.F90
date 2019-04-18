@@ -120,7 +120,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(ReadDiffusorPropList),pointer::ReadDiffusorProp_List=>null()
 
     !**********Info for reactions************
-    type(ReactionPropList),pointer::ReadReactionProp_List=>null()
+    type(ReadReactionPropList),pointer::ReadReactionProp_List=>null()
 
     contains
 
@@ -134,9 +134,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     procedure,non_overridable,private,pass::LoadDiffusorsValue
     procedure,non_overridable,private,pass::LoadOneDiffusors
     procedure,non_overridable,private,pass::LoadDiffusorsValueFromScript
+    procedure,non_overridable,private,pass::LoadReactions
+    procedure,non_overridable,private,pass::LoadOneReaction
+    procedure,non_overridable,private,pass::LoadReactionsFromScript
     procedure,non_overridable,private,pass::Load_Box_GrainBoundary
     procedure,non_overridable,private,pass::Load_GB_Simple
-    procedure,non_overridable,private,pass::Load_GB_Simple_Distribution
     procedure,non_overridable,private,pass::Load_GB_Simple_Distribution_ByGSeedCtl
     procedure,non_overridable,private,pass::Load_GB_Simple_Distribution_ByGVolumCtl
     procedure,non_overridable,private,pass::Load_GB_SpecialDistFromFile
@@ -185,9 +187,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   private::LoadDiffusorsValue
   private::LoadOneDiffusors
   private::LoadDiffusorsValueFromScript
+  private::LoadReactions
+  private::LoadOneReaction
+  private::LoadReactionsFromScript
   private::Load_Box_GrainBoundary
   private::Load_GB_Simple
-  private::Load_GB_Simple_Distribution
   private::Load_GB_Simple_Distribution_ByGSeedCtl
   private::Load_GB_Simple_Distribution_ByGVolumCtl
   private::Load_GB_SpecialDistFromFile
@@ -660,7 +664,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(*,*) "***********************Start to Check The reactions map*******************************************"
     write(*,*) "*                                                                                                *"
     write(*,*) "**************************************************************************************************"
-    this%ReadReactionProp_List%PrintOutCheckingResult(hFile,this%Atoms_list,this%m_ReactionsMap)
+    !call this%ReadReactionProp_List%PrintOutCheckingResult(hFile,this%Atoms_list,this%m_ReactionsMap)
 
     Nullify(atomsListCursor)
     atomsListCursor=>null()
@@ -1624,7 +1628,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case("&FGBDIST")
                 call EXTRACT_SUBSTR(STR,1,N,STRTMP)
 
-                if(N. LT. 1) then
+                if(N .LT. 1) then
                     write(*,*) "MCPSCUERROR: You must special the grain boundary configuration file path !"
                     write(*,*) "At line : ",LINE
                     pause

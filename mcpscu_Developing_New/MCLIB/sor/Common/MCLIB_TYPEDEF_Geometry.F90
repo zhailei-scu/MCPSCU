@@ -286,7 +286,7 @@ module MCLIB_TYPEDEF_GEOMETRY
 
 
     !******************************************
-    subroutine ConstructGrainBoundary(this,BOXBOUNDARY)
+    subroutine ConstructGrainBoundary(this,BOXBOUNDARY,Host_SimuCtrlParam)
         implicit none
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
@@ -440,6 +440,7 @@ module MCLIB_TYPEDEF_GEOMETRY
         integer::ISeed
         integer::N
         character*20::STRTMP(10)
+        integer::I
         !---Body---
 
         LINE = 0

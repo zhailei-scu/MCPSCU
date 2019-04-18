@@ -7,16 +7,6 @@ module MCLIB_TYPEDEF_DiffusorsValue
     USE iso_c_binding
     implicit none
 
-    !---
-    integer,parameter::p_DiffuseCoefficientTypesNum = 3
-    integer,parameter::p_DiffuseCoefficient_ByValue = 1
-    integer,parameter::p_DiffuseCoefficient_ByArrhenius = 2
-    integer,parameter::p_DiffuseCoefficient_ByBCluster = 3
-
-
-    integer,parameter::p_ECRTypesNum = 2
-    integer,parameter::p_ECR_ByValue = 1
-    integer,parameter::p_ECR_ByBCluster = 2
 
 
     TYPE,PUBLIC::ReadedDiffusorValue
@@ -85,6 +75,10 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         integer::NextIndex = 0
 
+        contains
+        procedure,public,non_overridable,pass::CopyDiffusorTypeEntityFromOther
+        Generic::Assignment(=)=>CopyDiffusorTypeEntityFromOther
+        !---Similarly, the final procedure cannot be used here---
     END TYPE DiffusorTypeEntity
 
 
@@ -119,6 +113,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
     !private::CleanReadedDiffusorValue
     private::CopyDiffusorValueFromOther
     !private::CleanDiffusorValue
+    private::CopyDiffusorTypeEntityFromOther
     private::putToDiffusorsMap
     private::getValueFromDiffusorsMap
     private::DiffusorTypesMapConstructor
@@ -231,6 +226,24 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%ActEnergy = 0.D0
         this%ECRValueType = p_ECR_ByValue
         this%ECR = 0.D0
+        return
+    end subroutine
+
+    !*******************************************
+    subroutine CopyDiffusorTypeEntityFromOther(this,others)
+        implicit none
+        !---Dummy Vars---
+        CLASS(DiffusorTypeEntity),intent(out)::this
+        type(DiffusorTypeEntity),intent(in)::others
+        !---Body---
+
+        this%Code = others%Code
+
+        !---The (=) hand been overrided
+        this%TheValue = others%TheValue
+
+        this%NextIndex = others%NextIndex
+
         return
     end subroutine
 

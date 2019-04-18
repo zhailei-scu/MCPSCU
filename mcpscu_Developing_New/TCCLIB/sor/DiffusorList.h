@@ -26,7 +26,7 @@ typedef struct{
 #ifdef __cplusplus
 struct CDiffusorList{
 #else
-typedef struct CDiffusorList_s{
+typedef struct CDiffusorList{
 #endif
 
   CDiffusorDef data;
@@ -34,7 +34,7 @@ typedef struct CDiffusorList_s{
   #ifdef __cplusplus
   CDiffusorList* next;
   #else
-  struct CDiffusorList_s* next;
+  struct CDiffusorList* next;
   #endif
 
   int size;
@@ -45,8 +45,8 @@ typedef struct CDiffusorList_s{
 }CDiffusorList;
 #endif
 
-void init(CDiffusorList **list);
+void InitDiffusorList(CDiffusorList **list);
 
-void append(CDiffusorList *list, CDiffusorDef *element);
+void AppendDiffusor(CDiffusorList *list, CDiffusorDef *element);
 
 #endif
