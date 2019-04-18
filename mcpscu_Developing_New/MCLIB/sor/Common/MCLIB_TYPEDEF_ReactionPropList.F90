@@ -342,6 +342,11 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             call ConstructClusterListsArray(tempIndex)%Clean_ClusterList()
 
+
+            write(*,*) "TheAtomsSetsRangesArray(tempIndex)%m_SetsRange%m_NA_From",TheAtomsSetsRangesArray(tempIndex)%m_SetsRange%m_NA_From
+
+            write(*,*) "TheAtomsSetsRangesArray(tempIndex)%m_SetsRange%m_NA_To",TheAtomsSetsRangesArray(tempIndex)%m_SetsRange%m_NA_To
+
             ConstructClusterListsArray(tempIndex) = TheAtomsSetsRangesArray(tempIndex)%AtomsSetRange2ClusterList(SingleAtomsDivideArrays)
 
             Maplength = Maplength + ConstructClusterListsArray(tempIndex)%GetList_Count()
@@ -362,6 +367,7 @@ module MCLIB_TYPEDEF_ReactionPropList
                     ObjectClusterListCursor=>ConstructClusterListsArray(tempIndex*2+2)
 
                     DO While(associated(ObjectClusterListCursor))
+
                         call TheReactionsMap%put(SubjectClusterListCursor%TheCluster,ObjectClusterListCursor%TheCluster,cursor%Reaction%Convert2ReactionValue())
 
                         ObjectClusterListCursor=>ObjectClusterListCursor%next
@@ -704,7 +710,7 @@ module MCLIB_TYPEDEF_ReactionPropList
             write(hFile,fmt="('!','The reaction subject symbol =',A20,2x,  &
                               '!','The reaction object symbol =',A20,2x,  &
                               '!','CoefficentsGenerate way =',I1,2x, &
-                              '!','Reaction Coefficents value =',1PE10.4,2x, &
+                              '!','Reaction Coefficents value =',1F10.4,2x, &
                               '!','PreFactor = ',1PE10.4,2x, &
                               '!','ActEnergy = ',1PE10.4,2x, &
                               '!','ECR Generate way =',I1,2x, &
@@ -753,7 +759,7 @@ module MCLIB_TYPEDEF_ReactionPropList
                         write(hFile,fmt="('! |--','The subject symbol =',A20,2x,  &
                                           '!','The object symbol =',A20,2x,  &
                                           '!','CoefficentsGenerate way =',I1,2x, &
-                                          '!','Reaction Coefficents value =',1PE10.4,2x, &
+                                          '!','Reaction Coefficents value =',1F10.4,2x, &
                                           '!','PreFactor = ',1PE10.4,2x, &
                                           '!','ActEnergy = ',1PE10.4,2x, &
                                           '!','ECR Generate way =',I1,2x, &

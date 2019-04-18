@@ -373,6 +373,13 @@ module MCLIB_TYPEDEF_DiffusorsValue
             ICount = 1
             DO While(NextIndex .GT. 0 .AND. Code .NE. this%TypesMap(IndexFor)%Code)
 
+                if(Code .eq. this%TypesMap(IndexFor)%Code) then
+                    write(*,*) "MCPSCUERROR: The diffusor is redefined !"
+                    write(*,*) "Diffusor : ",Key%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                    pause
+                    stop
+                end if
+
                 ICount = ICount + 1
 
                 if(ICount .GT. this%MapLength) then
@@ -400,14 +407,10 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
                 NextIndex = this%GetIndexFor(reSparedCode)
 
-                if(NextIndex .LE. 0) then
+                if(NextIndex .LE. 0 .or. NextIndex .GT. this%MapLength) then
                     reSparedCode = 1
-                end if
-
-                if(this%TypesMap(NextIndex)%Code .eq. 0) then
+                else if(this%TypesMap(NextIndex)%Code .eq. 0) then
                     exit
-                else if(NextIndex .GT. this%MapLength) then
-                    reSparedCode = 1
                 end if
 
             END DO

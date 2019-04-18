@@ -361,7 +361,15 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
                 NextIndex = this%RecordsMap(IndexFor)%NextIndex
 
                 ICount = 1
-                DO While(NextIndex .GT. 0 .AND. (SubjectCode .NE. this%RecordsMap(IndexFor)%SubjectCode .or. ObjectCode .NE. this%RecordsMap(IndexFor)%ObjectCode))
+                DO While(NextIndex .GT. 0)
+
+                    if(SubjectCode .eq. this%RecordsMap(IndexFor)%SubjectCode .AND. ObjectCode .eq. this%RecordsMap(IndexFor)%ObjectCode) then
+                        write(*,*) "MCPSCUERROR: The reaction is redefined !"
+                        write(*,*) "Subject : ",KeySubject%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                        write(*,*) "Subject : ",KeySubject%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                        pause
+                        stop
+                    end if
 
                     ICount = ICount + 1
 
@@ -381,7 +389,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
                 DO While(.true.)
                     ICount = ICount + 1
                     if(ICount .GT. this%MapLength) then
-                        write(*,*) "MCPSCUERROR: The reactions map is not sufficient to store all kinds of diffusor."
+                        write(*,*) "MCPSCUERROR: The reactions map is not sufficient to store all kinds of reaction pairs."
                         pause
                         stop
                     end if
@@ -390,14 +398,10 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
                     NextIndex = this%GetIndexFor(reSparedCode)
 
-                    if(NextIndex .LE. 0) then
+                    if(NextIndex .LE. 0 .or. NextIndex .GT. this%MapLength) then
                         reSparedCode = 1
-                    end if
-
-                    if(this%RecordsMap(NextIndex)%SubjectCode .eq. 0 .AND. this%RecordsMap(NextIndex)%ObjectCode .eq. 0) then
+                    else if(this%RecordsMap(NextIndex)%SubjectCode .eq. 0 .AND. this%RecordsMap(NextIndex)%ObjectCode .eq. 0) then
                         exit
-                    else if(NextIndex .GT. this%MapLength) then
-                        reSparedCode = 1
                     end if
 
                 END DO
@@ -407,6 +411,10 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
                 IndexFor = NextIndex
             end if
         end if
+
+
+        write(*,*) "IndexFor",IndexFor
+        write(*,*) "size(this%RecordsMap)",size(this%RecordsMap)
 
         this%RecordsMap(IndexFor)%SubjectCode = SubjectCode
         this%RecordsMap(IndexFor)%ObjectCode = ObjectCode

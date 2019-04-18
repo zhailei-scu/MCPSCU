@@ -266,6 +266,7 @@ module MCLIB_TYPEDEF_ACLUSTER
 
             allocate(cursor)
             NUllify(cursor%next)
+            cursor%next=>null()
             ! The assignment(=) had been overrided
             cursor%TheCluster = newOne
             cursorP%next=>cursor

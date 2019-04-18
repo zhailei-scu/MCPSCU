@@ -659,12 +659,13 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(*,*) "**************************************************************************************************"
     call this%ReadDiffusorProp_List%PrintOutCheckingResult(hFile,this%Atoms_list,this%m_DiffusorTypesMap)
 
+    !---Check the ReactionList---
     write(*,*) "**************************************************************************************************"
     write(*,*) "*                                                                                                *"
     write(*,*) "***********************Start to Check The reactions map*******************************************"
     write(*,*) "*                                                                                                *"
     write(*,*) "**************************************************************************************************"
-    !call this%ReadReactionProp_List%PrintOutCheckingResult(hFile,this%Atoms_list,this%m_ReactionsMap)
+    call this%ReadReactionProp_List%PrintOutCheckingResult(hFile,this%Atoms_list,this%m_ReactionsMap)
 
     Nullify(atomsListCursor)
     atomsListCursor=>null()
