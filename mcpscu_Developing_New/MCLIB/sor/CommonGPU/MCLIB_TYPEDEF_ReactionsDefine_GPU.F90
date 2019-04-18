@@ -1,95 +1,92 @@
-module MCLIB_TYPEDEF_DiffusorsDefine_GPU
+module MCLIB_TYPEDEF_ReactionssDefine_GPU
     use cudafor
-    use MCLIB_TYPEDEF_DiffusorsValue
+    use MCLIB_TYPEDEF_REACTIONSVALUE
     use MCLIB_UTILITIES_GPU
     implicit none
 
-    !---Params---
+    type,public::Dev_ReactionsMap
 
-    type,public::Dev_DiffusorTypesMap
-
-        type(DiffusorTypeEntity),device,dimension(:),allocatable::Dev_TypesMap
+        type(ReactionEntity),device,dimension(:),allocatable::Dev_RecordsMap
 
         integer,device,dimension(:,:),allocatable::Dev_SingleAtomsDivideArrays
 
         contains
-        procedure,public,non_overridable,pass::Init=>InitDiffuosrMap_Dev
-        procedure,public,non_overridable,pass::copyFromHost=>copyDiffusorTypesMapFromHost
-        procedure,public,non_overridable,pass::Clean=>Clean_DiffuosrMap_Dev
-        Final::CleanDiffuosrMap_Dev
-    end type Dev_DiffusorTypesMap
+        procedure,public,non_overridable,pass::Init=>InitReactionsMap_Dev
+        procedure,public,non_overridable,pass::copyFromHost=>copyReactionsMapFromHost
+        procedure,public,non_overridable,pass::Clean=>Clean_ReactionMap_Dev
+        Final::CleanReactionMap_Dev
+    end type Dev_ReactionsMap
 
-    integer,private,constant::dm_MaxDivideGroups_SingleElement_Diffusors
-    integer,private,constant::dm_MapBitLength_Diffusors
-    integer,private,constant::dm_MapLength_Diffusors
+    integer,private,constant::dm_MaxDivideGroups_SingleElement_Reactions
+    integer,private,constant::dm_MapBitLength_Reactions
+    integer,private,constant::dm_MapLength_Reactions
 
     !---Constructor---
-    private::InitDiffuosrMap_Dev
-    private::copyDiffusorTypesMapFromHost
-    private::Clean_DiffuosrMap_Dev
-    private::CleanDiffuosrMap_Dev
+    private::InitReactionsMap_Dev
+    private::copyReactionsMapFromHost
+    private::Clean_ReactionMap_Dev
+    private::CleanReactionMap_Dev
 
     contains
 
     !*********************************
-    subroutine InitDiffuosrMap_Dev(this,Host_DiffusorTypesMap)
+    subroutine InitReactionsMap_Dev(this,Host_ReactionsMap)
         implicit none
         !---Dummy Vars---
-        CLASS(Dev_DiffusorTypesMap)::this
-        type(DiffusorTypesMap)::Host_DiffusorTypesMap
+        CLASS(Dev_ReactionsMap)::this
+        type(ReactionsMap)::Host_ReactionsMap
         !---Local Vars---
 
         !---Body---
-        if(allocated(this%Dev_TypesMap)) then
-            deallocate(this%Dev_TypesMap)
+        if(allocated(this%Dev_RecordsMap)) then
+            deallocate(this%Dev_RecordsMap)
         end if
-        allocate(this%Dev_TypesMap(Host_DiffusorTypesMap%MapLength))
+        allocate(this%Dev_RecordsMap(Host_ReactionsMap%MapLength))
 
         call DeAllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,"Dev_SingleAtomsDivideArrays")
-        call AllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,Host_DiffusorTypesMap%MaxDivideGroups_SingleElement,"Dev_SingleAtomsDivideArrays")
+        call AllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,Host_ReactionsMap%MaxDivideGroups_SingleElement,"Dev_SingleAtomsDivideArrays")
 
         return
     end subroutine
 
 
     !**********************************
-    subroutine copyDiffusorTypesMapFromHost(this,Host_DiffusorTypesMap)
+    subroutine copyReactionsMapFromHost(this,Host_ReactionsMap)
         implicit none
         !---Dummy Vars---
-        CLASS(Dev_DiffusorTypesMap)::this
-        type(DiffusorTypesMap)::Host_DiffusorTypesMap
+        CLASS(Dev_ReactionsMap)::this
+        type(ReactionsMap)::Host_ReactionsMap
         !---Local Vars---
         integer::err
-        type(c_ptr)::hp_Clusters
-        type(c_devptr)::dp_Clusters
+        type(c_ptr)::hp
+        type(c_devptr)::dp
         !---Body---
 
-        dm_MapLength_Diffusors = Host_DiffusorTypesMap%MapLength
+        dm_MapLength_Reactions = Host_ReactionsMap%MapLength
 
-        dm_MapBitLength_Diffusors = Host_DiffusorTypesMap%MapBitLength
+        dm_MapBitLength_Reactions = Host_ReactionsMap%MapBitLength
 
-        dm_MaxDivideGroups_SingleElement_Diffusors = Host_DiffusorTypesMap%MaxDivideGroups_SingleElement
+        dm_MaxDivideGroups_SingleElement_Reactions = Host_ReactionsMap%MaxDivideGroups_SingleElement
 
-        hp_Clusters = c_loc(Host_DiffusorTypesMap%TypesMap)
-        dp_Clusters = c_devloc(this%Dev_TypesMap)
+        hp = c_loc(Host_ReactionsMap%RecordsMap)
+        dp = c_devloc(this%Dev_RecordsMap)
 
-        err = cudaMemcpy(dp_Clusters,hp_Clusters,sizeof(Host_DiffusorTypesMap%TypesMap))
+        err = cudaMemcpy(dp,hp,sizeof(Host_ReactionsMap%RecordsMap))
 
-        this%Dev_SingleAtomsDivideArrays = Host_DiffusorTypesMap%SingleAtomsDivideArrays
-
+        this%Dev_SingleAtomsDivideArrays = Host_ReactionsMap%SingleAtomsDivideArrays
 
         return
-    end subroutine copyDiffusorTypesMapFromHost
+    end subroutine copyReactionsMapFromHost
 
     !**********************************
-    subroutine Clean_DiffuosrMap_Dev(this)
+    subroutine Clean_ReactionMap_Dev(this)
         implicit none
         !---Dummy Vars---
-        CLASS(Dev_DiffusorTypesMap)::this
+        CLASS(Dev_ReactionsMap)::this
         !---Body---
 
-        if(allocated(this%Dev_TypesMap)) then
-            deallocate(this%Dev_TypesMap)
+        if(allocated(this%Dev_RecordsMap)) then
+            deallocate(this%Dev_RecordsMap)
         end if
 
         call DeAllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,"Dev_SingleAtomsDivideArrays")
@@ -98,10 +95,10 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
     end subroutine
 
     !*********************************
-    subroutine CleanDiffuosrMap_Dev(this)
+    subroutine CleanReactionMap_Dev(this)
         implicit none
         !---Dummy Vars---
-        TYPE(Dev_DiffusorTypesMap)::this
+        TYPE(Dev_ReactionsMap)::this
         !---Body---
         call this%Clean()
 
@@ -109,7 +106,7 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
     end subroutine
 
     !**********************************
-    attributes(device) subroutine Dev_GetValueFromDiffusorsMap(Key,Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheValue)
+    attributes(device) subroutine Dev_GetValueFromReactionsMap(Key,Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheValue)
         implicit none
         !---Dummy Vars---
         type(ACluster)::Key
@@ -140,7 +137,7 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
 
 
         return
-    end subroutine Dev_GetValueFromDiffusorsMap
+    end subroutine Dev_GetValueFromReactionsMap
 
     !**********************************
     attributes(device) subroutine Dev_GetCode(Atoms,Dev_SingleAtomsDivideArrays,Code)
@@ -157,9 +154,9 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
 
         DO I = 1,p_ATOMS_GROUPS_NUMBER
 
-            J = BinarySearch_GE_DEV(Atoms(I)%m_NA,p_ATOMS_GROUPS_NUMBER,Dev_SingleAtomsDivideArrays,I,1,dm_MaxDivideGroups_SingleElement_Diffusors)
+            J = BinarySearch_GE_DEV(Atoms(I)%m_NA,p_ATOMS_GROUPS_NUMBER,Dev_SingleAtomsDivideArrays,I,1,dm_MaxDivideGroups_SingleElement_Reactions)
 
-            Code = ISHFT(Code,dm_MapBitLength_Diffusors) + J
+            Code = ISHFT(Code,dm_MapBitLength_Reactions) + J
 
         END DO
 
@@ -179,13 +176,13 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
         reSparedCode = Code
         TempCode = Code
 
-        TempCode = ISHFT(TempCode,-dm_MapBitLength_Diffusors)
+        TempCode = ISHFT(TempCode,-dm_MapBitLength_Reactions)
 
         DO While(TempCode .GT. 0)
 
-            reSparedCode = IOR(reSparedCode,IBITS(TempCode,0,dm_MapBitLength_Diffusors-1))
+            reSparedCode = IOR(reSparedCode,IBITS(TempCode,0,dm_MapBitLength_Reactions-1))
 
-            TempCode = ISHFT(TempCode,-dm_MapBitLength_Diffusors)
+            TempCode = ISHFT(TempCode,-dm_MapBitLength_Reactions)
 
         END DO
 
@@ -199,10 +196,10 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
         integer(kind=KMCLINT)::Code
         integer(kind=KMCLINT)::IndexFor
         !---Body---
-        IndexFor = IAND(Code,dm_MapLength_Diffusors)
+        IndexFor = IAND(Code,dm_MapLength_Reactions)
 
         return
     end subroutine Dev_GetIndexFor
 
 
-end module MCLIB_TYPEDEF_DiffusorsDefine_GPU
+end module MCLIB_TYPEDEF_ReactionssDefine_GPU
