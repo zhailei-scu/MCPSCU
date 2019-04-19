@@ -2755,10 +2755,10 @@ module MIGCOALE_IMPLANTATION_GPU
     end subroutine FillVirtualBoundary_GPU_Depth_LAY
 
     !**********************************************
-    attributes(global) subroutine Kernel_ImplantClusters_Depth_Layer(TotalAllocateNC,             &
+    attributes(global) subroutine Kernel_ImplantClusters_Depth_Layer(TotalAllocateNC,            &
                                                                     NewAllocateNCEachBox,        &
                                                                     Dev_Clusters,                &
-                                                                    Dev_TypesMap,                &
+                                                                    Dev_TypesEntities,           &
                                                                     Dev_SingleAtomsDivideArrays, &
                                                                     Nseeds,                      &
                                                                     Dev_GrainSeeds,              &
@@ -2775,7 +2775,7 @@ module MIGCOALE_IMPLANTATION_GPU
         integer, value::TotalAllocateNC
         integer, value::NewAllocateNCEachBox
         type(ACluster), device::Dev_Clusters(:)
-        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
+        type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
         integer,value::Nseeds
         type(GrainSeed),device::Dev_GrainSeeds(:)
@@ -2859,7 +2859,7 @@ module MIGCOALE_IMPLANTATION_GPU
 
                         Dev_Clusters(ICTRUE)%m_Statu = p_ACTIVEFREE_STATU
 
-                        call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+                        call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
                         select case(TheDiffusorValue%ECRValueType)
                             case(p_ECR_ByValue)
@@ -2962,10 +2962,10 @@ module MIGCOALE_IMPLANTATION_GPU
     end subroutine FillVirtualBoundary_GPU_Depth_SubBox
 
     !**********************************************
-    attributes(global) subroutine Kernel_ImplantClusters_Depth_SubBox(TotalAllocateNC,            &
+    attributes(global) subroutine Kernel_ImplantClusters_Depth_SubBox(TotalAllocateNC,           &
                                                                     NewAllocateNCEachBox,        &
                                                                     Dev_Clusters,                &
-                                                                    Dev_TypesMap,                &
+                                                                    Dev_TypesEntities,           &
                                                                     Dev_SingleAtomsDivideArrays, &
                                                                     Nseeds,                      &
                                                                     Dev_GrainSeeds,              &
@@ -2981,7 +2981,7 @@ module MIGCOALE_IMPLANTATION_GPU
         integer, value::TotalAllocateNC
         integer, value::NewAllocateNCEachBox
         type(ACluster), device::Dev_Clusters(:)
-        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
+        type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
         integer,value::Nseeds
         type(GrainSeed),device::Dev_GrainSeeds(:)
@@ -3040,7 +3040,7 @@ module MIGCOALE_IMPLANTATION_GPU
 
             Dev_Clusters(ICTRUE)%m_Statu = p_ACTIVEFREE_STATU
 
-            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
             select case(TheDiffusorValue%ECRValueType)
                 case(p_ECR_ByValue)
@@ -3135,7 +3135,7 @@ module MIGCOALE_IMPLANTATION_GPU
     attributes(global) subroutine Kernel_ImplantClusters_Depth_Gauss(TotalAllocateNC,            &
                                                                     NewAllocateNCEachBox,        &
                                                                     Dev_Clusters,                &
-                                                                    Dev_TypesMap,                &
+                                                                    Dev_TypesEntities,           &
                                                                     Dev_SingleAtomsDivideArrays, &
                                                                     Nseeds,                      &
                                                                     Dev_GrainSeeds,              &
@@ -3150,7 +3150,7 @@ module MIGCOALE_IMPLANTATION_GPU
         integer, value::TotalAllocateNC
         integer, value::NewAllocateNCEachBox
         type(ACluster), device::Dev_Clusters(:)
-        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
+        type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
         integer,value::Nseeds
         type(GrainSeed),device::Dev_GrainSeeds(:)
@@ -3217,7 +3217,7 @@ module MIGCOALE_IMPLANTATION_GPU
 
             Dev_Clusters(ICTRUE)%m_Statu = p_ACTIVEFREE_STATU
 
-            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
             select case(TheDiffusorValue%ECRValueType)
                 case(p_ECR_ByValue)
@@ -3309,7 +3309,7 @@ module MIGCOALE_IMPLANTATION_GPU
     attributes(global) subroutine Kernel_ImplantClusters_FromFile(TotalAllocateNC,             &
                                                                   NewAllocateNCEachBox,        &
                                                                   Dev_Clusters,                &
-                                                                  Dev_TypesMap,                &
+                                                                  Dev_TypesEntities,                &
                                                                   Dev_SingleAtomsDivideArrays, &
                                                                   Nseeds,                      &
                                                                   Dev_GrainSeeds,              &
@@ -3323,7 +3323,7 @@ module MIGCOALE_IMPLANTATION_GPU
         integer, value::TotalAllocateNC
         integer, value::NewAllocateNCEachBox
         type(ACluster), device::Dev_Clusters(:)
-        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
+        type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
         integer,value::Nseeds
         type(GrainSeed),device::Dev_GrainSeeds(:)
@@ -3391,7 +3391,7 @@ module MIGCOALE_IMPLANTATION_GPU
 
                         Dev_Clusters(ICTRUE)%m_GrainID(1) = GrainBelongsTo_Dev(Nseeds,Dev_GrainSeeds,POS)
 
-                        call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+                        call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
                         select case(TheDiffusorValue%ECRValueType)
                             case(p_ECR_ByValue)

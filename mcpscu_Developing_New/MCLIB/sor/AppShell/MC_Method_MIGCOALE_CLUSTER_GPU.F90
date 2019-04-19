@@ -262,6 +262,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(TotalSize)
                 end if
 
+                if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_RandArray_Reaction)) then
+                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeReactionRandNum(TotalSize)
+                end if
+
                 NCUT = (Host_SimBoxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + Host_SimBoxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEINGB_STATU))/DUP+1
 
                 call Record%SetNCUT(NCUT)
@@ -403,7 +407,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
 
-        call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TSTEP)
+        call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
 
         call Record%IncreaseOneSimuStep()
 

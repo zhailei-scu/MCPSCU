@@ -10,6 +10,7 @@ module MIGCOALE_GLOBALVARS_DEV
     type,public::MigCoale_RandDev
 
         integer(kind=int_ptr_kind())::m_ranGen_ClustersRandomWalk = 0
+        integer(kind=int_ptr_kind())::m_ranGen_ClustersReaction = 0
 
         integer(kind=int_ptr_kind())::m_ranGen_ClustersSpaceDist_Layer = 0
         integer(kind=int_ptr_kind())::m_ranGen_ClustersSpaceDist_X = 0
@@ -19,6 +20,8 @@ module MIGCOALE_GLOBALVARS_DEV
         !---Random number array In Device
         ! The random array for diffusion direction choose
         real(kind=KMCDF),device,dimension(:),allocatable::dm_RandArray_Walk
+        ! The random array for reactions determine
+        real(kind=KMCDF),device,dimension(:),allocatable::dm_RandArray_Reaction
         ! The space distribution array for new Implant clusters
         real(kind=KMCDF),device,dimension(:),allocatable::dm_SpaceDist_Implant
         ! The size distribution array for new Implant clusters
@@ -29,6 +32,8 @@ module MIGCOALE_GLOBALVARS_DEV
         procedure,non_overridable,public,pass::Init=>InitMigCoale_RandDev
 
         procedure,non_overridable,public,pass::ReSizeWalkRandNum=>ResizeMigCoale_WalkRandNumDev
+
+        procedure,non_overridable,public,pass::ReSizeReactionRandNum=>ResizeMigCoale_ReactionRandNumDev
 
         procedure,non_overridable,public,pass::ReSizeImplantRandNum=>ResizeMigCoale_ImplantRandNumDev
 
@@ -48,6 +53,7 @@ module MIGCOALE_GLOBALVARS_DEV
 
     private::InitMigCoale_RandDev
     private::ResizeMigCoale_WalkRandNumDev
+    private::ResizeMigCoale_ReactionRandNumDev
     private::ResizeMigCoale_ImplantRandNumDev
     private::Clean_MigCoale_RandDev
     private::CleanMigCoale_RandDev
@@ -77,6 +83,7 @@ module MIGCOALE_GLOBALVARS_DEV
         TotalUsedNC = sum(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1) + 1)
 
         call AllocateArray_GPU(this%dm_RandArray_Walk,TotalUsedNC*3,"dm_RandArray_Walk")
+        call AllocateArray_GPU(this%dm_RandArray_Reaction,TotalUsedNC,"dm_RandArray_Reaction")
         call AllocateArray_GPU(this%dm_SpaceDist_Implant,0,"dm_SpaceDist_Implant")
         call AllocateArray_GPU(this%dm_SizeDist_Implant,0,"dm_SizeDist_Implant")
 
@@ -87,6 +94,15 @@ module MIGCOALE_GLOBALVARS_DEV
         end if
         err = curandCreateGenerator(this%m_ranGen_ClustersRandomWalk, CURAND_RNG_PSEUDO_DEFAULT)
         err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersRandomWalk, INT(SEED(1),kind=KMCLINT))
+
+        ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
+        call GetSeed_RAND32SEEDLIB(ISEED_Curand,SEED(1),SEED(2))
+        if(this%m_ranGen_ClustersReaction .GT. 0) then
+            err = curandDestroyGenerator(this%m_ranGen_ClustersReaction)
+        end if
+        err = curandCreateGenerator(this%m_ranGen_ClustersReaction,CURAND_RNG_PSEUDO_DEFAULT)
+        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersReaction,INT(SEED(1),kind=KMCLINT))
+
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
         call GetSeed_RAND32SEEDLIB(ISEED_Curand,SEED(1),SEED(2))
@@ -143,6 +159,18 @@ module MIGCOALE_GLOBALVARS_DEV
         return
     end subroutine ResizeMigCoale_WalkRandNumDev
 
+        !********************************************************************
+    subroutine ResizeMigCoale_ReactionRandNumDev(this,ReSize)
+        !---Dummy Vars---
+        CLASS(MigCoale_RandDev)::this
+        integer,intent(in)::ReSize
+        !---Body---
+        call DeAllocateArray_GPU(this%dm_RandArray_Reaction,"dm_RandArray_Reaction")
+        call AllocateArray_GPU(this%dm_RandArray_Reaction,ReSize,"dm_RandArray_Reaction")
+
+        return
+    end subroutine ResizeMigCoale_ReactionRandNumDev
+
     !********************************************************************
     subroutine ResizeMigCoale_ImplantRandNumDev(this,ReSize)
         !---Dummy Vars---
@@ -168,11 +196,16 @@ module MIGCOALE_GLOBALVARS_DEV
         !---Body---
 
         call DeAllocateArray_GPU(this%dm_RandArray_Walk,"dm_RandArray_Walk")
+        call DeAllocateArray_GPU(this%dm_RandArray_Reaction,"dm_RandArray_Reaction")
         call DeAllocateArray_GPU(this%dm_SpaceDist_Implant,"dm_SpaceDist_Implant")
         call DeAllocateArray_GPU(this%dm_SizeDist_Implant,"dm_SizeDist_Implant")
 
         if(this%m_ranGen_ClustersRandomWalk .GT. 0) then
             err = curandDestroyGenerator(this%m_ranGen_ClustersRandomWalk)
+        end if
+
+        if(this%m_ranGen_ClustersReaction .GT. 0) then
+            err = curandDestroyGenerator(this%m_ranGen_ClustersReaction)
         end if
 
         if(this%m_ranGen_ClustersSpaceDist_Layer .GT. 0) then

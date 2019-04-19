@@ -122,7 +122,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
     call this%dm_ReactionsMap%Clean()
 
-    call this%dm_DiffusorTypesMap%Init(Host_Boxes%m_ReactionsMap)
+    call this%dm_ReactionsMap%Init(Host_Boxes%m_ReactionsMap)
 
     return
   end subroutine Init_SimulationBoxes_Dev

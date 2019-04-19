@@ -270,12 +270,13 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine WalkOneStep_Kernel
 
   !********************************************************
-  subroutine MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TSTEP)
+  subroutine MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
+    type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
     real(kind=KMCDF)::TSTEP
     !---Local Vars---
     integer::MULTIBOX
@@ -285,11 +286,19 @@ module MIGCOALE_EVOLUTION_GPU
     integer::BX,BY,NB,err
     real(kind=KMCDF)::ATOMV0
     real(kind=KMCDF)::DIF0
+    integer::TotalNC
     !---Body---
 
-    ASSOCIATE(Dev_ClusterInfo_GPU=>Dev_Boxes%dm_ClusterInfo_GPU,Dev_DiffusorMap=>Dev_Boxes%dm_DiffusorTypesMap)
+    ASSOCIATE(Dev_ClusterInfo_GPU=>Dev_Boxes%dm_ClusterInfo_GPU,Dev_DiffusorMap=>Dev_Boxes%dm_DiffusorTypesMap,Dev_ReactionsMap=>Dev_Boxes%dm_ReactionsMap, &
+              Dev_Rand=>Dev_MigCoaleGVars%dm_MigCoale_RandDev)
 
         MULTIBOX = Host_SimuCtrlParam%MultiBox
+
+        if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(MultiBox,2) .GT. 0) then
+            TotalNC = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(MultiBox,2) - Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(1,1) + 1
+        else
+            TotalNC = 0
+        end if
 
         if(maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1)) .LT. 0) then
             return
@@ -306,12 +315,22 @@ module MIGCOALE_EVOLUTION_GPU
         blocks  = dim3(NB, 1, 1)
         threads = dim3(BX, BY, 1)
 
-        call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                        &
-                                                       Dev_ClusterInfo_GPU%dm_Clusters,        &
-                                                       Dev_Boxes%dm_SEUsedIndexBox,            &
-                                                       Dev_ClusterInfo_GPU%dm_MergeINDI,       &
-                                                       Dev_ClusterInfo_GPU%dm_MergeKVOIS,      &
-                                                       Dev_ClusterInfo_GPU%dm_KVOIS,           &
+        ! Generate the Random number
+        if(TotalNC .GT. size(Dev_Rand%dm_RandArray_Reaction)) then
+            call Dev_Rand%ReSizeReactionRandNum(TotalNC)
+        end if
+
+        err = curandGenerateUniformDouble(Dev_Rand%m_ranGen_ClustersReaction,Dev_Rand%dm_RandArray_Reaction,TotalNC) !Async in multiple streams
+
+        call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
+                                                       Dev_ClusterInfo_GPU%dm_Clusters,             &
+                                                       Dev_Boxes%dm_SEUsedIndexBox,                 &
+                                                       Dev_ReactionsMap%Dev_RecordsEntities,        &
+                                                       Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,&
+                                                       Dev_Rand%dm_RandArray_Reaction,              &
+                                                       Dev_ClusterInfo_GPU%dm_MergeINDI,            &
+                                                       Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
+                                                       Dev_ClusterInfo_GPU%dm_KVOIS,                &
                                                        Dev_ClusterInfo_GPU%dm_INDI)
 
 
@@ -341,12 +360,16 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine MergeClusters
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI)
+  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox, Dev_RecordsEntities,Dev_SingleAtomsDivideArrays,&
+                                                      Dev_RandArran_Reaction,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
+    type(ReactionEntity),device::Dev_RecordsEntities(:)
+    integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KMCDF),device::Dev_RandArran_Reaction(:)
     integer,device::MergeTable_KVOIS(:)
     integer,device::MergeTable_INDI(:,:)
     integer,device::Neighbor_KVOIS(:)
@@ -361,6 +384,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KMCSF)::RADA,RADB,DIST,RR
     integer::N_Neighbor,NewNA
     integer::I,J,JC,NN
+    type(ReactionValue)::TheReactionValue
+    real(kind=KMCDF)::ReactionCoeff
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -434,10 +459,21 @@ module MIGCOALE_EVOLUTION_GPU
                     cycle
                 end if
 
+                call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_RecordsEntities,Dev_SingleAtomsDivideArrays,TheReactionValue)
 
-                NN = NN + 1
+                ReactionCoeff = 0.D0
+                select case(TheReactionValue%ReactionCoefficientType)
+                    case(p_ReactionCoefficient_ByValue)
+                        ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
+                    case(p_ReactionCoefficient_ByArrhenius)
+                        ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+                end select
 
-                MergeTable_INDI(IC,NN) = JC
+                if(ReactionCoeff .GE. Dev_RandArran_Reaction(IC)) then
+                    NN = NN + 1
+
+                    MergeTable_INDI(IC,NN) = JC
+                end if
 
             END DO
 
@@ -450,14 +486,14 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine Merge_PreJudge_Kernel
 
   !************************************************************************
-  attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_TypesMap,Dev_SingleAtomsDivideArrays, &
+  attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_TypesEntities,Dev_SingleAtomsDivideArrays, &
                                                 Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
-    type(DiffusorTypeEntity),device::Dev_TypesMap(:)
+    type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
     integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
@@ -581,7 +617,7 @@ module MIGCOALE_EVOLUTION_GPU
           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
                                                                     Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
 
-          call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+          call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
           select case(TheDiffusorValue%ECRValueType)
               case(p_ECR_ByValue)
@@ -622,14 +658,14 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine MergePre_Kernel
 
   !************************************************************************
-  attributes(global) subroutine MergeBack_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_TypesMap,Dev_SingleAtomsDivideArrays,  &
+  attributes(global) subroutine MergeBack_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,  &
                                                  Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
-    type(DiffusorTypeEntity),device::Dev_TypesMap(:)
+    type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
     integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
@@ -753,7 +789,7 @@ module MIGCOALE_EVOLUTION_GPU
           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
                                                                     Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
 
-          call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+          call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
           select case(TheDiffusorValue%ECRValueType)
               case(p_ECR_ByValue)
