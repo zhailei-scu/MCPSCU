@@ -21,6 +21,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         procedure,non_overridable,pass,private::CopyReadReactionPropListFromOther
         procedure,non_overridable,pass,public::Clean_ReadReactionPropList
         procedure,non_overridable,pass,public::PrintOutCheckingResult
+        procedure,non_overridable,pass,public::WhetherFreeDiffusion
         Generic::Assignment(=)=>CopyReadReactionPropListFromOther
         Final::CleanReadReactionPropList
 
@@ -878,6 +879,49 @@ module MCLIB_TYPEDEF_ReactionPropList
 
         return
     end subroutine ResloveReactionsFromCScript
+
+    !*********************************************************
+    function WhetherFreeDiffusion(this,TKB) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        CLASS(ReadReactionPropList),target::this
+        real(kind=KMCDF),intent(in)::TKB
+        logical::TheResult
+        !---Local Vars---
+        type(ReadReactionPropList),pointer::cursor=>null()
+        real(kind=KMCDF)::TheValue
+        !---Body---
+
+        TheResult = .false.
+
+        cursor=>this
+
+        DO While(associated(cursor))
+
+            select case(cursor%Reaction%ReactionCoefficientType)
+                case(p_ReactionCoefficient_ByValue)
+                    TheValue = cursor%Reaction%ReactionCoefficient_Value
+                case(p_ReactionCoefficient_ByArrhenius)
+                    TheValue = cursor%Reaction%PreFactor*exp(-C_EV2ERG*cursor%Reaction%ActEnergy/TKB)
+                case default
+                    write(*,*) "MCPSCUERROR: undefined type of reaction value.",cursor%Reaction%ReactionCoefficientType
+                    pause
+                    stop
+            end select
+
+            if(TheValue .LE. 0.D0) then
+                TheResult = .true.
+            else
+                TheResult = .false.
+            end if
+
+        END DO
+
+
+        cursor=>null()
+
+        return
+    end function
 
 
 

@@ -114,7 +114,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
     call this%InitBoxesInfo_GPU(Host_SimuCtrlParams)
 
-    call this%dm_ClusterInfo_GPU%AllocateClustersInfo_GPU(TotalSize,Host_SimuCtrlParams%MAXNEIGHBORNUM)
+    if(Host_SimuCtrlParams%FreeDiffusion .eq. .false.) then
+        call this%dm_ClusterInfo_GPU%AllocateClustersInfo_GPU(TotalSize,Host_SimuCtrlParams%MAXNEIGHBORNUM)
+    else
+        call this%dm_ClusterInfo_GPU%AllocateClustersInfo_GPU(TotalSize,0)
+    end if
 
     call this%dm_DiffusorTypesMap%Clean()
 

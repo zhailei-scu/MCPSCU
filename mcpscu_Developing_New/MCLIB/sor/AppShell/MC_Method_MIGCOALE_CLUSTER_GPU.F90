@@ -407,7 +407,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
 
-        call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+        if(Host_SimuCtrlParam%FreeDiffusion .ne. .true.) then
+            call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+        end if
 
         call Record%IncreaseOneSimuStep()
 

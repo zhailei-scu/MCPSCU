@@ -1928,8 +1928,13 @@ module MIGCOALE_IMPLANTATION_GPU
         err = cudaMemGetInfo(FreeMemSize,TotalMemSize)
 
         !The 8*3 is for the random walking random number
-        FreeMemSize2NCEachBox  = (FreeMemSize/Dev_Boxes%dm_ClusterInfo_GPU%GetMemConsumOneClusterInfo(Host_SimuCtrlParam%MAXNEIGHBORNUM) + 8*3)/MultiBox
-        TotalMemSize2NCEachBox = (TotalMemSize/Dev_Boxes%dm_ClusterInfo_GPU%GetMemConsumOneClusterInfo(Host_SimuCtrlParam%MAXNEIGHBORNUM)+ 8*3)/MultiBox
+        if(Host_SimuCtrlParam%FreeDiffusion .eq. .false.) then
+            FreeMemSize2NCEachBox  = (FreeMemSize/(Dev_Boxes%dm_ClusterInfo_GPU%GetMemConsumOneClusterInfo(Host_SimuCtrlParam%MAXNEIGHBORNUM) + 8*3))/MultiBox
+            TotalMemSize2NCEachBox = (TotalMemSize/(Dev_Boxes%dm_ClusterInfo_GPU%GetMemConsumOneClusterInfo(Host_SimuCtrlParam%MAXNEIGHBORNUM)+ 8*3))/MultiBox
+        else
+            FreeMemSize2NCEachBox  = (FreeMemSize/(Dev_Boxes%dm_ClusterInfo_GPU%GetMemConsumOneClusterInfo(0) + 8*3))/MultiBox
+            TotalMemSize2NCEachBox = (TotalMemSize/(Dev_Boxes%dm_ClusterInfo_GPU%GetMemConsumOneClusterInfo(0)+ 8*3))/MultiBox
+        end if
 
         DO while(.true.)
 
@@ -2207,7 +2212,11 @@ module MIGCOALE_IMPLANTATION_GPU
 
             call Dev_Boxes%dm_ClusterInfo_GPU%ReleaseClustersInfo_GPU()
 
-            call Dev_Boxes%dm_ClusterInfo_GPU%AllocateClustersInfo_GPU(NSIZE,Host_SimuCtrlParam%MAXNEIGHBORNUM)
+            if(Host_SimuCtrlParam%FreeDiffusion .eq. .false.) then
+                call Dev_Boxes%dm_ClusterInfo_GPU%AllocateClustersInfo_GPU(NSIZE,Host_SimuCtrlParam%MAXNEIGHBORNUM)
+            else
+                call Dev_Boxes%dm_ClusterInfo_GPU%AllocateClustersInfo_GPU(NSIZE,0)
+            end if
         end if
 
         call Dev_Boxes%dm_ClusterInfo_GPU%CopyInFromHost(Host_Boxes%m_ClustersInfo_CPU,NSIZE,IfCpyNL=.false.)

@@ -163,6 +163,8 @@ module MCLIB_GLOBAL
 
     close(fileUnit)
 
+    call CheckSimulationParamters(CtrlParam,SimBoxes)
+
     return
     !------------------------------------
     100 write(*,*) "MCPSCUERROR: Failed to read line: ",LINE,"in file: ",sampleFilePath
@@ -228,5 +230,47 @@ module MCLIB_GLOBAL
     call SimBoxes%Print_Parameter_SimulationBoxes(hFile)
     return
   end subroutine
+
+
+  !***********************************************
+  subroutine CheckSimulationParamters(CtrlParam,SimBoxes)
+    implicit none
+    !---Dummy Vars---
+    type(SimulationCtrlParam),target::CtrlParam
+    type(SimulationBoxes)::SimBoxes
+    !---Local Vars---
+    integer::ISection
+    type(SimulationCtrlParam),pointer::PCtrlParam=>null()
+    !---Body---
+    ISection = 1
+
+    PCtrlParam=>CtrlParam
+
+    DO while(associated(PCtrlParam))
+      !---We can exclude some time section where the reaction need not to be considered and thus the neighbor-lists can not required, then, the---
+      !---calculation would be accelerated---
+
+      if(associated(SimBoxes%ReadReactionProp_List)) then
+         PCtrlParam%FreeDiffusion = SimBoxes%ReadReactionProp_List%WhetherFreeDiffusion(PCtrlParam%TKB)
+      else
+         PCtrlParam%FreeDiffusion = .true.
+      end if
+
+      if(PCtrlParam%FreeDiffusion .eq. .true.) then
+         PCtrlParam%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_AveSep
+
+         write(*,*) "***********************************************************************************************"
+         write(*,*) "MCPSCU Info: The Diffusion would not be considered in time section: ",ISection
+         write(*,*) "MCPSCU Info: The time step strategy would be changed to by average separation."
+         write(*,*) "***********************************************************************************************"
+      end if
+
+      PCtrlParam=>PCtrlParam%next
+
+      ISection = ISection + 1
+    END DO
+
+    return
+  end subroutine CheckSimulationParamters
 
 end module MCLIB_GLOBAL

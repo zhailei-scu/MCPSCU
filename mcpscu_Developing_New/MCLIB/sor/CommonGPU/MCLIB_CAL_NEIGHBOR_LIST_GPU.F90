@@ -34,6 +34,11 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     logical::SureToUpdateNL
     integer::NAct
     !---Body---
+
+    if(Host_SimuCtrlParam%FreeDiffusion .eq. .true.) then
+        return
+    end if
+
     SureToUpdateNL = .false.
 
     NAct = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + &

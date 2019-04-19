@@ -92,6 +92,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      integer::ENDBOX = -1
      integer::BOXSTEP = 0
 
+     !---Determine whether the reaction are considered
+     logical::FreeDiffusion = .false.
+
      !********************************************
      type(SimulationCtrlParam),pointer::next=>null()
 
@@ -224,6 +227,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%InputFileshortName = otherOne%InputFileshortName
     this%OutFilePath = otherOne%OutFilePath
 
+    !---Determine whether the reaction are considered
+    this%FreeDiffusion = otherOne%FreeDiffusion
+
     !*********Parameters for analysis processes*************
     this%STARTJOB = otherOne%STARTJOB
     this%ENDJOB = otherOne%ENDJOB
@@ -306,20 +312,22 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%InputFileshortName = ""
      this%OutFilePath = ""
 
+     !---Determine whether the reaction are considered
+     this%FreeDiffusion = .false.
 
-    !*********Parameters for analysis processes*************
-    this%STARTJOB = -1
-    this%ENDJOB = -1
-    this%JOBSTEP = 0
-    this%STARTTSECTION = -1
-    this%ENDTSECTION = -1
-    this%TSECTIONSTEP = 0
-    this%STARTCFG = -1
-    this%ENDCFG = -1
-    this%CFGSTEP = 0
-    this%STARTBOX = -1
-    this%ENDBOX = -1
-    this%BOXSTEP = 0
+     !*********Parameters for analysis processes*************
+     this%STARTJOB = -1
+     this%ENDJOB = -1
+     this%JOBSTEP = 0
+     this%STARTTSECTION = -1
+     this%ENDTSECTION = -1
+     this%TSECTIONSTEP = 0
+     this%STARTCFG = -1
+     this%ENDCFG = -1
+     this%CFGSTEP = 0
+     this%STARTBOX = -1
+     this%ENDBOX = -1
+     this%BOXSTEP = 0
 
      call Release_StatementList(this%AddOnData)
      this%AddOnData=>null()
@@ -449,19 +457,23 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%InputFileshortName = ""
      this%OutFilePath = ""
 
-    !*********Parameters for analysis processes*************
-    this%STARTJOB = -1
-    this%ENDJOB = -1
-    this%JOBSTEP = 0
-    this%STARTTSECTION = -1
-    this%ENDTSECTION = -1
-    this%TSECTIONSTEP = 0
-    this%STARTCFG = -1
-    this%ENDCFG = -1
-    this%CFGSTEP = 0
-    this%STARTBOX = -1
-    this%ENDBOX = -1
-    this%BOXSTEP = 0
+
+     !---Determine whether the reaction are considered
+     this%FreeDiffusion = .false.
+
+     !*********Parameters for analysis processes*************
+     this%STARTJOB = -1
+     this%ENDJOB = -1
+     this%JOBSTEP = 0
+     this%STARTTSECTION = -1
+     this%ENDTSECTION = -1
+     this%TSECTIONSTEP = 0
+     this%STARTCFG = -1
+     this%ENDCFG = -1
+     this%CFGSTEP = 0
+     this%STARTBOX = -1
+     this%ENDBOX = -1
+     this%BOXSTEP = 0
 
      call Release_StatementList(this%AddOnData)
      this%AddOnData=>null()
