@@ -4,6 +4,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
   use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   use MCLIB_TYPEDEF_GEOMETRY_GPU
   use MCLIB_TYPEDEF_DiffusorsDefine_GPU
+  use MCLIB_TYPEDEF_ReactionssDefine_GPU
   implicit none
 
   integer,private,device,dimension(:,:),allocatable::dm_CountsNCArray
@@ -14,6 +15,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
   type,public::SimulationBoxes_GPU
 
     type(Dev_DiffusorTypesMap)::dm_DiffusorTypesMap
+
+    type(Dev_ReactionsMap)::dm_ReactionsMap
 
     type(ClustersInfo_GPU)::dm_ClusterInfo_GPU
 
@@ -117,6 +120,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
     call this%dm_DiffusorTypesMap%Init(Host_Boxes%m_DiffusorTypesMap)
 
+    call this%dm_ReactionsMap%Clean()
+
+    call this%dm_DiffusorTypesMap%Init(Host_Boxes%m_ReactionsMap)
+
     return
   end subroutine Init_SimulationBoxes_Dev
 
@@ -135,6 +142,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
     call this%CopyInBoxesInfoFromHost(Host_Boxes)
 
     call this%dm_DiffusorTypesMap%copyFromHost(Host_Boxes%m_DiffusorTypesMap)
+
+    call this%dm_ReactionsMap%copyFromHost(Host_Boxes%m_ReactionsMap)
 
     call copyInBoxParamsConstant(Host_Boxes%BOXBOUNDARY,Host_Boxes%BOXSIZE,Host_Boxes%HBOXSIZE)
 
