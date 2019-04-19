@@ -75,7 +75,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
         integer,dimension(:,:),allocatable::SingleAtomsDivideArrays
 
-        type(ReactionEntity),dimension(:),allocatable::RecordsMap
+        type(ReactionEntity),dimension(:),allocatable::RecordsEntities
 
         contains
         procedure,public,non_overridable,pass::put=>putToReactionsMap
@@ -276,7 +276,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
         this%SingleAtomsDivideArrays = SingleAtomsDivideArrays
 
-        allocate(this%RecordsMap(this%MapLength))
+        allocate(this%RecordsEntities(this%MapLength))
 
         return
     end subroutine ReactionsMapConstructor
@@ -293,7 +293,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         this%MapBitLength = Others%MapBitLength
 
         this%SingleAtomsDivideArrays = Others%SingleAtomsDivideArrays
-        this%RecordsMap = Others%RecordsMap
+        this%RecordsEntities = Others%RecordsEntities
 
         return
     end subroutine CopyReactionsMapFromOther
@@ -312,8 +312,8 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
         call DeAllocateArray_Host(this%SingleAtomsDivideArrays,"SingleAtomsDivideArrays")
 
-        if(allocated(this%RecordsMap)) then
-            deallocate(this%RecordsMap)
+        if(allocated(this%RecordsEntities)) then
+            deallocate(this%RecordsEntities)
         end if
 
         return
@@ -355,15 +355,15 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         IndexFor = this%GetIndexFor(reSparedCode)
 
         ! Handle the conflictions
-        if((this%RecordsMap(IndexFor)%SubjectCode .NE. 0 .or. this%RecordsMap(IndexFor)%ObjectCode .NE. 0))then
-            if(SubjectCode .NE. this%RecordsMap(IndexFor)%SubjectCode .or. ObjectCode .NE. this%RecordsMap(IndexFor)%ObjectCode) then
+        if((this%RecordsEntities(IndexFor)%SubjectCode .NE. 0 .or. this%RecordsEntities(IndexFor)%ObjectCode .NE. 0))then
+            if(SubjectCode .NE. this%RecordsEntities(IndexFor)%SubjectCode .or. ObjectCode .NE. this%RecordsEntities(IndexFor)%ObjectCode) then
 
-                NextIndex = this%RecordsMap(IndexFor)%NextIndex
+                NextIndex = this%RecordsEntities(IndexFor)%NextIndex
 
                 ICount = 1
                 DO While(NextIndex .GT. 0)
 
-                    if(SubjectCode .eq. this%RecordsMap(IndexFor)%SubjectCode .AND. ObjectCode .eq. this%RecordsMap(IndexFor)%ObjectCode) then
+                    if(SubjectCode .eq. this%RecordsEntities(IndexFor)%SubjectCode .AND. ObjectCode .eq. this%RecordsEntities(IndexFor)%ObjectCode) then
                         write(*,*) "MCPSCUERROR: The reaction is redefined !"
                         write(*,*) "Subject : ",KeySubject%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                         write(*,*) "Subject : ",KeySubject%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
@@ -381,7 +381,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
                     IndexFor = NextIndex
 
-                    NextIndex = this%RecordsMap(IndexFor)%NextIndex
+                    NextIndex = this%RecordsEntities(IndexFor)%NextIndex
 
                 END DO
 
@@ -400,13 +400,13 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
                     if(NextIndex .LE. 0 .or. NextIndex .GT. this%MapLength) then
                         reSparedCode = 1
-                    else if(this%RecordsMap(NextIndex)%SubjectCode .eq. 0 .AND. this%RecordsMap(NextIndex)%ObjectCode .eq. 0) then
+                    else if(this%RecordsEntities(NextIndex)%SubjectCode .eq. 0 .AND. this%RecordsEntities(NextIndex)%ObjectCode .eq. 0) then
                         exit
                     end if
 
                 END DO
 
-                this%RecordsMap(IndexFor)%NextIndex = NextIndex
+                this%RecordsEntities(IndexFor)%NextIndex = NextIndex
 
                 IndexFor = NextIndex
             end if
@@ -414,11 +414,11 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
 
         write(*,*) "IndexFor",IndexFor
-        write(*,*) "size(this%RecordsMap)",size(this%RecordsMap)
+        write(*,*) "size(this%RecordsEntities)",size(this%RecordsEntities)
 
-        this%RecordsMap(IndexFor)%SubjectCode = SubjectCode
-        this%RecordsMap(IndexFor)%ObjectCode = ObjectCode
-        this%RecordsMap(IndexFor)%TheValue = TheValue
+        this%RecordsEntities(IndexFor)%SubjectCode = SubjectCode
+        this%RecordsEntities(IndexFor)%ObjectCode = ObjectCode
+        this%RecordsEntities(IndexFor)%TheValue = TheValue
 
         return
     end subroutine putToReactionsMap
@@ -447,12 +447,18 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
         DO While(IndexFor .GT. 0)
 
-            if(this%RecordsMap(IndexFor)%SubjectCode .eq. SubjectCode .AND. this%RecordsMap(IndexFor)%ObjectCode .eq. ObjectCode) then
-                TheValue = this%RecordsMap(IndexFor)%TheValue
+            if(this%RecordsEntities(IndexFor)%SubjectCode .eq. SubjectCode .AND. this%RecordsEntities(IndexFor)%ObjectCode .eq. ObjectCode) then
+                TheValue = this%RecordsEntities(IndexFor)%TheValue
                 exit
             end if
 
-            IndexFor = this%RecordsMap(IndexFor)%NextIndex
+            !---here, we consider that the reaction is symmetrical which means if A can react with B , vice versa
+            if(this%RecordsEntities(IndexFor)%SubjectCode .eq. ObjectCode .AND. this%RecordsEntities(IndexFor)%ObjectCode .eq. SubjectCode) then
+                TheValue = this%RecordsEntities(IndexFor)%TheValue
+                exit
+            end if
+
+            IndexFor = this%RecordsEntities(IndexFor)%NextIndex
         END DO
 
 
@@ -496,21 +502,9 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         !---Local Vars---
         integer(kind=KMCLINT)::TempCode
         !---Body---
-        reSparedCode = ObjectCode
+        reSparedCode = IOR(SubjectCode,ObjectCode)
 
-        TempCode = ObjectCode
-        TempCode = ISHFT(TempCode,-this%MapBitLength)
-        DO While(TempCode .GT. 0)
-
-            reSparedCode = IOR(reSparedCode,IBITS(TempCode,0,this%MapBitLength-1))
-
-            TempCode = ISHFT(TempCode,-this%MapBitLength)
-
-        END DO
-
-
-        TempCode = SubjectCode
-        reSparedCode = IOR(reSparedCode,IBITS(TempCode,0,this%MapBitLength-1))
+        TempCode = reSparedCode
         TempCode = ISHFT(TempCode,-this%MapBitLength)
         DO While(TempCode .GT. 0)
 

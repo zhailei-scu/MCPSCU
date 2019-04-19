@@ -320,7 +320,7 @@ module MIGCOALE_EVOLUTION_GPU
         call MergePre_Kernel<<<blocks,threads>>>(BlockNumEachBox,                               &
                                                  Dev_ClusterInfo_GPU%dm_Clusters,               &
                                                  Dev_Boxes%dm_SEUsedIndexBox,                   &
-                                                 Dev_DiffusorMap%Dev_TypesMap,                  &
+                                                 Dev_DiffusorMap%Dev_TypesEntities,             &
                                                  Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,   &
                                                  Dev_ClusterInfo_GPU%dm_MergeINDI,              &
                                                  Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
@@ -329,7 +329,7 @@ module MIGCOALE_EVOLUTION_GPU
         call MergeBack_Kernel<<<blocks,threads>>>(BlockNumEachBox,                              &
                                                   Dev_ClusterInfo_GPU%dm_Clusters,              &
                                                   Dev_Boxes%dm_SEUsedIndexBox,                  &
-                                                  Dev_DiffusorMap%Dev_TypesMap,                 &
+                                                  Dev_DiffusorMap%Dev_TypesEntities,            &
                                                   Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,  &
                                                   Dev_ClusterInfo_GPU%dm_MergeINDI,             &
                                                   Dev_ClusterInfo_GPU%dm_MergeKVOIS,            &

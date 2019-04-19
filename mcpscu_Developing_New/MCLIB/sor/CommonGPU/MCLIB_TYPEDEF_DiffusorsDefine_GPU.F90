@@ -8,7 +8,7 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
 
     type,public::Dev_DiffusorTypesMap
 
-        type(DiffusorTypeEntity),device,dimension(:),allocatable::Dev_TypesMap
+        type(DiffusorTypeEntity),device,dimension(:),allocatable::Dev_TypesEntities
 
         integer,device,dimension(:,:),allocatable::Dev_SingleAtomsDivideArrays
 
@@ -40,10 +40,10 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
         !---Local Vars---
 
         !---Body---
-        if(allocated(this%Dev_TypesMap)) then
-            deallocate(this%Dev_TypesMap)
+        if(allocated(this%Dev_TypesEntities)) then
+            deallocate(this%Dev_TypesEntities)
         end if
-        allocate(this%Dev_TypesMap(Host_DiffusorTypesMap%MapLength))
+        allocate(this%Dev_TypesEntities(Host_DiffusorTypesMap%MapLength))
 
         call DeAllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,"Dev_SingleAtomsDivideArrays")
         call AllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,Host_DiffusorTypesMap%MaxDivideGroups_SingleElement,"Dev_SingleAtomsDivideArrays")
@@ -70,10 +70,10 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
 
         dm_MaxDivideGroups_SingleElement_Diffusors = Host_DiffusorTypesMap%MaxDivideGroups_SingleElement
 
-        hp_Clusters = c_loc(Host_DiffusorTypesMap%TypesMap)
-        dp_Clusters = c_devloc(this%Dev_TypesMap)
+        hp_Clusters = c_loc(Host_DiffusorTypesMap%TypesEntities)
+        dp_Clusters = c_devloc(this%Dev_TypesEntities)
 
-        err = cudaMemcpy(dp_Clusters,hp_Clusters,sizeof(Host_DiffusorTypesMap%TypesMap))
+        err = cudaMemcpy(dp_Clusters,hp_Clusters,sizeof(Host_DiffusorTypesMap%TypesEntities))
 
         this%Dev_SingleAtomsDivideArrays = Host_DiffusorTypesMap%SingleAtomsDivideArrays
 
@@ -88,8 +88,8 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
         CLASS(Dev_DiffusorTypesMap)::this
         !---Body---
 
-        if(allocated(this%Dev_TypesMap)) then
-            deallocate(this%Dev_TypesMap)
+        if(allocated(this%Dev_TypesEntities)) then
+            deallocate(this%Dev_TypesEntities)
         end if
 
         call DeAllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,"Dev_SingleAtomsDivideArrays")
@@ -109,11 +109,11 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
     end subroutine
 
     !**********************************
-    attributes(device) subroutine Dev_GetValueFromDiffusorsMap(Key,Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheValue)
+    attributes(device) subroutine Dev_GetValueFromDiffusorsMap(Key,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheValue)
         implicit none
         !---Dummy Vars---
         type(ACluster)::Key
-        type(DiffusorTypeEntity),device::Dev_TypesMap(*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (*) for one dimension,cannot be (:)
+        type(DiffusorTypeEntity),device::Dev_TypesEntities(*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (*) for one dimension,cannot be (:)
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (x,*) for two dimension, cannot be (:,:)
         type(DiffusorValue)::TheValue
         !---Local Vars---
@@ -130,12 +130,12 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
 
         DO While(IndexFor .GT. 0)
 
-            if(Dev_TypesMap(IndexFor)%Code .eq. Code) then
-                TheValue = Dev_TypesMap(IndexFor)%TheValue
+            if(Dev_TypesEntities(IndexFor)%Code .eq. Code) then
+                TheValue = Dev_TypesEntities(IndexFor)%TheValue
                 exit
             end if
 
-            IndexFor = Dev_TypesMap(IndexFor)%NextIndex
+            IndexFor = Dev_TypesEntities(IndexFor)%NextIndex
         END DO
 
 

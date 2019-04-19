@@ -2735,7 +2735,7 @@ module MIGCOALE_IMPLANTATION_GPU
                 call Kernel_ImplantClusters_Depth_Layer<<<blocks,threads>>>(TotalAllocateNC,                                          &
                                                                             NewAllocateNCEachBox,                                     &
                                                                             Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,                 &
-                                                                            Dev_Boxes%dm_DiffusorTypesMap%Dev_TypesMap,               &
+                                                                            Dev_Boxes%dm_DiffusorTypesMap%Dev_TypesEntities,          &
                                                                             Dev_Boxes%dm_DiffusorTypesMap%Dev_SingleAtomsDivideArrays,&
                                                                             Host_Boxes%m_GrainBoundary%GrainNum,                      &
                                                                             Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,                 &
@@ -2942,7 +2942,7 @@ module MIGCOALE_IMPLANTATION_GPU
                 call Kernel_ImplantClusters_Depth_SubBox<<<blocks,threads>>>(TotalAllocateNC,                                         &
                                                                             NewAllocateNCEachBox,                                     &
                                                                             Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,                 &
-                                                                            Dev_Boxes%dm_DiffusorTypesMap%Dev_TypesMap,               &
+                                                                            Dev_Boxes%dm_DiffusorTypesMap%Dev_TypesEntities,          &
                                                                             Dev_Boxes%dm_DiffusorTypesMap%Dev_SingleAtomsDivideArrays,&
                                                                             Host_Boxes%m_GrainBoundary%GrainNum,                      &
                                                                             Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,                 &
@@ -3111,10 +3111,10 @@ module MIGCOALE_IMPLANTATION_GPU
 
                 err = curandGenerateNormal(ImplantRand%m_ranGen_ClustersSizeDist,ImplantRand%dm_SizeDist_Implant,TotalAllocateNC,this%NAINI,this%NASDINI)
 
-                call Kernel_ImplantClusters_Depth_Gauss<<<blocks,threads>>>(TotalAllocateNC,                                         &
+                call Kernel_ImplantClusters_Depth_Gauss<<<blocks,threads>>>(TotalAllocateNC,                                          &
                                                                             NewAllocateNCEachBox,                                     &
                                                                             Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,                 &
-                                                                            Dev_Boxes%dm_DiffusorTypesMap%Dev_TypesMap,               &
+                                                                            Dev_Boxes%dm_DiffusorTypesMap%Dev_TypesEntities,          &
                                                                             Dev_Boxes%dm_DiffusorTypesMap%Dev_SingleAtomsDivideArrays,&
                                                                             Host_Boxes%m_GrainBoundary%GrainNum,                      &
                                                                             Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,                 &
@@ -3288,7 +3288,7 @@ module MIGCOALE_IMPLANTATION_GPU
                 call Kernel_ImplantClusters_FromFile<<<blocks,threads>>>(TotalAllocateNC,                                         &
                                                                         NewAllocateNCEachBox,                                     &
                                                                         Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,                 &
-                                                                        Dev_Boxes%dm_DiffusorTypesMap%Dev_TypesMap,               &
+                                                                        Dev_Boxes%dm_DiffusorTypesMap%Dev_TypesEntities,          &
                                                                         Dev_Boxes%dm_DiffusorTypesMap%Dev_SingleAtomsDivideArrays,&
                                                                         Host_Boxes%m_GrainBoundary%GrainNum,                      &
                                                                         Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,                 &

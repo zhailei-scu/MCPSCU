@@ -6,7 +6,7 @@ module MCLIB_TYPEDEF_ReactionssDefine_GPU
 
     type,public::Dev_ReactionsMap
 
-        type(ReactionEntity),device,dimension(:),allocatable::Dev_RecordsMap
+        type(ReactionEntity),device,dimension(:),allocatable::Dev_RecordsEntities
 
         integer,device,dimension(:,:),allocatable::Dev_SingleAtomsDivideArrays
 
@@ -38,10 +38,10 @@ module MCLIB_TYPEDEF_ReactionssDefine_GPU
         !---Local Vars---
 
         !---Body---
-        if(allocated(this%Dev_RecordsMap)) then
-            deallocate(this%Dev_RecordsMap)
+        if(allocated(this%Dev_RecordsEntities)) then
+            deallocate(this%Dev_RecordsEntities)
         end if
-        allocate(this%Dev_RecordsMap(Host_ReactionsMap%MapLength))
+        allocate(this%Dev_RecordsEntities(Host_ReactionsMap%MapLength))
 
         call DeAllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,"Dev_SingleAtomsDivideArrays")
         call AllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,p_ATOMS_GROUPS_NUMBER,Host_ReactionsMap%MaxDivideGroups_SingleElement,"Dev_SingleAtomsDivideArrays")
@@ -68,10 +68,10 @@ module MCLIB_TYPEDEF_ReactionssDefine_GPU
 
         dm_MaxDivideGroups_SingleElement_Reactions = Host_ReactionsMap%MaxDivideGroups_SingleElement
 
-        hp = c_loc(Host_ReactionsMap%RecordsMap)
-        dp = c_devloc(this%Dev_RecordsMap)
+        hp = c_loc(Host_ReactionsMap%RecordsEntities)
+        dp = c_devloc(this%Dev_RecordsEntities)
 
-        err = cudaMemcpy(dp,hp,sizeof(Host_ReactionsMap%RecordsMap))
+        err = cudaMemcpy(dp,hp,sizeof(Host_ReactionsMap%RecordsEntities))
 
         this%Dev_SingleAtomsDivideArrays = Host_ReactionsMap%SingleAtomsDivideArrays
 
@@ -85,8 +85,8 @@ module MCLIB_TYPEDEF_ReactionssDefine_GPU
         CLASS(Dev_ReactionsMap)::this
         !---Body---
 
-        if(allocated(this%Dev_RecordsMap)) then
-            deallocate(this%Dev_RecordsMap)
+        if(allocated(this%Dev_RecordsEntities)) then
+            deallocate(this%Dev_RecordsEntities)
         end if
 
         call DeAllocateArray_GPU(this%Dev_SingleAtomsDivideArrays,"Dev_SingleAtomsDivideArrays")
@@ -106,33 +106,41 @@ module MCLIB_TYPEDEF_ReactionssDefine_GPU
     end subroutine
 
     !**********************************
-    attributes(device) subroutine Dev_GetValueFromReactionsMap(Key,Dev_TypesMap,Dev_SingleAtomsDivideArrays,TheValue)
+    attributes(device) subroutine Dev_GetValueFromReactionsMap(KeySubject,KeyObject,Dev_RecordsEntities,Dev_SingleAtomsDivideArrays,TheValue)
         implicit none
         !---Dummy Vars---
-        type(ACluster)::Key
-        type(DiffusorTypeEntity),device::Dev_TypesMap(*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (*) for one dimension,cannot be (:)
+        type(ACluster)::KeySubject
+        type(ACluster)::KeyObject
+        type(ReactionEntity),device::Dev_RecordsEntities(*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (*) for one dimension,cannot be (:)
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (x,*) for two dimension, cannot be (:,:)
-        type(DiffusorValue)::TheValue
+        type(ReactionValue)::TheValue
         !---Local Vars---
-        integer(kind=KMCLINT)::Code
+        integer(kind=KMCLINT)::SubjectCode,ObjectCode
         integer(kind=KMCLINT)::reSparedCode
         integer(kind=KMCLINT)::IndexFor
         integer(kind=KMCLINT)::NextIndex
         !---Body---
-        call Dev_GetCode(Key%m_Atoms,Dev_SingleAtomsDivideArrays,Code)
+        call Dev_GetCode(KeySubject%m_Atoms,Dev_SingleAtomsDivideArrays,SubjectCode)
+        call Dev_GetCode(KeyObject%m_Atoms,Dev_SingleAtomsDivideArrays,ObjectCode)
 
-        call Dev_Hash(Code,reSparedCode)
+        call Dev_Hash(SubjectCode,ObjectCode,reSparedCode)
 
         call Dev_GetIndexFor(reSparedCode,IndexFor)
 
         DO While(IndexFor .GT. 0)
 
-            if(Dev_TypesMap(IndexFor)%Code .eq. Code) then
-                TheValue = Dev_TypesMap(IndexFor)%TheValue
+            if(Dev_RecordsEntities(IndexFor)%SubjectCode .eq. SubjectCode .AND. Dev_RecordsEntities(IndexFor)%ObjectCode .eq. ObjectCode) then
+                TheValue = Dev_RecordsEntities(IndexFor)%TheValue
                 exit
             end if
 
-            IndexFor = Dev_TypesMap(IndexFor)%NextIndex
+            !---here, we consider that the reaction is symmetrical which means if A can react with B , vice versa
+            if(Dev_RecordsEntities(IndexFor)%SubjectCode .eq. ObjectCode .AND. Dev_RecordsEntities(IndexFor)%ObjectCode .eq. SubjectCode) then
+                TheValue = Dev_RecordsEntities(IndexFor)%TheValue
+                exit
+            end if
+
+            IndexFor = Dev_RecordsEntities(IndexFor)%NextIndex
         END DO
 
 
@@ -164,18 +172,19 @@ module MCLIB_TYPEDEF_ReactionssDefine_GPU
     end subroutine Dev_GetCode
 
     !**********************************
-    attributes(device) subroutine Dev_Hash(Code,reSparedCode)
+    attributes(device) subroutine Dev_Hash(SubjectCode,ObjectCode,reSparedCode)
         implicit none
         ! Purpose: to spare the code to be more uniform
         !---Dummy Vars---
-        integer(kind=KMCLINT)::Code
+        integer(kind=KMCLINT)::SubjectCode
+        integer(kind=KMCLINT)::ObjectCode
         integer(kind=KMCLINT)::reSparedCode
         !---Local Vars---
         integer(kind=KMCLINT)::TempCode
         !---Body---
-        reSparedCode = Code
-        TempCode = Code
+        reSparedCode = IOR(SubjectCode,ObjectCode)
 
+        TempCode = reSparedCode
         TempCode = ISHFT(TempCode,-dm_MapBitLength_Reactions)
 
         DO While(TempCode .GT. 0)

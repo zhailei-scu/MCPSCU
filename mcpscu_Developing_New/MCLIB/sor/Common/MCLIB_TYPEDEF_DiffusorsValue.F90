@@ -91,7 +91,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         integer,dimension(:,:),allocatable::SingleAtomsDivideArrays
 
-        type(DiffusorTypeEntity),dimension(:),allocatable::TypesMap
+        type(DiffusorTypeEntity),dimension(:),allocatable::TypesEntities
 
         contains
 
@@ -290,7 +290,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         this%SingleAtomsDivideArrays = SingleAtomsDivideArrays
 
-        allocate(this%TypesMap(this%MapLength))
+        allocate(this%TypesEntities(this%MapLength))
 
         return
     end subroutine DiffusorTypesMapConstructor
@@ -307,7 +307,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%MapBitLength = Others%MapBitLength
 
         this%SingleAtomsDivideArrays = Others%SingleAtomsDivideArrays
-        this%TypesMap = Others%TypesMap
+        this%TypesEntities = Others%TypesEntities
 
         return
     end subroutine
@@ -326,8 +326,8 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         call DeAllocateArray_Host(this%SingleAtomsDivideArrays,"SingleAtomsDivideArrays")
 
-        if(allocated(this%TypesMap)) then
-            deallocate(this%TypesMap)
+        if(allocated(this%TypesEntities)) then
+            deallocate(this%TypesEntities)
         end if
 
         return
@@ -366,14 +366,14 @@ module MCLIB_TYPEDEF_DiffusorsValue
         IndexFor = this%GetIndexFor(reSparedCode)
 
         ! Handle the conflictions
-        if(this%TypesMap(IndexFor)%Code .NE. 0 .AND. Code .NE. this%TypesMap(IndexFor)%Code) then
+        if(this%TypesEntities(IndexFor)%Code .NE. 0 .AND. Code .NE. this%TypesEntities(IndexFor)%Code) then
 
-            NextIndex = this%TypesMap(IndexFor)%NextIndex
+            NextIndex = this%TypesEntities(IndexFor)%NextIndex
 
             ICount = 1
-            DO While(NextIndex .GT. 0 .AND. Code .NE. this%TypesMap(IndexFor)%Code)
+            DO While(NextIndex .GT. 0 .AND. Code .NE. this%TypesEntities(IndexFor)%Code)
 
-                if(Code .eq. this%TypesMap(IndexFor)%Code) then
+                if(Code .eq. this%TypesEntities(IndexFor)%Code) then
                     write(*,*) "MCPSCUERROR: The diffusor is redefined !"
                     write(*,*) "Diffusor : ",Key%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                     pause
@@ -390,7 +390,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
                 IndexFor = NextIndex
 
-                NextIndex = this%TypesMap(IndexFor)%NextIndex
+                NextIndex = this%TypesEntities(IndexFor)%NextIndex
 
             END DO
 
@@ -409,19 +409,19 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
                 if(NextIndex .LE. 0 .or. NextIndex .GT. this%MapLength) then
                     reSparedCode = 1
-                else if(this%TypesMap(NextIndex)%Code .eq. 0) then
+                else if(this%TypesEntities(NextIndex)%Code .eq. 0) then
                     exit
                 end if
 
             END DO
 
-            this%TypesMap(IndexFor)%NextIndex = NextIndex
+            this%TypesEntities(IndexFor)%NextIndex = NextIndex
 
             IndexFor = NextIndex
         end if
 
-        this%TypesMap(IndexFor)%Code = Code
-        this%TypesMap(IndexFor)%TheValue = TheValue
+        this%TypesEntities(IndexFor)%Code = Code
+        this%TypesEntities(IndexFor)%TheValue = TheValue
 
         return
     end subroutine putToDiffusorsMap
@@ -447,12 +447,12 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         DO While(IndexFor .GT. 0)
 
-            if(this%TypesMap(IndexFor)%Code .eq. Code) then
-                TheValue = this%TypesMap(IndexFor)%TheValue
+            if(this%TypesEntities(IndexFor)%Code .eq. Code) then
+                TheValue = this%TypesEntities(IndexFor)%TheValue
                 exit
             end if
 
-            IndexFor = this%TypesMap(IndexFor)%NextIndex
+            IndexFor = this%TypesEntities(IndexFor)%NextIndex
         END DO
 
 
