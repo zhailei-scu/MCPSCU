@@ -343,11 +343,6 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             call ConstructClusterListsArray(tempIndex)%Clean_ClusterList()
 
-
-            write(*,*) "TheAtomsSetsRangesArray(tempIndex)%m_SetsRange%m_NA_From",TheAtomsSetsRangesArray(tempIndex)%m_SetsRange%m_NA_From
-
-            write(*,*) "TheAtomsSetsRangesArray(tempIndex)%m_SetsRange%m_NA_To",TheAtomsSetsRangesArray(tempIndex)%m_SetsRange%m_NA_To
-
             ConstructClusterListsArray(tempIndex) = TheAtomsSetsRangesArray(tempIndex)%AtomsSetRange2ClusterList(SingleAtomsDivideArrays)
 
             Maplength = Maplength + ConstructClusterListsArray(tempIndex)%GetList_Count()

@@ -412,10 +412,6 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
             end if
         end if
 
-
-        write(*,*) "IndexFor",IndexFor
-        write(*,*) "size(this%RecordsEntities)",size(this%RecordsEntities)
-
         this%RecordsEntities(IndexFor)%SubjectCode = SubjectCode
         this%RecordsEntities(IndexFor)%ObjectCode = ObjectCode
         this%RecordsEntities(IndexFor)%TheValue = TheValue
