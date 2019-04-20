@@ -657,9 +657,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         cursor=>this
 
         if(.not. associated(cursor)) then
-            write(*,*) "MCPSCUERROR: You should allocate the ReadReactionPropList first!"
-            pause
-            stop
+            return
         end if
 
         ListCount = this%GetList_Count()
