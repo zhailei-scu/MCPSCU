@@ -910,6 +910,8 @@ module MCLIB_TYPEDEF_ReactionPropList
                 TheResult = .false.
             end if
 
+            cursor=>cursor%next
+
         END DO
 
 
