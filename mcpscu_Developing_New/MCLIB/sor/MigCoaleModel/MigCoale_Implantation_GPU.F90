@@ -2129,6 +2129,11 @@ module MIGCOALE_IMPLANTATION_GPU
                             POS(3) = DRAND32()*this%LayerThick(ILayer) + sum(this%LayerThick(1:ILayer-1)) + Host_Boxes%BOXBOUNDARY(3,1)
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
+                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. 0.D0) then
+                                write(*,*) "MCPSCUERROR: the implant position had been occupied in memory",IC
+                                pause
+                            end if
+
                             TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
@@ -2191,11 +2196,6 @@ module MIGCOALE_IMPLANTATION_GPU
                                         ! Here we adopt a model that D=D0*(1/R)**Gama
                                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_GBSURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
                                 end select
-                            end if
-
-                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. 0.D0) then
-                                write(*,*) "MCPSCUERROR: the implant position had been occupied in memory",IC
-                                pause
                             end if
 
                             exitFlag = .true.

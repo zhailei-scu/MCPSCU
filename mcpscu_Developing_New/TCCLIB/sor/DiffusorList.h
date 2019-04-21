@@ -8,15 +8,28 @@ typedef struct{
 #endif
   char symbol[20];
 
-  int DiffusorValueType;
-  double DiffuseCoefficient_Value;
+  //In free matrix
+  int DiffusorValueType_Free;
+  double DiffuseCoefficient_Free_Value;
 
   // If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
-  double PreFactor;
-  double ActEnergy;
+  double PreFactor_Free;
+  double ActEnergy_Free;
 
-  int ECRValueType;
-  double ECR;
+  int ECRValueType_Free;
+  double ECR_Free;
+
+  //In GB
+  int DiffusorValueType_InGB;
+  double DiffuseCoefficient_InGB_Value;
+
+  // If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
+  double PreFactor_InGB;
+  double ActEnergy_InGB;
+
+  int ECRValueType_InGB;
+  double ECR_InGB;
+
 #ifdef __cplusplus
 };
 #else
