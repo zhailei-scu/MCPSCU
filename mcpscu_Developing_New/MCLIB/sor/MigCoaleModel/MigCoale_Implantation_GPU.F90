@@ -857,10 +857,10 @@ module MIGCOALE_IMPLANTATION_GPU
                 call this%Putin_OKMC_FORMAT18_Distribution(LayerNum)
 
             case(MF_OUTCFG_FORMAT18)
-                call SimBoxes%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFileName,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_RNFACTOR,m_SURDIFPRE)
+                call SimBoxes%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFileName,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_RNFACTOR,m_FREESURDIFPRE)
 
             case(SPMF_OUTCFG_FORMAT18)
-                call SimBoxes%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFileName,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_RNFACTOR,m_SURDIFPRE)
+                call SimBoxes%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFileName,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_RNFACTOR,m_FREESURDIFPRE,m_GBSURDIFPRE)
 
             case(SRIM_DIST)
                 call this%Putin_SRIM2003_OUTCFG_Distribution(SimBoxes,Host_SimuCtrlParam,LayerNum)
@@ -962,23 +962,24 @@ module MIGCOALE_IMPLANTATION_GPU
 
         TheDiffusorValue = SimBoxes%m_DiffusorTypesMap%Get(ImplantIon)
 
-        select case(TheDiffusorValue%ECRValueType)
+        !---In PANDA, the matrix is amorphous---
+        select case(TheDiffusorValue%ECRValueType_Free)
             case(p_ECR_ByValue)
-                ImplantIon%m_RAD = TheDiffusorValue%ECR
+                ImplantIon%m_RAD = TheDiffusorValue%ECR_Free
             case(p_ECR_ByBCluster)
                 ! Convert the number of atoms to radius
                 ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
                 ImplantIon%m_RAD = DSQRT(sum(ImplantIon%m_Atoms(:)%m_NA)/m_RNFACTOR)
         end select
 
-        select case(TheDiffusorValue%DiffusorValueType)
+        select case(TheDiffusorValue%DiffusorValueType_Free)
             case(p_DiffuseCoefficient_ByValue)
-                ImplantIon%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                ImplantIon%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
             case(p_DiffuseCoefficient_ByArrhenius)
-                ImplantIon%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
+                ImplantIon%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             case(p_DiffuseCoefficient_ByBCluster)
                 ! Here we adopt a model that D=D0*(1/R)**Gama
-                ImplantIon%m_DiffCoeff = m_SURDIFPRE*(ImplantIon%m_RAD**(-p_GAMMA))
+                ImplantIon%m_DiffCoeff = m_FREESURDIFPRE*(ImplantIon%m_RAD**(-p_GAMMA))
         end select
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
@@ -1183,23 +1184,24 @@ module MIGCOALE_IMPLANTATION_GPU
 
         TheDiffusorValue = SimBoxes%m_DiffusorTypesMap%Get(ImplantIon)
 
-        select case(TheDiffusorValue%ECRValueType)
+        !---In SRIM2003, the matrix is amorphous---
+        select case(TheDiffusorValue%ECRValueType_Free)
             case(p_ECR_ByValue)
-                ImplantIon%m_RAD = TheDiffusorValue%ECR
+                ImplantIon%m_RAD = TheDiffusorValue%ECR_Free
             case(p_ECR_ByBCluster)
                 ! Convert the number of atoms to radius
                 ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
                 ImplantIon%m_RAD = DSQRT(sum(ImplantIon%m_Atoms(:)%m_NA)/m_RNFACTOR)
         end select
 
-        select case(TheDiffusorValue%DiffusorValueType)
+        select case(TheDiffusorValue%DiffusorValueType_Free)
             case(p_DiffuseCoefficient_ByValue)
-                ImplantIon%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                ImplantIon%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
             case(p_DiffuseCoefficient_ByArrhenius)
-                ImplantIon%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
+                ImplantIon%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             case(p_DiffuseCoefficient_ByBCluster)
                 ! Here we adopt a model that D=D0*(1/R)**Gama
-                ImplantIon%m_DiffCoeff = m_SURDIFPRE*(ImplantIon%m_RAD**(-p_GAMMA))
+                ImplantIon%m_DiffCoeff = m_FREESURDIFPRE*(ImplantIon%m_RAD**(-p_GAMMA))
         end select
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
@@ -2127,34 +2129,74 @@ module MIGCOALE_IMPLANTATION_GPU
                             POS(3) = DRAND32()*this%LayerThick(ILayer) + sum(this%LayerThick(1:ILayer-1)) + Host_Boxes%BOXBOUNDARY(3,1)
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
-                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS)
-
                             TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS)
+
+                                select case(TheDiffusorValue%ECRValueType_Free)
+                                    case(p_ECR_ByValue)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                                    case(p_ECR_ByBCluster)
+                                        ! Convert the number of atoms to radius
+                                        ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                                end select
+
+                                select case(TheDiffusorValue%DiffusorValueType_Free)
+                                    case(p_DiffuseCoefficient_ByValue)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                                    case(p_DiffuseCoefficient_ByArrhenius)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                    case(p_DiffuseCoefficient_ByBCluster)
+                                        ! Here we adopt a model that D=D0*(1/R)**Gama
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                                end select
+
+                            else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%ClustersSample(ILayer,IGroup)%m_GrainID(1)
+
+                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) .GT. Host_Boxes%m_GrainBoundary%GrainNum) then
+                                    write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+                                    write(*,*) Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1)
+                                    pause
+                                    stop
+                                end if
+
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) = this%ClustersSample(ILayer,IGroup)%m_GrainID(2)
+
+                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) .GT. Host_Boxes%m_GrainBoundary%GrainNum) then
+                                    write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+                                    write(*,*) Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2)
+                                    pause
+                                    stop
+                                end if
+
+                                select case(TheDiffusorValue%ECRValueType_InGB)
+                                    case(p_ECR_ByValue)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                                    case(p_ECR_ByBCluster)
+                                        ! Convert the number of atoms to radius
+                                        ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                                end select
+
+                                select case(TheDiffusorValue%DiffusorValueType_InGB)
+                                    case(p_DiffuseCoefficient_ByValue)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                                    case(p_DiffuseCoefficient_ByArrhenius)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
+                                    case(p_DiffuseCoefficient_ByBCluster)
+                                        ! Here we adopt a model that D=D0*(1/R)**Gama
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_GBSURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                                end select
+                            end if
 
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. 0.D0) then
                                 write(*,*) "MCPSCUERROR: the implant position had been occupied in memory",IC
                                 pause
                             end if
-
-
-                            select case(TheDiffusorValue%ECRValueType)
-                                case(p_ECR_ByValue)
-                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
-                                case(p_ECR_ByBCluster)
-                                    ! Convert the number of atoms to radius
-                                    ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
-                            end select
-
-                            select case(TheDiffusorValue%DiffusorValueType)
-                                case(p_DiffuseCoefficient_ByValue)
-                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
-                                case(p_DiffuseCoefficient_ByArrhenius)
-                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
-                                case(p_DiffuseCoefficient_ByBCluster)
-                                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_SURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
-                            end select
 
                             exitFlag = .true.
 
@@ -2332,23 +2374,25 @@ module MIGCOALE_IMPLANTATION_GPU
 
                         TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
-                        select case(TheDiffusorValue%ECRValueType)
+                        !-- In Current application, the simple implant distribution is only considered in free matrix, if you want to init the clusters in GB---
+                        !---you should init the distribution by external file---
+                        select case(TheDiffusorValue%ECRValueType_Free)
                             case(p_ECR_ByValue)
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                             case(p_ECR_ByBCluster)
                                 ! Convert the number of atoms to radius
                                 ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
                         end select
 
-                        select case(TheDiffusorValue%DiffusorValueType)
+                        select case(TheDiffusorValue%DiffusorValueType_Free)
                             case(p_DiffuseCoefficient_ByValue)
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                             case(p_DiffuseCoefficient_ByArrhenius)
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                             case(p_DiffuseCoefficient_ByBCluster)
                                     ! Here we adopt a model that D=D0*(1/R)**Gama
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_SURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
                         end select
 
                         exitFlag = .true.
@@ -2452,23 +2496,25 @@ module MIGCOALE_IMPLANTATION_GPU
 
             TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
-            select case(TheDiffusorValue%ECRValueType)
+            !-- In Current application, the simple implant distribution is only considered in free matrix, if you want to init the clusters in GB---
+            !---you should init the distribution by external file---
+            select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                 case(p_ECR_ByBCluster)
                     ! Convert the number of atoms to radius
                     ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
              end select
 
-            select case(TheDiffusorValue%DiffusorValueType)
+            select case(TheDiffusorValue%DiffusorValueType_Free)
                 case(p_DiffuseCoefficient_ByValue)
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                 case(p_DiffuseCoefficient_ByArrhenius)
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_SURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
             end select
 
         END DO
@@ -2574,23 +2620,25 @@ module MIGCOALE_IMPLANTATION_GPU
 
                 TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
-                select case(TheDiffusorValue%ECRValueType)
+                !-- In Current application, the simple implant distribution is only considered in free matrix, if you want to init the clusters in GB---
+                !---you should init the distribution by external file---
+                select case(TheDiffusorValue%ECRValueType_Free)
                     case(p_ECR_ByValue)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                     case(p_ECR_ByBCluster)
                         ! Convert the number of atoms to radius
                         ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
                 end select
 
-                select case(TheDiffusorValue%DiffusorValueType)
+                select case(TheDiffusorValue%DiffusorValueType_Free)
                     case(p_DiffuseCoefficient_ByValue)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                     case(p_DiffuseCoefficient_ByArrhenius)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_SURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
                 end select
 
             END DO
@@ -2870,21 +2918,23 @@ module MIGCOALE_IMPLANTATION_GPU
 
                         call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
-                        select case(TheDiffusorValue%ECRValueType)
+                        !-- In Current application, the simple implant distribution is only considered in free matrix, if you want to init the clusters in GB---
+                        !---you should init the distribution by external file---
+                        select case(TheDiffusorValue%ECRValueType_Free)
                             case(p_ECR_ByValue)
-                                Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR
+                                Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                             case(p_ECR_ByBCluster)
                                 Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
                         end select
 
-                        select case(TheDiffusorValue%DiffusorValueType)
+                        select case(TheDiffusorValue%DiffusorValueType_Free)
                             case(p_DiffuseCoefficient_ByValue)
-                                Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                                Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                             case(p_DiffuseCoefficient_ByArrhenius)
-                                Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
+                                Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                             case(p_DiffuseCoefficient_ByBCluster)
                                 ! Here we adopt a model that D=D0*(1/R)**Gama
-                                Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_SURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                                Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
                         end select
 
                         exitFlag = .true.
@@ -3051,21 +3101,23 @@ module MIGCOALE_IMPLANTATION_GPU
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
-            select case(TheDiffusorValue%ECRValueType)
+            !-- In Current application, the simple implant distribution is only considered in free matrix, if you want to init the clusters in GB---
+            !---you should init the distribution by external file---
+            select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
-                    Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR
+                    Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                 case(p_ECR_ByBCluster)
                     Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
             end select
 
-            select case(TheDiffusorValue%DiffusorValueType)
+            select case(TheDiffusorValue%DiffusorValueType_Free)
                 case(p_DiffuseCoefficient_ByValue)
-                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                 case(p_DiffuseCoefficient_ByArrhenius)
-                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
-                    Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_SURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
             end select
 
         end if
@@ -3228,21 +3280,23 @@ module MIGCOALE_IMPLANTATION_GPU
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
-            select case(TheDiffusorValue%ECRValueType)
+            !-- In Current application, the simple implant distribution is only considered in free matrix, if you want to init the clusters in GB---
+            !---you should init the distribution by external file---
+            select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
-                    Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR
+                    Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                 case(p_ECR_ByBCluster)
                     Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
             end select
 
-            select case(TheDiffusorValue%DiffusorValueType)
+            select case(TheDiffusorValue%DiffusorValueType_Free)
                 case(p_DiffuseCoefficient_ByValue)
-                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                 case(p_DiffuseCoefficient_ByArrhenius)
-                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
-                    Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_SURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
             end select
 
         end if
@@ -3398,26 +3452,50 @@ module MIGCOALE_IMPLANTATION_GPU
 
                         Dev_Clusters(ICTRUE)%m_Statu = Dev_ClustersSample(ILayer,IGroup)%m_Statu
 
-                        Dev_Clusters(ICTRUE)%m_GrainID(1) = GrainBelongsTo_Dev(Nseeds,Dev_GrainSeeds,POS)
-
                         call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
-                        select case(TheDiffusorValue%ECRValueType)
-                            case(p_ECR_ByValue)
-                                Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR
-                            case(p_ECR_ByBCluster)
-                                Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
-                        end select
+                        if(Dev_Clusters(ICTRUE)%m_Statu .eq. p_ACTIVEFREE_STATU) then
 
-                        select case(TheDiffusorValue%DiffusorValueType)
-                            case(p_DiffuseCoefficient_ByValue)
-                                Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
-                            case(p_DiffuseCoefficient_ByArrhenius)
-                                Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
-                            case(p_DiffuseCoefficient_ByBCluster)
-                            ! Here we adopt a model that D=D0*(1/R)**Gama
-                            Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_SURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
-                        end select
+                            Dev_Clusters(ICTRUE)%m_GrainID(1) = GrainBelongsTo_Dev(Nseeds,Dev_GrainSeeds,POS)
+
+                            select case(TheDiffusorValue%ECRValueType_Free)
+                                case(p_ECR_ByValue)
+                                    Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
+                                case(p_ECR_ByBCluster)
+                                    Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                            end select
+
+                            select case(TheDiffusorValue%DiffusorValueType_Free)
+                                case(p_DiffuseCoefficient_ByValue)
+                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                                case(p_DiffuseCoefficient_ByArrhenius)
+                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                                case(p_DiffuseCoefficient_ByBCluster)
+                                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                            end select
+
+                        else if(Dev_Clusters(ICTRUE)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+
+                            Dev_Clusters(ICTRUE)%m_GrainID = Dev_ClustersSample(ILayer,IGroup)%m_GrainID
+
+                            select case(TheDiffusorValue%ECRValueType_InGB)
+                                case(p_ECR_ByValue)
+                                    Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_InGB
+                                case(p_ECR_ByBCluster)
+                                    Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                            end select
+
+                            select case(TheDiffusorValue%DiffusorValueType_InGB)
+                                case(p_DiffuseCoefficient_ByValue)
+                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                                case(p_DiffuseCoefficient_ByArrhenius)
+                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                case(p_DiffuseCoefficient_ByBCluster)
+                                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                            end select
+                        end if
 
                         exitFlag = .true.
                         exit

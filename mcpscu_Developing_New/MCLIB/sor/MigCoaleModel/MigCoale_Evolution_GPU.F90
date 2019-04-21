@@ -619,22 +619,43 @@ module MIGCOALE_EVOLUTION_GPU
 
           call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
-          select case(TheDiffusorValue%ECRValueType)
-              case(p_ECR_ByValue)
-                  Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
-              case(p_ECR_ByBCluster)
-                  Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
-          end select
+          if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
 
-          select case(TheDiffusorValue%DiffusorValueType)
-              case(p_DiffuseCoefficient_ByValue)
-                  Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
-              case(p_DiffuseCoefficient_ByArrhenius)
-                  Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
-              case(p_DiffuseCoefficient_ByBCluster)
-                  ! Here we adopt a model that D=D0*(1/R)**Gama
-                  Dev_Clusters(IC)%m_DiffCoeff = dm_SURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-          end select
+            select case(TheDiffusorValue%ECRValueType_Free)
+                case(p_ECR_ByValue)
+                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                case(p_ECR_ByBCluster)
+                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+            end select
+
+            select case(TheDiffusorValue%DiffusorValueType_Free)
+                case(p_DiffuseCoefficient_ByValue)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+            end select
+          else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+            select case(TheDiffusorValue%ECRValueType_InGB)
+                case(p_ECR_ByValue)
+                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                case(p_ECR_ByBCluster)
+                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+            end select
+
+            select case(TheDiffusorValue%DiffusorValueType_InGB)
+                case(p_DiffuseCoefficient_ByValue)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+            end select
+          end if
 
           if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
              if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
@@ -791,22 +812,43 @@ module MIGCOALE_EVOLUTION_GPU
 
           call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
-          select case(TheDiffusorValue%ECRValueType)
-              case(p_ECR_ByValue)
-                  Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
-              case(p_ECR_ByBCluster)
-                  Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
-          end select
+          if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
 
-          select case(TheDiffusorValue%DiffusorValueType)
-              case(p_DiffuseCoefficient_ByValue)
-                  Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
-              case(p_DiffuseCoefficient_ByArrhenius)
-                  Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
-              case(p_DiffuseCoefficient_ByBCluster)
-                  ! Here we adopt a model that D=D0*(1/R)**Gama
-                  Dev_Clusters(IC)%m_DiffCoeff = dm_SURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-          end select
+            select case(TheDiffusorValue%ECRValueType_Free)
+                case(p_ECR_ByValue)
+                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                case(p_ECR_ByBCluster)
+                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+            end select
+
+            select case(TheDiffusorValue%DiffusorValueType_Free)
+                case(p_DiffuseCoefficient_ByValue)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+            end select
+          else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+            select case(TheDiffusorValue%ECRValueType_InGB)
+                case(p_ECR_ByValue)
+                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                case(p_ECR_ByBCluster)
+                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+            end select
+
+            select case(TheDiffusorValue%DiffusorValueType_InGB)
+                case(p_DiffuseCoefficient_ByValue)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+            end select
+          end if
 
           if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
              if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
