@@ -640,18 +640,30 @@ module MCLIB_TYPEDEF_DiffusorPropList
             write(*,*) "######################################################################"
 
             write(hFile,fmt="('!','The diffusor symbol =',A20,2x,  &
-                              '!','CoefficentsGenerate way =',I1,2x, &
-                              '!','DiffusionCiefficents value =',1PE10.4,2x, &
-                              '!','PreFactor = ',1PE10.4,2x, &
-                              '!','ActEnergy = ',1PE10.4,2x, &
-                              '!','ECR Generate way =',I1,2x, &
-                              '!','ECR Value =',1PE10.4)")                     cursor%Diffusor%symbol, &
-                                                                               cursor%Diffusor%DiffusorValueType, &
-                                                                               cursor%Diffusor%DiffuseCoefficient_Value,  &
-                                                                               cursor%Diffusor%PreFactor, &
-                                                                               cursor%Diffusor%ActEnergy, &
-                                                                               cursor%Diffusor%ECRValueType, &
-                                                                               cursor%Diffusor%ECR
+                              '!','CoefficentsGenerate way in free matrix=',I1,2x, &
+                              '!','DiffusionCiefficents value in free matrix =',1PE10.4,2x, &
+                              '!','PreFactor in free matrix = ',1PE10.4,2x, &
+                              '!','ActEnergy in free matrix = ',1PE10.4,2x, &
+                              '!','ECR Generate way in free matrix =',I1,2x, &
+                              '!','ECR Value in free matrix =',1PE10.4, &
+                              '!','CoefficentsGenerate way in GB =',I1,2x, &
+                              '!','DiffusionCiefficents value in GB =',1PE10.4,2x, &
+                              '!','PreFactor in GB = ',1PE10.4,2x, &
+                              '!','ActEnergy in GB = ',1PE10.4,2x, &
+                              '!','ECR Generate way in GB =',I1,2x, &
+                              '!','ECR Value in GB =',1PE10.4)")      cursor%Diffusor%symbol, &
+                                                                      cursor%Diffusor%DiffusorValueType_Free, &
+                                                                      cursor%Diffusor%DiffuseCoefficient_Free_Value,  &
+                                                                      cursor%Diffusor%PreFactor_Free, &
+                                                                      cursor%Diffusor%ActEnergy_Free, &
+                                                                      cursor%Diffusor%ECRValueType_Free, &
+                                                                      cursor%Diffusor%ECR_Free,         &
+                                                                      cursor%Diffusor%DiffusorValueType_InGB, &
+                                                                      cursor%Diffusor%DiffuseCoefficient_InGB_Value,  &
+                                                                      cursor%Diffusor%PreFactor_InGB, &
+                                                                      cursor%Diffusor%ActEnergy_InGB, &
+                                                                      cursor%Diffusor%ECRValueType_InGB, &
+                                                                      cursor%Diffusor%ECR_InGB
 
             if(ConstructClusterList%GetList_Count() .GT. 0) then
                 ClusterListCursor=>ConstructClusterList
@@ -675,18 +687,30 @@ module MCLIB_TYPEDEF_DiffusorPropList
                     symbol = adjustl(symbol)
 
                     write(hFile,fmt="('! |--','The diffusor symbol =',A20,2x,  &
-                                      '!','CoefficentsGenerate way =',I1,2x, &
-                                      '!','DiffusionCiefficents value =',1PE10.4,2x, &
-                                      '!','PreFactor = ',1PE10.4,2x, &
-                                      '!','ActEnergy = ',1PE10.4,2x, &
-                                      '!','ECR Generate way =',I1,2x, &
-                                      '!','ECR Value =',1PE10.4)")             symbol, &
-                                                                               TheValue%DiffusorValueType, &
-                                                                               TheValue%DiffuseCoefficient_Value,  &
-                                                                               TheValue%PreFactor,          &
-                                                                               TheValue%ActEnergy,          &
-                                                                               TheValue%ECRValueType, &
-                                                                               TheValue%ECR
+                                      '!','CoefficentsGenerate way in free matrix =',I1,2x, &
+                                      '!','DiffusionCiefficents value in free matrix =',1PE10.4,2x, &
+                                      '!','PreFactor in free matrix = ',1PE10.4,2x, &
+                                      '!','ActEnergy in free matrix = ',1PE10.4,2x, &
+                                      '!','ECR Generate way in free matrix =',I1,2x, &
+                                      '!','ECR Value in free matrix =',1PE10.4,&
+                                      '!','CoefficentsGenerate way in GB =',I1,2x, &
+                                      '!','DiffusionCiefficents value in GB =',1PE10.4,2x, &
+                                      '!','PreFactor in GB = ',1PE10.4,2x, &
+                                      '!','ActEnergy in GB = ',1PE10.4,2x, &
+                                      '!','ECR Generate way in GB =',I1,2x, &
+                                      '!','ECR Value in GB =',1PE10.4)")       symbol,                                  &
+                                                                               TheValue%DiffusorValueType_Free,         &
+                                                                               TheValue%DiffuseCoefficient_Free_Value,  &
+                                                                               TheValue%PreFactor_Free,                 &
+                                                                               TheValue%ActEnergy_Free,                 &
+                                                                               TheValue%ECRValueType_Free,              &
+                                                                               TheValue%ECR_Free,                       &
+                                                                               TheValue%DiffusorValueType_InGB,         &
+                                                                               TheValue%DiffuseCoefficient_InGB_Value,  &
+                                                                               TheValue%PreFactor_InGB,                 &
+                                                                               TheValue%ActEnergy_InGB,                 &
+                                                                               TheValue%ECRValueType_InGB,              &
+                                                                               TheValue%ECR_InGB
 
                     ClusterListCursor=>ClusterListCursor%next
                 END DO

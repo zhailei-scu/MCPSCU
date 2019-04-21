@@ -4,11 +4,11 @@ module MIGCOALE_ADDONDATA_HOST
     implicit none
 
 
-    real(kind=KMCDF)::m_DIFCOES(3) = 0.D0                       ! the surface diffusion coeffciency
-    real(kind=KMCDF)::m_DIFCOESPRE(3) = 0.D0                    ! the prefactor for the surface diffusion coeffciency
-    real(kind=KMCDF)::m_DIFCOESES(3) = 0.D0                     ! the surface ative energy for surface diffusion coeffciency
+    real(kind=KMCDF)::m_FREEDIFCOES(3) = 0.D0                       ! the surface diffusion coeffciency
+    real(kind=KMCDF)::m_FREEDIFCOESPRE(3) = 0.D0                    ! the prefactor for the surface diffusion coeffciency
+    real(kind=KMCDF)::m_FREEDIFCOESES(3) = 0.D0                     ! the surface ative energy for surface diffusion coeffciency
 
-    real(kind=KMCDF)::m_SURDIFPRE = 0.D0
+    real(kind=KMCDF)::m_FREESURDIFPRE = 0.D0
 
     real(kind=KMCDF)::m_GBDIFCOES(3) = 0.D0                     ! the surface diffusion coeffciency in GB
     real(kind=KMCDF)::m_GBDIFCOESPRE(3) = 0.D0                  ! the prefactor for the surface diffusion coeffciency in GB
@@ -79,11 +79,11 @@ module MIGCOALE_ADDONDATA_HOST
             stop
         end if
         DO I=1,3
-            m_DIFCOESPRE(I) = DRSTR(STRTEMP(2*I-1))
-            m_DIFCOESES(I) =  DRSTR(STRTEMP(2*I))
-            m_DIFCOES(I) = m_DIFCOESPRE(I)*DEXP(-m_DIFCOESES(I)*C_EV2ERG/Host_SimuCtrlParam%TKB)
+            m_FREEDIFCOESPRE(I) = DRSTR(STRTEMP(2*I-1))
+            m_FREEDIFCOESES(I) =  DRSTR(STRTEMP(2*I))
+            m_FREEDIFCOES(I) = m_FREEDIFCOESPRE(I)*DEXP(-m_FREEDIFCOESES(I)*C_EV2ERG/Host_SimuCtrlParam%TKB)
         END DO
-        m_SURDIFPRE = (3.D0/(2.D0*PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_DIFCOES(1)
+        m_FREESURDIFPRE = (3.D0/(2.D0*PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_FREEDIFCOES(1)
 
         KEYWORD = "&GBSURDIF"
         call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)

@@ -13,18 +13,33 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         character(kind=c_char,len=20)::symbol = ""
 
-        integer(c_int)::DiffusorValueType = p_DiffuseCoefficient_ByValue
+        !---In free matrix---
+        integer(c_int)::DiffusorValueType_Free = p_DiffuseCoefficient_ByValue
 
         ! If the DiffuseCoefficient type is by value,use this
-        real(c_double)::DiffuseCoefficient_Value = 0.D0
+        real(c_double)::DiffuseCoefficient_Free_Value = 0.D0
 
         ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
-        real(c_double)::PreFactor = 0.D0
-        real(c_double)::ActEnergy = 0.D0
+        real(c_double)::PreFactor_Free = 0.D0
+        real(c_double)::ActEnergy_Free = 0.D0
 
-        integer(c_int)::ECRValueType = p_ECR_ByValue
+        integer(c_int)::ECRValueType_Free = p_ECR_ByValue
 
-        real(c_double)::ECR = 0.D0
+        real(c_double)::ECR_Free = 0.D0
+
+        !---In GB---
+        integer(c_int)::DiffusorValueType_InGB = p_DiffuseCoefficient_ByValue
+
+        ! If the DiffuseCoefficient type is by value,use this
+        real(c_double)::DiffuseCoefficient_InGB_Value = 0.D0
+
+        ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
+        real(c_double)::PreFactor_InGB = 0.D0
+        real(c_double)::ActEnergy_InGB = 0.D0
+
+        integer(c_int)::ECRValueType_InGB = p_ECR_ByValue
+
+        real(c_double)::ECR_InGB = 0.D0
 
         contains
         procedure,private,non_overridable,pass::CopyReadedDiffusorValueFromOther
@@ -40,18 +55,33 @@ module MCLIB_TYPEDEF_DiffusorsValue
     !**********Which contains all same members except the "symbol".
     TYPE,PUBLIC::DiffusorValue
 
-        integer::DiffusorValueType PREASSIGN p_DiffuseCoefficient_ByValue
+        !---In free matrix---
+        integer::DiffusorValueType_Free PREASSIGN p_DiffuseCoefficient_ByValue
 
         ! If the DiffuseCoefficient type is by value,use this
-        real(kind=KMCDF)::DiffuseCoefficient_Value PREASSIGN 0.D0
+        real(kind=KMCDF)::DiffuseCoefficient_Free_Value PREASSIGN 0.D0
 
         ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
-        real(kind=KMCDF)::PreFactor PREASSIGN 0.D0
-        real(kind=KMCDF)::ActEnergy PREASSIGN 0.D0
+        real(kind=KMCDF)::PreFactor_Free PREASSIGN 0.D0
+        real(kind=KMCDF)::ActEnergy_Free PREASSIGN 0.D0
 
-        integer::ECRValueType PREASSIGN p_ECR_ByValue
+        integer::ECRValueType_Free PREASSIGN p_ECR_ByValue
 
-        real(kind=KMCDF)::ECR PREASSIGN 0.D0
+        real(kind=KMCDF)::ECR_Free PREASSIGN 0.D0
+
+        !---In GB---
+        integer::DiffusorValueType_InGB PREASSIGN p_DiffuseCoefficient_ByValue
+
+        ! If the DiffuseCoefficient type is by value,use this
+        real(kind=KMCDF)::DiffuseCoefficient_InGB_Value PREASSIGN 0.D0
+
+        ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
+        real(kind=KMCDF)::PreFactor_InGB PREASSIGN 0.D0
+        real(kind=KMCDF)::ActEnergy_InGB PREASSIGN 0.D0
+
+        integer::ECRValueType_InGB PREASSIGN p_ECR_ByValue
+
+        real(kind=KMCDF)::ECR_InGB PREASSIGN 0.D0
 
         contains
         procedure,private,non_overridable,pass::CopyDiffusorValueFromOther
@@ -136,17 +166,31 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         this%symbol = others%symbol
 
-        this%DiffusorValueType = Others%DiffusorValueType
+        !--In free matrix---
+        this%DiffusorValueType_Free = Others%DiffusorValueType_Free
 
-        this%DiffuseCoefficient_Value = Others%DiffuseCoefficient_Value
+        this%DiffuseCoefficient_Free_Value = Others%DiffuseCoefficient_Free_Value
 
-        this%PreFactor = Others%PreFactor
+        this%PreFactor_Free = Others%PreFactor_Free
 
-        this%ActEnergy = Others%ActEnergy
+        this%ActEnergy_Free = Others%ActEnergy_Free
 
-        this%ECRValueType = Others%ECRValueType
+        this%ECRValueType_Free = Others%ECRValueType_Free
 
-        this%ECR  = others%ECR
+        this%ECR_Free  = others%ECR_Free
+
+        !---In GB---
+        this%DiffusorValueType_InGB = Others%DiffusorValueType_InGB
+
+        this%DiffuseCoefficient_InGB_Value = Others%DiffuseCoefficient_InGB_Value
+
+        this%PreFactor_InGB = Others%PreFactor_InGB
+
+        this%ActEnergy_InGB = Others%ActEnergy_InGB
+
+        this%ECRValueType_InGB = Others%ECRValueType_InGB
+
+        this%ECR_InGB = others%ECR_InGB
 
         return
     end subroutine
@@ -159,17 +203,30 @@ module MCLIB_TYPEDEF_DiffusorsValue
         type(DiffusorValue),intent(out)::TheDiffusorValue
         !---Body---
 
-        TheDiffusorValue%DiffusorValueType = this%DiffusorValueType
+        TheDiffusorValue%DiffusorValueType_Free = this%DiffusorValueType_Free
 
-        TheDiffusorValue%DiffuseCoefficient_Value = this%DiffuseCoefficient_Value
+        TheDiffusorValue%DiffuseCoefficient_Free_Value = this%DiffuseCoefficient_Free_Value
 
-        TheDiffusorValue%PreFactor = this%PreFactor
+        TheDiffusorValue%PreFactor_Free = this%PreFactor_Free
 
-        TheDiffusorValue%ActEnergy = this%ActEnergy
+        TheDiffusorValue%ActEnergy_Free = this%ActEnergy_Free
 
-        TheDiffusorValue%ECRValueType = this%ECRValueType
+        TheDiffusorValue%ECRValueType_Free = this%ECRValueType_Free
 
-        TheDiffusorValue%ECR = this%ECR
+        TheDiffusorValue%ECR_Free = this%ECR_Free
+
+
+        TheDiffusorValue%DiffusorValueType_InGB = this%DiffusorValueType_InGB
+
+        TheDiffusorValue%DiffuseCoefficient_InGB_Value = this%DiffuseCoefficient_InGB_Value
+
+        TheDiffusorValue%PreFactor_InGB = this%PreFactor_InGB
+
+        TheDiffusorValue%ActEnergy_InGB = this%ActEnergy_InGB
+
+        TheDiffusorValue%ECRValueType_InGB = this%ECRValueType_InGB
+
+        TheDiffusorValue%ECR_InGB = this%ECR_InGB
 
         return
     end function
@@ -181,12 +238,19 @@ module MCLIB_TYPEDEF_DiffusorsValue
         type(ReadedDiffusorValue)::this
         !---Body---
         this%symbol = ""
-        this%DiffusorValueType = p_DiffuseCoefficient_ByValue
-        this%DiffuseCoefficient_Value = 0.D0
-        this%PreFactor = 0.D0
-        this%ActEnergy = 0.D0
-        this%ECRValueType = p_ECR_ByValue
-        this%ECR = 0.D0
+        this%DiffusorValueType_Free = p_DiffuseCoefficient_ByValue
+        this%DiffuseCoefficient_Free_Value = 0.D0
+        this%PreFactor_Free = 0.D0
+        this%ActEnergy_Free = 0.D0
+        this%ECRValueType_Free = p_ECR_ByValue
+        this%ECR_Free = 0.D0
+
+        this%DiffusorValueType_InGB = p_DiffuseCoefficient_ByValue
+        this%DiffuseCoefficient_InGB_Value = 0.D0
+        this%PreFactor_InGB = 0.D0
+        this%ActEnergy_InGB = 0.D0
+        this%ECRValueType_InGB = p_ECR_ByValue
+        this%ECR_InGB = 0.D0
         return
     end subroutine
 
@@ -198,17 +262,31 @@ module MCLIB_TYPEDEF_DiffusorsValue
         type(DiffusorValue),intent(in)::Others
         !---Body---
 
-        this%DiffusorValueType = Others%DiffusorValueType
+        !---In Free matrix---
+        this%DiffusorValueType_Free = Others%DiffusorValueType_Free
 
-        this%DiffuseCoefficient_Value = Others%DiffuseCoefficient_Value
+        this%DiffuseCoefficient_Free_Value = Others%DiffuseCoefficient_Free_Value
 
-        this%PreFactor = Others%PreFactor
+        this%PreFactor_Free = Others%PreFactor_Free
 
-        this%ActEnergy = Others%ActEnergy
+        this%ActEnergy_Free = Others%ActEnergy_Free
 
-        this%ECRValueType = Others%ECRValueType
+        this%ECRValueType_Free = Others%ECRValueType_Free
 
-        this%ECR = Others%ECR
+        this%ECR_Free = Others%ECR_Free
+
+        !---In GB--
+        this%DiffusorValueType_InGB = Others%DiffusorValueType_InGB
+
+        this%DiffuseCoefficient_InGB_Value = Others%DiffuseCoefficient_InGB_Value
+
+        this%PreFactor_InGB = Others%PreFactor_InGB
+
+        this%ActEnergy_InGB = Others%ActEnergy_InGB
+
+        this%ECRValueType_InGB = Others%ECRValueType_InGB
+
+        this%ECR_InGB = Others%ECR_InGB
 
         return
     end subroutine
@@ -220,12 +298,19 @@ module MCLIB_TYPEDEF_DiffusorsValue
         !---Dummy Vars---
         type(DiffusorValue)::this
         !---Body---
-        this%DiffusorValueType = p_DiffuseCoefficient_ByValue
-        this%DiffuseCoefficient_Value = 0.D0
-        this%PreFactor = 0.D0
-        this%ActEnergy = 0.D0
-        this%ECRValueType = p_ECR_ByValue
-        this%ECR = 0.D0
+        this%DiffusorValueType_Free = p_DiffuseCoefficient_ByValue
+        this%DiffuseCoefficient_Free_Value = 0.D0
+        this%PreFactor_Free = 0.D0
+        this%ActEnergy_Free = 0.D0
+        this%ECRValueType_Free = p_ECR_ByValue
+        this%ECR_Free = 0.D0
+
+        this%DiffusorValueType_InGB = p_DiffuseCoefficient_ByValue
+        this%DiffuseCoefficient_InGB_Value = 0.D0
+        this%PreFactor_InGB = 0.D0
+        this%ActEnergy_InGB = 0.D0
+        this%ECRValueType_InGB = p_ECR_ByValue
+        this%ECR_InGB = 0.D0
         return
     end subroutine
 

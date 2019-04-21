@@ -1335,7 +1335,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(InitBoxSimCfg)::InitBoxCfg
         !---Body---
 
-        call SimBoxes%PutinCfg(Host_SimuCtrlParam,Record,InitBoxCfg%InitCfgFileName,m_RNFACTOR,m_SURDIFPRE)
+        call SimBoxes%PutinCfg(Host_SimuCtrlParam,Record,InitBoxCfg%InitCfgFileName,m_RNFACTOR,m_FREESURDIFPRE,m_GBSURDIFPRE)
 
         return
     end subroutine DoInitSimulationBoxesConfig_SpecialDistFromFile
@@ -1419,6 +1419,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 NAtoms = RGAUSS0_WithCut(InitBoxCfg%NAINI, InitBoxCfg%NASDINI,InitBoxCfg%NACUT(1),InitBoxCfg%NACUT(2))
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA = NAtoms*InitBoxCfg%CompositWeight
+
+                if(InitBoxCfg%GrainSeedID(1) .ne. InitBoxCfg%GrainSeedID(1)) then  ! in GB
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEINGB_STATU
+                end if
+
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS)
 

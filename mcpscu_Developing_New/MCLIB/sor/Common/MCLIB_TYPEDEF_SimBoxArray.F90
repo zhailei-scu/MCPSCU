@@ -634,18 +634,30 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         Do While(associated(diffusorListCursor))
 
             write(hFile,fmt="('!','The diffusor symbol = ',A20,2x,  &
-                              '!','CoefficentsGenerate way =',I1,2x, &
-                              '!','DiffusionCiefficents value =',1PE10.4,2x, &
-                              '!','PreFactor = ',1PE10.4,2x, &
-                              '!','ActEnergy = ',1PE10.4,2x, &
-                              '!','ECR Generate way = ',I1,2x, &
-                              '!','ECR Value = ',1PE10.4)")                    diffusorListCursor%Diffusor%symbol, &
-                                                                               diffusorListCursor%Diffusor%DiffusorValueType, &
-                                                                               diffusorListCursor%Diffusor%DiffuseCoefficient_Value,  &
-                                                                               diffusorListCursor%Diffusor%PreFactor, &
-                                                                               diffusorListCursor%Diffusor%ActEnergy, &
-                                                                               diffusorListCursor%Diffusor%ECRValueType, &
-                                                                               diffusorListCursor%Diffusor%ECR
+                              '!','CoefficentsGenerate way in free matrix =',I1,2x, &
+                              '!','DiffusionCiefficents value in free matrix =',1PE10.4,2x, &
+                              '!','PreFactor in free matrix = ',1PE10.4,2x, &
+                              '!','ActEnergy in free matrix = ',1PE10.4,2x, &
+                              '!','ECR Generate way in free matrix = ',I1,2x, &
+                              '!','ECR Value in free matrix = ',1PE10.4,&
+                              '!','CoefficentsGenerate way in GB =',I1,2x, &
+                              '!','DiffusionCiefficents value in GB =',1PE10.4,2x, &
+                              '!','PreFactor in GB = ',1PE10.4,2x, &
+                              '!','ActEnergy in GB = ',1PE10.4,2x, &
+                              '!','ECR Generate way in GB = ',I1,2x, &
+                              '!','ECR Value in GB = ',1PE10.4)")              diffusorListCursor%Diffusor%symbol, &
+                                                                               diffusorListCursor%Diffusor%DiffusorValueType_Free, &
+                                                                               diffusorListCursor%Diffusor%DiffuseCoefficient_Free_Value,  &
+                                                                               diffusorListCursor%Diffusor%PreFactor_Free, &
+                                                                               diffusorListCursor%Diffusor%ActEnergy_Free, &
+                                                                               diffusorListCursor%Diffusor%ECRValueType_Free, &
+                                                                               diffusorListCursor%Diffusor%ECR_Free,&
+                                                                               diffusorListCursor%Diffusor%DiffusorValueType_InGB, &
+                                                                               diffusorListCursor%Diffusor%DiffuseCoefficient_InGB_Value,  &
+                                                                               diffusorListCursor%Diffusor%PreFactor_InGB, &
+                                                                               diffusorListCursor%Diffusor%ActEnergy_InGB, &
+                                                                               diffusorListCursor%Diffusor%ECRValueType_InGB, &
+                                                                               diffusorListCursor%Diffusor%ECR_InGB
             diffusorListCursor=>diffusorListCursor%next
         End Do
     end if
@@ -1036,19 +1048,20 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
                 newDiffusor%symbol = trim(adjustl(STRNUMB(1)))
-            case("&DIFFCOEFFVALUE")
+
+            case("&DIFFCOEFFVALUE_FREE")
                 call EXTRACT_NUMB(STR,1,N,STRNUMB)
 
                 if(N .LT. 1) then
-                    write(*,*) "MCPSCUERROR: You must special the diffusor value type."
+                    write(*,*) "MCPSCUERROR: You must special the diffusor value type in free matrix."
                     write(*,*) "At Line: ",LINE
                     pause
                     stop
                 end if
 
-                newDiffusor%DiffusorValueType = ISTR(STRNUMB(1))
+                newDiffusor%DiffusorValueType_Free = ISTR(STRNUMB(1))
 
-                if(newDiffusor%DiffusorValueType .eq. p_DiffuseCoefficient_ByValue) then
+                if(newDiffusor%DiffusorValueType_Free .eq. p_DiffuseCoefficient_ByValue) then
                     call EXTRACT_NUMB(STR,2,N,STRNUMB)
                     if(N .LT. 2) then
                         write(*,*) "MCPSCUERROR: If you had used the by-diffusionValue strategy, you should give the diffusor value."
@@ -1056,8 +1069,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         pause
                         stop
                     end if
-                    newDiffusor%DiffuseCoefficient_Value = DRSTR(STRNUMB(2))
-                else if(newDiffusor%DiffusorValueType .eq. p_DiffuseCoefficient_ByArrhenius) then
+                    newDiffusor%DiffuseCoefficient_Free_Value = DRSTR(STRNUMB(2))
+                else if(newDiffusor%DiffusorValueType_Free .eq. p_DiffuseCoefficient_ByArrhenius) then
                     call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
                     if(N .LT. 3) then
@@ -1066,28 +1079,28 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         pause
                         stop
                     end if
-                    newDiffusor%PreFactor = DRSTR(STRNUMB(2))
-                    newDiffusor%ActEnergy = DRSTR(STRNUMB(3))
-                else if(newDiffusor%DiffusorValueType .ne. p_DiffuseCoefficient_ByBCluster) then
-                    write(*,*) "MCPSCUERROR: unknown diffusor value type :",newDiffusor%DiffusorValueType
+                    newDiffusor%PreFactor_Free = DRSTR(STRNUMB(2))
+                    newDiffusor%ActEnergy_Free = DRSTR(STRNUMB(3))
+                else if(newDiffusor%DiffusorValueType_Free .ne. p_DiffuseCoefficient_ByBCluster) then
+                    write(*,*) "MCPSCUERROR: unknown diffusor value type :",newDiffusor%DiffusorValueType_Free
                     write(*,*) "At line: ",LINE
                     pause
                     stop
                 end if
 
-            case("&ECR")
+            case("&ECR_FREE")
                 call EXTRACT_NUMB(STR,1,N,STRNUMB)
 
                 if(N .LT. 1) then
-                    write(*,*) "MCPSCUERROR: You must special the ECR value type."
+                    write(*,*) "MCPSCUERROR: You must special the ECR value type in free matrix."
                     write(*,*) "At Line: ",LINE
                     pause
                     stop
                 end if
 
-                newDiffusor%ECRValueType = ISTR(STRNUMB(1))
+                newDiffusor%ECRValueType_Free = ISTR(STRNUMB(1))
 
-                if(newDiffusor%ECRValueType .eq. p_ECR_ByValue) then
+                if(newDiffusor%ECRValueType_Free .eq. p_ECR_ByValue) then
                     call EXTRACT_NUMB(STR,2,N,STRNUMB)
                     if(N .LT. 2) then
                         write(*,*) "MCPSCUERROR: If you had used the by-ECRValue strategy, you should give the ECR value."
@@ -1095,7 +1108,69 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         pause
                         stop
                     end if
-                    newDiffusor%ECR = DRSTR(STRNUMB(2))*this%LatticeLength
+                    newDiffusor%ECR_Free = DRSTR(STRNUMB(2))*this%LatticeLength
+                end if
+
+            case("&DIFFCOEFFVALUE_INGB")
+                call EXTRACT_NUMB(STR,1,N,STRNUMB)
+
+                if(N .LT. 1) then
+                    write(*,*) "MCPSCUERROR: You must special the diffusor value type in GB."
+                    write(*,*) "At Line: ",LINE
+                    pause
+                    stop
+                end if
+
+                newDiffusor%DiffusorValueType_InGB = ISTR(STRNUMB(1))
+
+                if(newDiffusor%DiffusorValueType_InGB .eq. p_DiffuseCoefficient_ByValue) then
+                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: If you had used the by-diffusionValue strategy, you should give the diffusor value."
+                        write(*,*) "At Line: ",LINE
+                        pause
+                        stop
+                    end if
+                    newDiffusor%DiffuseCoefficient_InGB_Value = DRSTR(STRNUMB(2))
+                else if(newDiffusor%DiffusorValueType_InGB .eq. p_DiffuseCoefficient_ByArrhenius) then
+                    call EXTRACT_NUMB(STR,3,N,STRNUMB)
+
+                    if(N .LT. 3) then
+                        write(*,*) "MCPSCUERROR: If you had used the by-Arrhenius strategy, you should give the prefacotr and active energy."
+                        write(*,*) "At Line: ",LINE
+                        pause
+                        stop
+                    end if
+                    newDiffusor%PreFactor_InGB = DRSTR(STRNUMB(2))
+                    newDiffusor%ActEnergy_InGB = DRSTR(STRNUMB(3))
+                else if(newDiffusor%DiffusorValueType_InGB .ne. p_DiffuseCoefficient_ByBCluster) then
+                    write(*,*) "MCPSCUERROR: unknown diffusor value type :",newDiffusor%DiffusorValueType_InGB
+                    write(*,*) "At line: ",LINE
+                    pause
+                    stop
+                end if
+
+            case("&ECR_INGB")
+                call EXTRACT_NUMB(STR,1,N,STRNUMB)
+
+                if(N .LT. 1) then
+                    write(*,*) "MCPSCUERROR: You must special the ECR value type in GB."
+                    write(*,*) "At Line: ",LINE
+                    pause
+                    stop
+                end if
+
+                newDiffusor%ECRValueType_InGB = ISTR(STRNUMB(1))
+
+                if(newDiffusor%ECRValueType_InGB .eq. p_ECR_ByValue) then
+                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: If you had used the by-ECRValue strategy, you should give the ECR value."
+                        write(*,*) "At Line: ",LINE
+                        pause
+                        stop
+                    end if
+                    newDiffusor%ECR_InGB = DRSTR(STRNUMB(2))*this%LatticeLength
                 end if
 
             case default
@@ -2498,7 +2573,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Puout_Instance_Config_SimBoxArray
 
   !*****************************************************************
-  subroutine Putin_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,cfgFile,RNFACTOR,SURDIFPRE)
+  subroutine Putin_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,cfgFile,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
@@ -2506,7 +2581,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     Class(SimulationRecord)::SimuRecord
     character*256,intent(in)::cfgFile
     real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars--
     integer::hFile
     character*256::STR
@@ -2531,11 +2607,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     select case(KEYWORD(1:LENTRIM(KEYWORD)))
         case(OKMC_OUTCFG_FORMAT18)
-            call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE)
+            call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
         case(MF_OUTCFG_FORMAT18)
-            call this%Putin_MF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE)
+            call this%Putin_MF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
         case(SPMF_OUTCFG_FORMAT18)
-            call this%Putin_SPMF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE)
+            call this%Putin_SPMF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
         case default
             write(*,*) "MCPSCUERROR: You must special the box file format at the beginning of the file."
             pause
@@ -2552,7 +2628,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_Instance_Config_SimBoxArray
 
   !*************************************************************
-  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE)
+  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
@@ -2560,7 +2636,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
     integer::hFile
     integer::LINE
@@ -2806,8 +2883,25 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         IC = this%m_BoxesInfo%SEUsedIndexBox(IBox,2) + NCEachBox(IBox)
 
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ISTR(STRTMP(2))
+
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ISTR(STRTMP(3))
+
+        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) .GT. this%m_GrainBoundary%GrainNum) then
+            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+            write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1)
+            pause
+            stop
+        end if
+
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) = ISTR(STRTMP(4))
+
+        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) .GT. this%m_GrainBoundary%GrainNum) then
+            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+            write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2)
+            pause
+            stop
+        end if
+
         IStatu = ISTR(STRTMP(5))
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = IStatu
 
@@ -2828,22 +2922,42 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
 
-        select case(TheDiffusorValue%ECRValueType)
-            case(p_ECR_ByValue)
-                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
-            case(p_ECR_ByBCluster)
-                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
-        end select
+        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
+            select case(TheDiffusorValue%ECRValueType_Free)
+                case(p_ECR_ByValue)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                case(p_ECR_ByBCluster)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+            end select
 
-        select case(TheDiffusorValue%DiffusorValueType)
-            case(p_DiffuseCoefficient_ByValue)
-                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
-            case(p_DiffuseCoefficient_ByArrhenius)
-                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
-            case(p_DiffuseCoefficient_ByBCluster)
-                ! Here we adopt a model that D=D0*(1/R)**Gama
-                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
-        end select
+            select case(TheDiffusorValue%DiffusorValueType_Free)
+                case(p_DiffuseCoefficient_ByValue)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_FREE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+            end select
+        else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+            select case(TheDiffusorValue%ECRValueType_InGB)
+                case(p_ECR_ByValue)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                case(p_ECR_ByBCluster)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+            end select
+
+            select case(TheDiffusorValue%DiffusorValueType_InGB)
+                case(p_DiffuseCoefficient_ByValue)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_INGB*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+            end select
+        end if
+
 
         this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) + 1
         this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) + 1
@@ -2876,7 +2990,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_OKMC_OUTCFG_FORMAT18
 
   !*************************************************************
-  subroutine Putin_MF_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE)
+  subroutine Putin_MF_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -2885,16 +2999,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
     real(kind=KMCDF),dimension(:),allocatable::LayerThick
     real(kind=KMCDF),dimension(:,:),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),allocatable::ClustersSample
     !---Body---
 
-    call this%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFile,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE)
+    call this%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFile,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE_FREE)
 
-    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE)
+    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
 
     call DeAllocateArray_Host(LayerThick,"LayerThick")
     call DeAllocateArray_Host(ClustersSampleConcentrate,"ClustersSampleConcentrate")
@@ -2904,7 +3019,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_MF_OUTCFG_FORMAT18
 
   !*************************************************************
-  subroutine Putin_MF_OUTCFG_FORMAT18_Distribution(this,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE)
+  subroutine Putin_MF_OUTCFG_FORMAT18_Distribution(this,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE_FREE)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -2916,7 +3031,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(ACluster),dimension(:,:),allocatable::ClustersSample
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
     !---Local Vars---
     integer::hFile
     integer::LINE
@@ -3035,10 +3150,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call EXTRACT_NUMB(STR,NATomsUsed + 1,N,STRTMP)
 
-        if(N .LT. (NATomsUsed + 1 )) then
-            write(*,*) "MCPSCUERROR: The atoms concentrations groups are less than: ",NATomsUsed
-            write(*,*) "That is not correct with the elements define in previous."
-            write(*,*) "At line: ",LINE
+        if(N .LT. (NATomsUsed+1)) then
+            write(*,*) "MCPSCUERROR: The data not include atoms composition, concentration."
+            write(*,*) "At LINE: ",LINE
             write(*,*) STR
             pause
             stop
@@ -3067,6 +3181,25 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     NClustersGroup = 0
 
+    LINE = 0
+
+    DO While(.true.)
+        call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+        call RemoveComments(STR,"!")
+
+        STR = adjustl(STR)
+
+        call GETKEYWORD("&",STR,KEYWORD)
+
+        call UPCASE(KEYWORD)
+
+        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&TYPE")
+                exit
+        end select
+
+    END DO
+
     DO While(.true.)
 
         call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -3085,6 +3218,14 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call EXTRACT_NUMB(STR,NATomsUsed+1,N,STRTMP)
 
+        if(N .LT. (NATomsUsed+1)) then
+            write(*,*) "MCPSCUERROR: The data not include atoms composition, concentration."
+            write(*,*) "At LINE: ",LINE
+            write(*,*) STR
+            pause
+            stop
+        end if
+
         NClustersGroup = NClustersGroup + 1
 
         ClustersSampleConcentrate(1,NClustersGroup) = DRSTR(STRTMP(NATomsUsed + 1))
@@ -3096,24 +3237,24 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(ClustersSample(1,NClustersGroup))
 
-        select case(TheDiffusorValue%ECRValueType)
+        select case(TheDiffusorValue%ECRValueType_Free)
             case(p_ECR_ByValue)
-                ClustersSample(1,NClustersGroup)%m_RAD = TheDiffusorValue%ECR
+                ClustersSample(1,NClustersGroup)%m_RAD = TheDiffusorValue%ECR_Free
             case(p_ECR_ByBCluster)
                 ClustersSample(1,NClustersGroup)%m_RAD = DSQRT(sum(ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA)/RNFACTOR)
         end select
 
-        select case(TheDiffusorValue%DiffusorValueType)
+        select case(TheDiffusorValue%DiffusorValueType_Free)
             case(p_DiffuseCoefficient_ByValue)
-                ClustersSample(1,NClustersGroup)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
+                ClustersSample(1,NClustersGroup)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
             case(p_DiffuseCoefficient_ByArrhenius)
-                ClustersSample(1,NClustersGroup)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
+                ClustersSample(1,NClustersGroup)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             case(p_DiffuseCoefficient_ByBCluster)
                 ! Here we adopt a model that D=D0*(1/R)**Gama
-                ClustersSample(1,NClustersGroup)%m_DiffCoeff = SURDIFPRE*(ClustersSample(1,NClustersGroup)%m_RAD**(-p_GAMMA))
+                ClustersSample(1,NClustersGroup)%m_DiffCoeff = SURDIFPRE_FREE*(ClustersSample(1,NClustersGroup)%m_RAD**(-p_GAMMA))
         end select
 
-        ClustersSample(1,NClustersGroup)%m_Statu = p_ACTIVEFREE_STATU
+        ClustersSample(1,NClustersGroup)%m_Statu = p_ACTIVEFREE_STATU  ! the GB and interface would not be considered in MF , they would be considered SPMF
 
         ClustersSample(1,NClustersGroup)%m_Layer = 1
 
@@ -3130,7 +3271,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_MF_OUTCFG_FORMAT18_Distribution
 
   !*************************************************************
-  subroutine Putin_SPMF_OUTCFG_FORMAT18(this,cfgFileName,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE)
+  subroutine Putin_SPMF_OUTCFG_FORMAT18(this,cfgFileName,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -3139,16 +3280,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
     real(kind=KMCDF),dimension(:),allocatable::LayerThick
     real(kind=KMCDF),dimension(:,:),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),allocatable::ClustersSample
     !---Body---
 
-    call this%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFileName,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE)
+    call this%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFileName,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
 
-    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE)
+    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
 
     call DeAllocateArray_Host(LayerThick,"LayerThick")
     call DeAllocateArray_Host(ClustersSampleConcentrate,"ClustersSampleConcentrate")
@@ -3158,7 +3300,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_SPMF_OUTCFG_FORMAT18
 
   !*************************************************************
-  subroutine Putin_SPMF_OUTCFG_FORMAT18_Distribution(this,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE)
+  subroutine Putin_SPMF_OUTCFG_FORMAT18_Distribution(this,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -3170,7 +3312,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(ACluster),dimension(:,:),allocatable::ClustersSample
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
     integer::hFile
     integer::LINE
@@ -3347,18 +3490,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 exit
         end select
 
-        call EXTRACT_NUMB(STR,NATomsUsed + 2,N,STRTMP)
+        call EXTRACT_NUMB(STR,NATomsUsed + 5,N,STRTMP)
 
-        if(N .LT. (NATomsUsed + 2 )) then
-            write(*,*) "MCPSCUERROR: The atoms groups are less than: ",NATomsUsed
-            write(*,*) "That is not correct with the elements define in previous."
+        if(N .LT. (NATomsUsed + 5)) then
+            write(*,*) "MCPSCUERROR: The data not include atoms composition, cluster status,GB seed 1,GB seed 2, concentration,layer."
             write(*,*) "At line: ",LINE
             write(*,*) STR
             pause
             stop
         end if
 
-        tempLayer =  ISTR(STRTMP(NATomsUsed + 2))
+        tempLayer =  ISTR(STRTMP(NATomsUsed + 5))
 
         if(ILayer .eq. tempLayer) then
             tempClustersGroup = tempClustersGroup + 1
@@ -3404,6 +3546,23 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     ReWind(hFile)
 
+    LINE = 0
+    DO While(.true.)
+        call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+        call RemoveComments(STR,"!")
+
+        STR = adjustl(STR)
+
+        call GETKEYWORD("&",STR,KEYWORD)
+
+        call UPCASE(KEYWORD)
+
+        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&TYPE")
+                exit
+        end select
+    END DO
+
     IGroup = 1
 
     ILayer = 1
@@ -3424,9 +3583,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 exit
         end select
 
-        call EXTRACT_NUMB(STR,NATomsUsed+2,N,STRTMP)
+        call EXTRACT_NUMB(STR,NATomsUsed+5,N,STRTMP)
 
-        tempLayer =  ISTR(STRTMP(NATomsUsed + 2))
+        if(N .LT. (NATomsUsed + 5)) then
+            write(*,*) "MCPSCUERROR: The data not include atoms composition, cluster status,GB seed 1, GB seed 2, concentration,layer."
+            write(*,*) "At line: ",LINE
+            write(*,*) STR
+            pause
+            stop
+        end if
+
+        tempLayer =  ISTR(STRTMP(NATomsUsed + 5))
 
         if(ILayer .LT. tempLayer) then
             IGroup = IGroup + 1
@@ -3439,7 +3606,27 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             stop
         end if
 
-        ClustersSampleConcentrate(ILayer,IGroup) = DRSTR(STRTMP(NATomsUsed + 1))
+        ClustersSample(ILayer,IGroup)%m_Statu = ISTR(STRTMP(NATomsUsed + 1))
+
+        ClustersSample(ILayer,IGroup)%m_GrainID(1) = ISTR(STRTMP(NATomsUsed + 2))
+
+        if(ClustersSample(ILayer,IGroup)%m_GrainID(1) .GT. this%m_GrainBoundary%GrainNum) then
+            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+            write(*,*) ClustersSample(ILayer,IGroup)%m_GrainID(1)
+            pause
+            stop
+        end if
+
+        ClustersSample(ILayer,IGroup)%m_GrainID(2) = ISTR(STRTMP(NATomsUsed + 3))
+
+        if(ClustersSample(ILayer,IGroup)%m_GrainID(2) .GT. this%m_GrainBoundary%GrainNum) then
+            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+            write(*,*) ClustersSample(ILayer,IGroup)%m_GrainID(2)
+            pause
+            stop
+        end if
+
+        ClustersSampleConcentrate(ILayer,IGroup) = DRSTR(STRTMP(NATomsUsed + 4))
 
         Do IElement = 1,NATomsUsed
             ClustersSample(ILayer,IGroup)%m_Atoms(AtomsIndex(IElement))%m_ID = AtomsIndex(IElement)
@@ -3448,24 +3635,42 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(ClustersSample(ILayer,IGroup))
 
-        select case(TheDiffusorValue%ECRValueType)
-            case(p_ECR_ByValue)
-                ClustersSample(ILayer,IGroup)%m_RAD = TheDiffusorValue%ECR
-            case(p_ECR_ByBCluster)
-                ClustersSample(ILayer,IGroup)%m_RAD = DSQRT(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)/RNFACTOR)
-        end select
+        if(ClustersSample(ILayer,IGroup)%m_Statu .eq. p_ACTIVEFREE_STATU) then
 
-        select case(TheDiffusorValue%DiffusorValueType)
-            case(p_DiffuseCoefficient_ByValue)
-                ClustersSample(ILayer,IGroup)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
-            case(p_DiffuseCoefficient_ByArrhenius)
-                ClustersSample(ILayer,IGroup)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
-            case(p_DiffuseCoefficient_ByBCluster)
-                ! Here we adopt a model that D=D0*(1/R)**Gama
-                ClustersSample(ILayer,IGroup)%m_DiffCoeff = SURDIFPRE*(ClustersSample(ILayer,IGroup)%m_RAD**(-p_GAMMA))
-        end select
+            select case(TheDiffusorValue%ECRValueType_Free)
+                case(p_ECR_ByValue)
+                    ClustersSample(ILayer,IGroup)%m_RAD = TheDiffusorValue%ECR_Free
+                case(p_ECR_ByBCluster)
+                    ClustersSample(ILayer,IGroup)%m_RAD = DSQRT(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)/RNFACTOR)
+            end select
 
-        ClustersSample(ILayer,IGroup)%m_Statu = p_ACTIVEFREE_STATU
+            select case(TheDiffusorValue%DiffusorValueType_Free)
+                case(p_DiffuseCoefficient_ByValue)
+                    ClustersSample(ILayer,IGroup)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    ClustersSample(ILayer,IGroup)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    ClustersSample(ILayer,IGroup)%m_DiffCoeff = SURDIFPRE_FREE*(ClustersSample(ILayer,IGroup)%m_RAD**(-p_GAMMA))
+            end select
+        else if(ClustersSample(ILayer,IGroup)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+            select case(TheDiffusorValue%ECRValueType_InGB)
+                case(p_ECR_ByValue)
+                    ClustersSample(ILayer,IGroup)%m_RAD = TheDiffusorValue%ECR_InGB
+                case(p_ECR_ByBCluster)
+                    ClustersSample(ILayer,IGroup)%m_RAD = DSQRT(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)/RNFACTOR)
+            end select
+
+            select case(TheDiffusorValue%DiffusorValueType_InGB)
+                case(p_DiffuseCoefficient_ByValue)
+                    ClustersSample(ILayer,IGroup)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    ClustersSample(ILayer,IGroup)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    ClustersSample(ILayer,IGroup)%m_DiffCoeff = SURDIFPRE_INGB*(ClustersSample(ILayer,IGroup)%m_RAD**(-p_GAMMA))
+            end select
+        end if
 
         ClustersSample(ILayer,IGroup)%m_Layer = ILayer
 
@@ -3482,7 +3687,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_SPMF_OUTCFG_FORMAT18_Distribution
 
   !*************************************************************
-  subroutine DoPutin_FromDistribution(this,Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE)
+  subroutine DoPutin_FromDistribution(this,Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -3492,7 +3697,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     real(kind=KMCDF),dimension(:,:),intent(in),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),intent(in),allocatable::ClustersSample
     real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
     integer::MultiBox
     integer::IBox
@@ -3561,26 +3767,65 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     POS(3) = DRAND32()*this%BOXSIZE(3) + this%BOXBOUNDARY(3,1)
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%m_GrainBoundary%GrainBelongsTo(POS)
-
                     TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
 
-                    select case(TheDiffusorValue%ECRValueType)
-                        case(p_ECR_ByValue)
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
-                        case(p_ECR_ByBCluster)
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
-                    end select
+                    if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
 
-                    select case(TheDiffusorValue%DiffusorValueType)
-                        case(p_DiffuseCoefficient_ByValue)
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
-                        case(p_DiffuseCoefficient_ByArrhenius)
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
-                        case(p_DiffuseCoefficient_ByBCluster)
-                            ! Here we adopt a model that D=D0*(1/R)**Gama
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
-                    end select
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%m_GrainBoundary%GrainBelongsTo(POS)
+
+                        select case(TheDiffusorValue%ECRValueType_Free)
+                            case(p_ECR_ByValue)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                            case(p_ECR_ByBCluster)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                        end select
+
+                        select case(TheDiffusorValue%DiffusorValueType_Free)
+                            case(p_DiffuseCoefficient_ByValue)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                            case(p_DiffuseCoefficient_ByArrhenius)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                            case(p_DiffuseCoefficient_ByBCluster)
+                                ! Here we adopt a model that D=D0*(1/R)**Gama
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_FREE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        end select
+                    else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ClustersSample(ILayer,IGroup)%m_GrainID(1)
+
+                        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) .GT. this%m_GrainBoundary%GrainNum) then
+                            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+                            write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1)
+                            pause
+                            stop
+                        end if
+
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) = ClustersSample(ILayer,IGroup)%m_GrainID(2)
+
+                        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) .GT. this%m_GrainBoundary%GrainNum) then
+                            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+                            write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2)
+                            pause
+                            stop
+                        end if
+
+                        select case(TheDiffusorValue%ECRValueType_InGB)
+                            case(p_ECR_ByValue)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                            case(p_ECR_ByBCluster)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                        end select
+
+                        select case(TheDiffusorValue%DiffusorValueType_InGB)
+                            case(p_DiffuseCoefficient_ByValue)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                            case(p_DiffuseCoefficient_ByArrhenius)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
+                            case(p_DiffuseCoefficient_ByBCluster)
+                                ! Here we adopt a model that D=D0*(1/R)**Gama
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_INGB*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        end select
+                    end if
 
                     RemindedNum = RemindedNum - 1
 
@@ -3619,26 +3864,63 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         POS(3) = DRAND32()*LayerThick(ILayer) +  sum(LayerThick(1:ILayer-1)) + this%BOXBOUNDARY(3,1)
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
-                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%m_GrainBoundary%GrainBelongsTo(POS)
-
                         TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
 
-                        select case(TheDiffusorValue%ECRValueType)
-                            case(p_ECR_ByValue)
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR
-                            case(p_ECR_ByBCluster)
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
-                        end select
+                        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
 
-                        select case(TheDiffusorValue%DiffusorValueType)
-                            case(p_DiffuseCoefficient_ByValue)
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Value
-                            case(p_DiffuseCoefficient_ByArrhenius)
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/Host_SimuCtrlParam%TKB)
-                            case(p_DiffuseCoefficient_ByBCluster)
-                                ! Here we adopt a model that D=D0*(1/R)**Gama
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
-                        end select
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%m_GrainBoundary%GrainBelongsTo(POS)
+
+                            select case(TheDiffusorValue%ECRValueType_Free)
+                                case(p_ECR_ByValue)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                                case(p_ECR_ByBCluster)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                            end select
+
+                            select case(TheDiffusorValue%DiffusorValueType_Free)
+                                case(p_DiffuseCoefficient_ByValue)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                                case(p_DiffuseCoefficient_ByArrhenius)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                case(p_DiffuseCoefficient_ByBCluster)
+                                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_FREE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                            end select
+                        else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ClustersSample(ILayer,IGroup)%m_GrainID(1)
+                            if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) .GT. this%m_GrainBoundary%GrainNum) then
+                                write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+                                write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1)
+                                pause
+                                stop
+                            end if
+
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) = ClustersSample(ILayer,IGroup)%m_GrainID(2)
+                            if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) .GT. this%m_GrainBoundary%GrainNum) then
+                                write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+                                write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2)
+                                pause
+                                stop
+                            end if
+
+                            select case(TheDiffusorValue%ECRValueType_InGB)
+                                case(p_ECR_ByValue)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                                case(p_ECR_ByBCluster)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                            end select
+
+                            select case(TheDiffusorValue%DiffusorValueType_InGB)
+                                case(p_DiffuseCoefficient_ByValue)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                                case(p_DiffuseCoefficient_ByArrhenius)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
+                                case(p_DiffuseCoefficient_ByBCluster)
+                                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_INGB*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                            end select
+                        end if
 
                         exitFlag = .true.
                         exit

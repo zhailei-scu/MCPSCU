@@ -281,7 +281,7 @@ program Main_StatisticClusters_Offline
                 !*******Init the simulation boxes*****************
                 call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
 
-                call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,pathIn,m_RNFACTOR,m_SURDIFPRE)
+                call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,pathIn,m_RNFACTOR,m_FREESURDIFPRE,m_GBSURDIFPRE)
 
                 GTNAtom = 1
 
