@@ -29,14 +29,15 @@ libname  := libMC_$(objname).$(LIB_EXT)
 
 #######################################################          
 nlist    :=  MCLIB_CONSTANTS_GPU		  \
-	           MCLIB_Utilities_GPU		  \
-	           MCLIB_TYPEDEF_DiffusorsDefine_GPU	  \
-	           MCLIB_TYPEDEF_Geometry_GPU		  \
-	           MCLIB_TYPEDEF_ClustersInfo_GPU       \
-	           MCLIB_TYPEDEF_SimBoxArray_GPU	  \
-	           MCLIB_TYPEDEF_RecordList_GPU	  \
-	           MCLIB_GLOBAL_GPU               	  \
-	           MCLIB_CAL_NEIGHBOR_LIST_GPU
+	     MCLIB_Utilities_GPU		  \
+	     MCLIB_TYPEDEF_DiffusorsDefine_GPU	  \
+	     MCLIB_TYPEDEF_ReactionsDefine_GPU	  \
+	     MCLIB_TYPEDEF_Geometry_GPU		  \
+	     MCLIB_TYPEDEF_ClustersInfo_GPU       \
+	     MCLIB_TYPEDEF_SimBoxArray_GPU	  \
+	     MCLIB_TYPEDEF_RecordList_GPU	  \
+	     MCLIB_GLOBAL_GPU               	  \
+	     MCLIB_CAL_NEIGHBOR_LIST_GPU
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
 modules  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).mod)
@@ -54,42 +55,47 @@ $(tgt)$(Segment)MCLIB_CONSTANTS_GPU.o : $(sor)$(Segment)MCLIB_CONSTANTS_GPU.F90
 
 
 $(tgt)$(Segment)MCLIB_Utilities_GPU.o : $(sor)$(Segment)MCLIB_Utilities_GPU.F90  \
-			                                  $(tgt)$(Segment)MCLIB_CONSTANTS_GPU.o
+			                $(tgt)$(Segment)MCLIB_CONSTANTS_GPU.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_DiffusorsDefine_GPU.o : $(sor)$(Segment)MCLIB_TYPEDEF_DiffusorsDefine_GPU.F90  \
-					                                            $(tgt)$(Segment)MCLIB_Utilities_GPU.o
+					              $(tgt)$(Segment)MCLIB_Utilities_GPU.o
+	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
+
+$(tgt)$(Segment)MCLIB_TYPEDEF_ReactionsDefine_GPU.o : $(sor)$(Segment)MCLIB_TYPEDEF_ReactionsDefine_GPU.F90  \
+					              $(tgt)$(Segment)MCLIB_Utilities_GPU.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_Geometry_GPU.o : $(sor)$(Segment)MCLIB_TYPEDEF_Geometry_GPU.F90  \
-			      	                                 $(tgt)$(Segment)MCLIB_Utilities_GPU.o
+			      	               $(tgt)$(Segment)MCLIB_Utilities_GPU.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_ClustersInfo_GPU.o : $(sor)$(Segment)MCLIB_TYPEDEF_ClustersInfo_GPU.F90  \
-					                                         $(tgt)$(Segment)MCLIB_Utilities_GPU.o
+					           $(tgt)$(Segment)MCLIB_Utilities_GPU.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 
-$(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.o : $(sor)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.F90		\
-					                                        $(tgt)$(Segment)MCLIB_TYPEDEF_ClustersInfo_GPU.o		\
-					                                        $(tgt)$(Segment)MCLIB_TYPEDEF_Geometry_GPU.o		\
-					                                        $(tgt)$(Segment)MCLIB_TYPEDEF_DiffusorsDefine_GPU.o
+$(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.o : $(sor)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.F90	\
+					          $(tgt)$(Segment)MCLIB_TYPEDEF_ClustersInfo_GPU.o	\
+					          $(tgt)$(Segment)MCLIB_TYPEDEF_Geometry_GPU.o		\
+					          $(tgt)$(Segment)MCLIB_TYPEDEF_DiffusorsDefine_GPU.o   \
+						  $(tgt)$(Segment)MCLIB_TYPEDEF_ReactionsDefine_GPU.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_RecordList_GPU.o : $(sor)$(Segment)MCLIB_TYPEDEF_RecordList_GPU.F90	\
-				                                         $(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.o
+				                 $(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@	
 
 
-$(tgt)$(Segment)MCLIB_GLOBAL_GPU.o : $(sor)$(Segment)MCLIB_GLOBAL_GPU.F90		     \
-			                               $(tgt)$(Segment)MCLIB_TYPEDEF_ClustersInfo_GPU.o    \
-			                               $(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.o
+$(tgt)$(Segment)MCLIB_GLOBAL_GPU.o : $(sor)$(Segment)MCLIB_GLOBAL_GPU.F90		 \
+			             $(tgt)$(Segment)MCLIB_TYPEDEF_ClustersInfo_GPU.o    \
+			             $(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 
 $(tgt)$(Segment)MCLIB_CAL_NEIGHBOR_LIST_GPU.o : $(sor)$(Segment)MCLIB_CAL_NEIGHBOR_LIST_GPU.F90  \
-				                                        $(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.o
+				                $(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray_GPU.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 ######################################################################
 clean:

@@ -1,4 +1,4 @@
-module MCLIB_TYPEDEF_ReactionssDefine_GPU
+module MCLIB_TYPEDEF_ReactionsDefine_GPU
     use cudafor
     use MCLIB_TYPEDEF_REACTIONSVALUE
     use MCLIB_UTILITIES_GPU
@@ -211,4 +211,4 @@ module MCLIB_TYPEDEF_ReactionssDefine_GPU
     end subroutine Dev_GetIndexFor
 
 
-end module MCLIB_TYPEDEF_ReactionssDefine_GPU
+end module MCLIB_TYPEDEF_ReactionsDefine_GPU

@@ -4,7 +4,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
   use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   use MCLIB_TYPEDEF_GEOMETRY_GPU
   use MCLIB_TYPEDEF_DiffusorsDefine_GPU
-  use MCLIB_TYPEDEF_ReactionssDefine_GPU
+  use MCLIB_TYPEDEF_ReactionsDefine_GPU
   implicit none
 
   integer,private,device,dimension(:,:),allocatable::dm_CountsNCArray
