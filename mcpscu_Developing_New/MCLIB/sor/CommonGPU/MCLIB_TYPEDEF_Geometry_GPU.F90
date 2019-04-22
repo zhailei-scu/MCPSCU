@@ -123,11 +123,17 @@ module MCLIB_TYPEDEF_GEOMETRY_GPU
         DO ISeed = 1,NSeeds
             SEP = POS - Dev_GrainSeeds(ISeed)%m_POS
 
-            SEP(1) = SEP(1) - (int(ABS(SEP(1))/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP(1))
+            if(ABS(SEP(1)) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1) .GT. 0) then
+                SEP(1) = SEP(1) - SIGN(dm_BOXSIZE(1),SEP(1))
+            end if
 
-            SEP(2) = SEP(2) - (int(ABS(SEP(2))/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP(2))
+            if(ABS(SEP(2)) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2) .GT. 0) then
+                SEP(2) = SEP(2) - SIGN(dm_BOXSIZE(2),SEP(2))
+            end if
 
-            SEP(3) = SEP(3) - (int(ABS(SEP(3))/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP(3))
+            if(ABS(SEP(3)) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3) .GT. 0) then
+                SEP(3) = SEP(3) - SIGN(dm_BOXSIZE(3),SEP(3))
+            end if
 
             DIST2 = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
 
@@ -152,26 +158,49 @@ module MCLIB_TYPEDEF_GEOMETRY_GPU
         real(kind=KMCDF),intent(out)::CrossPoint(3) !Note: If the nollvm compiler option is used, we cannot apply the array as a function result, so this array result
                                                     !      must be an dummy array of the subroutine
         !---Local Vars---
-        real(kind=KMCDF)::GrainSeed1(3)
-        real(kind=KMCDF)::GrainSeed2(3)
+        real(kind=KMCSF)::GrainSeed1(3)
+        real(kind=KMCSF)::GrainSeed2(3)
+        real(kind=KMCSF)::SEP(3)
         real(kind=KMCDF)::halfPoint(3)
-        real(kind=KMCDF)::ratio
         real(kind=KMCDF)::GBNormVector(3)
+        real(kind=KMCDF)::K1
+        real(kind=KMCDF)::K2
         !---Body--
         GrainSeed1 = Dev_GrainSeeds(Seed1)%m_POS
 
+        SEP = GrainSeed1 - POS1
+        if(ABS(SEP(1)) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1) .GT. 0) then
+            GrainSeed1(1) = GrainSeed1(1) - SIGN(dm_BOXSIZE(1),SEP(1))
+        end if
+        if(ABS(SEP(2)) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2) .GT. 0) then
+            GrainSeed1(2) = GrainSeed1(2) - SIGN(dm_BOXSIZE(2),SEP(2))
+        end if
+        if(ABS(SEP(3)) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3) .GT. 0) then
+            GrainSeed1(3) = GrainSeed1(3) - SIGN(dm_BOXSIZE(3),SEP(3))
+        end if
+
         GrainSeed2 = Dev_GrainSeeds(Seed2)%m_POS
+        SEP = GrainSeed2 - POS1
+        if(ABS(SEP(1)) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1) .GT. 0) then
+            GrainSeed2(1) = GrainSeed2(1) - SIGN(dm_BOXSIZE(1),SEP(1))
+        end if
+        if(ABS(SEP(2)) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2) .GT. 0) then
+            GrainSeed2(2) = GrainSeed2(2) - SIGN(dm_BOXSIZE(2),SEP(2))
+        end if
+        if(ABS(SEP(3)) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3) .GT. 0) then
+            GrainSeed2(3) = GrainSeed2(3) - SIGN(dm_BOXSIZE(3),SEP(3))
+        end if
 
         halfPoint = (GrainSeed1 + GrainSeed2)/2
 
         GBNormVector = GrainSeed1 - GrainSeed2
 
-        ratio = (GBNormVector(1)*(halfPoint(1) - POS1(1)) + GBNormVector(2)*(halfPoint(2) - POS1(2)) + GBNormVector(3)*(halfPoint(3) - POS1(3)))/ &
-                (GBNormVector(1)*(POS2(1) - POS1(1)) + GBNormVector(2)*(POS2(2) - POS1(2)) + GBNormVector(3)*(POS2(3) - POS1(3)))
+        K1 = DABS(GBNormVector(1)*(halfPoint(1) - POS1(1)) + GBNormVector(2)*(halfPoint(2) - POS1(2)) + GBNormVector(3)*(halfPoint(3) - POS1(3)))
 
-        ratio = DABS(ratio)
+        K2 = K1 + DABS(GBNormVector(1)*(halfPoint(1) - POS2(1)) + GBNormVector(2)*(halfPoint(2) - POS2(2)) + GBNormVector(3)*(halfPoint(3) - POS2(3)))
 
-        CrossPoint = POS1 + (POS2 - POS1)*ratio
+
+        CrossPoint = POS1 + (POS2 - POS1)*(K1/K2)
 
         return
     end subroutine CalCrossPointInGB_Dev

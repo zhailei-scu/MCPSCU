@@ -82,6 +82,8 @@ module MIGCOALE_EVOLUTION_GPU
                                                     Dev_ClusterInfo_GPU%dm_ActiveStatus,         &
                                                     Host_Boxes%m_GrainBoundary%GrainNum,         &
                                                     Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
+                                                    Dev_DiffusorMap%Dev_TypesEntities,           &
+                                                    Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
                                                     TSTEP)
 
     END ASSOCIATE
@@ -91,7 +93,7 @@ module MIGCOALE_EVOLUTION_GPU
 
   !********************************************************
   attributes(global) subroutine WalkOneStep_Kernel(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
-                                                   Dev_RandArray,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,TSTEP)
+                                                   Dev_RandArray,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -102,6 +104,8 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::Dev_ActiveStatu(:)
     integer,value::NSeeds
     type(GrainSeed),device::Dev_GrainSeeds(:)
+    type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
+    integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     real(kind=KMCDF),value::TSTEP
     !---Local Vars---
     integer::tid,bid,bid0,cid
@@ -116,6 +120,7 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KMCDF)::POS(3)
     integer::SeedID
     integer::Statu
+    type(DiffusorValue)::TheDiffusorValue
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -186,6 +191,27 @@ module MIGCOALE_EVOLUTION_GPU
             Dev_Clusters(IC)%m_GrainID(2) = SeedID
             Dev_Clusters(IC)%m_Statu = p_ACTIVEINGB_STATU
             Dev_ActiveStatu(IC) = p_ACTIVEINGB_STATU
+
+            ! In current implementation, the diffusion coeffficencies, radius are calculated when diffusors are created, statu changed or reaction occur
+            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+
+            select case(TheDiffusorValue%ECRValueType_InGB)
+                case(p_ECR_ByValue)
+                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                case(p_ECR_ByBCluster)
+                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+            end select
+
+            select case(TheDiffusorValue%DiffusorValueType_InGB)
+                case(p_DiffuseCoefficient_ByValue)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+            end select
+
         end if
 
         Dev_Clusters(IC)%m_POS = tempPos

@@ -3771,7 +3771,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                     if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
 
-                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%m_GrainBoundary%GrainBelongsTo(POS)
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%m_GrainBoundary%GrainBelongsTo(POS,this%HBOXSIZE,this%BOXSIZE,Host_SimuCtrlParam)
 
                         select case(TheDiffusorValue%ECRValueType_Free)
                             case(p_ECR_ByValue)
@@ -3868,7 +3868,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                         if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
 
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%m_GrainBoundary%GrainBelongsTo(POS)
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%m_GrainBoundary%GrainBelongsTo(POS,this%HBOXSIZE,this%BOXSIZE,Host_SimuCtrlParam)
 
                             select case(TheDiffusorValue%ECRValueType_Free)
                                 case(p_ECR_ByValue)

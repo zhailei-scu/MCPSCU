@@ -2137,7 +2137,7 @@ module MIGCOALE_IMPLANTATION_GPU
                             TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS)
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
                                 select case(TheDiffusorValue%ECRValueType_Free)
                                     case(p_ECR_ByValue)
@@ -2370,7 +2370,7 @@ module MIGCOALE_IMPLANTATION_GPU
                         POS(3) = DRAND32()*this%LayerThick(ILayer) + sum(this%LayerThick(1:ILayer-1)) + Host_Boxes%BOXBOUNDARY(3,1)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
                         TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
@@ -2490,7 +2490,7 @@ module MIGCOALE_IMPLANTATION_GPU
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(IElement)%m_ID = IElement
             END DO
 
-            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS)
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
@@ -2606,7 +2606,7 @@ module MIGCOALE_IMPLANTATION_GPU
                 !Give the cluster an type(layper) ID for the convenience of visualization
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = 1
 
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 

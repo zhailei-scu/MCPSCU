@@ -568,11 +568,14 @@ module MCLIB_TYPEDEF_GEOMETRY
     end subroutine
 
     !*******************************************
-    function GrainBelongsTo(this,POS) result(SeedID)
+    function GrainBelongsTo(this,POS,HBOXSIZE,BOXSIZE,Host_SimuCtrlParam) result(SeedID)
         implicit none
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
         real(kind=KMCDF),intent(in)::POS(3)
+        real(kind=KMCDF),intent(in)::HBOXSIZE(3)
+        real(kind=KMCDF),intent(in)::BOXSIZE(3)
+        type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
         integer::SeedID
         !---Local Vars---
         integer::I
@@ -589,6 +592,18 @@ module MCLIB_TYPEDEF_GEOMETRY
 
         DO I = 1,NSeeds
             SEP = POS - this%GrainSeeds(I)%m_POS
+
+            if(ABS(SEP(1)) .GT. HBOXSIZE(1) .AND. Host_SimuCtrlParam%PERIOD(1) .GT. 0) then
+                SEP(1) = SEP(1) - SIGN(BOXSIZE(1),SEP(1))
+            end if
+
+            if(ABS(SEP(2)) .GT. HBOXSIZE(2) .AND. Host_SimuCtrlParam%PERIOD(2) .GT. 0) then
+                SEP(2) = SEP(2) - SIGN(BOXSIZE(2),SEP(2))
+            end if
+
+            if(ABS(SEP(3)) .GT. HBOXSIZE(3) .AND. Host_SimuCtrlParam%PERIOD(3) .GT. 0) then
+                SEP(3) = SEP(3) - SIGN(BOXSIZE(3),SEP(3))
+            end if
 
             DIST2 = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
 

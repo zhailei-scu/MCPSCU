@@ -11,7 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat 1 1" />
+				<Option parameters="/scratch/p1/ZhaiLei/ColumnarGB/GBDist125nm/Flux1E18/Temperature1000K/ImplantDepth100nm/SampleSetup.dat 3 1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
