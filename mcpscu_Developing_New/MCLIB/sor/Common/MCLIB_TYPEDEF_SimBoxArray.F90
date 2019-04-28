@@ -534,6 +534,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         this%ReadDiffusorProp_List = Other%ReadDiffusorProp_List
     end if
 
+    ! The Assignment(=) had been override
+    if(associated(this%ReadReactionProp_List)) then
+        this%ReadReactionProp_List = Other%ReadReactionProp_List
+    end if
+
     return
   end subroutine
 

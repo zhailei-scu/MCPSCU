@@ -717,7 +717,7 @@ module MCLIB_TYPEDEF_ReactionPropList
                                                                                cursor%Reaction%ECRValueType, &
                                                                                cursor%Reaction%ECR
 
-            if(SubjectConstructClusterList%GetList_Count() .GT. 0 .AND. ObjectConstructClusterList%GetList_Count()) then
+            if(SubjectConstructClusterList%GetList_Count() .GT. 0 .AND. ObjectConstructClusterList%GetList_Count() .GT. 0) then
                 SubjectClusterListCursor=>SubjectConstructClusterList
                 DO While(associated(SubjectClusterListCursor))
 
