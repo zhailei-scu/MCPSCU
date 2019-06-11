@@ -118,6 +118,9 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KMCDF)::ArrowLen
     real(kind=KMCDF)::RR
     real(kind=KMCDF)::POS(3)
+    real(kind=KMCSF)::SEP(3)
+    real(kind=KMCDF)::Seed1Pos(3)
+    real(kind=KMCDF)::Seed2Pos(3)
     integer::SeedID
     integer::Statu
     type(DiffusorValue)::TheDiffusorValue
@@ -234,20 +237,54 @@ module MIGCOALE_EVOLUTION_GPU
 
         POS = Dev_Clusters(IC)%m_POS
 
-        !The average displacement:by using the Einstein Relation
-        RR  = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
+        Seed1Pos = Dev_GrainSeeds(Dev_Clusters(IC)%m_GrainID(1))%m_POS
+        SEP = Seed1Pos - POS
+        if(ABS(SEP(1)) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1) .GT. 0) then
+            Seed1Pos(1) = Seed1Pos(1) - SIGN(dm_BOXSIZE(1),SEP(1))
+        end if
+        if(ABS(SEP(2)) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2) .GT. 0) then
+            Seed1Pos(2) = Seed1Pos(2) - SIGN(dm_BOXSIZE(2),SEP(2))
+        end if
+        if(ABS(SEP(3)) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3) .GT. 0) then
+            Seed1Pos(3) = Seed1Pos(3) - SIGN(dm_BOXSIZE(3),SEP(3))
+        end if
 
-        tempPos(1) =  Dev_RandArray(IC)-0.5D0
-        tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
+        Seed2Pos = Dev_GrainSeeds(Dev_Clusters(IC)%m_GrainID(2))%m_POS
+        SEP = Seed2Pos - POS
+        if(ABS(SEP(1)) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1) .GT. 0) then
+            Seed2Pos(1) = Seed2Pos(1) - SIGN(dm_BOXSIZE(1),SEP(1))
+        end if
+        if(ABS(SEP(2)) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2) .GT. 0) then
+            Seed2Pos(2) = Seed2Pos(2) - SIGN(dm_BOXSIZE(2),SEP(2))
+        end if
+        if(ABS(SEP(3)) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3) .GT. 0) then
+            Seed2Pos(3) = Seed2Pos(3) - SIGN(dm_BOXSIZE(3),SEP(3))
+        end if
 
-        normVector = Dev_GrainSeeds(Dev_Clusters(IC)%m_GrainID(1))%m_POS - Dev_GrainSeeds(Dev_Clusters(IC)%m_GrainID(2))%m_POS
+        normVector = Seed1Pos - Seed2Pos
 
-        tempPos(3) = 0.D0
+        if(normVector(1)*TENPOWEIGHT .GE. 1) then
+            tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
+            tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
+            tempPos(1) = -(normVector(2)*tempPos(2) + normVector(3)*tempPos(3))/normVector(1)
+        end if
+
+        if(normVector(2)*TENPOWEIGHT .GE. 1) then
+            tempPos(1) =  Dev_RandArray(IC)-0.5D0
+            tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
+            tempPos(2) = -(normVector(1)*tempPos(1) + normVector(3)*tempPos(3))/normVector(2)
+        end if
+
         if(normVector(3)*TENPOWEIGHT .GE. 1) then
+            tempPos(1) =  Dev_RandArray(IC)-0.5D0
+            tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
             tempPos(3) = -(normVector(1)*tempPos(1) + normVector(2)*tempPos(2))/normVector(3)
         end if
 
         ArrowLen = DSQRT(tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3))
+
+        !The average displacement:by using the Einstein Relation
+        RR  = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
 
         tempPos(1) = RR*tempPos(1)/ArrowLen
         tempPos(2) = RR*tempPos(2)/ArrowLen
