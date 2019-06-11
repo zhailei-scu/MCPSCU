@@ -11,7 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat 1 1" />
+				<Option parameters="/scratch/110doc01/ZhaiLei/ColumnarGB/GBDist125nm/Flux1E18/Temperature1000K/ImplantDepth100nm/Test_TwoDimDiffusionInGB/SampleSetup.dat 0 1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
@@ -39,7 +39,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat 1 1" />
+				<Option parameters="/scratch/110doc01/ZhaiLei/ColumnarGB/GBDist125nm/Flux1E18/Temperature1000K/ImplantDepth100nm/Test2_TwoDimDiffusionInGB/SampleSetup.dat 0 1" />
 				<Compiler>
 					<Add option="-fast" />
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />

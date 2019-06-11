@@ -292,21 +292,21 @@ module MIGCOALE_EVOLUTION_GPU
 
         tempPos = tempPos + POS
 
-        if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+        if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1) .GT. 0) then
             tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
-        else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+        else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1) .GT. 0) then
             tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
         end if
 
-        if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+        if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2) .GT. 0) then
             tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
-        else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+        else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2) .GT. 0) then
             tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
         end if
 
-        if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+        if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3) .GT. 0) then
             tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
-        else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+        else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3) .GT. 0) then
             tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
         end if
 
