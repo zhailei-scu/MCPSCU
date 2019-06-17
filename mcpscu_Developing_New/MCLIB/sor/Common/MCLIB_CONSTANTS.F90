@@ -50,7 +50,7 @@ module MCLIB_CONSTANTS
     #ifdef ATOMSGROUP
     integer, parameter::p_ATOMS_GROUPS_NUMBER = ATOMSGROUP
     #else
-    integer, parameter::p_ATOMS_GROUPS_NUMBER = 3
+    integer, parameter::p_ATOMS_GROUPS_NUMBER = 4
     #endif
 
     character(len=1),parameter::p_ElementsTypeSpe = "@"
@@ -62,6 +62,10 @@ module MCLIB_CONSTANTS
     integer,parameter::p_ReactionCoefficientTypesNum = 2
     integer,parameter::p_ReactionCoefficient_ByValue = 1
     integer,parameter::p_ReactionCoefficient_ByArrhenius = 2
+
+    integer,parameter::p_ProductionTypesNum = 2
+    integer,parameter::p_ProductionType_BySimplePlus = 1
+    integer,parameter::p_ProductionType_BySubtract = 2
 
     integer,parameter::p_DiffuseCoefficientTypesNum = 3
     integer,parameter::p_DiffuseCoefficient_ByValue = 1

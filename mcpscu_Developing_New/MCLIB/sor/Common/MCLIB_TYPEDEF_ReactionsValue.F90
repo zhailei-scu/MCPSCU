@@ -8,14 +8,18 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
     implicit none
 
     type,public::ReadReactionPair
-        character(kind=c_char,len=20)::SubjectSymbol = ""
-        character(kind=c_char,len=20)::ObjectSymbol = ""
+        character(kind=c_char,len=30)::SubjectSymbol = ""
+        character(kind=c_char,len=30)::ObjectSymbol = ""
 
         integer(c_int)::ReactionCoefficientType = p_ReactionCoefficient_ByValue
 
         real(c_double)::ReactionCoefficient_Value = -1.D0 ! < 0 means not occur, >=1 means must occur
         real(c_double)::PreFactor = 0.D0
         real(c_double)::ActEnergy = 0.D0
+
+        integer(c_int)::ProductionType = p_ProductionType_BySimplePlus
+        character(kind=c_char,len=10)::Element_Subject = ""
+        character(kind=c_char,len=10)::Element_Object = ""
 
         integer(c_int)::ECRValueType = p_ECR_ByValue
         real(c_double)::ECR = 0.D0
@@ -40,6 +44,10 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         real(kind=KMCDF)::ReactionCoefficient_Value PREASSIGN -1.D0 ! < 0 means not occur, >=1 means must occur
         real(kind=KMCDF)::PreFactor PREASSIGN 0.D0
         real(kind=KMCDF)::ActEnergy PREASSIGN 0.D0
+
+        integer::ProductionType PREASSIGN p_ProductionType_BySimplePlus
+        integer::ElemetIndex_Subject PREASSIGN 0
+        integer::ElemetIndex_Object PREASSIGN 0
 
         integer::ECRValueType PREASSIGN p_ECR_ByValue
         real(kind=KMCDF)::ECR PREASSIGN 0.D0
@@ -126,6 +134,10 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         this%PreFactor = Others%PreFactor
         this%ActEnergy = Others%ActEnergy
 
+        this%ProductionType = Others%ProductionType
+        this%Element_Subject = Others%Element_Subject
+        this%Element_Object = Others%Element_Object
+
         this%ECRValueType = Others%ECRValueType
         this%ECR = Others%ECR
 
@@ -133,10 +145,11 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
     end subroutine CopyReadedReactionPairFromOther
 
     !*******************************************
-    function Convert2ReactionValue(this) result(TheReactionValue)
+    function Convert2ReactionValue(this,TheAtomsList) result(TheReactionValue)
         implicit none
         !---Dummy Vars---
         CLASS(ReadReactionPair),intent(in)::this
+        type(AtomsList),intent(in)::TheAtomsList
         type(ReactionValue),intent(out)::TheReactionValue
         !---Body---
 
@@ -147,6 +160,16 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         TheReactionValue%PreFactor = this%PreFactor
 
         TheReactionValue%ActEnergy = this%ActEnergy
+
+        TheReactionValue%ProductionType = this%ProductionType
+
+        if(LEN_TRIM(this%Element_Subject) .GT. 0) then
+            TheReactionValue%ElemetIndex_Subject = TheAtomsList%FindIndexBySymbol(this%Element_Subject)
+        end if
+
+        if(LEN_TRIM(this%Element_Object) .GT. 0) then
+            TheReactionValue%ElemetIndex_Object = TheAtomsList%FindIndexBySymbol(this%Element_Object)
+        end if
 
         TheReactionValue%ECRValueType = this%ECRValueType
 
@@ -170,6 +193,10 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         this%PreFactor = 0.D0
         this%ActEnergy = 0.D0
 
+        this%ProductionType = p_ProductionType_BySimplePlus
+        this%Element_Subject = ""
+        this%Element_Object = ""
+
         this%ECRValueType = p_ECR_ByValue
         this%ECR = 0.D0
         return
@@ -188,6 +215,10 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         this%ReactionCoefficient_Value = Others%ReactionCoefficient_Value
         this%PreFactor = Others%PreFactor
         this%ActEnergy = Others%ActEnergy
+
+        this%ProductionType = Others%ProductionType
+        this%ElemetIndex_Subject = Others%ElemetIndex_Subject
+        this%ElemetIndex_Object = Others%ElemetIndex_Object
 
         this%ECRValueType = Others%ECRValueType
         this%ECR = Others%ECR
@@ -208,6 +239,10 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         this%ReactionCoefficient_Value = -1.D0 ! < 0 means not occur, >=1 means must occur
         this%PreFactor = 0.D0
         this%ActEnergy = 0.D0
+
+        this%ProductionType = p_ProductionType_BySimplePlus
+        this%ElemetIndex_Subject = 0
+        this%ElemetIndex_Object = 0
 
         this%ECRValueType = p_ECR_ByValue
         this%ECR = 0.D0
@@ -366,7 +401,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
                     if(SubjectCode .eq. this%RecordsEntities(IndexFor)%SubjectCode .AND. ObjectCode .eq. this%RecordsEntities(IndexFor)%ObjectCode) then
                         write(*,*) "MCPSCUERROR: The reaction is redefined !"
                         write(*,*) "Subject : ",KeySubject%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                        write(*,*) "Subject : ",KeySubject%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                        write(*,*) "Object : ",KeyObject%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                         pause
                         stop
                     end if

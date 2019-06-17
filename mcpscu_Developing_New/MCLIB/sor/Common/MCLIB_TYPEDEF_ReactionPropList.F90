@@ -339,13 +339,17 @@ module MCLIB_TYPEDEF_ReactionPropList
 
         Maplength = 0
 
-        DO tempIndex = 1,2*ListCount
+        DO tempIndex = 1,ListCount
 
-            call ConstructClusterListsArray(tempIndex)%Clean_ClusterList()
+            call ConstructClusterListsArray(2*tempIndex-1)%Clean_ClusterList()
 
-            ConstructClusterListsArray(tempIndex) = TheAtomsSetsRangesArray(tempIndex)%AtomsSetRange2ClusterList(SingleAtomsDivideArrays)
+            ConstructClusterListsArray(2*tempIndex-1) = TheAtomsSetsRangesArray(2*tempIndex-1)%AtomsSetRange2ClusterList(SingleAtomsDivideArrays)
 
-            Maplength = Maplength + ConstructClusterListsArray(tempIndex)%GetList_Count()
+            call ConstructClusterListsArray(2*tempIndex)%Clean_ClusterList()
+
+            ConstructClusterListsArray(2*tempIndex) = TheAtomsSetsRangesArray(2*tempIndex)%AtomsSetRange2ClusterList(SingleAtomsDivideArrays)
+
+            Maplength = Maplength + ConstructClusterListsArray(2*tempIndex-1)%GetList_Count()*ConstructClusterListsArray(2*tempIndex)%GetList_Count()
         END DO
 
         call TheReactionsMap%constructor(SingleAtomsDivideArrays,Maplength)
@@ -364,7 +368,10 @@ module MCLIB_TYPEDEF_ReactionPropList
 
                     DO While(associated(ObjectClusterListCursor))
 
-                        call TheReactionsMap%put(SubjectClusterListCursor%TheCluster,ObjectClusterListCursor%TheCluster,cursor%Reaction%Convert2ReactionValue())
+                        write(*,*) cursor%Reaction%SubjectSymbol,cursor%Reaction%ObjectSymbol
+                        write(*,*) cursor%Reaction%Element_Subject,cursor%Reaction%Element_Object
+
+                        call TheReactionsMap%put(SubjectClusterListCursor%TheCluster,ObjectClusterListCursor%TheCluster,cursor%Reaction%Convert2ReactionValue(BasicAtomsList))
 
                         ObjectClusterListCursor=>ObjectClusterListCursor%next
                     END DO

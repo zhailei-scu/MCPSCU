@@ -214,13 +214,13 @@ module MCLIB_TYPEDEF_ACLUSTER
                     cycle
                 end if
 
-                if(this%m_SetsRange(TheLevel)%m_NA_To .LT. SingleAtomsDivideArrays(TheLevel,IGroup)) then
+                call this%PermutationAtomsSetRange2ClusterList(List,Cluster,SingleAtomsDivideArrays,TheLevel+1,IGroup)
+
+                if(this%m_SetsRange(TheLevel)%m_NA_To .LE. SingleAtomsDivideArrays(TheLevel,IGroup)) then
                     if(IGroup .GT. 1) then
                         exit
                     end if
                 end if
-
-                call this%PermutationAtomsSetRange2ClusterList(List,Cluster,SingleAtomsDivideArrays,TheLevel+1,IGroup)
 
                 if(this%m_SetsRange(TheLevel)%m_NA_From .eq. this%m_SetsRange(TheLevel)%m_NA_To) then
                     exit

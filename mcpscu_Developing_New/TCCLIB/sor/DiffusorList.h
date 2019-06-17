@@ -6,7 +6,7 @@ struct CDiffusorDef{
 #else
 typedef struct{
 #endif
-  char symbol[20];
+  char symbol[30];
 
   //In free matrix
   int DiffusorValueType_Free;

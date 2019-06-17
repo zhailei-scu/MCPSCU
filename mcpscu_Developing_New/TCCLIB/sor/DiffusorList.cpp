@@ -13,7 +13,7 @@ using namespace std;
 
 void copyCDiffusorDef(CDiffusorDef *Dest,CDiffusorDef *Source){
 
-  memset(Dest->symbol,0,20);
+  memset(Dest->symbol,0,30);
   strcpy(Dest->symbol,Source->symbol);
 
   Dest->DiffusorValueType_Free = Source->DiffusorValueType_Free;

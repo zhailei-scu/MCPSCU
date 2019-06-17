@@ -1263,7 +1263,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 write(*,*) "Please check box file at Line: ",LINE
                 pause
                 STOP
-
         END SELECT
 
     END DO
@@ -1354,6 +1353,44 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
+
+            case("&PRODUCTIONS")
+                call EXTRACT_NUMB(STR,1,N,STRNUMB)
+
+                if(N .LT. 1) then
+                    write(*,*) "MCPSCUERROR: You must special the reaction productions result type."
+                    write(*,*) "At Line: ",LINE
+                    pause
+                    stop
+                end if
+
+                newReactionPair%ProductionType = ISTR(STRNUMB(1))
+
+                select case(newReactionPair%ProductionType)
+                    case(p_ProductionType_BySimplePlus)
+                        newReactionPair%Element_Subject = ""
+                        newReactionPair%Element_Object = ""
+
+                    case(p_ProductionType_BySubtract)
+                        call EXTRACT_SUBSTR(STR,2,N,STRNUMB)
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: the production type by subtract model need two target elements for operation."
+                            write(*,*) "At Line: ",LINE
+                            pause
+                            stop
+                        end if
+                        call UPCASE(STRNUMB(1))
+                        call UPCASE(STRNUMB(2))
+                        newReactionPair%Element_Subject = adjustl(trim(STRNUMB(1)))
+                        newReactionPair%Element_Object = adjustl(trim(STRNUMB(2)))
+
+                    case default
+                        write(*,*) "Unknown reaction production model: ",newReactionPair%ProductionType
+                        write(*,*) "At Line: ",LINE
+                        write(*,*) STR
+                        pause
+                        stop
+                end select
 
             case("&ECR")
                 call EXTRACT_NUMB(STR,1,N,STRNUMB)

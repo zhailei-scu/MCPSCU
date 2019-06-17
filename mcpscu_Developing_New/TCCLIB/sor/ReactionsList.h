@@ -6,8 +6,8 @@ struct CReactionDef{
 #else
 typedef struct{
 #endif
-  char SubjectSymbol[20];
-  char ObjectSymbol[20];
+  char SubjectSymbol[30];
+  char ObjectSymbol[30];
 
   int ReactionCoefficientType;
   double ReactionCoefficient_Value;
@@ -15,6 +15,10 @@ typedef struct{
   // If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
   double PreFactor;
   double ActEnergy;
+
+  int ProductionType;
+  char Element_Subject[10];
+  char Element_Object[10];
 
   int ECRValueType;
   double ECR;

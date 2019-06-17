@@ -13,14 +13,21 @@ using namespace std;
 
 void copyCReactionDef(CReactionDef *Dest,CReactionDef *Source){
 
-  memset(Dest->SubjectSymbol,0,20);
+  memset(Dest->SubjectSymbol,0,30);
   strcpy(Dest->SubjectSymbol,Source->SubjectSymbol);
-  memset(Dest->ObjectSymbol,0,20);
+  memset(Dest->ObjectSymbol,0,30);
   strcpy(Dest->ObjectSymbol,Source->ObjectSymbol);
   Dest->ReactionCoefficientType = Source->ReactionCoefficientType;
   Dest->ReactionCoefficient_Value = Source->ReactionCoefficient_Value;
   Dest->PreFactor = Source->PreFactor;
   Dest->ActEnergy = Source->ActEnergy;
+
+  Dest->ProductionType = Source->ProductionType;
+  memset(Dest->Element_Subject,0,10);
+  strcpy(Dest->Element_Subject,Source->Element_Subject);
+  memset(Dest->Element_Object,0,10);
+  strcpy(Dest->Element_Object,Source->Element_Object);
+
   Dest->ECRValueType = Source->ECRValueType;
   Dest->ECR = Source->ECR;
 }
