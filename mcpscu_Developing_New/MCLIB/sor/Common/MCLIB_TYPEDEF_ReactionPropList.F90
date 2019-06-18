@@ -705,12 +705,15 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             write(*,*) "######################################################################"
 
-            write(hFile,fmt="('!','The reaction subject symbol =',A20,2x,  &
-                              '!','The reaction object symbol =',A20,2x,  &
+            write(hFile,fmt="('!','The reaction subject symbol =',A30,2x,  &
+                              '!','The reaction object symbol =',A30,2x,  &
                               '!','CoefficentsGenerate way =',I1,2x, &
                               '!','Reaction Coefficents value =',1F10.4,2x, &
                               '!','PreFactor = ',1PE10.4,2x, &
                               '!','ActEnergy = ',1PE10.4,2x, &
+                              '!','Production type = ',I1,2x, &
+                              '!','SubjectElement = ',A10,2x, &
+                              '!','ObjectElement = ',A10,2x, &
                               '!','ECR Generate way =',I1,2x, &
                               '!','ECR Value =',1PE10.4)")                     cursor%Reaction%SubjectSymbol, &
                                                                                cursor%Reaction%ObjectSymbol, &
@@ -718,6 +721,9 @@ module MCLIB_TYPEDEF_ReactionPropList
                                                                                cursor%Reaction%ReactionCoefficient_Value,  &
                                                                                cursor%Reaction%PreFactor, &
                                                                                cursor%Reaction%ActEnergy, &
+                                                                               cursor%Reaction%ProductionType, &
+                                                                               cursor%Reaction%Element_Subject, &
+                                                                               cursor%Reaction%Element_Object, &
                                                                                cursor%Reaction%ECRValueType, &
                                                                                cursor%Reaction%ECR
 
@@ -754,12 +760,15 @@ module MCLIB_TYPEDEF_ReactionPropList
                         SubjectSymbol = adjustl(SubjectSymbol)
                         ObjectSymbol = adjustl(ObjectSymbol)
 
-                        write(hFile,fmt="('! |--','The subject symbol =',A20,2x,  &
-                                          '!','The object symbol =',A20,2x,  &
+                        write(hFile,fmt="('! |--','The subject symbol =',A30,2x,  &
+                                          '!','The object symbol =',A30,2x,  &
                                           '!','CoefficentsGenerate way =',I1,2x, &
                                           '!','Reaction Coefficents value =',1F10.4,2x, &
                                           '!','PreFactor = ',1PE10.4,2x, &
                                           '!','ActEnergy = ',1PE10.4,2x, &
+                                          '!','Production type = ',I1,2x, &
+                                          '!','SubjectElement_Index = ',I10,2x, &
+                                          '!','ObjectElement_Index = ',I10,2x, &
                                           '!','ECR Generate way =',I1,2x, &
                                           '!','ECR Value =',1PE10.4)")         SubjectSymbol,                       &
                                                                                ObjectSymbol,                        &
@@ -767,6 +776,9 @@ module MCLIB_TYPEDEF_ReactionPropList
                                                                                TheValue%ReactionCoefficient_Value,  &
                                                                                TheValue%PreFactor,                  &
                                                                                TheValue%ActEnergy,                  &
+                                                                               TheValue%ProductionType,             &
+                                                                               TheValue%ElemetIndex_Subject,        &
+                                                                               TheValue%ElemetIndex_Object,         &
                                                                                TheValue%ECRValueType,               &
                                                                                TheValue%ECR
 
