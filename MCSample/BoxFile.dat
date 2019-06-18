@@ -206,7 +206,13 @@
           &ATOMP    atomic symbol = "W", element index = 74,  atomic mass= 183.84
           &STAT     active
 	  &ATOMVOLUM   Voulm of matrix atom (in nm^3) = 1.5855D-2      ! the symbol ATOMVOLUM denote this elements would be use as a matrix and the atom volum need to be special
-       &ENDSUBCTL 
+       &ENDSUBCTL
+
+       &GROUPSUBCTL #4 
+          &NATOM    the number of atoms in the group = 2000
+          &ATOMP    atomic symbol = "Vc", element index = 0, atomic mass= 0
+          &STAT     active
+       &ENDSUBCTL  
       
   &ENDSUBCTL --- end subsection for composition of box
 
@@ -322,19 +328,43 @@
 	
           &REACTION  #1
 		&REACTPAIRS The reaction pairs "He#1@H#0@W#0" , "He#2@H#0@W#0"
-		&REACTCOEFF The type for reaction coefficient = 1 , The prefactor is = 0.D0 ,  The active energy =  0.D0    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
+		&PRODUCTIONS The mode of production = 1                                 ! 1 by simple plus , 2 by speical the subtract elemets
+		&REACTCOEFF The type for reaction coefficient = 1 , The value = 1.D0    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
 		&ECR The effecitive capture radius type = 2                                                                 ! 1 by fix value (LU), 2 by  bubble model             
           &ENDSUBCTL
 
           &REACTION  #2
 		&REACTPAIRS The reaction pairs "He#1@H#0@W#0" , "He#3@H#0@W#0"
-		&REACTCOEFF The type for reaction coefficient = 2 , The prefactor is = 0.D0 ,  The active energy =  0.D0    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
+		&PRODUCTIONS The mode of production = 1                                  ! 1 by simple plus , 2 by speical the subtract elemets
+		&REACTCOEFF The type for reaction coefficient = 2 , The prefactor is = 1 ,  The active energy =  1    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
 		&ECR The effecitive capture radius type = 2                                                                 ! 1 by fix value (LU), 2 by  bubble model           
           &ENDSUBCTL
 
           &REACTION  #3
 		&REACTPAIRS The reaction pairs "He#1@H#0@W#0" , "He#4@H#0@W#0"
-		&REACTCOEFF The type for reaction coefficient = 1 , The value = 0.D0    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
+		&PRODUCTIONS The mode of production = 1                                 ! 1 by simple plus , 2 by speical the subtract elemets
+		&REACTCOEFF The type for reaction coefficient = 1 , The value = 1.D0    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
+		&ECR The effecitive capture radius type = 2                             ! 1 by fix value (LU), 2 by  bubble model             
+          &ENDSUBCTL
+
+	  &REACTION  #4
+		&REACTPAIRS The reaction pairs "He#1-Inf@H#0@W#1" , "He#1-Inf@H#0@Vc#1"
+		&PRODUCTIONS The mode of production = 2 , the correspond element are "W" and "Vc"     ! 1 by simple plus , 2 by speical the subtract elemets
+		&REACTCOEFF The type for reaction coefficient = 1 , The value = 1.D0    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
+		&ECR The effecitive capture radius type = 2                             ! 1 by fix value (LU), 2 by  bubble model             
+          &ENDSUBCTL
+
+	  &REACTION  #5
+		&REACTPAIRS The reaction pairs "He#1-Inf@H#0@W#1" , "He#1-Inf@H#0@Vc#2-Inf"
+		&PRODUCTIONS The mode of production = 2 , the correspond element are "W" and "Vc"     ! 1 by simple plus , 2 by speical the subtract elemets
+		&REACTCOEFF The type for reaction coefficient = 1 , The value = 1.D0    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
+		&ECR The effecitive capture radius type = 2                             ! 1 by fix value (LU), 2 by  bubble model             
+          &ENDSUBCTL
+
+	  &REACTION  #6
+		&REACTPAIRS The reaction pairs "He#1-Inf@H#0@W#2-Inf" , "He#1-Inf@H#0@Vc#1"
+		&PRODUCTIONS The mode of production = 2 , the correspond element are "W" and "Vc"     ! 1 by simple plus , 2 by speical the subtract elemets
+		&REACTCOEFF The type for reaction coefficient = 1 , The value = 1.D0    ! 1 by fix value (<0 means would not happen, >=1 means must happen), 2 by  Arrhenius(Prefactor,ActEng) 
 		&ECR The effecitive capture radius type = 2                             ! 1 by fix value (LU), 2 by  bubble model             
           &ENDSUBCTL
 
@@ -352,7 +382,8 @@
 		strcpy(Reaction.SubjectSymbol,"He#1");
                 strcpy(Reaction.ObjectSymbol,"He#5-Inf");
                 Reaction.ReactionCoefficientType = 1;
-	        Reaction.ReactionCoefficient_Value = 0;
+	        Reaction.ReactionCoefficient_Value = 1.0;
+		Reaction.ProductionType = 1;
                 Reaction.ECRValueType = 2;
                 AppendReaction(list,&Reaction);
 
@@ -360,7 +391,19 @@
 		strcpy(Reaction.SubjectSymbol,"He#2-Inf");
                 strcpy(Reaction.ObjectSymbol,"He#2-Inf");
                 Reaction.ReactionCoefficientType = 1;
-	        Reaction.ReactionCoefficient_Value = 0;
+	        Reaction.ReactionCoefficient_Value = 1.0;
+		Reaction.ProductionType = 1;
+                Reaction.ECRValueType = 2;
+                AppendReaction(list,&Reaction);
+
+		//subject: xx@W: 2-Inf, Object xx@Vc: 2-Inf
+		strcpy(Reaction.SubjectSymbol,"He#1-Inf@W#2-Inf");
+                strcpy(Reaction.ObjectSymbol,"He#1-Inf@Vc#2-Inf");
+                Reaction.ReactionCoefficientType = 1;
+	        Reaction.ReactionCoefficient_Value = 1.0;
+		Reaction.ProductionType = 2;
+		strcpy(Reaction.Element_Subject,"W");
+		strcpy(Reaction.Element_Object,"Vc");
                 Reaction.ECRValueType = 2;
                 AppendReaction(list,&Reaction);
               }
