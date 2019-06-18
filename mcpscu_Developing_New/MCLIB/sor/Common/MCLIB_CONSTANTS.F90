@@ -77,15 +77,16 @@ module MCLIB_CONSTANTS
     integer,parameter::p_ECR_ByBCluster = 2
 
     !*** The clusters type
-    integer,parameter::p_NUMBER_OF_STATU = 6
+    integer,parameter::p_NUMBER_OF_STATU = 7
     integer,parameter::p_ACTIVEFREE_STATU = 1
     integer,parameter::p_ACTIVEINGB_STATU = 2
     integer,parameter::p_OUT_DESTROY_STATU = 3
     integer,parameter::p_EXP_DESTROY_STATU = 4
     integer,parameter::p_MIS_DESTROY_STATU = 5
     integer,parameter::p_ABSORBED_STATU = 6
+    integer,parameter::p_ANNIHILATE_STATU = 7
     integer,parameter::p_Empty = 0
-    character*20,parameter::p_CStatu(p_NUMBER_OF_STATU) = (/"ACTIVEFREE","ACTIVEINGB","OUT_DESTROY","EXP_DESTRO","MIS_DESTROY","ABSORBED"/)
+    character*20,parameter::p_CStatu(p_NUMBER_OF_STATU) = (/"ACTIVEFREE","ACTIVEINGB","OUT_DESTROY","EXP_DESTRO","MIS_DESTROY","ABSORBED","ANNIHILATE"/)
 
 
     real(kind=KMCDF),parameter::p_GAMMA = 4.D0                          ! the parameter for cluster diffusion

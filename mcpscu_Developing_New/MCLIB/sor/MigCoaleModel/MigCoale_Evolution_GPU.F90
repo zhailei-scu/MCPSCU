@@ -388,9 +388,6 @@ module MIGCOALE_EVOLUTION_GPU
         call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
                                                        Dev_ClusterInfo_GPU%dm_Clusters,             &
                                                        Dev_Boxes%dm_SEUsedIndexBox,                 &
-                                                       Dev_ReactionsMap%Dev_RecordsEntities,        &
-                                                       Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,&
-                                                       Dev_Rand%dm_RandArray_Reaction,              &
                                                        Dev_ClusterInfo_GPU%dm_MergeINDI,            &
                                                        Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
                                                        Dev_ClusterInfo_GPU%dm_KVOIS,                &
@@ -404,18 +401,24 @@ module MIGCOALE_EVOLUTION_GPU
                                                  Dev_Boxes%dm_SEUsedIndexBox,                   &
                                                  Dev_DiffusorMap%Dev_TypesEntities,             &
                                                  Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,   &
+                                                 Dev_ReactionsMap%Dev_RecordsEntities,          &
+                                                 Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
+                                                 Dev_Rand%dm_RandArray_Reaction,                &
                                                  Dev_ClusterInfo_GPU%dm_MergeINDI,              &
                                                  Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
                                                  Dev_ClusterInfo_GPU%dm_ActiveStatus)
         !---Back Direction
         call MergeBack_Kernel<<<blocks,threads>>>(BlockNumEachBox,                              &
-                                                  Dev_ClusterInfo_GPU%dm_Clusters,              &
-                                                  Dev_Boxes%dm_SEUsedIndexBox,                  &
-                                                  Dev_DiffusorMap%Dev_TypesEntities,            &
-                                                  Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,  &
-                                                  Dev_ClusterInfo_GPU%dm_MergeINDI,             &
-                                                  Dev_ClusterInfo_GPU%dm_MergeKVOIS,            &
-                                                  Dev_ClusterInfo_GPU%dm_ActiveStatus)
+                                                 Dev_ClusterInfo_GPU%dm_Clusters,               &
+                                                 Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                 Dev_DiffusorMap%Dev_TypesEntities,             &
+                                                 Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,   &
+                                                 Dev_ReactionsMap%Dev_RecordsEntities,          &
+                                                 Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
+                                                 Dev_Rand%dm_RandArray_Reaction,                &
+                                                 Dev_ClusterInfo_GPU%dm_MergeINDI,              &
+                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
+                                                 Dev_ClusterInfo_GPU%dm_ActiveStatus)
 
     END ASSOCIATE
 
@@ -423,16 +426,12 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine MergeClusters
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox, Dev_RecordsEntities,Dev_SingleAtomsDivideArrays,&
-                                                      Dev_RandArran_Reaction,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI)
+  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
-    type(ReactionEntity),device::Dev_RecordsEntities(:)
-    integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
-    real(kind=KMCDF),device::Dev_RandArran_Reaction(:)
     integer,device::MergeTable_KVOIS(:)
     integer,device::MergeTable_INDI(:,:)
     integer,device::Neighbor_KVOIS(:)
@@ -447,8 +446,6 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KMCSF)::RADA,RADB,DIST,RR
     integer::N_Neighbor,NewNA
     integer::I,J,JC,NN
-    type(ReactionValue)::TheReactionValue
-    real(kind=KMCDF)::ReactionCoeff
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -522,21 +519,9 @@ module MIGCOALE_EVOLUTION_GPU
                     cycle
                 end if
 
-                call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_RecordsEntities,Dev_SingleAtomsDivideArrays,TheReactionValue)
+                NN = NN + 1
 
-                ReactionCoeff = 0.D0
-                select case(TheReactionValue%ReactionCoefficientType)
-                    case(p_ReactionCoefficient_ByValue)
-                        ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
-                    case(p_ReactionCoefficient_ByArrhenius)
-                        ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
-                end select
-
-                if(ReactionCoeff .GE. Dev_RandArran_Reaction(IC)) then
-                    NN = NN + 1
-
-                    MergeTable_INDI(IC,NN) = JC
-                end if
+                MergeTable_INDI(IC,NN) = JC
 
             END DO
 
@@ -549,15 +534,19 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine Merge_PreJudge_Kernel
 
   !************************************************************************
-  attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_TypesEntities,Dev_SingleAtomsDivideArrays, &
+  attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays, &
+                                                Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
                                                 Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
-    type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
-    integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    type(DiffusorTypeEntity),device::Dev_DiffuTypesEntities(:)
+    integer,device::Dev_DiffuSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
+    integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KMCDF),device::Dev_RandArran_Reaction(:)
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
     integer,device::Dev_ActiveStatu(:)
@@ -575,6 +564,10 @@ module MIGCOALE_EVOLUTION_GPU
     integer::SubjectStatu
     integer::ObjectStatu
     type(DiffusorValue)::TheDiffusorValue
+    type(ReactionValue)::TheReactionValue
+    real(kind=KMCDF)::ReactionCoeff
+    integer::SubjectElementIndex
+    integer::ObjectElementIndex
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -677,59 +670,93 @@ module MIGCOALE_EVOLUTION_GPU
           Dev_Clusters(IC)%m_POS(2) =  PosA_Y
           Dev_Clusters(IC)%m_POS(3) =  PosA_Z
 
-          Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
-                                                                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
 
-          call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+          ReactionCoeff = 0.D0
+          select case(TheReactionValue%ReactionCoefficientType)
+            case(p_ReactionCoefficient_ByValue)
+                 ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
+            case(p_ReactionCoefficient_ByArrhenius)
+                 ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+          end select
 
-          if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
+          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
+          if(ReactionCoeff .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
 
-            select case(TheDiffusorValue%ECRValueType_Free)
-                case(p_ECR_ByValue)
-                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                case(p_ECR_ByBCluster)
-                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+            select case(TheReactionValue%ProductionType)
+                case(p_ProductionType_BySimplePlus)
+                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                case(p_ProductionType_BySubtract)
+
+                    SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
+                    ObjectElementIndex = TheReactionValue%ElemetIndex_Object
+
+                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA - &
+                                                                         2*Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA,0)
+
+                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA - &
+                                                                        2*Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA,0)
             end select
 
-            select case(TheDiffusorValue%DiffusorValueType_Free)
-                case(p_DiffuseCoefficient_ByValue)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
-                case(p_DiffuseCoefficient_ByArrhenius)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
-                case(p_DiffuseCoefficient_ByBCluster)
-                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                    Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-            end select
-          else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
 
-            select case(TheDiffusorValue%ECRValueType_InGB)
-                case(p_ECR_ByValue)
-                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                case(p_ECR_ByBCluster)
-                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
-            end select
+            if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
 
-            select case(TheDiffusorValue%DiffusorValueType_InGB)
-                case(p_DiffuseCoefficient_ByValue)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
-                case(p_DiffuseCoefficient_ByArrhenius)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
-                case(p_DiffuseCoefficient_ByBCluster)
-                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                    Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-            end select
+                select case(TheDiffusorValue%ECRValueType_Free)
+                    case(p_ECR_ByValue)
+                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                    case(p_ECR_ByBCluster)
+                        Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                end select
+
+                select case(TheDiffusorValue%DiffusorValueType_Free)
+                    case(p_DiffuseCoefficient_ByValue)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                    case(p_DiffuseCoefficient_ByArrhenius)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                    case(p_DiffuseCoefficient_ByBCluster)
+                        ! Here we adopt a model that D=D0*(1/R)**Gama
+                        Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+                end select
+            else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+                select case(TheDiffusorValue%ECRValueType_InGB)
+                    case(p_ECR_ByValue)
+                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                    case(p_ECR_ByBCluster)
+                        Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                end select
+
+                select case(TheDiffusorValue%DiffusorValueType_InGB)
+                    case(p_DiffuseCoefficient_ByValue)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                    case(p_DiffuseCoefficient_ByArrhenius)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                    case(p_DiffuseCoefficient_ByBCluster)
+                        ! Here we adopt a model that D=D0*(1/R)**Gama
+                        Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+                end select
+            end if
+
+            if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
+                if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
+                    Dev_Clusters(IC)%m_Statu = p_EXP_DESTROY_STATU
+                    S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_EXP_DESTROY_STATU)
+                endif
+            end if
+
+            if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .LE. 0) then
+                Dev_Clusters(IC)%m_Statu = p_ANNIHILATE_STATU
+                S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_ANNIHILATE_STATU)
+            end if
+
+            !Dev_Clusters(JC)%m_RAD = 0.D0
+            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+            Dev_Clusters(JC)%m_Atoms(:)%m_NA = 0
           end if
-
-          if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
-             if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
-                Dev_Clusters(IC)%m_Statu = p_EXP_DESTROY_STATU
-                S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_EXP_DESTROY_STATU)
-             endif
-          end if
-
-          !Dev_Clusters(JC)%m_RAD = 0.D0
-          Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
-          Dev_Clusters(JC)%m_Atoms(:)%m_NA = 0
 
           !---Step 4:Release self
           S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
@@ -742,15 +769,19 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine MergePre_Kernel
 
   !************************************************************************
-  attributes(global) subroutine MergeBack_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,  &
-                                                 Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu)
+  attributes(global) subroutine MergeBack_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays, &
+                                                Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
+                                                Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
-    type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
-    integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    type(DiffusorTypeEntity),device::Dev_DiffuTypesEntities(:)
+    integer,device::Dev_DiffuSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
+    integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KMCDF),device::Dev_RandArran_Reaction(:)
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
     integer,device::Dev_ActiveStatu(:)
@@ -768,6 +799,10 @@ module MIGCOALE_EVOLUTION_GPU
     integer::SubjectStatu
     integer::ObjectStatu
     type(DiffusorValue)::TheDiffusorValue
+    type(ReactionValue)::TheReactionValue
+    real(kind=KMCDF)::ReactionCoeff
+    integer::SubjectElementIndex
+    integer::ObjectElementIndex
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -797,7 +832,7 @@ module MIGCOALE_EVOLUTION_GPU
 
           ObjectStatu = Dev_ActiveStatu(JC)
 
-          if(IC .LT. JC .or. (ObjectStatu .ne. p_ACTIVEFREE_STATU .AND. ObjectStatu .ne. p_ACTIVEINGB_STATU)) then    ! to ensure pre-direction merge
+          if(IC .LT. JC .or. (ObjectStatu .ne. p_ACTIVEFREE_STATU .AND. ObjectStatu .ne. p_ACTIVEINGB_STATU)) then    ! to ensure back-direction merge
             cycle
           end if
 
@@ -870,59 +905,93 @@ module MIGCOALE_EVOLUTION_GPU
           Dev_Clusters(IC)%m_POS(2) =  PosA_Y
           Dev_Clusters(IC)%m_POS(3) =  PosA_Z
 
-          Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
-                                                                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
 
-          call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+          ReactionCoeff = 0.D0
+          select case(TheReactionValue%ReactionCoefficientType)
+            case(p_ReactionCoefficient_ByValue)
+                 ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
+            case(p_ReactionCoefficient_ByArrhenius)
+                 ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+          end select
 
-          if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
+          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
+          if(ReactionCoeff .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
 
-            select case(TheDiffusorValue%ECRValueType_Free)
-                case(p_ECR_ByValue)
-                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                case(p_ECR_ByBCluster)
-                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+            select case(TheReactionValue%ProductionType)
+                case(p_ProductionType_BySimplePlus)
+                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                case(p_ProductionType_BySubtract)
+
+                    SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
+                    ObjectElementIndex = TheReactionValue%ElemetIndex_Object
+
+                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA - &
+                                                                         2*Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA,0)
+
+                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA - &
+                                                                        2*Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA,0)
             end select
 
-            select case(TheDiffusorValue%DiffusorValueType_Free)
-                case(p_DiffuseCoefficient_ByValue)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
-                case(p_DiffuseCoefficient_ByArrhenius)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
-                case(p_DiffuseCoefficient_ByBCluster)
-                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                    Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-            end select
-          else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
 
-            select case(TheDiffusorValue%ECRValueType_InGB)
-                case(p_ECR_ByValue)
-                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                case(p_ECR_ByBCluster)
-                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
-            end select
+            if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
 
-            select case(TheDiffusorValue%DiffusorValueType_InGB)
-                case(p_DiffuseCoefficient_ByValue)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
-                case(p_DiffuseCoefficient_ByArrhenius)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
-                case(p_DiffuseCoefficient_ByBCluster)
-                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                    Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-            end select
+                select case(TheDiffusorValue%ECRValueType_Free)
+                    case(p_ECR_ByValue)
+                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                    case(p_ECR_ByBCluster)
+                        Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                end select
+
+                select case(TheDiffusorValue%DiffusorValueType_Free)
+                    case(p_DiffuseCoefficient_ByValue)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                    case(p_DiffuseCoefficient_ByArrhenius)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                    case(p_DiffuseCoefficient_ByBCluster)
+                        ! Here we adopt a model that D=D0*(1/R)**Gama
+                        Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+                end select
+            else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+                select case(TheDiffusorValue%ECRValueType_InGB)
+                    case(p_ECR_ByValue)
+                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                    case(p_ECR_ByBCluster)
+                        Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                end select
+
+                select case(TheDiffusorValue%DiffusorValueType_InGB)
+                    case(p_DiffuseCoefficient_ByValue)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                    case(p_DiffuseCoefficient_ByArrhenius)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                    case(p_DiffuseCoefficient_ByBCluster)
+                        ! Here we adopt a model that D=D0*(1/R)**Gama
+                        Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+                end select
+            end if
+
+            if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
+                if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
+                    Dev_Clusters(IC)%m_Statu = p_EXP_DESTROY_STATU
+                    S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_EXP_DESTROY_STATU)
+                endif
+            end if
+
+            if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .LE. 0) then
+                Dev_Clusters(IC)%m_Statu = p_ANNIHILATE_STATU
+                S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_ANNIHILATE_STATU)
+            end if
+
+            !Dev_Clusters(JC)%m_RAD = 0.D0
+            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+            Dev_Clusters(JC)%m_Atoms(:)%m_NA = 0
           end if
-
-          if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
-             if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
-                Dev_Clusters(IC)%m_Statu = p_EXP_DESTROY_STATU
-                S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_EXP_DESTROY_STATU)
-             endif
-          end if
-
-          !Dev_Clusters(JC)%m_RAD = 0.D0
-          Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
-          Dev_Clusters(JC)%m_Atoms(:)%m_NA = 0
 
           !---Step 4:Release self
           S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)

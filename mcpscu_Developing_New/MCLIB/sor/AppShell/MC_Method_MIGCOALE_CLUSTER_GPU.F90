@@ -1781,7 +1781,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Concentrate = NCAct/(MultiBox*Host_Boxes%BOXVOLUM)
 
-                write(Record%HSizeStatistic_TotalBox, fmt="(I20,1x,1PE20.4,1x,9(I20,1x),15(1PE20.4,1x),7(I20,1x))") Record%GetSimuSteps(),                 &
+                write(Record%HSizeStatistic_TotalBox, fmt="(I20,1x,1PE20.4,1x,10(I20,1x),17(1PE20.4,1x),8(I20,1x))") Record%GetSimuSteps(),                 &
                                                                                                            Record%GetSimuTimes(),                          &
                                                                                                            NCAct,                                          &
                                                                                                            sum(TBasicInfo%NC),                             &
@@ -1795,17 +1795,17 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                                                                                            Record%GetImplantedEntitiesNum(),                &
                                                                                                            TBasicInfo%NC(p_ACTIVEFREE_STATU),               &
                                                                                                            TBasicInfo%NC(p_ACTIVEINGB_STATU),               &
-                                                                                                           TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ABSORBED_STATU) + &
-                                                                                                           Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ABSORBED_STATU)
+                                                                                                           TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + &
+                                                                                                           Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)
                 call flush(Record%HSizeStatistic_TotalBox)
 
                 if((TBasicInfo%NC(p_ACTIVEFREE_STATU) + TBasicInfo%NC(p_ACTIVEINGB_STATU) + &
-                   sum(TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ABSORBED_STATU) + Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ABSORBED_STATU)) - &
+                   sum(TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)) - &
                    Record%GetImplantedEntitiesNum() - sum(TBasicInfo%NC0) - TBasicInfo%NCDumpAdded) .ne. 0) then
 
                    write(*,*) "MCPSCUERROR: The clusters number is not conservation."
                    write(*,*) "The accumulated clusters for all kinds =",TBasicInfo%NC(p_ACTIVEFREE_STATU) + TBasicInfo%NC(p_ACTIVEINGB_STATU) + &
-                               sum(TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ABSORBED_STATU) + Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ABSORBED_STATU))
+                               sum(TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
                    write(*,*) "The total implanted cluster number = ",Record%GetImplantedEntitiesNum()
                    write(*,*) "The initial cluster number plus rescale added number = ",TBasicInfo%NC0(p_ACTIVEFREE_STATU) + TBasicInfo%NC0(p_ACTIVEINGB_STATU) + TBasicInfo%NCDumpAdded
                    pause
@@ -1897,7 +1897,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Concentrate = NCAct/Host_Boxes%BOXVOLUM
 
-                write(Record%HSizeStatistic_EachBox,fmt="(2(I20,1x),1PE20.4,1x,9(I20,1x),15(1PE20.4,1x),7(I20,1x))") Record%GetSimuSteps(),                   &
+                write(Record%HSizeStatistic_EachBox,fmt="(2(I20,1x),1PE20.4,1x,10(I20,1x),17(1PE20.4,1x),8(I20,1x))") Record%GetSimuSteps(),                   &
                                                                                                              IBox,                                            &
                                                                                                              Record%GetSimuTimes(),                           &
                                                                                                              NCAct,                                           &
@@ -1912,8 +1912,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                                                                                              Record%GetImplantedEntitiesNum(),                &
                                                                                                              SBasicInfo%NC(p_ACTIVEFREE_STATU),               &
                                                                                                              SBasicInfo%NC(p_ACTIVEINGB_STATU),               &
-                                                                                                             SBasicInfo%NC(p_OUT_DESTROY_STATU:p_ABSORBED_STATU) + &
-                                                                                                             Record%RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ABSORBED_STATU)
+                                                                                                             SBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + &
+                                                                                                             Record%RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)
 
             END ASSOCIATE
 
