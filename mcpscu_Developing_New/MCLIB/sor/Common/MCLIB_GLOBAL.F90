@@ -260,8 +260,9 @@ module MCLIB_GLOBAL
          PCtrlParam%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_AveSep
 
          write(*,*) "***********************************************************************************************"
-         write(*,*) "MCPSCU Info: The Diffusion would not be considered in time section: ",ISection
-         write(*,*) "MCPSCU Info: The time step strategy would be changed to by average separation."
+         write(*,*) "MCPSCU Info: The reaction would not be considered in time section: ",ISection
+         write(*,*) "MCPSCU Info: The time step strategy would be changed to by average separation"
+         write(*,*) "MCPSCU Info: And the neighbor-list would not be calculated."
          write(*,*) "***********************************************************************************************"
       end if
 

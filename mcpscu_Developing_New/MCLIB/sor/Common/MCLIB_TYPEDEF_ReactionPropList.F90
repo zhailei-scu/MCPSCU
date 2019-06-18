@@ -368,9 +368,6 @@ module MCLIB_TYPEDEF_ReactionPropList
 
                     DO While(associated(ObjectClusterListCursor))
 
-                        write(*,*) cursor%Reaction%SubjectSymbol,cursor%Reaction%ObjectSymbol
-                        write(*,*) cursor%Reaction%Element_Subject,cursor%Reaction%Element_Object
-
                         call TheReactionsMap%put(SubjectClusterListCursor%TheCluster,ObjectClusterListCursor%TheCluster,cursor%Reaction%Convert2ReactionValue(BasicAtomsList))
 
                         ObjectClusterListCursor=>ObjectClusterListCursor%next

@@ -12,7 +12,8 @@
 
        DO I = tempLength,1,-1
         if(ICHAR(str(I:I)) .GT. 31 .and. str(I:I) .ne. CHAR(32)
-     -   .and. str(I:I) .ne. CHAR(34)) then
+     -   .and. str(I:I) .ne. CHAR(34) .and.
+     -   ICHAR(str(I:I)) .LT. 127) then
             exit
         end if
        END DO
