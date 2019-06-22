@@ -49,7 +49,9 @@
 		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_Geometry_GPU.F90">
 			<Option weight="2" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_ReactionsDefine_GPU.F90" />
+		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_ReactionsDefine_GPU.F90">
+			<Option weight="2" />
+		</Unit>
 		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_RecordList_GPU.F90">
 			<Option weight="4" />
 		</Unit>

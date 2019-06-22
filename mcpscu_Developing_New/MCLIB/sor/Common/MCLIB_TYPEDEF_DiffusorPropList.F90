@@ -643,6 +643,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                               '!','CoefficentsGenerate way in free matrix=',I1,2x, &
                               '!','DiffusionCiefficents value in free matrix =',1PE10.4,2x, &
                               '!','PreFactor in free matrix = ',1PE10.4,2x, &
+                              '!','PreFactor parameter in free matrix = ',1PE10.4,2x, &
                               '!','ActEnergy in free matrix = ',1PE10.4,2x, &
                               '!','ECR Generate way in free matrix =',I1,2x, &
                               '!','ECR Value in free matrix =',1PE10.4, &
@@ -655,6 +656,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                                                       cursor%Diffusor%DiffusorValueType_Free, &
                                                                       cursor%Diffusor%DiffuseCoefficient_Free_Value,  &
                                                                       cursor%Diffusor%PreFactor_Free, &
+                                                                      cursor%Diffusor%PreFactorParameter_Free, &
                                                                       cursor%Diffusor%ActEnergy_Free, &
                                                                       cursor%Diffusor%ECRValueType_Free, &
                                                                       cursor%Diffusor%ECR_Free,         &
@@ -690,6 +692,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                       '!','CoefficentsGenerate way in free matrix =',I1,2x, &
                                       '!','DiffusionCiefficents value in free matrix =',1PE10.4,2x, &
                                       '!','PreFactor in free matrix = ',1PE10.4,2x, &
+                                      '!','PreFactor parameter in free matrix = ',1PE10.4,2x, &
                                       '!','ActEnergy in free matrix = ',1PE10.4,2x, &
                                       '!','ECR Generate way in free matrix =',I1,2x, &
                                       '!','ECR Value in free matrix =',1PE10.4,&
@@ -702,6 +705,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                                                                TheValue%DiffusorValueType_Free,         &
                                                                                TheValue%DiffuseCoefficient_Free_Value,  &
                                                                                TheValue%PreFactor_Free,                 &
+                                                                               TheValue%PreFactorParameter_Free,        &
                                                                                TheValue%ActEnergy_Free,                 &
                                                                                TheValue%ECRValueType_Free,              &
                                                                                TheValue%ECR_Free,                       &

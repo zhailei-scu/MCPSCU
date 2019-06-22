@@ -642,6 +642,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                               '!','CoefficentsGenerate way in free matrix =',I1,2x, &
                               '!','DiffusionCiefficents value in free matrix =',1PE10.4,2x, &
                               '!','PreFactor in free matrix = ',1PE10.4,2x, &
+                              '!','PreFactor parameter in free matrix = ',1PE10.4,2x, &
                               '!','ActEnergy in free matrix = ',1PE10.4,2x, &
                               '!','ECR Generate way in free matrix = ',I1,2x, &
                               '!','ECR Value in free matrix = ',1PE10.4,&
@@ -654,6 +655,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                                diffusorListCursor%Diffusor%DiffusorValueType_Free, &
                                                                                diffusorListCursor%Diffusor%DiffuseCoefficient_Free_Value,  &
                                                                                diffusorListCursor%Diffusor%PreFactor_Free, &
+                                                                               diffusorListCursor%Diffusor%PreFactorParameter_Free, &
                                                                                diffusorListCursor%Diffusor%ActEnergy_Free, &
                                                                                diffusorListCursor%Diffusor%ECRValueType_Free, &
                                                                                diffusorListCursor%Diffusor%ECR_Free,&
@@ -1066,16 +1068,18 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                 newDiffusor%DiffusorValueType_Free = ISTR(STRNUMB(1))
 
-                if(newDiffusor%DiffusorValueType_Free .eq. p_DiffuseCoefficient_ByValue) then
-                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
-                    if(N .LT. 2) then
-                        write(*,*) "MCPSCUERROR: If you had used the by-diffusionValue strategy, you should give the diffusor value."
-                        write(*,*) "At Line: ",LINE
-                        pause
-                        stop
-                    end if
-                    newDiffusor%DiffuseCoefficient_Free_Value = DRSTR(STRNUMB(2))
-                else if(newDiffusor%DiffusorValueType_Free .eq. p_DiffuseCoefficient_ByArrhenius) then
+                select case(newDiffusor%DiffusorValueType_Free)
+                    case(p_DiffuseCoefficient_ByValue)
+                        call EXTRACT_NUMB(STR,2,N,STRNUMB)
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: If you had used the by-diffusionValue strategy, you should give the diffusor value."
+                            write(*,*) "At Line: ",LINE
+                            pause
+                            stop
+                        end if
+                        newDiffusor%DiffuseCoefficient_Free_Value = DRSTR(STRNUMB(2))
+
+                case(p_DiffuseCoefficient_ByArrhenius)
                     call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
                     if(N .LT. 3) then
@@ -1086,12 +1090,38 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     end if
                     newDiffusor%PreFactor_Free = DRSTR(STRNUMB(2))
                     newDiffusor%ActEnergy_Free = DRSTR(STRNUMB(3))
-                else if(newDiffusor%DiffusorValueType_Free .ne. p_DiffuseCoefficient_ByBCluster) then
+
+                case(p_DiffuseCoefficient_BySIACluster)
+                    call EXTRACT_NUMB(STR,4,N,STRNUMB)
+
+                    if(N .LT. 4) then
+                        write(*,*) "MCPSCUERROR: If you had used the by-SIA cluster strategy, you should give the prefacotr , prefactor parameter and active energy."
+                        write(*,*) "At Line: ",LINE
+                        pause
+                        stop
+                    end if
+                    newDiffusor%PreFactor_Free = DRSTR(STRNUMB(2))
+                    newDiffusor%PreFactorParameter_Free = DRSTR(STRNUMB(3))
+                    newDiffusor%ActEnergy_Free = DRSTR(STRNUMB(4))
+
+                case(p_DiffuseCoefficient_ByVcCluster)
+                    call EXTRACT_NUMB(STR,4,N,STRNUMB)
+
+                    if(N .LT. 4) then
+                        write(*,*) "MCPSCUERROR: If you had used the by-Vacancy cluster strategy, you should give the prefacotr , prefactor parameter and active energy."
+                        write(*,*) "At Line: ",LINE
+                        pause
+                        stop
+                    end if
+                    newDiffusor%PreFactor_Free = DRSTR(STRNUMB(2))
+                    newDiffusor%PreFactorParameter_Free = DRSTR(STRNUMB(3))
+                    newDiffusor%ActEnergy_Free = DRSTR(STRNUMB(4))
+                case default
                     write(*,*) "MCPSCUERROR: unknown diffusor value type :",newDiffusor%DiffusorValueType_Free
                     write(*,*) "At line: ",LINE
                     pause
                     stop
-                end if
+                end select
 
             case("&ECR_FREE")
                 call EXTRACT_NUMB(STR,1,N,STRNUMB)
@@ -2980,6 +3010,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_FREE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                case(p_DiffuseCoefficient_BySIACluster)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                case(p_DiffuseCoefficient_ByVcCluster)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
@@ -3294,6 +3330,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case(p_DiffuseCoefficient_ByBCluster)
                 ! Here we adopt a model that D=D0*(1/R)**Gama
                 ClustersSample(1,NClustersGroup)%m_DiffCoeff = SURDIFPRE_FREE*(ClustersSample(1,NClustersGroup)%m_RAD**(-p_GAMMA))
+            case(p_DiffuseCoefficient_BySIACluster)
+                ClustersSample(1,NClustersGroup)%m_DiffCoeff = (sum(ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+            case(p_DiffuseCoefficient_ByVcCluster)
+                ClustersSample(1,NClustersGroup)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA)))* &
+                                                                 TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
 
         ClustersSample(1,NClustersGroup)%m_Statu = p_ACTIVEFREE_STATU  ! the GB and interface would not be considered in MF , they would be considered SPMF
@@ -3694,6 +3736,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     ClustersSample(ILayer,IGroup)%m_DiffCoeff = SURDIFPRE_FREE*(ClustersSample(ILayer,IGroup)%m_RAD**(-p_GAMMA))
+                case(p_DiffuseCoefficient_BySIACluster)
+                    ClustersSample(ILayer,IGroup)%m_DiffCoeff = (sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                case(p_DiffuseCoefficient_ByVcCluster)
+                    ClustersSample(ILayer,IGroup)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)))* &
+                                                                  TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
         else if(ClustersSample(ILayer,IGroup)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
@@ -3830,6 +3878,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             case(p_DiffuseCoefficient_ByBCluster)
                                 ! Here we adopt a model that D=D0*(1/R)**Gama
                                 this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_FREE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                            case(p_DiffuseCoefficient_BySIACluster)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                     TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                            case(p_DiffuseCoefficient_ByVcCluster)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                     TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                         end select
                     else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
@@ -3927,6 +3981,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                 case(p_DiffuseCoefficient_ByBCluster)
                                     ! Here we adopt a model that D=D0*(1/R)**Gama
                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_FREE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                                case(p_DiffuseCoefficient_BySIACluster)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                case(p_DiffuseCoefficient_ByVcCluster)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                             end select
                         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 

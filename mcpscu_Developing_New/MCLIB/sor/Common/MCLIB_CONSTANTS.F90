@@ -67,10 +67,16 @@ module MCLIB_CONSTANTS
     integer,parameter::p_ProductionType_BySimplePlus = 1
     integer,parameter::p_ProductionType_BySubtract = 2
 
-    integer,parameter::p_DiffuseCoefficientTypesNum = 3
+    integer,parameter::p_DiffuseCoefficientTypesNum = 5
     integer,parameter::p_DiffuseCoefficient_ByValue = 1
     integer,parameter::p_DiffuseCoefficient_ByArrhenius = 2
     integer,parameter::p_DiffuseCoefficient_ByBCluster = 3
+    integer,parameter::p_DiffuseCoefficient_BySIACluster = 4
+    integer,parameter::p_DiffuseCoefficient_ByVcCluster = 5
+
+    integer,parameter::p_DiffuseDirectionTypeNum = 2
+    integer,parameter::p_DiffuseDirection_ThreeDim = 1
+    integer,parameter::p_DiffuseDirection_OneDim = 2
 
     integer,parameter::p_ECRTypesNum = 2
     integer,parameter::p_ECR_ByValue = 1

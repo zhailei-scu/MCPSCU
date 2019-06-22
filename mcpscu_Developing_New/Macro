@@ -32,10 +32,21 @@
 ! If we add -w -v compiling option, we would see that compiler print "xxxxx_A is undifined."
 ! So, in windows cygwin, we should not assign any member of derived fortran type an init value.
 
+!---Based on our test, in GPU code,the max members size inner one class (include inherit from parent classes)
+!---is 12*8 bytes, which mean if each one of the member is the kind of real*8 , only 12 members are supported
+!---in one class. Otherwise, the PGI compiler cannot support some basic operator such as assignment(=) and some
+!---errors would occur during compiling. So,if the members size greater than 12*8 bytes, we need to reload some
+!---operators such as assignment(=) to let the compiler know that is right way to load this operator. Besides,
+!---we need to ensure that the members are not pre-assignment some value such as AA = xx when the members size
+!---greater than 12*8 bytes, otherwise, the compiler would give some error when you visiting the object member value
+!---in device code while this object is a defined in function-local.
+
+!---So, currently, we lent PREASSIGN be a commont
+
 #ifdef CYGWIN
   #define PREASSIGN ! =
 #else
-  #define PREASSIGN =
+  #define PREASSIGN ! =
 #endif
 
 

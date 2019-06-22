@@ -980,6 +980,12 @@ module MIGCOALE_IMPLANTATION_GPU
             case(p_DiffuseCoefficient_ByBCluster)
                 ! Here we adopt a model that D=D0*(1/R)**Gama
                 ImplantIon%m_DiffCoeff = m_FREESURDIFPRE*(ImplantIon%m_RAD**(-p_GAMMA))
+            case(p_DiffuseCoefficient_BySIACluster)
+                ImplantIon%m_DiffCoeff = (sum(ImplantIon%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+            case(p_DiffuseCoefficient_ByVcCluster)
+                ImplantIon%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ImplantIon%m_Atoms(:)%m_NA)))* &
+                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
@@ -1202,6 +1208,12 @@ module MIGCOALE_IMPLANTATION_GPU
             case(p_DiffuseCoefficient_ByBCluster)
                 ! Here we adopt a model that D=D0*(1/R)**Gama
                 ImplantIon%m_DiffCoeff = m_FREESURDIFPRE*(ImplantIon%m_RAD**(-p_GAMMA))
+            case(p_DiffuseCoefficient_BySIACluster)
+                ImplantIon%m_DiffCoeff = (sum(ImplantIon%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+            case(p_DiffuseCoefficient_ByVcCluster)
+                ImplantIon%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ImplantIon%m_Atoms(:)%m_NA)))* &
+                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
@@ -2156,6 +2168,12 @@ module MIGCOALE_IMPLANTATION_GPU
                                     case(p_DiffuseCoefficient_ByBCluster)
                                         ! Here we adopt a model that D=D0*(1/R)**Gama
                                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                                    case(p_DiffuseCoefficient_BySIACluster)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                    case(p_DiffuseCoefficient_ByVcCluster)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                                   TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                                 end select
 
                             else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
@@ -2393,6 +2411,12 @@ module MIGCOALE_IMPLANTATION_GPU
                             case(p_DiffuseCoefficient_ByBCluster)
                                     ! Here we adopt a model that D=D0*(1/R)**Gama
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                            case(p_DiffuseCoefficient_BySIACluster)
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                            TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                            case(p_DiffuseCoefficient_ByVcCluster)
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                            TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                         end select
 
                         exitFlag = .true.
@@ -2515,6 +2539,12 @@ module MIGCOALE_IMPLANTATION_GPU
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                case(p_DiffuseCoefficient_BySIACluster)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                               TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                case(p_DiffuseCoefficient_ByVcCluster)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
 
         END DO
@@ -2639,6 +2669,12 @@ module MIGCOALE_IMPLANTATION_GPU
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                    case(p_DiffuseCoefficient_BySIACluster)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                   TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                    case(p_DiffuseCoefficient_ByVcCluster)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                   TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                 end select
 
             END DO
@@ -2935,6 +2971,12 @@ module MIGCOALE_IMPLANTATION_GPU
                             case(p_DiffuseCoefficient_ByBCluster)
                                 ! Here we adopt a model that D=D0*(1/R)**Gama
                                 Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                            case(p_DiffuseCoefficient_BySIACluster)
+                                Dev_Clusters(ICTRUE)%m_DiffCoeff = (sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                            case(p_DiffuseCoefficient_ByVcCluster)
+                                Dev_Clusters(ICTRUE)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                                   TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                         end select
 
                         exitFlag = .true.
@@ -3118,6 +3160,12 @@ module MIGCOALE_IMPLANTATION_GPU
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                case(p_DiffuseCoefficient_BySIACluster)
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = (sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                case(p_DiffuseCoefficient_ByVcCluster)
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
             end select
 
         end if
@@ -3297,6 +3345,12 @@ module MIGCOALE_IMPLANTATION_GPU
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                case(p_DiffuseCoefficient_BySIACluster)
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = (sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                case(p_DiffuseCoefficient_ByVcCluster)
+                    Dev_Clusters(ICTRUE)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
             end select
 
         end if
@@ -3473,6 +3527,12 @@ module MIGCOALE_IMPLANTATION_GPU
                                 case(p_DiffuseCoefficient_ByBCluster)
                                     ! Here we adopt a model that D=D0*(1/R)**Gama
                                     Dev_Clusters(ICTRUE)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(ICTRUE)%m_RAD**(-p_GAMMA))
+                                case(p_DiffuseCoefficient_BySIACluster)
+                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = (sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                                case(p_DiffuseCoefficient_ByVcCluster)
+                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                             end select
 
                         else if(Dev_Clusters(ICTRUE)%m_Statu .eq. p_ACTIVEINGB_STATU) then

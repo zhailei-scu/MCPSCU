@@ -4,6 +4,19 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
     use MCLIB_UTILITIES_GPU
     implicit none
 
+    !******(2)Based on our test, in GPU code,the max members size inner one class (include inherit from parent classes)
+    !*********is 12*8 bytes, which mean if each one of the member is the kind of real*8 , only 12 members are supported
+    !*********in one class. Otherwise, the PGI compiler cannot support some basic operator such as assignment(=) and some
+    !*********errors would occur during compiling. So,if the members size greater than 12*8 bytes, we need to reload some
+    !*********operators such as assignment(=) for device code to let the compiler know that is right way to load this
+    !*********operator. Besides,we need to ensure that the members are not pre-assignment some value such as AA = xx
+    !*********when the members size greater than 12*8 bytes, otherwise, the compiler would give some error when you
+    !*********visiting the object member value in device code while this object is a defined in function-local.
+    INTERFACE ASSIGNMENT (=)
+        MODULE PROCEDURE CopyDiffusorValueFormOther_Dev
+        MODULE PROCEDURE CopyDiffusorTypeEntityFormOther_Dev
+    END INTERFACE
+
     !---Params---
 
     type,public::Dev_DiffusorTypesMap
@@ -30,6 +43,66 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
     private::CleanDiffuosrMap_Dev
 
     contains
+
+    !---Based on our test, the right way to define the routine to reloaded Assignment(=) is that
+    !---dummy vars (Dist,Source), this argument order cannot be inverse
+    attributes(device) subroutine CopyDiffusorValueFormOther_Dev(Dist,Source)
+        implicit none
+        !---Dummy Vars---
+        type(DiffusorValue),intent(out)::Dist
+        type(DiffusorValue),intent(in)::Source
+        !---Body---
+
+        !---In Free matrix---
+        Dist%DiffusorValueType_Free = Source%DiffusorValueType_Free
+
+        Dist%DiffuseCoefficient_Free_Value = Source%DiffuseCoefficient_Free_Value
+
+        Dist%PreFactor_Free = Source%PreFactor_Free
+        Dist%PreFactorParameter_Free = Source%PreFactorParameter_Free
+        Dist%ActEnergy_Free = Source%ActEnergy_Free
+
+        Dist%DiffuseDirectionType = Source%DiffuseDirectionType
+        Dist%DiffuseDirection = Source%DiffuseDirection
+
+        Dist%ECRValueType_Free = Source%ECRValueType_Free
+
+        Dist%ECR_Free = Source%ECR_Free
+
+        !---In GB--
+        Dist%DiffusorValueType_InGB = Source%DiffusorValueType_InGB
+
+        Dist%DiffuseCoefficient_InGB_Value = Source%DiffuseCoefficient_InGB_Value
+
+        Dist%PreFactor_InGB = Source%PreFactor_InGB
+
+        Dist%ActEnergy_InGB = Source%ActEnergy_InGB
+
+        Dist%ECRValueType_InGB = Source%ECRValueType_InGB
+
+        Dist%ECR_InGB = Source%ECR_InGB
+
+        return
+    end subroutine
+
+    !---Based on our test, the right way to define the routine to reloaded Assignment(=) is that
+    !---dummy vars (Dist,Source), this argument order cannot be inverse
+    attributes(device) subroutine CopyDiffusorTypeEntityFormOther_Dev(Dist,Source)
+        implicit none
+        !---Dummy Vars---
+        type(DiffusorTypeEntity)::Dist
+        type(DiffusorTypeEntity)::Source
+        !---Body---
+
+        Dist%Code = Source%Code
+
+        !---The Assignment(=) had been override
+        Dist%TheValue = Source%TheValue
+
+        Dist%NextIndex = Source%NextIndex
+
+        return
+    end subroutine
 
     !*********************************
     subroutine InitDiffuosrMap_Dev(this,Host_DiffusorTypesMap)

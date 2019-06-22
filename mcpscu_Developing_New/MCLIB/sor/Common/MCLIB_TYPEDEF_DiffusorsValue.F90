@@ -21,7 +21,11 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
         real(c_double)::PreFactor_Free = 0.D0
+        real(c_double)::PreFactorParameter_Free = 0.D0
         real(c_double)::ActEnergy_Free = 0.D0
+
+        integer(c_int)::DiffuseDirectionType = p_DiffuseDirection_ThreeDim
+        integer(kind=c_int),dimension(3)::DiffuseDirection = 1
 
         integer(c_int)::ECRValueType_Free = p_ECR_ByValue
 
@@ -48,11 +52,20 @@ module MCLIB_TYPEDEF_DiffusorsValue
         Final::CleanReadedDiffusorValue
     END TYPE ReadedDiffusorValue
 
-    !**********Based by our test, if we want to combine C, the same data structure need to be defined in fortran and C
+    !*******(1)Based by our test, if we want to combine C, the same data structure need to be defined in fortran and C
     !**********More important, we can not use the inherit in fotran types define, or it would meeting mismatch while running the code
     !**********So we must define the type ReadedDiffusorValue in fortran to match C type to reslove the diffusor from C.
     !**********Howeve, the member "symbol" is not required after the diffusors is used for calculation, so we re-define type DiffusorValue
     !**********Which contains all same members except the "symbol".
+
+    !******(2)Based on our test, in GPU code,the max members size inner one class (include inherit from parent classes)
+    !*********is 12*8 bytes, which mean if each one of the member is the kind of real*8 , only 12 members are supported
+    !*********in one class. Otherwise, the PGI compiler cannot support some basic operator such as assignment(=) and some
+    !*********errors would occur during compiling. So,if the members size greater than 12*8 bytes, we need to reload some
+    !*********operators such as assignment(=) for device code to let the compiler know that is right way to load this
+    !*********operator. Besides,we need to ensure that the members are not pre-assignment some value such as AA = xx
+    !*********when the members size greater than 12*8 bytes, otherwise, the compiler would give some error when you
+    !*********visiting the object member value in device code while this object is a defined in function-local.
     TYPE,PUBLIC::DiffusorValue
 
         !---In free matrix---
@@ -63,7 +76,11 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
         real(kind=KMCDF)::PreFactor_Free PREASSIGN 0.D0
+        real(kind=KMCDF)::PreFactorParameter_Free PREASSIGN 0.D0
         real(kind=KMCDF)::ActEnergy_Free PREASSIGN 0.D0
+
+        integer::DiffuseDirectionType PREASSIGN p_DiffuseDirection_ThreeDim
+        integer,dimension(3)::DiffuseDirection PREASSIGN 1
 
         integer::ECRValueType_Free PREASSIGN p_ECR_ByValue
 
@@ -98,12 +115,21 @@ module MCLIB_TYPEDEF_DiffusorsValue
     !    Code(in other words, the Code would not conflict with each other), thus we can use
     !    Code to replace the diffusors(key) while checking whether the generated index is conflicted
     !---
+
+    !******(2)Based on our test, in GPU code,the max members size inner one class (include inherit from parent classes)
+    !*********is 12*8 bytes, which mean if each one of the member is the kind of real*8 , only 12 members are supported
+    !*********in one class. Otherwise, the PGI compiler cannot support some basic operator such as assignment(=) and some
+    !*********errors would occur during compiling. So,if the members size greater than 12*8 bytes, we need to reload some
+    !*********operators such as assignment(=) for device code to let the compiler know that is right way to load this
+    !*********operator. Besides,we need to ensure that the members are not pre-assignment some value such as AA = xx
+    !*********when the members size greater than 12*8 bytes, otherwise, the compiler would give some error when you
+    !*********visiting the object member value in device code while this object is a defined in function-local.
     TYPE,PUBLIC::DiffusorTypeEntity
-        integer(kind=KMCLINT)::Code = 0
+        integer(kind=KMCLINT)::Code PREASSIGN 0
 
         type(DiffusorValue)::TheValue
 
-        integer::NextIndex = 0
+        integer::NextIndex PREASSIGN 0
 
         contains
         procedure,public,non_overridable,pass::CopyDiffusorTypeEntityFromOther
@@ -172,8 +198,11 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%DiffuseCoefficient_Free_Value = Others%DiffuseCoefficient_Free_Value
 
         this%PreFactor_Free = Others%PreFactor_Free
-
+        this%PreFactorParameter_Free = Others%PreFactorParameter_Free
         this%ActEnergy_Free = Others%ActEnergy_Free
+
+        this%DiffuseDirectionType = Others%DiffuseDirectionType
+        this%DiffuseDirection = Others%DiffuseDirection
 
         this%ECRValueType_Free = Others%ECRValueType_Free
 
@@ -208,8 +237,11 @@ module MCLIB_TYPEDEF_DiffusorsValue
         TheDiffusorValue%DiffuseCoefficient_Free_Value = this%DiffuseCoefficient_Free_Value
 
         TheDiffusorValue%PreFactor_Free = this%PreFactor_Free
-
+        TheDiffusorValue%PreFactorParameter_Free = this%PreFactorParameter_Free
         TheDiffusorValue%ActEnergy_Free = this%ActEnergy_Free
+
+        TheDiffusorValue%DiffuseDirectionType = this%DiffuseDirectionType
+        TheDiffusorValue%DiffuseDirection = this%DiffuseDirection
 
         TheDiffusorValue%ECRValueType_Free = this%ECRValueType_Free
 
@@ -241,7 +273,12 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%DiffusorValueType_Free = p_DiffuseCoefficient_ByValue
         this%DiffuseCoefficient_Free_Value = 0.D0
         this%PreFactor_Free = 0.D0
+        this%PreFactorParameter_Free = 0.D0
         this%ActEnergy_Free = 0.D0
+
+        this%DiffuseDirectionType = p_DiffuseDirection_ThreeDim
+        this%DiffuseDirection = 1
+
         this%ECRValueType_Free = p_ECR_ByValue
         this%ECR_Free = 0.D0
 
@@ -268,8 +305,11 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%DiffuseCoefficient_Free_Value = Others%DiffuseCoefficient_Free_Value
 
         this%PreFactor_Free = Others%PreFactor_Free
-
+        this%PreFactorParameter_Free = Others%PreFactorParameter_Free
         this%ActEnergy_Free = Others%ActEnergy_Free
+
+        this%DiffuseDirectionType = Others%DiffuseDirectionType
+        this%DiffuseDirection = Others%DiffuseDirection
 
         this%ECRValueType_Free = Others%ECRValueType_Free
 
@@ -301,7 +341,12 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%DiffusorValueType_Free = p_DiffuseCoefficient_ByValue
         this%DiffuseCoefficient_Free_Value = 0.D0
         this%PreFactor_Free = 0.D0
+        this%PreFactorParameter_Free = 0.D0
         this%ActEnergy_Free = 0.D0
+
+        this%DiffuseDirectionType = p_DiffuseDirection_ThreeDim
+        this%DiffuseDirection = 1
+
         this%ECRValueType_Free = p_ECR_ByValue
         this%ECR_Free = 0.D0
 
