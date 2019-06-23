@@ -75,7 +75,7 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
         Dist%DiffuseCoefficient_InGB_Value = Source%DiffuseCoefficient_InGB_Value
 
         Dist%PreFactor_InGB = Source%PreFactor_InGB
-
+        Dist%PreFactorParameter_InGB = Source%PreFactorParameter_InGB
         Dist%ActEnergy_InGB = Source%ActEnergy_InGB
 
         Dist%ECRValueType_InGB = Source%ECRValueType_InGB

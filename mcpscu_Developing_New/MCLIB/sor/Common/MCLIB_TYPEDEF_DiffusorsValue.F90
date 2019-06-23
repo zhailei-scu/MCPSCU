@@ -11,7 +11,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
     TYPE,PUBLIC::ReadedDiffusorValue
 
-        character(kind=c_char,len=20)::symbol = ""
+        character(kind=c_char,len=30)::symbol = ""
 
         !---In free matrix---
         integer(c_int)::DiffusorValueType_Free = p_DiffuseCoefficient_ByValue
@@ -25,7 +25,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         real(c_double)::ActEnergy_Free = 0.D0
 
         integer(c_int)::DiffuseDirectionType = p_DiffuseDirection_ThreeDim
-        integer(kind=c_int),dimension(3)::DiffuseDirection = 1
+        real(c_double),dimension(3)::DiffuseDirection = 1.D0
 
         integer(c_int)::ECRValueType_Free = p_ECR_ByValue
 
@@ -39,6 +39,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
         real(c_double)::PreFactor_InGB = 0.D0
+        real(c_double)::PreFactorParameter_InGB = 0.D0
         real(c_double)::ActEnergy_InGB = 0.D0
 
         integer(c_int)::ECRValueType_InGB = p_ECR_ByValue
@@ -80,7 +81,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         real(kind=KMCDF)::ActEnergy_Free PREASSIGN 0.D0
 
         integer::DiffuseDirectionType PREASSIGN p_DiffuseDirection_ThreeDim
-        integer,dimension(3)::DiffuseDirection PREASSIGN 1
+        real(kind=KMCDF),dimension(3)::DiffuseDirection PREASSIGN 1.D0
 
         integer::ECRValueType_Free PREASSIGN p_ECR_ByValue
 
@@ -94,6 +95,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
         real(kind=KMCDF)::PreFactor_InGB PREASSIGN 0.D0
+        real(kind=KMCDF)::PreFactorParameter_InGB PREASSIGN 0.D0
         real(kind=KMCDF)::ActEnergy_InGB PREASSIGN 0.D0
 
         integer::ECRValueType_InGB PREASSIGN p_ECR_ByValue
@@ -214,7 +216,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%DiffuseCoefficient_InGB_Value = Others%DiffuseCoefficient_InGB_Value
 
         this%PreFactor_InGB = Others%PreFactor_InGB
-
+        this%PreFactorParameter_InGB = Others%PreFactorParameter_InGB
         this%ActEnergy_InGB = Others%ActEnergy_InGB
 
         this%ECRValueType_InGB = Others%ECRValueType_InGB
@@ -253,7 +255,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         TheDiffusorValue%DiffuseCoefficient_InGB_Value = this%DiffuseCoefficient_InGB_Value
 
         TheDiffusorValue%PreFactor_InGB = this%PreFactor_InGB
-
+        TheDiffusorValue%PreFactorParameter_InGB = this%PreFactorParameter_InGB
         TheDiffusorValue%ActEnergy_InGB = this%ActEnergy_InGB
 
         TheDiffusorValue%ECRValueType_InGB = this%ECRValueType_InGB
@@ -285,6 +287,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%DiffusorValueType_InGB = p_DiffuseCoefficient_ByValue
         this%DiffuseCoefficient_InGB_Value = 0.D0
         this%PreFactor_InGB = 0.D0
+        this%PreFactorParameter_InGB = 0.D0
         this%ActEnergy_InGB = 0.D0
         this%ECRValueType_InGB = p_ECR_ByValue
         this%ECR_InGB = 0.D0
@@ -321,7 +324,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%DiffuseCoefficient_InGB_Value = Others%DiffuseCoefficient_InGB_Value
 
         this%PreFactor_InGB = Others%PreFactor_InGB
-
+        this%PreFactorParameter_InGB = Others%PreFactorParameter_InGB
         this%ActEnergy_InGB = Others%ActEnergy_InGB
 
         this%ECRValueType_InGB = Others%ECRValueType_InGB
@@ -353,6 +356,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%DiffusorValueType_InGB = p_DiffuseCoefficient_ByValue
         this%DiffuseCoefficient_InGB_Value = 0.D0
         this%PreFactor_InGB = 0.D0
+        this%PreFactorParameter_InGB = 0.D0
         this%ActEnergy_InGB = 0.D0
         this%ECRValueType_InGB = p_ECR_ByValue
         this%ECR_InGB = 0.D0
@@ -387,6 +391,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         !---Local Vars---
         integer::tempLength
         integer::MapBitLength
+        integer::I
         !---Body---
 
         MapBitLength = 0
@@ -421,6 +426,11 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%SingleAtomsDivideArrays = SingleAtomsDivideArrays
 
         allocate(this%TypesEntities(this%MapLength))
+
+        DO I = 1,this%MapLength
+            this%TypesEntities(I)%Code = 0
+            this%TypesEntities(I)%NextIndex = 0
+        END DO
 
         return
     end subroutine DiffusorTypesMapConstructor
@@ -513,7 +523,8 @@ module MCLIB_TYPEDEF_DiffusorsValue
                 ICount = ICount + 1
 
                 if(ICount .GT. this%MapLength) then
-                    write(*,*) "MCPSCUERROR: The difussor map is not sufficient to store all kinds of diffusor."
+                    write(*,*) "MCPSCUERROR: The diffusor map is not sufficient to store all kinds of diffusor."
+                    write(*,*) "this%MapLength",this%MapLength
                     pause
                     stop
                 end if
@@ -529,6 +540,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
                 ICount = ICount + 1
                 if(ICount .GT. this%MapLength) then
                     write(*,*) "MCPSCUERROR: The difussor map is not sufficient to store all kinds of diffusor."
+                    write(*,*) "this%MapLength",this%MapLength
                     pause
                     stop
                 end if

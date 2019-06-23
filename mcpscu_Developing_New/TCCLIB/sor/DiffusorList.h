@@ -14,7 +14,11 @@ typedef struct{
 
   // If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
   double PreFactor_Free;
+  double PreFactorParameter_Free;
   double ActEnergy_Free;
+
+  int DiffuseDirectionType;
+  double DiffuseDirection[3];
 
   int ECRValueType_Free;
   double ECR_Free;
@@ -25,6 +29,7 @@ typedef struct{
 
   // If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
   double PreFactor_InGB;
+  double PreFactorParameter_InGB;
   double ActEnergy_InGB;
 
   int ECRValueType_InGB;

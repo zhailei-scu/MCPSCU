@@ -42,7 +42,6 @@ CReactionsList* ReactionsList = NULL;
 
 #ifdef __cplusplus
 int InterpCScript_DiffusorsDef(char* scriptStr){
-
   TCCState *s = NULL;
 
   stringstream pathStream;

@@ -19,13 +19,19 @@ void copyCDiffusorDef(CDiffusorDef *Dest,CDiffusorDef *Source){
   Dest->DiffusorValueType_Free = Source->DiffusorValueType_Free;
   Dest->DiffuseCoefficient_Free_Value = Source->DiffuseCoefficient_Free_Value;
   Dest->PreFactor_Free = Source->PreFactor_Free;
+  Dest->PreFactorParameter_Free = Source->PreFactorParameter_Free;
   Dest->ActEnergy_Free = Source->ActEnergy_Free;
+
+  Dest->DiffuseDirectionType = Source->DiffuseDirectionType;
+  memcpy(Dest->DiffuseDirection,Source->DiffuseDirection,sizeof(Dest->DiffuseDirection)); // it is OK because DiffuseDirection is fix array
+
   Dest->ECRValueType_Free = Source->ECRValueType_Free;
   Dest->ECR_Free = Source->ECR_Free;
 
   Dest->DiffusorValueType_InGB = Source->DiffusorValueType_InGB;
   Dest->DiffuseCoefficient_InGB_Value = Source->DiffuseCoefficient_InGB_Value;
   Dest->PreFactor_InGB = Source->PreFactor_InGB;
+  Dest->PreFactorParameter_InGB = Source->PreFactorParameter_InGB;
   Dest->ActEnergy_InGB = Source->ActEnergy_InGB;
   Dest->ECRValueType_InGB = Source->ECRValueType_InGB;
   Dest->ECR_InGB = Source->ECR_InGB;

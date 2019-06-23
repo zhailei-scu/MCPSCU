@@ -327,7 +327,6 @@ module MCLIB_TYPEDEF_DiffusorPropList
         cursor=>this
         tempIndex = 0
         DO While(associated(cursor))
-
             tempIndex = tempIndex + 1
 
             if(ConstructClusterListsArray(tempIndex)%GetList_Count() .GT. 0) then
@@ -650,6 +649,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                               '!','CoefficentsGenerate way in GB =',I1,2x, &
                               '!','DiffusionCiefficents value in GB =',1PE10.4,2x, &
                               '!','PreFactor in GB = ',1PE10.4,2x, &
+                              '!','PreFactor parameter in GB = ',1PE10.4,2x, &
                               '!','ActEnergy in GB = ',1PE10.4,2x, &
                               '!','ECR Generate way in GB =',I1,2x, &
                               '!','ECR Value in GB =',1PE10.4)")      cursor%Diffusor%symbol, &
@@ -663,6 +663,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                                                       cursor%Diffusor%DiffusorValueType_InGB, &
                                                                       cursor%Diffusor%DiffuseCoefficient_InGB_Value,  &
                                                                       cursor%Diffusor%PreFactor_InGB, &
+                                                                      cursor%Diffusor%PreFactorParameter_InGB, &
                                                                       cursor%Diffusor%ActEnergy_InGB, &
                                                                       cursor%Diffusor%ECRValueType_InGB, &
                                                                       cursor%Diffusor%ECR_InGB
@@ -699,6 +700,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                       '!','CoefficentsGenerate way in GB =',I1,2x, &
                                       '!','DiffusionCiefficents value in GB =',1PE10.4,2x, &
                                       '!','PreFactor in GB = ',1PE10.4,2x, &
+                                      '!','PreFactor parameter in GB = ',1PE10.4,2x, &
                                       '!','ActEnergy in GB = ',1PE10.4,2x, &
                                       '!','ECR Generate way in GB =',I1,2x, &
                                       '!','ECR Value in GB =',1PE10.4)")       symbol,                                  &
@@ -712,6 +714,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                                                                TheValue%DiffusorValueType_InGB,         &
                                                                                TheValue%DiffuseCoefficient_InGB_Value,  &
                                                                                TheValue%PreFactor_InGB,                 &
+                                                                               TheValue%PreFactorParameter_InGB,        &
                                                                                TheValue%ActEnergy_InGB,                 &
                                                                                TheValue%ECRValueType_InGB,              &
                                                                                TheValue%ECR_InGB
@@ -811,9 +814,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
 
         call GetInterpedDiffusorsArray(FDiffusorDefArray)
 
-
         call AppendArray_ReadDiffusorPropList(DiffusorProp_List,FDiffusorDefArray,ArraySize)
-
 
         return
     end subroutine ResloveDiffusorsValueFromCScript

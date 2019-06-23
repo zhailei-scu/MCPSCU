@@ -213,6 +213,12 @@ module MIGCOALE_EVOLUTION_GPU
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+                case(p_DiffuseCoefficient_BySIACluster)
+                    Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
+                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                case(p_DiffuseCoefficient_ByVcCluster)
+                    Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
             end select
 
         end if
@@ -744,6 +750,13 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+
+                    case(p_DiffuseCoefficient_BySIACluster)
+                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                    case(p_DiffuseCoefficient_ByVcCluster)
+                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 end select
             end if
 
@@ -985,6 +998,12 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+                    case(p_DiffuseCoefficient_BySIACluster)
+                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                    case(p_DiffuseCoefficient_ByVcCluster)
+                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 end select
             end if
 
