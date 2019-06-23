@@ -25,7 +25,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         real(c_double)::ActEnergy_Free = 0.D0
 
         integer(c_int)::DiffuseDirectionType = p_DiffuseDirection_ThreeDim
-        real(c_double),dimension(3)::DiffuseDirection = 1.D0
+        real(c_double),dimension(3)::DiffuseDirection = 0.D0
 
         integer(c_int)::ECRValueType_Free = p_ECR_ByValue
 
@@ -81,7 +81,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         real(kind=KMCDF)::ActEnergy_Free PREASSIGN 0.D0
 
         integer::DiffuseDirectionType PREASSIGN p_DiffuseDirection_ThreeDim
-        real(kind=KMCDF),dimension(3)::DiffuseDirection PREASSIGN 1.D0
+        real(kind=KMCDF),dimension(3)::DiffuseDirection PREASSIGN 0.D0
 
         integer::ECRValueType_Free PREASSIGN p_ECR_ByValue
 
@@ -279,7 +279,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%ActEnergy_Free = 0.D0
 
         this%DiffuseDirectionType = p_DiffuseDirection_ThreeDim
-        this%DiffuseDirection = 1
+        this%DiffuseDirection = 0.D0
 
         this%ECRValueType_Free = p_ECR_ByValue
         this%ECR_Free = 0.D0
@@ -348,7 +348,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         this%ActEnergy_Free = 0.D0
 
         this%DiffuseDirectionType = p_DiffuseDirection_ThreeDim
-        this%DiffuseDirection = 1
+        this%DiffuseDirection = 0.D0
 
         this%ECRValueType_Free = p_ECR_ByValue
         this%ECR_Free = 0.D0
@@ -407,9 +407,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         this%MaxDivideGroups_SingleElement = size(SingleAtomsDivideArrays,DIM=2)
 
-
         this%MapLength = 0
-
 
         DO While(tempLength .GT. 0)
             this%MapLength = ISHFT(this%MapLength,1)

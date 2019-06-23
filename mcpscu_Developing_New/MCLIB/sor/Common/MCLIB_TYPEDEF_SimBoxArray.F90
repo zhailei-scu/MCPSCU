@@ -1040,6 +1040,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(ReadedDiffusorValue)::newDiffusor
     integer::N
     integer::I
+    real(kind=KMCDF)::VectorLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
@@ -1145,9 +1146,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                 select case(newDiffusor%DiffuseDirectionType)
                     case(p_DiffuseDirection_ThreeDim)
-                        newDiffusor%DiffuseDirectionType = p_DiffuseDirection_ThreeDim
+                        newDiffusor%DiffuseDirection = 0.D0
                     case(p_DiffuseDirection_OneDim)
-                        newDiffusor%DiffuseDirectionType = p_DiffuseDirection_OneDim
 
                         call EXTRACT_NUMB(STR,4,N,STRNUMB)
 
@@ -1158,9 +1158,20 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             stop
                         end if
 
+                        VectorLen = 0.D0
                         DO I = 1,3
                             newDiffusor%DiffuseDirection(I) = DRSTR(STRNUMB(I+1))
+                            VectorLen = VectorLen + newDiffusor%DiffuseDirection(I)**2
                         END DO
+
+                        if(VectorLen*TENPOWEIGHT .LT. 1) then
+                            write(*,*) "MCPSCUERROR: The one-dimension diffusion vector cannot less than 0"
+                            write(*,*) newDiffusor%DiffuseDirection
+                            pause
+                            stop
+                        end if
+
+                        newDiffusor%DiffuseDirection = newDiffusor%DiffuseDirection/DSQRT(VectorLen)
 
                     case default
                         write(*,*) "MCPSCUERROR: unknown diffuse direction type :",newDiffusor%DiffuseDirectionType
@@ -3096,6 +3107,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                           TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
+
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
                 case(p_ECR_ByValue)
@@ -3422,6 +3436,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 ClustersSample(1,NClustersGroup)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA)))* &
                                                                  TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
+
+        ClustersSample(1,NClustersGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         ClustersSample(1,NClustersGroup)%m_Statu = p_ACTIVEFREE_STATU  ! the GB and interface would not be considered in MF , they would be considered SPMF
 
@@ -3828,6 +3844,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     ClustersSample(ILayer,IGroup)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)))* &
                                                                   TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
+
+            ClustersSample(ILayer,IGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
         else if(ClustersSample(ILayer,IGroup)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
                 case(p_ECR_ByValue)
@@ -3976,6 +3995,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                 this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                                      TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                         end select
+
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
                     else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ClustersSample(ILayer,IGroup)%m_GrainID(1)
@@ -4085,6 +4107,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                             end select
+
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
                         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ClustersSample(ILayer,IGroup)%m_GrainID(1)

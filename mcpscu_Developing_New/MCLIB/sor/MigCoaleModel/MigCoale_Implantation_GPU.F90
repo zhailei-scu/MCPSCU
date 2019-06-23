@@ -988,6 +988,8 @@ module MIGCOALE_IMPLANTATION_GPU
                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
 
+        ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
         DO Layer = 1,LayerNum
@@ -1215,6 +1217,8 @@ module MIGCOALE_IMPLANTATION_GPU
                 ImplantIon%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ImplantIon%m_Atoms(:)%m_NA)))* &
                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
+
+        ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
@@ -2176,6 +2180,8 @@ module MIGCOALE_IMPLANTATION_GPU
                                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                                 end select
 
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
                             else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = this%ClustersSample(ILayer,IGroup)%m_GrainID(1)
@@ -2425,6 +2431,8 @@ module MIGCOALE_IMPLANTATION_GPU
                                                                                             TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                         end select
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
                         exitFlag = .true.
                         exit
 
@@ -2552,6 +2560,8 @@ module MIGCOALE_IMPLANTATION_GPU
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                                 TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
+
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         END DO
 
@@ -2682,6 +2692,8 @@ module MIGCOALE_IMPLANTATION_GPU
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                 end select
+
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
             END DO
 
@@ -2985,6 +2997,8 @@ module MIGCOALE_IMPLANTATION_GPU
                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                         end select
 
+                        Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
                         exitFlag = .true.
                         exit
 
@@ -3174,6 +3188,8 @@ module MIGCOALE_IMPLANTATION_GPU
                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
             end select
 
+            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
         end if
 
         return
@@ -3359,6 +3375,8 @@ module MIGCOALE_IMPLANTATION_GPU
                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
             end select
 
+            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
         end if
 
         return
@@ -3540,6 +3558,8 @@ module MIGCOALE_IMPLANTATION_GPU
                                     Dev_Clusters(ICTRUE)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                             end select
+
+                            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
                         else if(Dev_Clusters(ICTRUE)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 

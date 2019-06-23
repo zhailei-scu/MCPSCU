@@ -124,6 +124,8 @@ module MIGCOALE_EVOLUTION_GPU
     integer::SeedID
     integer::Statu
     type(DiffusorValue)::TheDiffusorValue
+    real(kind=KMCDF)::VectorLen
+    integer::RandomSign
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -156,15 +158,28 @@ module MIGCOALE_EVOLUTION_GPU
         !The average displacement:by using the Einstein Relation
         RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
 
-        tempPos(1) =  Dev_RandArray(IC)-0.5D0
-        tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
-        tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
 
-        ArrowLen = DSQRT(tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3))
+        VectorLen = Dev_Clusters(IC)%m_DiffuseDirection(1)*Dev_Clusters(IC)%m_DiffuseDirection(1) + &
+                    Dev_Clusters(IC)%m_DiffuseDirection(2)*Dev_Clusters(IC)%m_DiffuseDirection(2) + &
+                    Dev_Clusters(IC)%m_DiffuseDirection(3)*Dev_Clusters(IC)%m_DiffuseDirection(3)
 
-        tempPos(1) = RR*tempPos(1)/ArrowLen
-        tempPos(2) = RR*tempPos(2)/ArrowLen
-        tempPos(3) = RR*tempPos(3)/ArrowLen
+        if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
+            tempPos(1) =  Dev_RandArray(IC)-0.5D0
+            tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
+            tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
+
+            ArrowLen = DSQRT(tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3))
+
+            tempPos(1) = RR*tempPos(1)/ArrowLen
+            tempPos(2) = RR*tempPos(2)/ArrowLen
+            tempPos(3) = RR*tempPos(3)/ArrowLen
+        else
+            RandomSign = 1
+            if(Dev_RandArray(IC) .GT. 0.5D0) then
+                RandomSign = -1
+            end if
+            tempPos = RandomSign*RR*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+        end if
 
         tempPos = tempPos + POS
 
@@ -220,6 +235,8 @@ module MIGCOALE_EVOLUTION_GPU
                     Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
                                                     TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
             end select
+
+            Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
 
         end if
 
@@ -733,6 +750,9 @@ module MIGCOALE_EVOLUTION_GPU
                         Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                 end select
+
+                Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
                 select case(TheDiffusorValue%ECRValueType_InGB)
@@ -981,6 +1001,9 @@ module MIGCOALE_EVOLUTION_GPU
                         Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                 end select
+
+                Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
                 select case(TheDiffusorValue%ECRValueType_InGB)

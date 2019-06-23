@@ -38,6 +38,7 @@ module MCLIB_TYPEDEF_ACLUSTER
          integer::m_Statu = p_Empty
          integer::m_GrainID(2) = 0
          real(kind=KMCDF)::m_DiffCoeff = 0.D0
+         real(kind=KMCDF)::m_DiffuseDirection(3) = 0.D0
 
          contains
          procedure,non_overridable,pass,public::CopyClusterFromOther
@@ -122,6 +123,8 @@ module MCLIB_TYPEDEF_ACLUSTER
 
         this%m_DiffCoeff = other%m_DiffCoeff
 
+        this%m_DiffuseDirection = other%m_DiffuseDirection
+
         return
     end subroutine CopyClusterFromOther
 
@@ -145,6 +148,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         this%m_Statu = p_Empty
         this%m_GrainID(2) = 0
         this%m_DiffCoeff = 0.D0
+        this%m_DiffuseDirection = 0.D0
 
         return
     end subroutine
