@@ -1,3 +1,5 @@
+#include "../../../Macro"
+
 module MCLIB_TYPEDEF_ACLUSTER
     #ifdef MC_PROFILING
     USE MCLIB_TimeProfile
@@ -6,8 +8,8 @@ module MCLIB_TYPEDEF_ACLUSTER
     implicit none
 
     TYPE,PUBLIC::Single_AtomsSet
-        integer::m_ID = 0
-        integer::m_NA = 0
+        integer::m_ID PREASSIGN 0
+        integer::m_NA PREASSIGN 0
     END TYPE Single_AtomsSet
 
     TYPE,PUBLIC::Single_AtomsSetRange
@@ -32,13 +34,13 @@ module MCLIB_TYPEDEF_ACLUSTER
 
     TYPE,PUBLIC::ACluster
          type(Single_AtomsSet),dimension(p_ATOMS_GROUPS_NUMBER)::m_Atoms
-         real(kind=KMCDF),dimension(3)::m_POS
-         integer::m_Layer=1
-         real(kind=KMCDF)::m_RAD=0
-         integer::m_Statu = p_Empty
-         integer::m_GrainID(2) = 0
-         real(kind=KMCDF)::m_DiffCoeff = 0.D0
-         real(kind=KMCDF)::m_DiffuseDirection(3) = 0.D0
+         real(kind=KMCDF),dimension(3)::m_POS PREASSIGN 0.D0
+         integer::m_Layer PREASSIGN 1
+         real(kind=KMCDF)::m_RAD PREASSIGN 0
+         integer::m_Statu PREASSIGN p_Empty
+         integer,dimension(2)::m_GrainID PREASSIGN 0
+         real(kind=KMCDF)::m_DiffCoeff PREASSIGN 0.D0
+         real(kind=KMCDF),dimension(3)::m_DiffuseDirection PREASSIGN 0.D0
 
          contains
          procedure,non_overridable,pass,public::CopyClusterFromOther

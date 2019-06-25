@@ -18,6 +18,10 @@ module MCLIB_Utilities_GPU
   #endif
   implicit none
 
+  INTERFACE Assignment (=)
+    MODULE PROCEDURE CopyClusterFromOther_Dev
+  END INTERFACE
+
   !-----------------------
   interface AllocateArray_GPU
     MODULE PROCEDURE AllocateOneDimi_GPU
@@ -57,6 +61,35 @@ module MCLIB_Utilities_GPU
 
 
   contains
+
+      attributes(device) subroutine CopyClusterFromOther_Dev(Dist,Source)
+        implicit none
+        !---Dummy Vars---
+        type(ACluster),intent(out)::Dist
+        type(ACluster),intent(in)::Source
+        !---Local Vars---
+        integer::IElement
+        !---Body---
+        DO IElement = 1,p_ATOMS_GROUPS_NUMBER
+            Dist%m_Atoms(IElement) = Source%m_Atoms(IElement)
+        END DO
+
+        Dist%m_POS = Source%m_POS
+
+        Dist%m_RAD = Source%m_RAD
+
+        Dist%m_Layer = Source%m_Layer
+
+        Dist%m_Statu = Source%m_Statu
+
+        Dist%m_GrainID = Source%m_GrainID
+
+        Dist%m_DiffCoeff = Source%m_DiffCoeff
+
+        Dist%m_DiffuseDirection = Source%m_DiffuseDirection
+
+        return
+    end subroutine
 
   !****************************************************
   subroutine Get_DeviceMemInfo(FreeMemSize,TotalMemSize)

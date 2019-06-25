@@ -13,7 +13,7 @@ using namespace std;
 
 void copyCDiffusorDef(CDiffusorDef *Dest,CDiffusorDef *Source){
 
-  memset(Dest->symbol,0,30);
+  memset(Dest->symbol,0,30*sizeof(char));
   strcpy(Dest->symbol,Source->symbol);
 
   Dest->DiffusorValueType_Free = Source->DiffusorValueType_Free;
@@ -35,6 +35,31 @@ void copyCDiffusorDef(CDiffusorDef *Dest,CDiffusorDef *Source){
   Dest->ActEnergy_InGB = Source->ActEnergy_InGB;
   Dest->ECRValueType_InGB = Source->ECRValueType_InGB;
   Dest->ECR_InGB = Source->ECR_InGB;
+}
+
+
+void InitDiffusor(CDiffusorDef *DiffusorDef){
+  memset(DiffusorDef->symbol,0,30*sizeof(char));
+
+  DiffusorDef->DiffusorValueType_Free = 1;
+  DiffusorDef->DiffuseCoefficient_Free_Value = 0;
+  DiffusorDef->PreFactor_Free = 0;
+  DiffusorDef->PreFactorParameter_Free = 0;
+  DiffusorDef->ActEnergy_Free = 0;
+
+  DiffusorDef->DiffuseDirectionType = 1;
+  memset(DiffusorDef->DiffuseDirection,0,sizeof(DiffusorDef->DiffuseDirection)); // it is OK because DiffuseDirection is fix array
+
+  DiffusorDef->ECRValueType_Free = 1;
+  DiffusorDef->ECR_Free = 0;
+
+  DiffusorDef->DiffusorValueType_InGB = 1;
+  DiffusorDef->DiffuseCoefficient_InGB_Value = 0;
+  DiffusorDef->PreFactor_InGB = 0;
+  DiffusorDef->PreFactorParameter_InGB = 0;
+  DiffusorDef->ActEnergy_InGB = 0;
+  DiffusorDef->ECRValueType_InGB = 1;
+  DiffusorDef->ECR_InGB = 0;
 }
 
 #ifdef __cplusplus

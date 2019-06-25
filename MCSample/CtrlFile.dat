@@ -40,10 +40,10 @@
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
-        &OUTPUT_CONF     Output instant configuration flag = 0 , the interval = 1000                 ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 102      
+        &OUTPUT_CONF     Output instant configuration flag = 0 , the interval = 1                    ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 1 , the interval for each box = 1      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification

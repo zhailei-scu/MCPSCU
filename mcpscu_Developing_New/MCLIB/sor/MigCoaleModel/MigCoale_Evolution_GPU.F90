@@ -72,6 +72,7 @@ module MIGCOALE_EVOLUTION_GPU
             call Dev_Rand%ReSizeWalkRandNum(TotalNC)
         end if
 
+
         err = curandGenerateUniformDouble(Dev_Rand%m_ranGen_ClustersRandomWalk,Dev_Rand%dm_RandArray_Walk,TotalNC*3) !Async in multiple streams
 
         call WalkOneStep_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
@@ -286,19 +287,19 @@ module MIGCOALE_EVOLUTION_GPU
 
         normVector = Seed1Pos - Seed2Pos
 
-        if(normVector(1)*TENPOWEIGHT .GE. 1) then
+        if(ABS(normVector(1)*TENPOWEIGHT) .GE. 1) then
             tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
             tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
             tempPos(1) = -(normVector(2)*tempPos(2) + normVector(3)*tempPos(3))/normVector(1)
         end if
 
-        if(normVector(2)*TENPOWEIGHT .GE. 1) then
+        if(ABS(normVector(2)*TENPOWEIGHT) .GE. 1) then
             tempPos(1) =  Dev_RandArray(IC)-0.5D0
             tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
             tempPos(2) = -(normVector(1)*tempPos(1) + normVector(3)*tempPos(3))/normVector(2)
         end if
 
-        if(normVector(3)*TENPOWEIGHT .GE. 1) then
+        if(ABS(normVector(3)*TENPOWEIGHT) .GE. 1) then
             tempPos(1) =  Dev_RandArray(IC)-0.5D0
             tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
             tempPos(3) = -(normVector(1)*tempPos(1) + normVector(2)*tempPos(2))/normVector(3)

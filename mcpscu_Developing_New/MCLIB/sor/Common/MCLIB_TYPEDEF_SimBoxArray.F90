@@ -644,6 +644,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                               '!','PreFactor in free matrix = ',1PE10.4,2x, &
                               '!','PreFactor parameter in free matrix = ',1PE10.4,2x, &
                               '!','ActEnergy in free matrix = ',1PE10.4,2x, &
+                              '!','Diffuse direction way = ',I1,2x, &
+                              '!','Diffuse direction = ',3(1PE10.4,2x), &
                               '!','ECR Generate way in free matrix = ',I1,2x, &
                               '!','ECR Value in free matrix = ',1PE10.4,&
                               '!','CoefficentsGenerate way in GB =',I1,2x, &
@@ -658,6 +660,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                                diffusorListCursor%Diffusor%PreFactor_Free, &
                                                                                diffusorListCursor%Diffusor%PreFactorParameter_Free, &
                                                                                diffusorListCursor%Diffusor%ActEnergy_Free, &
+                                                                               diffusorListCursor%Diffusor%DiffuseDirectionType,&
+                                                                               diffusorListCursor%Diffusor%DiffuseDirection,&
                                                                                diffusorListCursor%Diffusor%ECRValueType_Free, &
                                                                                diffusorListCursor%Diffusor%ECR_Free,&
                                                                                diffusorListCursor%Diffusor%DiffusorValueType_InGB, &
@@ -985,6 +989,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::LINE
     character*32::STRNUMB(10)
     type(ReadDiffusorPropList),pointer::cursor=>null()
+    integer::I
+    real(kind=KMCDF)::VectorLen
     !---Body---
     allocate(this%ReadDiffusorProp_List)
 
@@ -1015,6 +1021,23 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     DO While(associated(cursor))
         call UPCASE(cursor%Diffusor%symbol)
+
+        if(cursor%Diffusor%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+            VectorLen = 0.D0
+            DO I = 1,3
+                VectorLen = VectorLen + cursor%Diffusor%DiffuseDirection(I)**2
+            END DO
+
+            if(VectorLen*TENPOWEIGHT .LT. 1) then
+                write(*,*) "MCPSCUERROR: The one-dimension diffusion vector cannot less than 0"
+                write(*,*) cursor%Diffusor%DiffuseDirection
+                pause
+                stop
+            end if
+
+            cursor%Diffusor%DiffuseDirection = cursor%Diffusor%DiffuseDirection/DSQRT(VectorLen)
+        end if
+
         cursor=>cursor%next
     END DO
 

@@ -93,6 +93,7 @@ int InterpCScript_DiffusorsDef(char* scriptStr){
 
   tcc_add_symbol(s,"InitDiffusorList",(void*)InitDiffusorList);
   tcc_add_symbol(s,"AppendDiffusor",(void*)AppendDiffusor);
+  tcc_add_symbol(s,"InitDiffusor",(void*)InitDiffusor);
 
   if(tcc_relocate(s, TCC_RELOCATE_AUTO) < 0)
      return 1;
@@ -244,6 +245,7 @@ int InterpCScript_ReactionsDef(char* scriptStr){
 
   tcc_add_symbol(s,"InitReactionsList",(void*)InitReactionsList);
   tcc_add_symbol(s,"AppendReaction",(void*)AppendReaction);
+  tcc_add_symbol(s,"InitReaction",(void*)InitReaction);
 
   if(tcc_relocate(s, TCC_RELOCATE_AUTO) < 0)
      return 1;

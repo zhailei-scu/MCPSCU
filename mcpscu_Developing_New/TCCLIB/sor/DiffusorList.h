@@ -63,6 +63,8 @@ typedef struct CDiffusorList{
 }CDiffusorList;
 #endif
 
+void InitDiffusor(CDiffusorDef *DiffusorDef);
+
 void InitDiffusorList(CDiffusorList **list);
 
 void AppendDiffusor(CDiffusorList *list, CDiffusorDef *element);

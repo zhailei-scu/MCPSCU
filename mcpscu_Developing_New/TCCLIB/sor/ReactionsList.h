@@ -50,6 +50,8 @@ typedef struct CReactionsList{
 }CReactionsList;
 #endif
 
+void InitReaction(CReactionDef *ReactionDef);
+
 void InitReactionsList(CReactionsList **list);
 
 void AppendReaction(CReactionsList *list, CReactionDef *element);

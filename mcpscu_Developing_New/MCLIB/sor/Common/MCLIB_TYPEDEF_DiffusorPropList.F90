@@ -644,6 +644,8 @@ module MCLIB_TYPEDEF_DiffusorPropList
                               '!','PreFactor in free matrix = ',1PE10.4,2x, &
                               '!','PreFactor parameter in free matrix = ',1PE10.4,2x, &
                               '!','ActEnergy in free matrix = ',1PE10.4,2x, &
+                              '!','Diffuse direction way = ',I1,2x, &
+                              '!','Diffuse direction = ',3(1PE10.4,2x), &
                               '!','ECR Generate way in free matrix =',I1,2x, &
                               '!','ECR Value in free matrix =',1PE10.4, &
                               '!','CoefficentsGenerate way in GB =',I1,2x, &
@@ -658,6 +660,8 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                                                       cursor%Diffusor%PreFactor_Free, &
                                                                       cursor%Diffusor%PreFactorParameter_Free, &
                                                                       cursor%Diffusor%ActEnergy_Free, &
+                                                                      cursor%Diffusor%DiffuseDirectionType, &
+                                                                      cursor%Diffusor%DiffuseDirection, &
                                                                       cursor%Diffusor%ECRValueType_Free, &
                                                                       cursor%Diffusor%ECR_Free,         &
                                                                       cursor%Diffusor%DiffusorValueType_InGB, &
@@ -695,6 +699,8 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                       '!','PreFactor in free matrix = ',1PE10.4,2x, &
                                       '!','PreFactor parameter in free matrix = ',1PE10.4,2x, &
                                       '!','ActEnergy in free matrix = ',1PE10.4,2x, &
+                                      '!','Diffuse direction way = ',I1,2x, &
+                                      '!','Diffuse direction = ',3(1PE10.4,2x), &
                                       '!','ECR Generate way in free matrix =',I1,2x, &
                                       '!','ECR Value in free matrix =',1PE10.4,&
                                       '!','CoefficentsGenerate way in GB =',I1,2x, &
@@ -709,6 +715,8 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                                                                TheValue%PreFactor_Free,                 &
                                                                                TheValue%PreFactorParameter_Free,        &
                                                                                TheValue%ActEnergy_Free,                 &
+                                                                               TheValue%DiffuseDirectionType,           &
+                                                                               TheValue%DiffuseDirection,               &
                                                                                TheValue%ECRValueType_Free,              &
                                                                                TheValue%ECR_Free,                       &
                                                                                TheValue%DiffusorValueType_InGB,         &

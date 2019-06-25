@@ -336,6 +336,7 @@
  	        InitDiffusorList(&list);
 
 		//6-Inf
+		//InitDiffusor(&Diffusor);
                 //strcpy(Diffusor.symbol,"He#6-Inf");
                 //Diffusor.DiffusorValueType_Free = 1;
 		//Diffusor.DiffuseCoefficient_Free_Value = 0;
@@ -347,6 +348,7 @@
                 //AppendDiffusor(list,&Diffusor);
 
                 //He#6-Inf
+		InitDiffusor(&Diffusor);
                 strcpy(Diffusor.symbol,"He#6-Inf");
                 Diffusor.DiffusorValueType_Free = 3;
 		Diffusor.DiffuseDirectionType = 1;
@@ -356,6 +358,7 @@
                 AppendDiffusor(list,&Diffusor);
 
 		//W#2-Inf
+		InitDiffusor(&Diffusor);
                 strcpy(Diffusor.symbol,"W#2-Inf");
                 Diffusor.DiffusorValueType_Free = 4;
 		Diffusor.PreFactor_Free = 1.0e-3;
@@ -430,6 +433,7 @@
  	        InitReactionsList(&list);
         
 		//subject: 1, Object 5-Inf
+		InitReaction(&Reaction);
 		strcpy(Reaction.SubjectSymbol,"He#1");
                 strcpy(Reaction.ObjectSymbol,"He#5-Inf");
                 Reaction.ReactionCoefficientType = 1;
@@ -439,6 +443,7 @@
                 AppendReaction(list,&Reaction);
 
                //subject: 2-Inf, Object 2-Inf
+		InitReaction(&Reaction);
 		strcpy(Reaction.SubjectSymbol,"He#2-Inf");
                 strcpy(Reaction.ObjectSymbol,"He#2-Inf");
                 Reaction.ReactionCoefficientType = 1;
@@ -448,6 +453,7 @@
                 AppendReaction(list,&Reaction);
 
 		//subject: xx@W: 2-Inf, Object xx@Vc: 2-Inf
+		InitReaction(&Reaction);
 		strcpy(Reaction.SubjectSymbol,"He#1-Inf@W#2-Inf");
                 strcpy(Reaction.ObjectSymbol,"He#1-Inf@Vc#2-Inf");
                 Reaction.ReactionCoefficientType = 1;
