@@ -2,16 +2,15 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="MC_StatisticClusters_Offline" />
+		<Option title="MCCascade_GPU" />
 		<Option pch_mode="2" />
 		<Option compiler="pgifortran" />
 		<Build>
 			<Target title="Debug">
-				<Option output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/MC_StatisticClusters_Offline" prefix_auto="1" extension_auto="1" />
-				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
+				<Option output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug/MCCascade_GPU" prefix_auto="1" extension_auto="1" />
+				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/scratch/p1/ZhaiLei/Fixed_Bubble/C1E18/100eV/Flux1E18/Fixed10_LongTime/SampleSetup.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
@@ -20,47 +19,44 @@
 				<Linker>
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libAppShell.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libInletModel.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMigCoaleModel.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommonGPU.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libTCCLIB.a" />
 					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
 					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMSMLIB.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMiniUtilities.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCudaRanGenerator.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRandGenerators.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRunningProfile.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRandGenerators.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCudaRanGenerator.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMiniUtilities.a" />
 					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug" />
 				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Release/MC_StatisticClusters_Offline" prefix_auto="1" extension_auto="1" />
-				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Release/" />
+				<Option output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/MCCascade_GPU" prefix_auto="1" extension_auto="1" />
+				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-fast" />
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
 					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release" />
 				</Compiler>
-				<Linker>
+								<Linker>
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libAppShell.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libInletModel.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMigCoaleModel.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommonGPU.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libTCCLIB.a" />
-					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
 					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMiniUtilities.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMSMLIB.a" />
+					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCudaRanGenerator.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMiniUtilities.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libRandGenerators.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libRunningProfile.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMSMLIB.a" />
 					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release" />
 				</Linker>
 			</Target>
@@ -68,13 +64,12 @@
 		<Compiler>
 			<Add option="-Minform=inform" />
 		</Compiler>
-		<Unit filename="../../sor/ANALYTOOLS/MC_StatisticClusters_Offline.F90">
+		<Unit filename="../../sor/APPLICATIONS/MCCasCade_GPU.F90">
 			<Option weight="0" />
 		</Unit>
 		<Extensions>
 			<envvars />
 			<code_completion />
-			<lib_finder disable_auto="1" />
 			<debugger />
 		</Extensions>
 	</Project>

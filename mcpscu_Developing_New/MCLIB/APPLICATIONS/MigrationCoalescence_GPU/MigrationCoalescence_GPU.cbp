@@ -20,6 +20,7 @@
 				<Linker>
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libAppShell.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libInletModel.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMigCoaleModel.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommonGPU.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
@@ -48,6 +49,7 @@
 				<Linker>
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libAppShell.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libInletModel.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMigCoaleModel.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommonGPU.a" />
 					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />

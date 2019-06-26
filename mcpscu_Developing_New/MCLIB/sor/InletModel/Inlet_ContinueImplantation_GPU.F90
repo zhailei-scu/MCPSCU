@@ -1,4 +1,4 @@
-module MIGCOALE_IMPLANTATION_GPU
+module INLET_CONTINUEIMPLANTATION_GPU
     use cudafor
     use MCLIB_CONSTANTS_GPU
     use MCLIB_TYPEDEF_USUAL
@@ -1675,9 +1675,6 @@ module MIGCOALE_IMPLANTATION_GPU
         integer::NSIZE
         integer::ImplantNumEachBox
         integer::TotalImplantNum
-        !integer::NCUsed
-        !integer::NCAct
-        !logical::SweepOut
         !---Body---
 
         TotalImplantNum = 0
@@ -1770,30 +1767,11 @@ module MIGCOALE_IMPLANTATION_GPU
                 DO IBox = 1,MultiBox
                     Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) = min(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) + ImplantNumEachBox_Ceiling*this%ExpandFactor,Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2))
 
-                    !if(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GT. 0) then
-                    !    NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
-                    !else
-                    !    NCUsed = 0
-                    !end if
-
-                    !NCAct = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEINGB_STATU)
-
-                    !if(NCUsed .GT. this%SweepOutFactor*NCAct) then
-                    !    SweepOut = .true.
-                    !end if
-
                     write(*,*) "The expanded range for box ",IBox, " is ",Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2)
                 END DO
                 Dev_Boxes%dm_SEExpdIndexBox = Host_Boxes%m_BoxesInfo%SEExpdIndexBox
 
                 call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
-
-                !if(SweepOut) then
-                    !write(*,*) "...Sweep out inactive cluster memory...."
-
-                    !call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam)
-
-                !end if
 
                 if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
                     call Record%SetLastUpdateStatisTime(Record%GetSimuSteps() + 1.D0)
@@ -4102,4 +4080,4 @@ module MIGCOALE_IMPLANTATION_GPU
 !        return
 !    end subroutine Cluster_TypeDefine_GPU
 
-end module MIGCOALE_IMPLANTATION_GPU
+end module INLET_CONTINUEIMPLANTATION_GPU
