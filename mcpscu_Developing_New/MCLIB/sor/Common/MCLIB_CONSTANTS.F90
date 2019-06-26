@@ -44,6 +44,7 @@ module MCLIB_CONSTANTS
     integer, parameter::p_DEPT_DIS_Layer = 0                            ! uniform distribution in the box
     integer, parameter::p_DEPT_DIS_BOX = 1                              ! boxed uniform distribution. The box is a subbox of simulated box
     integer, parameter::p_DEPT_DIS_GAS = 2                              ! Gauss distribution in Z-depth
+    integer, parameter::p_SPHERE_DIST = 3                               ! within a sphere volum
 
 
     !*** data structure defining an cluster

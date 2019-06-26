@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="mcpscu">
+		<Project filename="MCLIB/APPLICATIONS/MC_GenerateCascadeBox/MC_GenerateCascadeBox.cbp" />
 		<Project filename="MCLIB/ANALYTOOLS/MC_StatisticClusters_Offline/MC_StatisticClusters_Offline.cbp">
 			<Depends filename="MCLIB/AppShell/AppShell.cbp" />
 			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />

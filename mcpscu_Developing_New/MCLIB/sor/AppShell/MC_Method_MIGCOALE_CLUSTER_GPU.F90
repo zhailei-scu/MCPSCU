@@ -10,7 +10,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     use MIGCOALE_STATISTIC_GPU
     use MIGCOALE_STATISTIC_CPU
     use MIGCOALE_TYPEDEF_SIMRECORD
-    use INLET_CONTINUEIMPLANTATION_GPU
+    use INLET_TYPEDEF_IMPLANTSECTION
     implicit none
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
@@ -1406,6 +1406,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             DO II = 1, PNC
 
                 IC = IC + 1
+
+                call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
                 !Initialize the position of clusters
                 POS(1) = DRAND32()*BOXSIZE(1)+BOXBOUNDARY(1,1)
                 POS(2) = DRAND32()*BOXSIZE(2)+BOXBOUNDARY(2,1)
@@ -1508,6 +1511,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
             IC = IC + 1
             !Initialize the position of clusters
+            call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
             DO I = 1,3
                 POS(I) = DRAND32()*SUBBOXSIZE(I) + InitBoxCfg%SUBBOXBOUNDARY(I,1)
             END DO
@@ -1605,6 +1610,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 IC = IC + 1
                 !Initialize the position of clusters
+                call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
                 POS(1) = DRAND32()*BOXSIZE(1) + BOXBOUNDARY(1,1)
                 POS(2) = DRAND32()*BOXSIZE(2) + BOXBOUNDARY(2,1)
                 POS(3) = RGAUSS0_WithCut(InitBoxCfg%DepthINI, InitBoxCfg%DepthSDINI,BOXBOUNDARY(3,1),BOXBOUNDARY(3,2))

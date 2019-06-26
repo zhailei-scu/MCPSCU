@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="MC_GenerateCascadeBox" />
+		<Option pch_mode="2" />
+		<Option compiler="pgifortran" />
+		<Build>
+			<Target title="Debug">
+				<Option output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug/MC_GenerateCascadeBox" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug" />
+				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug/" />
+				<Option type="1" />
+				<Option compiler="pgifortran" />
+				<Option parameters="/scratch/p1/ZhaiLei/Fixed_Bubble/C1E18/100eV/Flux1E18/Fixed10_LongTime/SampleSetup.dat" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
+					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug" />
+				</Compiler>
+				<Linker>
+					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libAppShell.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libInletModel.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMigCoaleModel.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommonGPU.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libTCCLIB.a" />
+					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
+					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMSMLIB.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMiniUtilities.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCudaRanGenerator.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRandGenerators.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRunningProfile.a" />
+					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/MC_GenerateCascadeBox" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/" />
+				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/" />
+				<Option type="1" />
+				<Option compiler="pgifortran" />
+				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
+					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release" />
+				</Compiler>
+				<Linker>
+					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libAppShell.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libInletModel.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMigCoaleModel.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommonGPU.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libTCCLIB.a" />
+					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
+					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMiniUtilities.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMSMLIB.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCudaRanGenerator.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libRandGenerators.a" />
+					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libRunningProfile.a" />
+					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release" />
+				</Linker>
+			</Target>
+		</Build>
+		<Unit filename="../../sor/APPLICATIONS/MC_GenerateCascadeBox.F90" />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<lib_finder disable_auto="1" />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

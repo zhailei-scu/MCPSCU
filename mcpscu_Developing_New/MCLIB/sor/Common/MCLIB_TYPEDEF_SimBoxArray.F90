@@ -3067,6 +3067,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         IC = this%m_BoxesInfo%SEUsedIndexBox(IBox,2) + NCEachBox(IBox)
 
+        call this%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ISTR(STRTMP(2))
 
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ISTR(STRTMP(3))
@@ -3429,6 +3431,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         NClustersGroup = NClustersGroup + 1
 
         ClustersSampleConcentrate(1,NClustersGroup) = DRSTR(STRTMP(NATomsUsed + 1))
+
+        call ClustersSample(1,NClustersGroup)%Clean_Cluster()
 
         Do IElement = 1,NATomsUsed
             ClustersSample(1,NClustersGroup)%m_Atoms(AtomsIndex(IElement))%m_ID = AtomsIndex(IElement)
@@ -3814,6 +3818,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             stop
         end if
 
+        call ClustersSample(ILayer,IGroup)%Clean_Cluster()
+
         ClustersSample(ILayer,IGroup)%m_Statu = ISTR(STRTMP(NATomsUsed + 1))
 
         ClustersSample(ILayer,IGroup)%m_GrainID(1) = ISTR(STRTMP(NATomsUsed + 2))
@@ -3979,6 +3985,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 ICTO = ICFROM + floor(ClustersSampleConcentrate(ILayer,IGroup)*BoxVolum) - 1
 
                 DO IC = ICFROM,ICTO
+
+                    call this%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms = ClustersSample(ILayer,IGroup)%m_Atoms
 
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ClustersSample(ILayer,IGroup)%m_Layer
@@ -4090,6 +4099,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     GroupRateTemp = ClustersSampleConcentrate(ILayer,IGroup)/TotalConcentrate
 
                     if(GroupRateTemp .GE. tempRand) then
+
+                        call this%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms = ClustersSample(ILayer,IGroup)%m_Atoms
 

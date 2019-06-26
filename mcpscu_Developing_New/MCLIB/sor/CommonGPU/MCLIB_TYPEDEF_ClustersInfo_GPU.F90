@@ -50,6 +50,30 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
 
     contains
 
+    attributes(device) subroutine Clean_Cluster_Dev(TheCluster)
+        implicit none
+        !---Dummy Vars---
+        type(ACluster)::TheCluster
+        !---Dummy vars---
+        integer::I
+        !---Body---
+
+        DO I = 1,p_ATOMS_GROUPS_NUMBER
+            TheCluster%m_Atoms(I)%m_ID = 0
+            TheCluster%m_Atoms(I)%m_NA = 0
+        END DO
+
+        TheCluster%m_POS = 0
+        TheCluster%m_Layer = 1
+        TheCluster%m_RAD = 0
+        TheCluster%m_Statu = p_Empty
+        TheCluster%m_GrainID(2) = 0
+        TheCluster%m_DiffCoeff = 0.D0
+        TheCluster%m_DiffuseDirection = 0.D0
+
+        return
+    end subroutine Clean_Cluster_Dev
+
     !******************************************************************
     subroutine CopyIn_FromHost(this,Host_ClustersInfo,NSIZE,IfCpyNL)
         implicit none

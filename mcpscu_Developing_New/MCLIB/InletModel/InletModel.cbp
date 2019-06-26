@@ -31,9 +31,13 @@
 				</Compiler>
 			</Target>
 		</Build>
+		<Unit filename="../sor/InletModel/Inlet_CascadeImplantation_GPU.F90">
+			<Option weight="0" />
+		</Unit>
 		<Unit filename="../sor/InletModel/Inlet_ContinueImplantation_GPU.F90">
 			<Option weight="0" />
 		</Unit>
+		<Unit filename="../sor/InletModel/Inlet_TYPEDEF_ImplantSection.F90" />
 		<Extensions>
 			<envvars />
 			<code_completion />
