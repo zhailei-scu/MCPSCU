@@ -2638,28 +2638,42 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(hFile,FMT="(A)") OKMC_OUTCFG_FORMAT18
 
     KEYWORD = "&TIME"
-    write(hFile, FMT="(A20,1x,A15,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetSimuTimes()
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetSimuTimes()
+
+    KEYWORD = "&ISTEP"
+    write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuSteps()
+
+    KEYWORD = "&IPATCH"
+    write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuPatch()
+
+    KEYWORD = "&ITIMESECTION"
+    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetTimeSections()
+
+    write(hFile,*) ""
+
+    KEYWORD = "&LATT"
+    write(hFile, FMT="(A,1x,A25,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"lattice length(in A):",this%LatticeLength*C_CM2AM
 
     KEYWORD = "&BOXLOW"
-    write(hFile, FMT="(A20,1x,A15,1x,3(1PE14.4, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),   &
-                                                       "(in nm)",                     &
-                                                       this%BoxBoundary(1,1)*C_CM2NM, &
-                                                       this%BoxBoundary(2,1)*C_CM2NM, &
-                                                       this%BoxBoundary(3,1)*C_CM2NM
+    write(hFile, FMT="(A,1x,8x,A15,2x,1x,3(1PE14.4, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),                &
+                                                           "(in LU):",                                 &
+                                                           this%BoxBoundary(1,1)/this%LatticeLength,   &
+                                                           this%BoxBoundary(2,1)/this%LatticeLength,   &
+                                                           this%BoxBoundary(3,1)/this%LatticeLength
 
     KEYWORD = "&BOXSIZE"
-    write(hFile, FMT="(A20,1x,A15,1x,3(1PE14.4, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),  &
-                                                       "(in nm)",                    &
-                                                       this%BOXSIZE(1)*C_CM2NM,      &
-                                                       this%BOXSIZE(2)*C_CM2NM,      &
-                                                       this%BOXSIZE(3)*C_CM2NM
+    write(hFile, FMT="(A,1x,7x,A15,1x,1x,3(1PE14.4, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),           &
+                                                           "(in LU):",                            &
+                                                           this%BOXSIZE(1)/this%LatticeLength,    &
+                                                           this%BOXSIZE(2)/this%LatticeLength,    &
+                                                           this%BOXSIZE(3)/this%LatticeLength
 
     KEYWORD = "&NGRAIN"
-    write(hFile,FMT="(A20,1x,I8)") KEYWORD(1:LENTRIM(KEYWORD)),this%m_GrainBoundary%GrainNum
-    write(hFile,FMT="(A20,1x,4(A14,1x))")  "!","Seed ID", "x(nm)", "y(nm)", "z(nm)"
+    write(hFile,FMT="(A,1x,I8)") KEYWORD(1:LENTRIM(KEYWORD)),this%m_GrainBoundary%GrainNum
+    write(hFile,FMT="(A,1x,8x,4(A14,1x))")  "!","Seed ID", "x(LU)", "y(LU)", "z(LU)"
     KEYWORD = "&SEEDDATA"
     Do ISeed = 1,this%m_GrainBoundary%GrainNum
-        write(hFile,fmt="(A20,1x,I14, 1x, 3(1PE14.4, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),ISeed,this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3)*C_CM2NM
+        write(hFile,fmt="(A,1x,I14, 1x, 3(1PE14.4, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),ISeed,this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3)/this%LatticeLength
     End Do
 
 !    CNUM = ""
@@ -2680,7 +2694,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(CNUM,*) p_NUMBER_OF_STATU
     KEYWORD = "&BOXSEINDEX"
     CFormat = ""
-    CFormat = "(8(A20,1x))"
+    CFormat = "(A,7(A20,1x))"
     write(hFile, FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),  &
                                                   "IBox",                       &
                                                   "SEUsedIndexFrom",            &
@@ -2692,7 +2706,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     KEYWORD = "&BOXSEDATA"
     CFormat = ""
-    CFormat = "(A20,1x,I20,1x,"//CNUM(1:LENTRIM(CNUM))//"(I20,1x))"
+    CFormat = "(A,1x,I20,1x,"//CNUM(1:LENTRIM(CNUM))//"(I20,1x))"
     DO IBox = 1,MultiBox
         write(hFile, FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),                  &
                                                       IBox,                                         &
@@ -2717,16 +2731,16 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     KEYWORD = "&ELEMENT"
     CFormat = ""
-    CFormat = "(A20,1x,"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
+    CFormat = "(A,1x,"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
     write(hFile, FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),AtomsStr(1:ElementsKind)
 
     KEYWORD = "&TYPE"
     CFormat = ""
-    CFormat = "(9(A15,1x),"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
-    write(hFile,FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),"IBox", "Layer","GBSeed1","GBSeed2","Statu","x(nm)","y(nm)","z(nm)",AtomsStr(1:ElementsKind)
+    CFormat = "(A,1x,8(A15,1x),"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
+    write(hFile,FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),"IBox", "Layer","GBSeed1","GBSeed2","Statu","x(LU)","y(LU)","z(LU)",AtomsStr(1:ElementsKind)
 
     CFormat = ""
-    CFormat = "(A15,1x,5(I15, 1x),3(1PE15.4, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x))"
+    CFormat = "(A,1x,5(I15, 1x),3(1PE15.4, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x))"
     DO IBox = 1,MultiBox
         ICFROM = this%m_BoxesInfo%SEUsedIndexBox(IBox,1)
         ICTO   = this%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -2739,12 +2753,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
-                write(hFile,fmt=CFormat(1:LENTRIM(CFormat))) "",                                                                &
-                                                            IBox,                                                               &
-                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer,                     &
-                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID,                   &
-                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu,                     &
-                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)*C_CM2NM,          &
+                write(hFile,fmt=CFormat(1:LENTRIM(CFormat))) "     ",                                                             &
+                                                            IBox,                                                                 &
+                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer,                       &
+                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID,                     &
+                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu,                       &
+                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)/this%LatticeLength, &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(1:ElementsKind)%m_NA
             end if
         END DO
@@ -2903,13 +2917,41 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
                 call SimuRecord%SetSimuTimes(DRSTR(STRTMP(1)))
 
+            case("&ISTEP")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetSimuSteps(ISTR(STRTMP(1)))
+
+            case("&IPATCH")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetSimuPatch(ISTR(STRTMP(1)))
+
+            case("&ITIMESECTION")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetTimeSections(ISTR(STRTMP(1)))
+
+            case("&LATT")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                if(N .LT. 1) then
+                    write(*,*) "MCPSCUERROR: You must special the lattice length"
+                    write(*,*) STR
+                    pause
+                    stop
+                end if
+                if(ABS(this%LatticeLength - DRSTR(STRTMP(1))*C_AM2CM)*TENPOWEIGHT .GT. 1) then
+                    write(*,*) "MCPSCUERROR: The read-in configure is not match with lattice length."
+                    write(*,*) this%LatticeLength
+                    write(*,*) DRSTR(STRTMP(1))*C_AM2CM
+                    pause
+                    stop
+                end if
+
             case("&BOXLOW")
                 call EXTRACT_NUMB(STR,3,N,STRTMP)
                 DO K = 1,3
-                    if( ABS(this%BOXBOUNDARY(K,1) - DRSTR(STRTMP(K))*C_NM2CM)*TENPOWFIVE .GT. 1) then
+                    if( ABS(this%BOXBOUNDARY(K,1) - DRSTR(STRTMP(K))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
                         write(*,*) "MCPSCUERROR: The read-in configure is not match with box below size."
                         write(*,*) this%BOXBOUNDARY(K,1)
-                        write(*,*) DRSTR(STRTMP(K))*C_NM2CM
+                        write(*,*) DRSTR(STRTMP(K))*this%LatticeLength
                         pause
                         stop
                     end if
@@ -2918,10 +2960,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case("&BOXSIZE")
                 call EXTRACT_NUMB(STR,3,N,STRTMP)
                 DO K = 1,3
-                    if( ABS(this%BOXSIZE(K) - DRSTR(STRTMP(K))*C_NM2CM)*TENPOWFIVE .GT. 1) then
+                    if( ABS(this%BOXSIZE(K) - DRSTR(STRTMP(K))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
                         write(*,*) "MCPSCUERROR: The read-in configure is not match with box size."
                         write(*,*) this%BOXSIZE(K)
-                        write(*,*) DRSTR(STRTMP(K))*C_NM2CM
+                        write(*,*) DRSTR(STRTMP(K))*this%LatticeLength
                         pause
                         stop
                     end if
@@ -2929,7 +2971,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             case("&NGRAIN")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                this%m_GrainBoundary%GrainNum = ISTR(STRTMP(1))
                 if(this%m_GrainBoundary%GrainNum .ne. ISTR(STRTMP(1))) then
                     write(*,*) "MCPSCUERROR: The read-in configure is not match with grain seeds number."
                     write(*,*) this%m_GrainBoundary%GrainNum
@@ -2970,11 +3011,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     end if
 
                     DO I = 1,3
-                        if( ABS(this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I) - DRSTR(STRTMP(I+1))*C_NM2CM)*TENPOWFIVE .GT. 1) then
+                        if( ABS(this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I) - DRSTR(STRTMP(I+1))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
                             write(*,*) "MCPSCUERROR: The read-in configure is not match with box grain position."
                             write(*,*) "For grain seed ID: ",ISeedTemp
                             write(*,*) this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I)
-                            write(*,*) DRSTR(STRTMP(I+1))*C_NM2CM
+                            write(*,*) DRSTR(STRTMP(I+1))*this%LatticeLength
                                 pause
                             stop
                         end if
@@ -3146,7 +3187,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(AtomsIndex(IElement))%m_NA = atomsInfo(IElement)
         End Do
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)*C_NM2CM
+        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)*this%LatticeLength
 
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
 

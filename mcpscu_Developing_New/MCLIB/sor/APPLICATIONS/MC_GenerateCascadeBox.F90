@@ -27,6 +27,10 @@ program Main_MC_GenerateCascadeBox
     integer::ISEED0,ISEED(2)
     integer::SIAIndex
     integer::VacancyIndex
+    real(kind=KMCDF)::VectorLen
+    real(kind=KMCDF)::ZDirection
+    real(kind=KMCDF)::XDirection
+    integer::ExitCount
     !-----------Body--------------
     processid = 0
 
@@ -80,11 +84,18 @@ program Main_MC_GenerateCascadeBox
                 call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                DO While(.true.)
+                    ExitCount = 0
 
-                DO I = 1,3
-                    DO While(.true.)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Sphere_Central(ICase,I) + (2*DRAND32()-1.D0)*Sphere_Radius(ICase)
+                    VectorLen = Sphere_Radius(ICase)*DRAND32()
+                    ZDirection = DRAND32()*PI
+                    XDirection = DRAND32()*2*PI
 
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + VectorLen*sin(ZDirection)*cos(XDirection)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + VectorLen*sin(ZDirection)*sin(XDirection)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + VectorLen*cos(ZDirection)
+
+                    DO I = 1,3
                         if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
                         else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
@@ -93,9 +104,14 @@ program Main_MC_GenerateCascadeBox
 
                         if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GE. Host_Boxes%BOXBOUNDARY(I,1) .AND. &
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LE. Host_Boxes%BOXBOUNDARY(I,2)) then
-                            exit
+                            ExitCount = ExitCount + 1
                         end if
                     END DO
+
+                    if(ExitCount .EQ. 3) then
+                        exit
+                    end if
+
                 END DO
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
@@ -113,10 +129,18 @@ program Main_MC_GenerateCascadeBox
                 call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
-                DO I = 1,3
-                    DO While(.true.)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Sphere_Central(ICase,I) + (2*DRAND32()-1.D0)*Sphere_Radius(ICase)
+                DO While(.true.)
+                    ExitCount = 0
 
+                    VectorLen = Sphere_Radius(ICase)*DRAND32()
+                    ZDirection = DRAND32()*PI
+                    XDirection = DRAND32()*2*PI
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + VectorLen*sin(ZDirection)*cos(XDirection)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + VectorLen*sin(ZDirection)*sin(XDirection)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + VectorLen*cos(ZDirection)
+
+                    DO I = 1,3
                         if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
                         else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
@@ -125,9 +149,14 @@ program Main_MC_GenerateCascadeBox
 
                         if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GE. Host_Boxes%BOXBOUNDARY(I,1) .AND. &
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LE. Host_Boxes%BOXBOUNDARY(I,2)) then
-                            exit
+                            ExitCount = ExitCount + 1
                         end if
                     END DO
+
+                    if(ExitCount .EQ. 3) then
+                        exit
+                    end if
+
                 END DO
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 

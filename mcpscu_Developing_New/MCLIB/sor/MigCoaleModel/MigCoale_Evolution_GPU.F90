@@ -592,6 +592,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KMCDF)::ReactionCoeff
     integer::SubjectElementIndex
     integer::ObjectElementIndex
+    integer::SubjectNANum
+    integer::ObjectNANum
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -718,11 +720,13 @@ module MIGCOALE_EVOLUTION_GPU
 
                     Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
                                                                               Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA - &
-                                                                         2*Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA,0)
 
-                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA - &
-                                                                        2*Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA,0)
+                    SubjectNANum = Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+                    ObjectNANum  = Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
+
+                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
+
+                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
             end select
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
@@ -843,6 +847,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KMCDF)::ReactionCoeff
     integer::SubjectElementIndex
     integer::ObjectElementIndex
+    integer::SubjectNANum
+    integer::ObjectNANum
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -969,11 +975,13 @@ module MIGCOALE_EVOLUTION_GPU
 
                     Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
                                                                               Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA - &
-                                                                         2*Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA,0)
 
-                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA - &
-                                                                        2*Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA,0)
+                    SubjectNANum = Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+                    ObjectNANum  = Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
+
+                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
+
+                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
             end select
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
