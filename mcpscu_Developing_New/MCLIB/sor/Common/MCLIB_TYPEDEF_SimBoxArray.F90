@@ -2906,31 +2906,62 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case("&BOXLOW")
                 call EXTRACT_NUMB(STR,3,N,STRTMP)
                 DO K = 1,3
-                    this%BOXBOUNDARY(K,1) = DRSTR(STRTMP(K))
+                    if( ABS(this%BOXBOUNDARY(K,1) - DRSTR(STRTMP(K))*C_NM2CM)*TENPOWFIVE .GT. 1) then
+                        write(*,*) "MCPSCUERROR: The read-in configure is not match with box below size."
+                        write(*,*) this%BOXBOUNDARY(K,1)
+                        write(*,*) DRSTR(STRTMP(K))*C_NM2CM
+                        pause
+                        stop
+                    end if
                 END DO
 
             case("&BOXSIZE")
                 call EXTRACT_NUMB(STR,3,N,STRTMP)
                 DO K = 1,3
-                    this%BOXSIZE(K) = DRSTR(STRTMP(K))
+                    if( ABS(this%BOXSIZE(K) - DRSTR(STRTMP(K))*C_NM2CM)*TENPOWFIVE .GT. 1) then
+                        write(*,*) "MCPSCUERROR: The read-in configure is not match with box size."
+                        write(*,*) this%BOXSIZE(K)
+                        write(*,*) DRSTR(STRTMP(K))*C_NM2CM
+                        pause
+                        stop
+                    end if
                 END DO
 
             case("&NGRAIN")
-                call this%m_GrainBoundary%Clean_Grainboundary()
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
                 this%m_GrainBoundary%GrainNum = ISTR(STRTMP(1))
-                if(this%m_GrainBoundary%GrainNum .GT. 0) then
-                    allocate(this%m_GrainBoundary%GrainSeeds(this%m_GrainBoundary%GrainNum))
+                if(this%m_GrainBoundary%GrainNum .ne. ISTR(STRTMP(1))) then
+                    write(*,*) "MCPSCUERROR: The read-in configure is not match with grain seeds number."
+                    write(*,*) this%m_GrainBoundary%GrainNum
+                    write(*,*) ISTR(STRTMP(1))
+                    pause
+                    stop
                 end if
                 DO ISeed = 1,this%m_GrainBoundary%GrainNum
                     call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
                     call RemoveComments(STR,"!")
-                    read(STR,fmt="(A20,1x,I14, 1x, 3(1PE14.4, 1x))",ERR=100) CEmpty,ISeedTemp,this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3)
-                    if(.not. IsStrEqual(CEmpty,"&SEEDDATA")) then
+                    STR = adjustl(STR)
+                    call GETKEYWORD("&",STR,KEYWORD)
+                    call UPCASE(KEYWORD)
+
+                    if(.not. IsStrEqual(KEYWORD,"&SEEDDATA")) then
                         write(*,*) "MCPSCUERROR: The grain seeds number is less than the recorded one."
+                        write(*,*) KEYWORD
                         pause
                         stop
                     end if
+
+                    call EXTRACT_NUMB(STR,4,N,STRTMP)
+
+                    if(N .LT. 4) then
+                        write(*,*) "MCPSCUERROR: The grain seeds configuration is not right."
+                        write(*,*) "It should be '&SEEDDATA SeedID Pos_x Pos_y Pos_z' "
+                        write(*,*) STR
+                        pause
+                        stop
+                    end if
+
+                    ISeedTemp = ISTR(STRTMP(1))
 
                     if(ISeedTemp .ne. ISeed) then
                         write(*,*) "MCPSCUERROR: The grain seeds index is not correct: ",ISeed
@@ -2938,7 +2969,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         stop
                     end if
 
-                    this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3) = this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3)*C_NM2CM
+                    DO I = 1,3
+                        if( ABS(this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I) - DRSTR(STRTMP(I+1))*C_NM2CM)*TENPOWFIVE .GT. 1) then
+                            write(*,*) "MCPSCUERROR: The read-in configure is not match with box grain position."
+                            write(*,*) "For grain seed ID: ",ISeedTemp
+                            write(*,*) this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I)
+                            write(*,*) DRSTR(STRTMP(I+1))*C_NM2CM
+                                pause
+                            stop
+                        end if
+                    END DO
+
                 END DO
 
             case("&NCLUSTERS")
@@ -3186,7 +3227,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     100 write(*,*) "MCPSCUERROR: Fail to load the configuration file"
         write(*,*) "At line: ",LINE
         write(*,*) "STR",STR
-        write(*,*) "STR(1:1)",STR(1:1)
         pause
         stop
   end subroutine Putin_OKMC_OUTCFG_FORMAT18

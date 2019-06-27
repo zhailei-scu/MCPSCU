@@ -950,7 +950,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Local Vars---
         character*256::STR
         character*32::KEYWORD
-        character*32::STRTMP(10)
+        character*50::STRTMP(10)
         integer::N
         !---Body---
 
