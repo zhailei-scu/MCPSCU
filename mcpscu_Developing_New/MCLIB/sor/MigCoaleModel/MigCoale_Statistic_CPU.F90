@@ -17,7 +17,7 @@ module MIGCOALE_STATISTIC_CPU
     integer::MultiBox
     integer::IBox
     integer::IStatu
-    real(kind=KMCDF)::RAVA(p_NUMBER_OF_STATU)
+    real(kind=KINDDF)::RAVA(p_NUMBER_OF_STATU)
     integer::NActCountTemp(p_NUMBER_OF_STATU)
     integer::NCCount(p_NUMBER_OF_STATU)
     !---Body---
@@ -190,7 +190,7 @@ module MIGCOALE_STATISTIC_CPU
     integer::MultiBox
     integer::IBox
     integer::IStatu
-    real(kind=KMCDF)::RAVA(p_NUMBER_OF_STATU)
+    real(kind=KINDDF)::RAVA(p_NUMBER_OF_STATU)
     integer::NActCountTemp(p_NUMBER_OF_STATU)
     integer::NCCount(p_NUMBER_OF_STATU)
     !---Body---
@@ -370,7 +370,7 @@ module MIGCOALE_STATISTIC_CPU
     integer::MultiBox
     integer::IBox
     integer::IStatu
-    real(kind=KMCDF)::RAVA(p_NUMBER_OF_STATU)
+    real(kind=KINDDF)::RAVA(p_NUMBER_OF_STATU)
     integer::NActCountTemp(p_NUMBER_OF_STATU)
     integer::NCCount(p_NUMBER_OF_STATU)
     !---Body---

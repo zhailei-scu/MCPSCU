@@ -2,6 +2,7 @@
 
 module MCLIB_TYPEDEF_DiffusorsValue
     USE MCLIB_CONSTANTS
+    USE MODEL_ECR_CPU
     USE MCLIB_TYPEDEF_ACLUSTER
     use MCLIB_UTILITIES
     USE iso_c_binding
@@ -73,34 +74,34 @@ module MCLIB_TYPEDEF_DiffusorsValue
         integer::DiffusorValueType_Free PREASSIGN p_DiffuseCoefficient_ByValue
 
         ! If the DiffuseCoefficient type is by value,use this
-        real(kind=KMCDF)::DiffuseCoefficient_Free_Value PREASSIGN 0.D0
+        real(kind=KINDDF)::DiffuseCoefficient_Free_Value PREASSIGN 0.D0
 
         ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
-        real(kind=KMCDF)::PreFactor_Free PREASSIGN 0.D0
-        real(kind=KMCDF)::PreFactorParameter_Free PREASSIGN 0.D0
-        real(kind=KMCDF)::ActEnergy_Free PREASSIGN 0.D0
+        real(kind=KINDDF)::PreFactor_Free PREASSIGN 0.D0
+        real(kind=KINDDF)::PreFactorParameter_Free PREASSIGN 0.D0
+        real(kind=KINDDF)::ActEnergy_Free PREASSIGN 0.D0
 
         integer::DiffuseDirectionType PREASSIGN p_DiffuseDirection_ThreeDim
-        real(kind=KMCDF),dimension(3)::DiffuseDirection PREASSIGN 0.D0
+        real(kind=KINDDF),dimension(3)::DiffuseDirection PREASSIGN 0.D0
 
         integer::ECRValueType_Free PREASSIGN p_ECR_ByValue
 
-        real(kind=KMCDF)::ECR_Free PREASSIGN 0.D0
+        real(kind=KINDDF)::ECR_Free PREASSIGN 0.D0
 
         !---In GB---
         integer::DiffusorValueType_InGB PREASSIGN p_DiffuseCoefficient_ByValue
 
         ! If the DiffuseCoefficient type is by value,use this
-        real(kind=KMCDF)::DiffuseCoefficient_InGB_Value PREASSIGN 0.D0
+        real(kind=KINDDF)::DiffuseCoefficient_InGB_Value PREASSIGN 0.D0
 
         ! If the DiffuseCoefficient type is by Arrhenius or BCluster(bigger cluster),use this
-        real(kind=KMCDF)::PreFactor_InGB PREASSIGN 0.D0
-        real(kind=KMCDF)::PreFactorParameter_InGB PREASSIGN 0.D0
-        real(kind=KMCDF)::ActEnergy_InGB PREASSIGN 0.D0
+        real(kind=KINDDF)::PreFactor_InGB PREASSIGN 0.D0
+        real(kind=KINDDF)::PreFactorParameter_InGB PREASSIGN 0.D0
+        real(kind=KINDDF)::ActEnergy_InGB PREASSIGN 0.D0
 
         integer::ECRValueType_InGB PREASSIGN p_ECR_ByValue
 
-        real(kind=KMCDF)::ECR_InGB PREASSIGN 0.D0
+        real(kind=KINDDF)::ECR_InGB PREASSIGN 0.D0
 
         contains
         procedure,private,non_overridable,pass::CopyDiffusorValueFromOther

@@ -20,7 +20,7 @@ module MCLIB_CAL_NEIGHBOR_LIST
     type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::Record
     logical,optional::IfDirectly
-    real(kind=KMCDF),optional::RMAX
+    real(kind=KINDDF),optional::RMAX
     !---Local Vars---
     logical::SureToUpdateNL
     integer::NAct
@@ -89,17 +89,17 @@ module MCLIB_CAL_NEIGHBOR_LIST
     !---Dummy vars---
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
-    real(kind=KMCDF),intent(in)::RMAX
+    real(kind=KINDDF),intent(in)::RMAX
     !---Local Vars---
-    real(kind=KMCDF)::RCUT
+    real(kind=KINDDF)::RCUT
     integer::MultiBox
     integer::IC, ICFROM, ICTO, J, K, IW
     integer::MAXNEIGHBORNUM
     integer::IBox
-    real(kind=KMCDF)::SEP(3), R2, RCUT2
+    real(kind=KINDDF)::SEP(3), R2, RCUT2
     integer, dimension(:), allocatable::INDI
-    real(kind=KMCDF)::tempBOXSIZE(3)
-    real(kind=KMCDF)::tempHBOXSIZE(3)
+    real(kind=KINDDF)::tempBOXSIZE(3)
+    real(kind=KINDDF)::tempHBOXSIZE(3)
     integer::tempPERIOD(3)
     integer::NAct
 
@@ -202,13 +202,13 @@ module MCLIB_CAL_NEIGHBOR_LIST
     integer::IBox
     integer::IC, ICFROM, ICTO, J, K
     integer::NN
-    real(kind=KMCDF)::SEP(3), R2
+    real(kind=KINDDF)::SEP(3), R2
     integer::Nearest_maxDistIndex
-    real(kind=KMCDF)::Nearest_maxDIST2,temp_DIST2
+    real(kind=KINDDF)::Nearest_maxDIST2,temp_DIST2
     integer, dimension(:),allocatable::Nearest_INDI
-    real(kind=KMCDF),dimension(:),allocatable::Nearest_DIST2
-    real(kind=KMCDF)::tempBOXSIZE(3)
-    real(kind=KMCDF)::tempHBOXSIZE(3)
+    real(kind=KINDDF),dimension(:),allocatable::Nearest_DIST2
+    real(kind=KINDDF)::tempBOXSIZE(3)
+    real(kind=KINDDF)::tempHBOXSIZE(3)
     integer::tempPERIOD(3)
     !---Body---
     #ifdef MC_PROFILING

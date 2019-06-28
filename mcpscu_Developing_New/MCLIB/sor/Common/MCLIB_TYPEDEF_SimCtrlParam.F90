@@ -25,7 +25,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      integer::INDEPBOX = 1                                              ! if all the box are independent
 
      !***Information for random number
-     integer(kind=KMCDF)::RANDSEED(2) = (/43434, 54454532/)             ! the inputed random seed
+     integer(kind=KINDDF)::RANDSEED(2) = (/43434, 54454532/)             ! the inputed random seed
 
      !***PERIOD boundary************
      integer::PERIOD(3) = (/1,1,1/)                                     ! determine if PERIOD condition used
@@ -33,13 +33,13 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      !***Inforamtion about neighborlist
      integer::NEIGHBORCALWAY = mp_CalcNeighborList_NNEAREST             ! 1 for NNearest way, 2 for cut-off radium way
      integer::MAXNEIGHBORNUM   = 2048                                   ! the max neighbor number for a cluster while searching neighbor-list
-     real(kind=KMCDF)::CUTREGIONEXTEND = 8                              ! the parameter determine the neighbor region extend
+     real(kind=KINDDF)::CUTREGIONEXTEND = 8                              ! the parameter determine the neighbor region extend
      integer::NEIGHBORUPDATESTRATEGY = mp_NEIGHBORUPDATEBYSTEP          ! flag = 0 for output each interval steps,flag = 1 for by remind clusters number percent
-     real(kind=KMCDF)::NEIGHBORUPDATE = 10                              ! if number of particles decreases to this value, neigbore list should be update
+     real(kind=KINDDF)::NEIGHBORUPDATE = 10                              ! if number of particles decreases to this value, neigbore list should be update
 
      !***Informaiton about temperature
-     real(kind=KMCDF)::TEMP = 300.D0                                    ! temperature
-     real(kind=KMCDF)::TKB = 300D0*C_KB                                 ! the kinetic energy
+     real(kind=KINDDF)::TEMP = 300.D0                                    ! temperature
+     real(kind=KINDDF)::TKB = 300D0*C_KB                                 ! the kinetic energy
 
      !***Implantation section*********
      integer::ImplantSectID = 0                                         ! the implantation section index

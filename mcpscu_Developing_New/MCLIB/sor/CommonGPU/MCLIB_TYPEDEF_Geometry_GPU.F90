@@ -107,13 +107,13 @@ module MCLIB_TYPEDEF_GEOMETRY_GPU
         !---Dummy Vars---
         integer,value::NSeeds
         type(GrainSeed),device::Dev_GrainSeeds(*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (*) for one dimension, cannot be (:)
-        real(kind=KMCDF)::POS(3)
+        real(kind=KINDDF)::POS(3)
         integer::SeedID
         !---Local Vars---
         integer::ISeed
-        real(kind=KMCSF)::SEP(3)
-        real(kind=KMCDF)::DIST2
-        real(kind=KMCDF)::MinDist2
+        real(kind=KINDSF)::SEP(3)
+        real(kind=KINDDF)::DIST2
+        real(kind=KINDDF)::MinDist2
         !---Body--
 
         MinDist2 = 1.D32
@@ -153,18 +153,18 @@ module MCLIB_TYPEDEF_GEOMETRY_GPU
         type(GrainSeed),device::Dev_GrainSeeds(*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (*) for one dimension,cannot be (:)
         integer,intent(in)::Seed1
         integer,intent(in)::Seed2
-        real(kind=KMCDF),intent(in)::POS1(3)
-        real(kind=KMCDF),intent(in)::POS2(3)
-        real(kind=KMCDF),intent(out)::CrossPoint(3) !Note: If the nollvm compiler option is used, we cannot apply the array as a function result, so this array result
+        real(kind=KINDDF),intent(in)::POS1(3)
+        real(kind=KINDDF),intent(in)::POS2(3)
+        real(kind=KINDDF),intent(out)::CrossPoint(3) !Note: If the nollvm compiler option is used, we cannot apply the array as a function result, so this array result
                                                     !      must be an dummy array of the subroutine
         !---Local Vars---
-        real(kind=KMCSF)::GrainSeed1(3)
-        real(kind=KMCSF)::GrainSeed2(3)
-        real(kind=KMCSF)::SEP(3)
-        real(kind=KMCDF)::halfPoint(3)
-        real(kind=KMCDF)::GBNormVector(3)
-        real(kind=KMCDF)::K1
-        real(kind=KMCDF)::K2
+        real(kind=KINDSF)::GrainSeed1(3)
+        real(kind=KINDSF)::GrainSeed2(3)
+        real(kind=KINDSF)::SEP(3)
+        real(kind=KINDDF)::halfPoint(3)
+        real(kind=KINDDF)::GBNormVector(3)
+        real(kind=KINDDF)::K1
+        real(kind=KINDDF)::K2
         !---Body--
         GrainSeed1 = Dev_GrainSeeds(Seed1)%m_POS
 

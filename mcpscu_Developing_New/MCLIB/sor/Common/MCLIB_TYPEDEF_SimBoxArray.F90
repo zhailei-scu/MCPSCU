@@ -19,8 +19,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer(kind=KMCLINT)::NA(p_NUMBER_OF_STATU) = 0               ! the number of all status atomics at current time intervale
     integer::NCDumpAdded = 0
 
-    real(kind=KMCDF)::AveNearestSpeFreeClusters = 0.D0
-    real(kind=KMCDF)::AveNearestSpeGBClusters = 0.D0
+    real(kind=KINDDF)::AveNearestSpeFreeClusters = 0.D0
+    real(kind=KINDDF)::AveNearestSpeGBClusters = 0.D0
     contains
     procedure,public,non_overridable,pass::Init=>Init_BoxStatis
     procedure,public,non_overridable,pass::Clean=>Clean_BoxStatis
@@ -92,11 +92,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(GrainBoundary)::m_GrainBoundary
 
     !************Info for boxsize*************
-    real(kind=KMCDF)::LatticeLength = 3.14D-8                          ! Lattice length (cm)
-    real(kind=KMCDF)::BOXBOUNDARY(3,2) = 0                             ! siumulation box boundary, in unit of atomic radiua
-    real(kind=KMCDF)::BOXSIZE(3) = 0                                   ! simulation box size
-    real(kind=KMCDF)::HBOXSIZE(3) = 0                                  ! half box size
-    real(kind=KMCDF)::BOXVOLUM = 0                                     ! voulme of the box
+    real(kind=KINDDF)::LatticeLength = 3.14D-8                          ! Lattice length (cm)
+    real(kind=KINDDF)::BOXBOUNDARY(3,2) = 0                             ! siumulation box boundary, in unit of atomic radiua
+    real(kind=KINDDF)::BOXSIZE(3) = 0                                   ! simulation box size
+    real(kind=KINDDF)::HBOXSIZE(3) = 0                                  ! half box size
+    real(kind=KINDDF)::BOXVOLUM = 0                                     ! voulme of the box
 
     !************Info for matrix*************
     type(ATOM)::MatrixAtom
@@ -133,6 +133,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     procedure,non_overridable,private,pass::Load_Box_Diffusors
     procedure,non_overridable,private,pass::LoadDiffusorsValue
     procedure,non_overridable,private,pass::LoadOneDiffusors
+    procedure,non_overridable,private,pass::ResloveDiffusorsValueFromCScript
     procedure,non_overridable,private,pass::LoadDiffusorsValueFromScript
     procedure,non_overridable,private,pass::LoadReactions
     procedure,non_overridable,private,pass::LoadOneReaction
@@ -186,6 +187,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   private::Load_Box_Diffusors
   private::LoadDiffusorsValue
   private::LoadOneDiffusors
+  private::ResloveDiffusorsValueFromCScript
   private::LoadDiffusorsValueFromScript
   private::LoadReactions
   private::LoadOneReaction
@@ -714,7 +716,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*256::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
-    real(kind=KMCDF)::BOXSIZE(3)
+    real(kind=KINDDF)::BOXSIZE(3)
     !---Body---
 
     DO While(.TRUE.)
@@ -990,7 +992,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*32::STRNUMB(10)
     type(ReadDiffusorPropList),pointer::cursor=>null()
     integer::I
-    real(kind=KMCDF)::VectorLen
+    real(kind=KINDDF)::VectorLen
     !---Body---
     allocate(this%ReadDiffusorProp_List)
 
@@ -1063,7 +1065,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(ReadedDiffusorValue)::newDiffusor
     integer::N
     integer::I
-    real(kind=KMCDF)::VectorLen
+    real(kind=KINDDF)::VectorLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
@@ -1336,6 +1338,41 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     100 return 1
   end subroutine LoadOneDiffusors
 
+
+  !**************************************************
+  subroutine ResloveDiffusorsValueFromCScript(this,scriptStr)
+    use MCLIB_TYPEDEF_DiffusorPropList
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationBoxes)::this
+    character(kind=c_char,len=10000)::scriptStr
+    !---Local Vars---
+    type(ReadedDiffusorValue),allocatable::FDiffusorDefArray(:)
+    integer(kind=c_int)::ArraySize
+    integer::I
+    !---Body---
+
+    ArraySize = InterpCScript_DiffusorsDef(scriptStr)
+
+    if(allocated(FDiffusorDefArray)) then
+        deallocate(FDiffusorDefArray)
+    end if
+    allocate(FDiffusorDefArray(ArraySize))
+
+    call GetInterpedDiffusorsArray(FDiffusorDefArray)
+
+    DO I = 1,ArraySize
+        FDiffusorDefArray(I)%ECR_Free = FDiffusorDefArray(I)%ECR_Free*this%LatticeLength
+        FDiffusorDefArray(I)%ECR_InGB = FDiffusorDefArray(I)%ECR_InGB*this%LatticeLength
+    END DO
+    call this%ReadDiffusorProp_List%AppendArray_ReadDiffusorPropList(FDiffusorDefArray,ArraySize)
+
+    deallocate(FDiffusorDefArray)
+
+    return
+  end subroutine ResloveDiffusorsValueFromCScript
+
+
   !*******************************************
   subroutine LoadDiffusorsValueFromScript(this,hBoxFile,*)
     implicit none
@@ -1367,7 +1404,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     scriptStr(LEN_TRIM(scriptStr):LEN_TRIM(scriptStr)+1) = CHAR(0)
 
-    call ResloveDiffusorsValueFromCScript(scriptStr,this%ReadDiffusorProp_List)
+    call this%ResloveDiffusorsValueFromCScript(scriptStr)
 
     return
     100 return 1
@@ -2245,7 +2282,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         integer::MultiBox
         integer::NeighborNum
         type(ClustersInfo_CPU)::temp_ClustersInfo
-        real(kind=KMCDF)::tempBOXSIZE(3)
+        real(kind=KINDDF)::tempBOXSIZE(3)
         integer::DumplicateNum
         integer::NCDUP
         integer::ICFROM,ICTO
@@ -2772,16 +2809,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Puout_Instance_Config_SimBoxArray
 
   !*****************************************************************
-  subroutine Putin_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,cfgFile,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,cfgFile,SURDIFPRE_FREE,SURDIFPRE_INGB)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     Class(SimulationRecord)::SimuRecord
     character*256,intent(in)::cfgFile
-    real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
-    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
+    real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars--
     integer::hFile
     character*256::STR
@@ -2806,11 +2842,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     select case(KEYWORD(1:LENTRIM(KEYWORD)))
         case(OKMC_OUTCFG_FORMAT18)
-            call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+            call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
         case(MF_OUTCFG_FORMAT18)
-            call this%Putin_MF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+            call this%Putin_MF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
         case(SPMF_OUTCFG_FORMAT18)
-            call this%Putin_SPMF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+            call this%Putin_SPMF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
         case default
             write(*,*) "MCPSCUERROR: You must special the box file format at the beginning of the file."
             pause
@@ -2827,16 +2863,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_Instance_Config_SimBoxArray
 
   !*************************************************************
-  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     character*256,intent(in)::cfgFile
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
-    real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
-    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
+    real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
     integer::hFile
     integer::LINE
@@ -3196,7 +3231,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 case(p_ECR_ByValue)
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                 case(p_ECR_ByBCluster)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3217,12 +3252,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+
+            write(*,*) "Capture radius",this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD/this%LatticeLength
+
         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
                 case(p_ECR_ByValue)
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                 case(p_ECR_ByBCluster)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -3273,7 +3311,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_OKMC_OUTCFG_FORMAT18
 
   !*************************************************************
-  subroutine Putin_MF_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_MF_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -3281,18 +3319,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*256,intent(in)::cfgFile
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
-    real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
-    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
+    real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
-    real(kind=KMCDF),dimension(:),allocatable::LayerThick
-    real(kind=KMCDF),dimension(:,:),allocatable::ClustersSampleConcentrate
+    real(kind=KINDDF),dimension(:),allocatable::LayerThick
+    real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),allocatable::ClustersSample
     !---Body---
 
-    call this%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFile,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE_FREE)
+    call this%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFile,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,SURDIFPRE_FREE)
 
-    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB)
 
     call DeAllocateArray_Host(LayerThick,"LayerThick")
     call DeAllocateArray_Host(ClustersSampleConcentrate,"ClustersSampleConcentrate")
@@ -3302,19 +3339,18 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_MF_OUTCFG_FORMAT18
 
   !*************************************************************
-  subroutine Putin_MF_OUTCFG_FORMAT18_Distribution(this,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE_FREE)
+  subroutine Putin_MF_OUTCFG_FORMAT18_Distribution(this,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,SURDIFPRE_FREE)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     character*256,intent(in)::cfgFile
-    real(kind=KMCDF),dimension(:),allocatable::LayersThick
-    real(kind=KMCDF),dimension(:,:),allocatable::ClustersSampleConcentrate
+    real(kind=KINDDF),dimension(:),allocatable::LayersThick
+    real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),allocatable::ClustersSample
     CLASS(SimulationRecord)::SimuRecord
-    real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     !---Local Vars---
     integer::hFile
     integer::LINE
@@ -3526,7 +3562,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case(p_ECR_ByValue)
                 ClustersSample(1,NClustersGroup)%m_RAD = TheDiffusorValue%ECR_Free
             case(p_ECR_ByBCluster)
-                ClustersSample(1,NClustersGroup)%m_RAD = DSQRT(sum(ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA)/RNFACTOR)
+                ClustersSample(1,NClustersGroup)%m_RAD = Cal_ECR_ByBCluster(sum(ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
         end select
 
         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3564,7 +3600,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_MF_OUTCFG_FORMAT18_Distribution
 
   !*************************************************************
-  subroutine Putin_SPMF_OUTCFG_FORMAT18(this,cfgFileName,Host_SimuCtrlParam,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_SPMF_OUTCFG_FORMAT18(this,cfgFileName,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -3572,18 +3608,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*256,intent(in)::cfgFileName
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
-    real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
-    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
+    real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
-    real(kind=KMCDF),dimension(:),allocatable::LayerThick
-    real(kind=KMCDF),dimension(:,:),allocatable::ClustersSampleConcentrate
+    real(kind=KINDDF),dimension(:),allocatable::LayerThick
+    real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),allocatable::ClustersSample
     !---Body---
 
-    call this%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFileName,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    call this%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFileName,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
 
-    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB)
 
     call DeAllocateArray_Host(LayerThick,"LayerThick")
     call DeAllocateArray_Host(ClustersSampleConcentrate,"ClustersSampleConcentrate")
@@ -3593,20 +3628,19 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_SPMF_OUTCFG_FORMAT18
 
   !*************************************************************
-  subroutine Putin_SPMF_OUTCFG_FORMAT18_Distribution(this,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_SPMF_OUTCFG_FORMAT18_Distribution(this,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     character*256,intent(in)::cfgFile
-    real(kind=KMCDF),dimension(:),allocatable::LayersThick
-    real(kind=KMCDF),dimension(:,:),allocatable::ClustersSampleConcentrate
+    real(kind=KINDDF),dimension(:),allocatable::LayersThick
+    real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),allocatable::ClustersSample
     CLASS(SimulationRecord)::SimuRecord
-    real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
-    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
+    real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
     integer::hFile
     integer::LINE
@@ -3936,7 +3970,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 case(p_ECR_ByValue)
                     ClustersSample(ILayer,IGroup)%m_RAD = TheDiffusorValue%ECR_Free
                 case(p_ECR_ByBCluster)
-                    ClustersSample(ILayer,IGroup)%m_RAD = DSQRT(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)/RNFACTOR)
+                    ClustersSample(ILayer,IGroup)%m_RAD = Cal_ECR_ByBCluster(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3962,7 +3996,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 case(p_ECR_ByValue)
                     ClustersSample(ILayer,IGroup)%m_RAD = TheDiffusorValue%ECR_InGB
                 case(p_ECR_ByBCluster)
-                    ClustersSample(ILayer,IGroup)%m_RAD = DSQRT(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)/RNFACTOR)
+                    ClustersSample(ILayer,IGroup)%m_RAD = Cal_ECR_ByBCluster(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -3997,36 +4031,35 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_SPMF_OUTCFG_FORMAT18_Distribution
 
   !*************************************************************
-  subroutine DoPutin_FromDistribution(this,Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,RNFACTOR,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine DoPutin_FromDistribution(this,Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    real(kind=KMCDF),dimension(:),intent(in),allocatable::LayerThick
-    real(kind=KMCDF),dimension(:,:),intent(in),allocatable::ClustersSampleConcentrate
+    real(kind=KINDDF),dimension(:),intent(in),allocatable::LayerThick
+    real(kind=KINDDF),dimension(:,:),intent(in),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),intent(in),allocatable::ClustersSample
-    real(kind=KMCDF),intent(in)::RNFACTOR
-    real(kind=KMCDF),intent(in)::SURDIFPRE_FREE
-    real(kind=KMCDF),intent(in)::SURDIFPRE_INGB
+    real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
+    real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
     integer::MultiBox
     integer::IBox
     integer::IC
     integer::ICFROM
     integer::ICTO
-    real(kind=KMCDF)::BoxVolum
+    real(kind=KINDDF)::BoxVolum
     integer::NCEachBox
-    real(kind=KMCDF)::POS(3)
+    real(kind=KINDDF)::POS(3)
     integer::LastIndex
     integer::NClustersGroup
     integer::IGroup
     integer::ILayer
     integer::LayerNum
     integer::RemindedNum
-    real(kind=KMCDF)::GroupRateTemp
-    real(kind=KMCDF)::TotalConcentrate
-    real(kind=KMCDF)::tempRand
+    real(kind=KINDDF)::GroupRateTemp
+    real(kind=KINDDF)::TotalConcentrate
+    real(kind=KINDDF)::tempRand
     logical::exitFlag
     type(DiffusorValue)::TheDiffusorValue
     !---Body---
@@ -4090,7 +4123,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             case(p_ECR_ByValue)
                                 this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                             case(p_ECR_ByBCluster)
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                         end select
 
                         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -4135,7 +4168,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             case(p_ECR_ByValue)
                                 this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                             case(p_ECR_ByBCluster)
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                         end select
 
                         select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -4204,7 +4237,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                 case(p_ECR_ByValue)
                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                                 case(p_ECR_ByBCluster)
-                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                             end select
 
                             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -4247,7 +4280,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                 case(p_ECR_ByValue)
                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                                 case(p_ECR_ByBCluster)
-                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/RNFACTOR)
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                             end select
 
                             select case(TheDiffusorValue%DiffusorValueType_InGB)

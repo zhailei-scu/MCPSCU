@@ -34,13 +34,13 @@ module MCLIB_TYPEDEF_ACLUSTER
 
     TYPE,PUBLIC::ACluster
          type(Single_AtomsSet),dimension(p_ATOMS_GROUPS_NUMBER)::m_Atoms
-         real(kind=KMCDF),dimension(3)::m_POS PREASSIGN 0.D0
+         real(kind=KINDDF),dimension(3)::m_POS PREASSIGN 0.D0
          integer::m_Layer PREASSIGN 1
-         real(kind=KMCDF)::m_RAD PREASSIGN 0
+         real(kind=KINDDF)::m_RAD PREASSIGN 0
          integer::m_Statu PREASSIGN p_Empty
          integer,dimension(2)::m_GrainID PREASSIGN 0
-         real(kind=KMCDF)::m_DiffCoeff PREASSIGN 0.D0
-         real(kind=KMCDF),dimension(3)::m_DiffuseDirection PREASSIGN 0.D0
+         real(kind=KINDDF)::m_DiffCoeff PREASSIGN 0.D0
+         real(kind=KINDDF),dimension(3)::m_DiffuseDirection PREASSIGN 0.D0
 
          contains
          procedure,non_overridable,pass,public::CopyClusterFromOther

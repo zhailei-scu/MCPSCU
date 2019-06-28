@@ -9,7 +9,7 @@ module MIGCOALE_TIMECTL
     implicit none
 
 
-    real(kind=KMCDF), private, parameter::p_ZeroNCStep = 1.D-10
+    real(kind=KINDDF), private, parameter::p_ZeroNCStep = 1.D-10
 
     contains
 
@@ -26,12 +26,12 @@ module MIGCOALE_TIMECTL
         type(SimulationBoxes_GPU)::Dev_Boxes
         type(MigCoaleStatisticInfo_Expd)::TheMigCoaleStatisticInfo
         CLASS(SimulationRecord)::Record
-        real(kind=KMCDF)::TSTEP
+        real(kind=KINDDF)::TSTEP
         !---Local Vars---
-        real(kind=KMCDF)::SEP, DIF
+        real(kind=KINDDF)::SEP, DIF
         integer::NCActFree
         integer::NCActGB
-        real(kind=KMCDF)::TSTEPFREE,TSTEPGB
+        real(kind=KINDDF)::TSTEPFREE,TSTEPGB
         !---Body---
 
         TSTEPFREE = 1.D32
@@ -127,12 +127,12 @@ module MIGCOALE_TIMECTL
         type(MigCoaleStatisticInfo_Virtual)::TheMigCoaleStatisticInfo
         CLASS(SimulationRecord)::Record
         integer,intent(in)::ImplantedNumEachBox
-        real(kind=KMCDF),intent(out)::TheVerifyTime
+        real(kind=KINDDF),intent(out)::TheVerifyTime
         !---Local Vars---
-        real(kind=KMCDF)::SEP, DIF
+        real(kind=KINDDF)::SEP, DIF
         integer::NCActFree,NCActGB
-        real(kind=KMCDF)::RAVA
-        real(kind=KMCDF)::TSTEPFREE,TSTEPGB
+        real(kind=KINDDF)::RAVA
+        real(kind=KINDDF)::TSTEPFREE,TSTEPGB
         integer::MultiBox
         !---Body---
 

@@ -134,7 +134,7 @@ module MCLIB_Utilities_GPU
   subroutine AllocateOneDimr_GPU(Array,Length,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),device,dimension(:),allocatable::Array
+    real(kind=KINDSF),device,dimension(:),allocatable::Array
     integer,intent(in)::Length
     character(*)::Name
     !---Dummy Vars---
@@ -158,7 +158,7 @@ module MCLIB_Utilities_GPU
   subroutine AllocateOneDimd_GPU(Array,Length,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),device,dimension(:),allocatable::Array
+    real(kind=KINDDF),device,dimension(:),allocatable::Array
     integer,intent(in)::Length
     character(*)::Name
     !---Dummy Vars---
@@ -231,7 +231,7 @@ module MCLIB_Utilities_GPU
   subroutine AllocateTwoDimr_GPU(Array,LengthX,LengthY,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),device,dimension(:,:),allocatable::Array
+    real(kind=KINDSF),device,dimension(:,:),allocatable::Array
     integer,intent(in)::LengthX
     integer,intent(in)::LengthY
     character(*)::Name
@@ -256,7 +256,7 @@ module MCLIB_Utilities_GPU
   subroutine AllocateTwoDimd_GPU(Array,LengthX,LengthY,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),device,dimension(:,:),allocatable::Array
+    real(kind=KINDDF),device,dimension(:,:),allocatable::Array
     integer,intent(in)::LengthX
     integer,intent(in)::LengthY
     character(*)::Name
@@ -333,7 +333,7 @@ module MCLIB_Utilities_GPU
   subroutine AllocateThreeDimr_GPU(Array,LengthX,LengthY,LengthZ,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),device,dimension(:,:,:),allocatable::Array
+    real(kind=KINDSF),device,dimension(:,:,:),allocatable::Array
     integer,intent(in)::LengthX
     integer,intent(in)::LengthY
     integer,intent(in)::LengthZ
@@ -359,7 +359,7 @@ module MCLIB_Utilities_GPU
   subroutine AllocateThreeDimd_GPU(Array,LengthX,LengthY,LengthZ,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),device,dimension(:,:,:),allocatable::Array
+    real(kind=KINDDF),device,dimension(:,:,:),allocatable::Array
     integer,intent(in)::LengthX
     integer,intent(in)::LengthY
     integer,intent(in)::LengthZ
@@ -408,7 +408,7 @@ module MCLIB_Utilities_GPU
   subroutine DeAllocateOneDimr_GPU(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),device,dimension(:),allocatable::Array
+    real(kind=KINDSF),device,dimension(:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -430,7 +430,7 @@ module MCLIB_Utilities_GPU
   subroutine DeAllocateOneDimd_GPU(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),device,dimension(:),allocatable::Array
+    real(kind=KINDDF),device,dimension(:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -496,7 +496,7 @@ module MCLIB_Utilities_GPU
   subroutine DeAllocateTwoDimr_GPU(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),device,dimension(:,:),allocatable::Array
+    real(kind=KINDSF),device,dimension(:,:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -518,7 +518,7 @@ module MCLIB_Utilities_GPU
   subroutine DeAllocateTwoDimd_GPU(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),device,dimension(:,:),allocatable::Array
+    real(kind=KINDDF),device,dimension(:,:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -586,7 +586,7 @@ module MCLIB_Utilities_GPU
   subroutine DeAllocateThreeDimr_GPU(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),device,dimension(:,:,:),allocatable::Array
+    real(kind=KINDSF),device,dimension(:,:,:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -608,7 +608,7 @@ module MCLIB_Utilities_GPU
   subroutine DeAllocateThreeDimd_GPU(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),device,dimension(:,:,:),allocatable::Array
+    real(kind=KINDDF),device,dimension(:,:,:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat

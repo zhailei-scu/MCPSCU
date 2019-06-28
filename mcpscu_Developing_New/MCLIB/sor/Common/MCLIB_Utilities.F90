@@ -173,16 +173,16 @@ module MCLIB_UTILITIES
 
 
   !****************************************************************
-  real(kind=KMCDF) function Calc_RCUT_Old(MultiBox,CUTREGIONEXTEND,BOXVOLUM,NCAct,RMAX)
+  real(kind=KINDDF) function Calc_RCUT_Old(MultiBox,CUTREGIONEXTEND,BOXVOLUM,NCAct,RMAX)
     !---Purpose: To calculate the radium while searching nerighbor list
     !---Dummy Vars---
     integer,intent(in)::MultiBox
-    real(kind=KMCDF),intent(in)::CUTREGIONEXTEND
-    real(kind=KMCDF),intent(in)::BOXVOLUM
+    real(kind=KINDDF),intent(in)::CUTREGIONEXTEND
+    real(kind=KINDDF),intent(in)::BOXVOLUM
     integer,intent(in)::NCAct
-    real(kind=KMCDF),intent(in)::RMAX
+    real(kind=KINDDF),intent(in)::RMAX
     !---Local Vars---
-    real(kind=KMCDF)::SEP
+    real(kind=KINDDF)::SEP
 
     #ifdef MC_PROFILING
     call Time_Start(T_Calc_RCUT_Old_Start)
@@ -227,7 +227,7 @@ module MCLIB_UTILITIES
   subroutine AllocateOneDimr_Host(Array,Length,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),dimension(:),allocatable::Array
+    real(kind=KINDSF),dimension(:),allocatable::Array
     integer,intent(in)::Length
     character(*)::Name
     !---Dummy Vars---
@@ -251,7 +251,7 @@ module MCLIB_UTILITIES
   subroutine AllocateOneDimd_Host(Array,Length,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),dimension(:),allocatable::Array
+    real(kind=KINDDF),dimension(:),allocatable::Array
     integer,intent(in)::Length
     character(*)::Name
     !---Dummy Vars---
@@ -324,7 +324,7 @@ module MCLIB_UTILITIES
   subroutine AllocateTwoDimr_Host(Array,LengthX,LengthY,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),dimension(:,:),allocatable::Array
+    real(kind=KINDSF),dimension(:,:),allocatable::Array
     integer,intent(in)::LengthX
     integer,intent(in)::LengthY
     character(*)::Name
@@ -349,7 +349,7 @@ module MCLIB_UTILITIES
   subroutine AllocateTwoDimd_Host(Array,LengthX,LengthY,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),dimension(:,:),allocatable::Array
+    real(kind=KINDDF),dimension(:,:),allocatable::Array
     integer,intent(in)::LengthX
     integer,intent(in)::LengthY
     character(*)::Name
@@ -425,7 +425,7 @@ module MCLIB_UTILITIES
   subroutine AllocateThreeDimr_Host(Array,LengthX,LengthY,LengthZ,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),dimension(:,:,:),allocatable::Array
+    real(kind=KINDSF),dimension(:,:,:),allocatable::Array
     integer,intent(in)::LengthX
     integer,intent(in)::LengthY
     integer,intent(in)::LengthZ
@@ -451,7 +451,7 @@ module MCLIB_UTILITIES
   subroutine AllocateThreeDimd_Host(Array,LengthX,LengthY,LengthZ,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),dimension(:,:,:),allocatable::Array
+    real(kind=KINDDF),dimension(:,:,:),allocatable::Array
     integer,intent(in)::LengthX
     integer,intent(in)::LengthY
     integer,intent(in)::LengthZ
@@ -501,7 +501,7 @@ module MCLIB_UTILITIES
   subroutine DeAllocateOneDimr_Host(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),dimension(:),allocatable::Array
+    real(kind=KINDSF),dimension(:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -523,7 +523,7 @@ module MCLIB_UTILITIES
   subroutine DeAllocateOneDimd_Host(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),dimension(:),allocatable::Array
+    real(kind=KINDDF),dimension(:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -589,7 +589,7 @@ module MCLIB_UTILITIES
   subroutine DeAllocateTwoDimr_Host(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),dimension(:,:),allocatable::Array
+    real(kind=KINDSF),dimension(:,:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -611,7 +611,7 @@ module MCLIB_UTILITIES
   subroutine DeAllocateTwoDimd_Host(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),dimension(:,:),allocatable::Array
+    real(kind=KINDDF),dimension(:,:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -678,7 +678,7 @@ module MCLIB_UTILITIES
   subroutine DeAllocateThreeDimr_Host(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF),dimension(:,:,:),allocatable::Array
+    real(kind=KINDSF),dimension(:,:,:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -700,7 +700,7 @@ module MCLIB_UTILITIES
   subroutine DeAllocateThreeDimd_Host(Array,Name)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF),dimension(:,:,:),allocatable::Array
+    real(kind=KINDDF),dimension(:,:,:),allocatable::Array
     character(*)::Name
     !---Local Vars---
     integer::istat
@@ -758,13 +758,13 @@ module MCLIB_UTILITIES
   subroutine ResizeArrayr_OneDim(TheArray,NewSize)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF), dimension(:), allocatable,intent(inout)::TheArray
+    real(kind=KINDSF), dimension(:), allocatable,intent(inout)::TheArray
     integer,intent(in)::NewSize
     !---Local Vars---
     integer::OldSize(1)
-    real(kind=KMCSF), dimension(:), allocatable::tempArray
+    real(kind=KINDSF), dimension(:), allocatable::tempArray
     integer::istat
-    real(kind=KMCSF)::zero_Single
+    real(kind=KINDSF)::zero_Single
     !---Body----
     zero_Single = 0.D0
     OldSize = shape(TheArray)
@@ -795,13 +795,13 @@ module MCLIB_UTILITIES
   subroutine ResizeArrayd_OneDim(TheArray,NewSize)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF), dimension(:), allocatable,intent(inout)::TheArray
+    real(kind=KINDDF), dimension(:), allocatable,intent(inout)::TheArray
     integer,intent(in)::NewSize
     !---Local Vars---
     integer::OldSize(1)
-    real(kind=KMCDF), dimension(:), allocatable::tempArray
+    real(kind=KINDDF), dimension(:), allocatable::tempArray
     integer::istat
-    real(kind=KMCDF)::zero_Double
+    real(kind=KINDDF)::zero_Double
     !---Body----
     zero_Double = 0.D0
     OldSize = shape(TheArray)
@@ -949,13 +949,13 @@ module MCLIB_UTILITIES
   subroutine ResizeArrayr_TwoDim(TheArray,NewX,NewY)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCSF), dimension(:,:), allocatable::TheArray
+    real(kind=KINDSF), dimension(:,:), allocatable::TheArray
     integer::NewX
     integer::NewY
     !---Local Vars---
     integer::oldShape(2)
-    real(kind=KMCSF), dimension(:,:), allocatable::tempArray
-    real(kind=KMCSF)::zero_Single
+    real(kind=KINDSF), dimension(:,:), allocatable::tempArray
+    real(kind=KINDSF)::zero_Single
     integer::istat
     !---Body---
 
@@ -1069,13 +1069,13 @@ module MCLIB_UTILITIES
   subroutine ResizeArrayd_TwoDim(TheArray,NewX,NewY)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF), dimension(:,:), allocatable::TheArray
+    real(kind=KINDDF), dimension(:,:), allocatable::TheArray
     integer::NewX
     integer::NewY
     !---Local Vars---
     integer::oldShape(2)
-    real(kind=KMCDF), dimension(:,:), allocatable::tempArray
-    real(kind=KMCDF)::zero_Double
+    real(kind=KINDDF), dimension(:,:), allocatable::tempArray
+    real(kind=KINDDF)::zero_Double
     integer::istat
     !---Body---
 
@@ -1267,11 +1267,11 @@ module MCLIB_UTILITIES
     subroutine DumplicateArrayr_OneDim(TheArray,DumplicateNum)
         implicit none
         !---Dummy Vars---
-        real(kind=KMCSF), dimension(:), allocatable,intent(inout)::TheArray
+        real(kind=KINDSF), dimension(:), allocatable,intent(inout)::TheArray
         integer,intent(in)::DumplicateNum
         !---Local Vars---
         integer::OldSize(1)
-        real(kind=KMCSF), dimension(:), allocatable::tempArray
+        real(kind=KINDSF), dimension(:), allocatable::tempArray
         integer::NewSize
         integer::istat
         !---Body----
@@ -1305,11 +1305,11 @@ module MCLIB_UTILITIES
     subroutine DumplicateArrayd_OneDim(TheArray,DumplicateNum)
         implicit none
         !---Dummy Vars---
-        real(kind=KMCDF), dimension(:), allocatable,intent(inout)::TheArray
+        real(kind=KINDDF), dimension(:), allocatable,intent(inout)::TheArray
         integer,intent(in)::DumplicateNum
         !---Local Vars---
         integer::OldSize(1)
-        real(kind=KMCDF), dimension(:), allocatable::tempArray
+        real(kind=KINDDF), dimension(:), allocatable::tempArray
         integer::NewSize
         integer::istat
         !---Body----
@@ -1421,12 +1421,12 @@ module MCLIB_UTILITIES
     subroutine DumplicateArrayr_TwoDim(TheArray,DumplicateNum)
         implicit none
         !---Dummy Vars---
-        real(kind=KMCSF), dimension(:,:), allocatable,intent(inout)::TheArray
+        real(kind=KINDSF), dimension(:,:), allocatable,intent(inout)::TheArray
         integer,intent(in)::DumplicateNum
         !---Local Vars---
         integer::OldSize(2)
-        real(kind=KMCSF), dimension(:,:), allocatable::tempArray
-        real(kind=KMCSF)::zero_Single
+        real(kind=KINDSF), dimension(:,:), allocatable::tempArray
+        real(kind=KINDSF)::zero_Single
         integer::NewSize(2)
         integer::istat
         !---Body----
@@ -1465,12 +1465,12 @@ module MCLIB_UTILITIES
     subroutine DumplicateArrayd_TwoDim(TheArray,DumplicateNum)
         implicit none
         !---Dummy Vars---
-        real(kind=KMCDF), dimension(:,:), allocatable,intent(inout)::TheArray
+        real(kind=KINDDF), dimension(:,:), allocatable,intent(inout)::TheArray
         integer,intent(in)::DumplicateNum
         !---Local Vars---
         integer::OldSize(2)
-        real(kind=KMCDF), dimension(:,:), allocatable::tempArray
-        real(kind=KMCDF)::zero_Double
+        real(kind=KINDDF), dimension(:,:), allocatable::tempArray
+        real(kind=KINDDF)::zero_Double
         integer::NewSize(2)
         integer::istat
         !---Body----

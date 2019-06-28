@@ -8,14 +8,14 @@ module MIGCOALE_STATISTIC_GPU
     use MIGCOALE_ADDONDATA_DEV
     implicit none
 
-    real(kind=KMCDF),private,device,dimension(:,:),allocatable::dm_SumRArray
-    real(kind=KMCDF),private,dimension(:,:),allocatable::m_SumRArray
-    real(kind=KMCDF),private,device,dimension(:,:),allocatable::dm_MaxRArray
-    real(kind=KMCDF),private,dimension(:,:),allocatable::m_MaxRArray
-    real(kind=KMCDF),private,device,dimension(:,:),allocatable::dm_MinRArray
-    real(kind=KMCDF),private,dimension(:,:),allocatable::m_MinRArray
-    real(kind=KMCDF),private,device,dimension(:,:),allocatable::dm_MaxDiffArray
-    real(kind=KMCDF),private,dimension(:,:),allocatable::m_MaxDiffArray
+    real(kind=KINDDF),private,device,dimension(:,:),allocatable::dm_SumRArray
+    real(kind=KINDDF),private,dimension(:,:),allocatable::m_SumRArray
+    real(kind=KINDDF),private,device,dimension(:,:),allocatable::dm_MaxRArray
+    real(kind=KINDDF),private,dimension(:,:),allocatable::m_MaxRArray
+    real(kind=KINDDF),private,device,dimension(:,:),allocatable::dm_MinRArray
+    real(kind=KINDDF),private,dimension(:,:),allocatable::m_MinRArray
+    real(kind=KINDDF),private,device,dimension(:,:),allocatable::dm_MaxDiffArray
+    real(kind=KINDDF),private,dimension(:,:),allocatable::m_MaxDiffArray
 
     contains
 
@@ -573,10 +573,10 @@ module MIGCOALE_STATISTIC_GPU
         integer,value::BlockNumEachBox
         type(ACluster),device::DevArray(:)
         integer,device::Dev_SEIndexBox(:,:)
-        real(kind=KMCDF),device::ResultSumRadiusArray(p_NUMBER_OF_STATU,*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (x,*) for two dimension, cannot be (:,:)
-        real(kind=KMCDF),device::ResultMaxRadiusArray(p_NUMBER_OF_STATU,*)
-        real(kind=KMCDF),device::ResultMinRadiusArray(p_NUMBER_OF_STATU,*)
-        real(kind=KMCDF),device::ResultMaxDiffArray(p_NUMBER_OF_STATU,*)
+        real(kind=KINDDF),device::ResultSumRadiusArray(p_NUMBER_OF_STATU,*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (x,*) for two dimension, cannot be (:,:)
+        real(kind=KINDDF),device::ResultMaxRadiusArray(p_NUMBER_OF_STATU,*)
+        real(kind=KINDDF),device::ResultMinRadiusArray(p_NUMBER_OF_STATU,*)
+        real(kind=KINDDF),device::ResultMaxDiffArray(p_NUMBER_OF_STATU,*)
         !---Local Vars---
         integer::tid
         integer::bid
@@ -586,13 +586,13 @@ module MIGCOALE_STATISTIC_GPU
         integer::scid
         integer::ecid
         integer::IC
-        real(kind=KMCDF),shared::Share_SumRadiusOneStatu(p_Reduce_BLOCKSIZE)
-        real(kind=KMCDF),shared::Share_MaxRadiusOneStatu(p_Reduce_BLOCKSIZE)
-        real(kind=KMCDF),shared::Share_MinRadiusOneStatu(p_Reduce_BLOCKSIZE)
-        real(kind=KMCDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
+        real(kind=KINDDF),shared::Share_SumRadiusOneStatu(p_Reduce_BLOCKSIZE)
+        real(kind=KINDDF),shared::Share_MaxRadiusOneStatu(p_Reduce_BLOCKSIZE)
+        real(kind=KINDDF),shared::Share_MinRadiusOneStatu(p_Reduce_BLOCKSIZE)
+        real(kind=KINDDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
         integer::I
-        real(kind=KMCDF)::tempRadius
-        real(kind=KMCDF)::tempDIF
+        real(kind=KINDDF)::tempRadius
+        real(kind=KINDDF)::tempDIF
         integer::IStatu
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -1249,10 +1249,10 @@ module MIGCOALE_STATISTIC_GPU
 !        integer,value::BlockNumEachBox
 !        type(ACluster),device::DevArray(:)
 !        integer,device::Dev_SEIndexBox(:,:)
-!        real(kind=KMCDF),device::ResultSumRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMaxRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMinRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMaxDiffOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultSumRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMaxRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMinRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMaxDiffOneStatuArray(:)
 !        !---Local Vars---
 !        integer::tid
 !        integer::bid
@@ -1262,13 +1262,13 @@ module MIGCOALE_STATISTIC_GPU
 !        integer::scid
 !        integer::ecid
 !        integer::IC
-!        real(kind=KMCDF),shared::Share_SumRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MinRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_SumRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MinRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
 !        integer::I
-!        real(kind=KMCDF)::tempRadius
-!        real(kind=KMCDF)::tempDIF
+!        real(kind=KINDDF)::tempRadius
+!        real(kind=KINDDF)::tempDIF
 !        !---Body---
 !        tid = (threadidx%y - 1)*blockdim%x + threadidx%x
 !        bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -1380,19 +1380,19 @@ module MIGCOALE_STATISTIC_GPU
 !        type(ACluster),device::DevArray(N)
 !        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
 !        integer,device::Dev_SingleAtomsDivideArrays(:,:)
-!        real(kind=KMCDF),device::ResultSumRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMaxRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMinRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMaxDiffOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultSumRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMaxRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMinRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMaxDiffOneStatuArray(:)
 !        !---Local Vars---
 !        integer::IT,IB,IC
-!        real(kind=KMCDF),shared::Share_SumRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MinRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_SumRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MinRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
 !        integer::I
-!        real(kind=KMCDF)::tempRadius
-!        real(kind=KMCDF)::tempDIF
+!        real(kind=KINDDF)::tempRadius
+!        real(kind=KINDDF)::tempDIF
 !        type(DiffusorValue)::TheDiffusorValue
 !        integer::IATOMGROUP
 !        integer::tempNA
@@ -1534,10 +1534,10 @@ module MIGCOALE_STATISTIC_GPU
 !        type(ACluster),device::DevArray(:)
 !        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
 !        integer,device::Dev_SingleAtomsDivideArrays(:,:)
-!        real(kind=KMCDF)::SumROneStatu
-!        real(kind=KMCDF)::MaxROneStatu
-!        real(kind=KMCDF)::MinROneStatu
-!        real(kind=KMCDF)::MaxDiffOneStatu
+!        real(kind=KINDDF)::SumROneStatu
+!        real(kind=KINDDF)::MaxROneStatu
+!        real(kind=KINDDF)::MinROneStatu
+!        real(kind=KINDDF)::MaxDiffOneStatu
 !        !---Local Vars---
 !        integer::N
 !        integer::NB
@@ -1655,10 +1655,10 @@ module MIGCOALE_STATISTIC_GPU
 !        type(ACluster),device::DevArray(:)
 !        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
 !        integer,device::Dev_SingleAtomsDivideArrays(:,:)
-!        real(kind=KMCDF)::SumROneStatu
-!        real(kind=KMCDF)::MaxROneStatu
-!        real(kind=KMCDF)::MinROneStatu
-!        real(kind=KMCDF)::MaxDiffOneStatu
+!        real(kind=KINDDF)::SumROneStatu
+!        real(kind=KINDDF)::MaxROneStatu
+!        real(kind=KINDDF)::MinROneStatu
+!        real(kind=KINDDF)::MaxDiffOneStatu
 !        !---Local Vars---
 !        integer::N
 !        integer::NB
@@ -1764,10 +1764,10 @@ module MIGCOALE_STATISTIC_GPU
 !        type(ACluster),device::DevArray(:)
 !        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
 !        integer,device::Dev_SingleAtomsDivideArrays(:,:)
-!        real(kind=KMCDF)::SumROneStatu
-!        real(kind=KMCDF)::MaxROneStatu
-!        real(kind=KMCDF)::MinROneStatu
-!        real(kind=KMCDF)::MaxDiffOneStatu
+!        real(kind=KINDDF)::SumROneStatu
+!        real(kind=KINDDF)::MaxROneStatu
+!        real(kind=KINDDF)::MinROneStatu
+!        real(kind=KINDDF)::MaxDiffOneStatu
 !        !---Local Vars---
 !        integer::N
 !        integer::NB
@@ -1883,10 +1883,10 @@ module MIGCOALE_STATISTIC_GPU
 !        type(ACluster),device::DevArray(:)
 !        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
 !        integer,device::Dev_SingleAtomsDivideArrays(:,:)
-!        real(kind=KMCDF)::SumROneStatu
-!        real(kind=KMCDF)::MaxROneStatu
-!        real(kind=KMCDF)::MinROneStatu
-!        real(kind=KMCDF)::MaxDiffOneStatu
+!        real(kind=KINDDF)::SumROneStatu
+!        real(kind=KINDDF)::MaxROneStatu
+!        real(kind=KINDDF)::MinROneStatu
+!        real(kind=KINDDF)::MaxDiffOneStatu
 !        !---Local Vars---
 !        integer::N
 !        integer::NB
@@ -1996,19 +1996,19 @@ module MIGCOALE_STATISTIC_GPU
 !        type(ACluster),device::DevArray(N)
 !        type(DiffusorTypeEntity),device::Dev_TypesMap(:)
 !        integer,device::Dev_SingleAtomsDivideArrays(:,:)
-!        real(kind=KMCDF),device::ResultSumRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMaxRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMinRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::ResultMaxDiffOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultSumRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMaxRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMinRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::ResultMaxDiffOneStatuArray(:)
 !        !---Local Vars---
 !        integer::IT,IB,IC
-!        real(kind=KMCDF),shared::Share_SumRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MinRadiusOneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_SumRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MinRadiusOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
 !        integer::I
-!        real(kind=KMCDF)::tempRadius
-!        real(kind=KMCDF)::tempDIF
+!        real(kind=KINDDF)::tempRadius
+!        real(kind=KINDDF)::tempDIF
 !        integer::IAtomsGroup
 !        type(DiffusorValue)::TheDiffusorValue
 !        integer::tempNA
@@ -2104,16 +2104,16 @@ module MIGCOALE_STATISTIC_GPU
 !        implicit none
 !        !---Dummy Vars---
 !        integer,value::N
-!        real(kind=KMCDF),device::SumRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::MaxRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::MinRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::MaxDiffOneStatuArray(:)
+!        real(kind=KINDDF),device::SumRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::MaxRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::MinRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::MaxDiffOneStatuArray(:)
 !        !---Local Vars---
 !        integer::IT,IB,IC
-!        real(kind=KMCDF),shared::Share_SumROneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxROneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MinROneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_SumROneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxROneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MinROneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
 !        integer::I
 !        !---Body---
 !        IT = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -2181,16 +2181,16 @@ module MIGCOALE_STATISTIC_GPU
 !        implicit none
 !        !---Dummy Vars---
 !        integer,value::N
-!        real(kind=KMCDF),device::SumRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::MaxRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::MinRadiusOneStatuArray(:)
-!        real(kind=KMCDF),device::MaxDiffOneStatuArray(:)
+!        real(kind=KINDDF),device::SumRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::MaxRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::MinRadiusOneStatuArray(:)
+!        real(kind=KINDDF),device::MaxDiffOneStatuArray(:)
 !        !---Local Vars---
 !        integer::IT,IB,IC
-!        real(kind=KMCDF),shared::Share_SumROneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxROneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MinROneStatu(p_Reduce_BLOCKSIZE)
-!        real(kind=KMCDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_SumROneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxROneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MinROneStatu(p_Reduce_BLOCKSIZE)
+!        real(kind=KINDDF),shared::Share_MaxDiffOneStatu(p_Reduce_BLOCKSIZE)
 !        integer::I
 !        !---Body---
 !        IT = (threadidx%y - 1)*blockdim%x + threadidx%x

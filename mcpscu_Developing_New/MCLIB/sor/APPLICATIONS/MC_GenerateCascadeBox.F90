@@ -16,8 +16,8 @@ program Main_MC_GenerateCascadeBox
     integer::MultiBox
     integer::CascadeNum
     integer::ClusterNumOneCase
-    real(kind=KMCDF),dimension(:,:),allocatable::Sphere_Central
-    real(kind=KMCDF),dimension(:),allocatable::Sphere_Radius
+    real(kind=KINDDF),dimension(:,:),allocatable::Sphere_Central
+    real(kind=KINDDF),dimension(:),allocatable::Sphere_Radius
     integer::I
     integer::IBox
     integer::ICase
@@ -27,9 +27,9 @@ program Main_MC_GenerateCascadeBox
     integer::ISEED0,ISEED(2)
     integer::SIAIndex
     integer::VacancyIndex
-    real(kind=KMCDF)::VectorLen
-    real(kind=KMCDF)::ZDirection
-    real(kind=KMCDF)::XDirection
+    real(kind=KINDDF)::VectorLen
+    real(kind=KINDDF)::ZDirection
+    real(kind=KINDDF)::XDirection
     integer::ExitCount
     !-----------Body--------------
     processid = 0
@@ -88,8 +88,8 @@ program Main_MC_GenerateCascadeBox
                     ExitCount = 0
 
                     VectorLen = Sphere_Radius(ICase)*DRAND32()
-                    ZDirection = DRAND32()*PI
-                    XDirection = DRAND32()*2*PI
+                    ZDirection = DRAND32()*CP_PI
+                    XDirection = DRAND32()*2*CP_PI
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + VectorLen*sin(ZDirection)*cos(XDirection)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + VectorLen*sin(ZDirection)*sin(XDirection)
@@ -133,8 +133,8 @@ program Main_MC_GenerateCascadeBox
                     ExitCount = 0
 
                     VectorLen = Sphere_Radius(ICase)*DRAND32()
-                    ZDirection = DRAND32()*PI
-                    XDirection = DRAND32()*2*PI
+                    ZDirection = DRAND32()*CP_PI
+                    XDirection = DRAND32()*2*CP_PI
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + VectorLen*sin(ZDirection)*cos(XDirection)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + VectorLen*sin(ZDirection)*sin(XDirection)

@@ -10,7 +10,7 @@ module MCLIB_TYPEDEF_ATOMSLIST
 
         real::m_AtomMass = 0.D0
 
-        real(KIND=KMCDF)::m_Volum = 0.D0      ! the volum of the atom (only need by matrix atoms)
+        real(KIND=KINDDF)::m_Volum = 0.D0      ! the volum of the atom (only need by matrix atoms)
 
         contains
         procedure,non_overridable,private,pass::CopyAtomFromOther

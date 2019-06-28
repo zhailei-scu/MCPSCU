@@ -1,6 +1,7 @@
 module MC_StatisticClusters_Offline
     use MCLIB_GLOBAL
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
+    use MODEL_ECR_CPU
     implicit none
 
     logical,private::FirstTimeVist = .true.
@@ -30,10 +31,10 @@ module MC_StatisticClusters_Offline
         character*28,dimension(:),allocatable::CNAVA
         character*28,dimension(:),allocatable::CNAVA_GTNAtom
         character*256::CNUM_GT
-        real(kind=KMCDF),dimension(:),allocatable::NAVAEachBox
-        real(kind=KMCDF),dimension(:),allocatable::NAVAEachBox_GTNAtom
-        real(kind=KMCDF)::NAVA(p_NUMBER_OF_STATU)
-        real(kind=KMCDF)::NAVA_GTNAtom(p_NUMBER_OF_STATU)
+        real(kind=KINDDF),dimension(:),allocatable::NAVAEachBox
+        real(kind=KINDDF),dimension(:),allocatable::NAVAEachBox_GTNAtom
+        real(kind=KINDDF)::NAVA(p_NUMBER_OF_STATU)
+        real(kind=KINDDF)::NAVA_GTNAtom(p_NUMBER_OF_STATU)
         integer,dimension(:),allocatable::NCCountEachBox
         integer,dimension(:),allocatable::NCCountEachBox_GTNAtom
         integer::NCCount(p_NUMBER_OF_STATU)
@@ -281,7 +282,7 @@ program Main_StatisticClusters_Offline
                 !*******Init the simulation boxes*****************
                 call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
 
-                call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,pathIn,m_RNFACTOR,m_FREESURDIFPRE,m_GBSURDIFPRE)
+                call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,pathIn,m_FREESURDIFPRE,m_GBSURDIFPRE)
 
                 GTNAtom = 1
 

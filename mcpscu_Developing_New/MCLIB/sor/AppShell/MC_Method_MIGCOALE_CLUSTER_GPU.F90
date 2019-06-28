@@ -30,25 +30,25 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         character*10::Elemets(p_ATOMS_GROUPS_NUMBER) = ""
 
-        real(kind=KMCDF)::NAINI = 0.D0
+        real(kind=KINDDF)::NAINI = 0.D0
 
-        real(kind=KMCDF)::NASDINI = 0.D0
+        real(kind=KINDDF)::NASDINI = 0.D0
 
-        real(kind=KMCDF)::NACUT(2) = 0.D0
+        real(kind=KINDDF)::NACUT(2) = 0.D0
 
-        real(kind=KMCDF)::CompositWeight(p_ATOMS_GROUPS_NUMBER) = 0.D0
+        real(kind=KINDDF)::CompositWeight(p_ATOMS_GROUPS_NUMBER) = 0.D0
 
         integer::InitDepthDistType = -1
 
-        real(kind=KMCDF)::DepthINI = 0.D0
+        real(kind=KINDDF)::DepthINI = 0.D0
 
-        real(kind=KMCDF)::DepthSDINI = 0.D0
+        real(kind=KINDDF)::DepthSDINI = 0.D0
 
-        real(kind=KMCDF)::SUBBOXBOUNDARY(3,2) = 0.D0
+        real(kind=KINDDF)::SUBBOXBOUNDARY(3,2) = 0.D0
 
-        real(kind=KMCDF),dimension(:),allocatable::LayerThick
+        real(kind=KINDDF),dimension(:),allocatable::LayerThick
 
-        real(kind=KMCDF),dimension(:),allocatable::PNCLayers
+        real(kind=KINDDF),dimension(:),allocatable::PNCLayers
 
         contains
         procedure,non_overridable,public,pass::CopyInitBoxSimCfgFromOther
@@ -321,7 +321,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer, intent(in)::NC0
         integer, optional::NCUT
         !---local vars---
-        real(kind=KMCDF):: TSTEP, RCUT
+        real(kind=KINDDF):: TSTEP, RCUT
         integer::NAct
         integer::IBox
         logical::HasUpdateStatis
@@ -396,7 +396,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(ImplantSection)::TheImplantSection
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
-        real(kind=KMCDF)::TSTEP
+        real(kind=KINDDF)::TSTEP
         !---Local Vars---
 
         call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
@@ -1131,8 +1131,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::N
         integer::LayerNum
         integer::I
-        real(kind=KMCDF)::TotalLayerThick
-        real(kind=KMCDF)::TotalPNC
+        real(kind=KINDDF)::TotalLayerThick
+        real(kind=KINDDF)::TotalPNC
         !---Body---
 
         DO While(.true.)
@@ -1335,7 +1335,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(InitBoxSimCfg)::InitBoxCfg
         !---Body---
 
-        call SimBoxes%PutinCfg(Host_SimuCtrlParam,Record,InitBoxCfg%InitCfgFileName,m_RNFACTOR,m_FREESURDIFPRE,m_GBSURDIFPRE)
+        call SimBoxes%PutinCfg(Host_SimuCtrlParam,Record,InitBoxCfg%InitCfgFileName,m_FREESURDIFPRE,m_GBSURDIFPRE)
 
         return
     end subroutine DoInitSimulationBoxesConfig_SpecialDistFromFile
@@ -1364,10 +1364,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
       type(InitBoxSimCfg)::InitBoxCfg
       !-----local variables---
       integer::MultiBox
-      real(kind=KMCDF)::POS(3)
-      real(kind=KMCDF)::Z0
-      real(kind=KMCDF)::BOXBOUNDARY(3,2)
-      real(kind=KMCDF)::BOXSIZE(3)
+      real(kind=KINDDF)::POS(3)
+      real(kind=KINDDF)::Z0
+      real(kind=KINDDF)::BOXBOUNDARY(3,2)
+      real(kind=KINDDF)::BOXSIZE(3)
       integer::IBox, II, IC, LAY, PNC
       integer::J
       integer::SNC0,SNC
@@ -1435,7 +1435,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     case(p_ECR_ByValue)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                     case(p_ECR_ByBCluster)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1485,8 +1485,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
       type(InitBoxSimCfg)::InitBoxCfg
       !-----local variables---
       integer::MultiBox
-      real(kind=KMCDF)::POS(3)
-      real(kind=KMCDF)::SUBBOXSIZE(3)
+      real(kind=KINDDF)::POS(3)
+      real(kind=KINDDF)::SUBBOXSIZE(3)
       integer::IBox, II, IC
       integer::SNC0
       integer::I
@@ -1537,7 +1537,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 case(p_ECR_ByValue)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                 case(p_ECR_ByBCluster)
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1585,10 +1585,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(InitBoxSimCfg)::InitBoxCfg
         !---local variables---
         integer::MultiBox
-        real(kind=KMCDF)::POS(3)
-        real(kind=KMCDF)::SEP
-        real(kind=KMCDF)::BOXBOUNDARY(3,2)
-        real(kind=KMCDF)::BOXSIZE(3)
+        real(kind=KINDDF)::POS(3)
+        real(kind=KINDDF)::SEP
+        real(kind=KINDDF)::BOXBOUNDARY(3,2)
+        real(kind=KINDDF)::BOXSIZE(3)
         integer::IBox,II,IC
         integer::SNC0
         integer::NAtoms
@@ -1646,7 +1646,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     case(p_ECR_ByValue)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                     case(p_ECR_ByBCluster)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1788,11 +1788,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer,intent(in)::Model                           ! 1 would output ot file
         !---Local Vars---
         integer::MultiBox
-        real(kind=KMCDF)::RMIN
-        real(kind=KMCDF)::Concentrate
+        real(kind=KINDDF)::RMIN
+        real(kind=KINDDF)::Concentrate
         integer::NCAct
-        real(kind=KMCDF)::RAVA
-        real(kind=KMCDF)::NAVA
+        real(kind=KINDDF)::RAVA
+        real(kind=KINDDF)::NAVA
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -1904,11 +1904,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Local Vars---
         integer::IBox
         integer::MultiBox
-        real(kind=KMCDF)::RMIN
-        real(kind=KMCDF)::Concentrate
+        real(kind=KINDDF)::RMIN
+        real(kind=KINDDF)::Concentrate
         integer::NCAct
-        real(kind=KMCDF)::RAVA
-        real(kind=KMCDF)::NAVA
+        real(kind=KINDDF)::RAVA
+        real(kind=KINDDF)::NAVA
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 

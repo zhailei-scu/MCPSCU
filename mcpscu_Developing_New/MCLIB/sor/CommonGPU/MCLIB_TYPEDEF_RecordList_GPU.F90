@@ -13,7 +13,7 @@ module MCLIB_TYPEDEF_RECORDLIST_GPU
             type(SimulationBoxes)::Host_Boxes
             type(SimulationCtrlParam)::Host_SimuCtrlParam
             type(SimulationBoxes_GPU)::Dev_Boxes
-            real(kind=KMCDF)::TSTEP
+            real(kind=KINDDF)::TSTEP
             CLASS(SimulationRecord)::SimRecord
         end subroutine
     end interface
@@ -45,7 +45,7 @@ module MCLIB_TYPEDEF_RECORDLIST_GPU
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        real(kind=KMCDF)::TSTEP
+        real(kind=KINDDF)::TSTEP
         CLASS(SimulationRecord)::SimRecord
         !---Local Vars---
         type(OneStepProcedureList),pointer::cursor=>null()

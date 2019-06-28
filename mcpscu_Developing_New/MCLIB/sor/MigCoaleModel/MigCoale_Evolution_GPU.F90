@@ -6,6 +6,7 @@ module MIGCOALE_EVOLUTION_GPU
   use MIGCOALE_GLOBALVARS_DEV
   use MIGCOALE_ADDONDATA_DEV
   use MCLIB_TYPEDEF_GEOMETRY_GPU
+  use MODEL_ECR_GPU
   implicit none
 
   contains
@@ -18,7 +19,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
     type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
-    real(kind=KMCDF)::TSTEP
+    real(kind=KINDDF)::TSTEP
     !---Local Vars---
     integer::MULTIBOX
     integer::IBox
@@ -101,31 +102,31 @@ module MIGCOALE_EVOLUTION_GPU
     integer,value::TotalNC
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
-    real(kind=KMCDF),device::Dev_RandArray(:)
+    real(kind=KINDDF),device::Dev_RandArray(:)
     integer,device::Dev_ActiveStatu(:)
     integer,value::NSeeds
     type(GrainSeed),device::Dev_GrainSeeds(:)
     type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
     integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
-    real(kind=KMCDF),value::TSTEP
+    real(kind=KINDDF),value::TSTEP
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
     integer::IBox
     integer::scid,ecid
-    real(kind=KMCDF)::tempPos(3)
-    real(kind=KMCDF)::crossPos(3)
-    real(kind=KMCDF)::normVector(3)
-    real(kind=KMCDF)::ArrowLen
-    real(kind=KMCDF)::RR
-    real(kind=KMCDF)::POS(3)
-    real(kind=KMCSF)::SEP(3)
-    real(kind=KMCDF)::Seed1Pos(3)
-    real(kind=KMCDF)::Seed2Pos(3)
+    real(kind=KINDDF)::tempPos(3)
+    real(kind=KINDDF)::crossPos(3)
+    real(kind=KINDDF)::normVector(3)
+    real(kind=KINDDF)::ArrowLen
+    real(kind=KINDDF)::RR
+    real(kind=KINDDF)::POS(3)
+    real(kind=KINDSF)::SEP(3)
+    real(kind=KINDDF)::Seed1Pos(3)
+    real(kind=KINDDF)::Seed2Pos(3)
     integer::SeedID
     integer::Statu
     type(DiffusorValue)::TheDiffusorValue
-    real(kind=KMCDF)::VectorLen
+    real(kind=KINDDF)::VectorLen
     integer::RandomSign
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -218,7 +219,7 @@ module MIGCOALE_EVOLUTION_GPU
                 case(p_ECR_ByValue)
                     Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                 case(p_ECR_ByBCluster)
-                    Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                    Dev_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -364,15 +365,15 @@ module MIGCOALE_EVOLUTION_GPU
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
     type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
-    real(kind=KMCDF)::TSTEP
+    real(kind=KINDDF)::TSTEP
     !---Local Vars---
     integer::MULTIBOX
     integer::BlockNumEachBox
     type(dim3)::blocks
     type(dim3)::threads
     integer::BX,BY,NB,err
-    real(kind=KMCDF)::ATOMV0
-    real(kind=KMCDF)::DIF0
+    real(kind=KINDDF)::ATOMV0
+    real(kind=KINDDF)::DIF0
     integer::TotalNC
     !---Body---
 
@@ -465,9 +466,9 @@ module MIGCOALE_EVOLUTION_GPU
     integer::IC
     integer::IBox
     integer::scid,ecid
-    real(kind=KMCSF)::Pos_X,Pos_Y,Pos_Z
-    real(kind=KMCSF)::Sep_X,Sep_Y,Sep_Z
-    real(kind=KMCSF)::RADA,RADB,DIST,RR
+    real(kind=KINDSF)::Pos_X,Pos_Y,Pos_Z
+    real(kind=KINDSF)::Sep_X,Sep_Y,Sep_Z
+    real(kind=KINDSF)::RADA,RADB,DIST,RR
     integer::N_Neighbor,NewNA
     integer::I,J,JC,NN
     !---Body---
@@ -570,7 +571,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::Dev_DiffuSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
     integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
-    real(kind=KMCDF),device::Dev_RandArran_Reaction(:)
+    real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
     integer,device::Dev_ActiveStatu(:)
@@ -589,7 +590,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::ObjectStatu
     type(DiffusorValue)::TheDiffusorValue
     type(ReactionValue)::TheReactionValue
-    real(kind=KMCDF)::ReactionCoeff
+    real(kind=KINDDF)::ReactionCoeff
     integer::SubjectElementIndex
     integer::ObjectElementIndex
     integer::SubjectNANum
@@ -737,7 +738,7 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                     case(p_ECR_ByBCluster)
-                        Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                        Dev_Clusters(IC)%m_RAD =  Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -764,7 +765,7 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                     case(p_ECR_ByBCluster)
-                        Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                        Dev_Clusters(IC)%m_RAD =  Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -825,7 +826,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::Dev_DiffuSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
     integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
-    real(kind=KMCDF),device::Dev_RandArran_Reaction(:)
+    real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
     integer,device::Dev_ActiveStatu(:)
@@ -844,7 +845,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::ObjectStatu
     type(DiffusorValue)::TheDiffusorValue
     type(ReactionValue)::TheReactionValue
-    real(kind=KMCDF)::ReactionCoeff
+    real(kind=KINDDF)::ReactionCoeff
     integer::SubjectElementIndex
     integer::ObjectElementIndex
     integer::SubjectNANum
@@ -992,7 +993,7 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                     case(p_ECR_ByBCluster)
-                        Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                        Dev_Clusters(IC)%m_RAD =  Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1019,7 +1020,7 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                     case(p_ECR_ByBCluster)
-                        Dev_Clusters(IC)%m_RAD = DSQRT(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                        Dev_Clusters(IC)%m_RAD =  Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_InGB)

@@ -19,13 +19,13 @@ module MIGCOALE_GLOBALVARS_DEV
         integer(kind=int_ptr_kind())::m_ranGen_ClustersSizeDist = 0
         !---Random number array In Device
         ! The random array for diffusion direction choose
-        real(kind=KMCDF),device,dimension(:),allocatable::dm_RandArray_Walk
+        real(kind=KINDDF),device,dimension(:),allocatable::dm_RandArray_Walk
         ! The random array for reactions determine
-        real(kind=KMCDF),device,dimension(:),allocatable::dm_RandArray_Reaction
+        real(kind=KINDDF),device,dimension(:),allocatable::dm_RandArray_Reaction
         ! The space distribution array for new Implant clusters
-        real(kind=KMCDF),device,dimension(:),allocatable::dm_SpaceDist_Implant
+        real(kind=KINDDF),device,dimension(:),allocatable::dm_SpaceDist_Implant
         ! The size distribution array for new Implant clusters
-        real(kind=KMCDF),device,dimension(:),allocatable::dm_SizeDist_Implant
+        real(kind=KINDDF),device,dimension(:),allocatable::dm_SizeDist_Implant
 
         contains
 

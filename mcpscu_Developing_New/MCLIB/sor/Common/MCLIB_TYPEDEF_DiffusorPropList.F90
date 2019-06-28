@@ -802,30 +802,5 @@ module MCLIB_TYPEDEF_DiffusorPropList
         return
     end subroutine CleanReadDiffusorPropList
 
-    !**************************************************
-    subroutine ResloveDiffusorsValueFromCScript(scriptStr,DiffusorProp_List)
-        implicit none
-        !---Dummy Vars---
-        character(kind=c_char,len=10000)::scriptStr
-        type(ReadDiffusorPropList)::DiffusorProp_List
-        !---Local Vars---
-        type(ReadedDiffusorValue),allocatable::FDiffusorDefArray(:)
-        integer(kind=c_int)::ArraySize
-        !---Body---
-
-        ArraySize = InterpCScript_DiffusorsDef(scriptStr)
-
-        if(allocated(FDiffusorDefArray)) then
-            deallocate(FDiffusorDefArray)
-        end if
-        allocate(FDiffusorDefArray(ArraySize))
-
-        call GetInterpedDiffusorsArray(FDiffusorDefArray)
-
-        call AppendArray_ReadDiffusorPropList(DiffusorProp_List,FDiffusorDefArray,ArraySize)
-
-        return
-    end subroutine ResloveDiffusorsValueFromCScript
-
 
 end module MCLIB_TYPEDEF_DiffusorPropList

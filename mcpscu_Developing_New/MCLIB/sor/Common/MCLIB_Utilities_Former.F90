@@ -673,9 +673,9 @@ module MCLIB_UTILITIES_FORMER
   function RGAUSS0_WithCut(XMEAN,SD,LCut,RCut) result(TheResult)
         implicit none
         !---dummy vars---
-        real(kind=KMCDF)::XMEAN,SD
-        real(kind=KMCDF)::LCut,RCut
-        real(kind=KMCDF)::TheResult
+        real(kind=KINDDF)::XMEAN,SD
+        real(kind=KINDDF)::LCut,RCut
+        real(kind=KINDDF)::TheResult
         !---Local vars---
         integer::I
         !---Body---
@@ -711,7 +711,7 @@ module MCLIB_UTILITIES_FORMER
 
   !**** Random number generators
   !     The fisrt one is RAND()
-  real(kind=KMCDF) function RAND()
+  real(kind=KINDDF) function RAND()
     !
     !     THIS IS AN ADAPTED VERSION OF SUBROUTINE RANECU WRITTEN BY
     !  F. JAMES (COMPUT. PHYS. COMMUN. 60 (1990) 329-344), WHICH HAS
@@ -723,7 +723,7 @@ module MCLIB_UTILITIES_FORMER
     implicit none
     !IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER*4 (I)
     !---Local Vars---
-    real(kind=KMCDF),parameter::USCALE=1.0D0/2.0D0**31
+    real(kind=KINDDF),parameter::USCALE=1.0D0/2.0D0**31
     integer::ISEED1,ISEED2,I1,I2,IZ
     common/RSEED/ISEED1,ISEED2
 
@@ -806,10 +806,10 @@ module MCLIB_UTILITIES_FORMER
   end subroutine RAND_GETSEED
 
   !**************************************************************
-  real(kind=KMCDF) function RGAUSS0(XMEAN,SD)
+  real(kind=KINDDF) function RGAUSS0(XMEAN,SD)
     implicit none
     !---dummy vars---
-    real(kind=KMCDF)::XMEAN,SD
+    real(kind=KINDDF)::XMEAN,SD
     !---Local vars---
     integer::I
 
@@ -831,10 +831,10 @@ module MCLIB_UTILITIES_FORMER
   end  function RGAUSS0
 
   !**************************************************************
-  real(kind=KMCDF) function RGAUSS(XMEAN,SD, reset)
+  real(kind=KINDDF) function RGAUSS(XMEAN,SD, reset)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF)::XMEAN,SD
+    real(kind=KINDDF)::XMEAN,SD
     integer, optional::reset
     !---Local Vars---
     integer::I, idum=0
@@ -878,7 +878,7 @@ module MCLIB_UTILITIES_FORMER
     integer idum
     !---Local Vars---
     integer IA,IM,IQ,IR,MASK
-    real(kind=KMCDF) ran0,AM
+    real(kind=KINDDF) ran0,AM
     parameter (IA=16807,IM=2147483647,AM=1./IM,IQ=127773,IR=2836,MASK=123459876)
     integer k
 
@@ -907,7 +907,7 @@ module MCLIB_UTILITIES_FORMER
     integer idum
     !---Local Vars---
     integer IA,IM,IQ,IR,NTAB,NDIV
-    real(kind=KMCDF)  ran1,AM,EPS,RNMX
+    real(kind=KINDDF)  ran1,AM,EPS,RNMX
     parameter (IA=16807,IM=2147483647,AM=1./IM,IQ=127773,IR=2836, NTAB=32,NDIV=1+(IM-1)/NTAB,EPS=1.2e-7,RNMX=1.-EPS)
     integer j,k,iv(NTAB),iy
     save iv,iy
@@ -949,7 +949,7 @@ module MCLIB_UTILITIES_FORMER
     integer idum
     !---Local Vars---
     integer IM1,IM2,IMM1,IA1,IA2,IQ1,IQ2,IR1,IR2,NTAB,NDIV
-    real(kind=KMCDF)  ran2,AM,EPS,RNMX
+    real(kind=KINDDF)  ran2,AM,EPS,RNMX
     parameter (IM1=2147483563,IM2=2147483399,AM=1./IM1,IMM1=IM1-1, &
                IA1=40014,IA2=40692,IQ1=53668,IQ2=52774,IR1=12211,IR2=3791, &
                NTAB=32,NDIV=1+IMM1/NTAB,EPS=1.2e-7,RNMX=1.-EPS)
@@ -998,7 +998,7 @@ module MCLIB_UTILITIES_FORMER
     integer idum
     !---Local Vars---
     integer MBIG,MSEED,MZ
-    real(kind=KMCDF) ran3,FAC
+    real(kind=KINDDF) ran3,FAC
     parameter (MBIG=1000000000,MSEED=161803398,MZ=0,FAC=1./MBIG)
     integer i,iff,ii,inext,inextp,k
     integer mj,mk,ma(55)
@@ -1053,7 +1053,7 @@ module MCLIB_UTILITIES_FORMER
   function ran4(idum)
     integer idum
     !---Dummy Vars---
-    real(kind=KMCDF) ran4
+    real(kind=KINDDF) ran4
     integer idums
     !---Local Vars---
     integer irword,itemp,jflmsk,jflone,lword
@@ -1125,10 +1125,10 @@ module MCLIB_UTILITIES_FORMER
     implicit none
     !---Dummy Vars---
     integer idum
-    real(kind=KMCDF) gasdev
+    real(kind=KINDDF) gasdev
     !---Local Vars---
     integer iset
-    real(kind=KMCDF) fac,gset,rsq,v1,v2
+    real(kind=KINDDF) fac,gset,rsq,v1,v2
     save   iset,gset
     DATA iset/0/
 
@@ -1160,12 +1160,12 @@ module MCLIB_UTILITIES_FORMER
   function SCALEDCFunction1(r, rav, m, sep, rp) result(DN)
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF)::r, rav, m
-    real(kind=KMCDF)::DN, sep
-    real(kind=KMCDF), optional::rp
+    real(kind=KINDDF)::r, rav, m
+    real(kind=KINDDF)::DN, sep
+    real(kind=KINDDF), optional::rp
     !---Local Vars---
-    real(kind=KMCDF)::PP
-    real(kind=KMCDF), parameter::C_4PI_3 = (4.D0*PI)/3.D0
+    real(kind=KINDDF)::PP
+    real(kind=KINDDF), parameter::C_4PI_3 = (4.D0*CP_PI)/3.D0
 
     #ifdef MC_PROFILING
     call Time_Start(T_SCALEDCFunction1_Start)
@@ -1208,24 +1208,24 @@ module MCLIB_UTILITIES_FORMER
     !  IER=0 IF THE INTEGRATION ALGORITHM HAS BEEN ABLE TO GET THE
     !  REQUIRED ACCURACY AND IER=1 OTHERWISE.
     implicit none
-    real(kind=KMCDF)::FCT
-    real(kind=KMCDF)::XL,XU,SUM,TOL
-    integer(kind=KMCINT)::IER
+    real(kind=KINDDF)::FCT
+    real(kind=KINDDF)::XL,XU,SUM,TOL
+    integer(kind=KINDINT)::IER
     !***  Working space
-    real(kind=KMCDF)::S(128),SN(128), CTOL, PTOL, ERR, H, A, B, C, D, HO, ASUM, SI, XA, XB, XC, S1, S2, S12
-    integer(kind=KMCINT)::L(128),LN(128), I1, I2, I3, ICALL, LH, LHN, I, K
+    real(kind=KINDDF)::S(128),SN(128), CTOL, PTOL, ERR, H, A, B, C, D, HO, ASUM, SI, XA, XB, XC, S1, S2, S12
+    integer(kind=KINDINT)::L(128),LN(128), I1, I2, I3, ICALL, LH, LHN, I, K
     !****  PRINTED OUTPUT OF PARTIAL RESULTS: SET IWR=1.
-    integer(kind=KMCINT), parameter::IWR= 0
+    integer(kind=KINDINT), parameter::IWR= 0
     !****  COEFFICIENTS FOR GAUSS 20-POINT INTEGRATION.
-    integer(kind=KMCINT), parameter:: NP=10,NP2=20,NP4=40
+    integer(kind=KINDINT), parameter:: NP=10,NP2=20,NP4=40
     !****  ABSCISSAS.
-    real(kind=KMCDF), parameter::X(10)=(/7.6526521133497334D-02,2.2778585114164508D-01,   &
+    real(kind=KINDDF), parameter::X(10)=(/7.6526521133497334D-02,2.2778585114164508D-01,   &
              3.7370608871541956D-01,5.1086700195082710D-01,   &
              6.3605368072651503D-01,7.4633190646015079D-01,   &
              8.3911697182221882D-01,9.1223442825132591D-01,   &
              9.6397192727791379D-01,9.9312859918509492D-01/)
     !****  WEIGHTS.
-    real(kind=KMCDF), parameter::W(10)=(/1.5275338713072585D-01,1.4917298647260375D-01,   &
+    real(kind=KINDDF), parameter::W(10)=(/1.5275338713072585D-01,1.4917298647260375D-01,   &
              1.4209610931838205D-01,1.3168863844917663D-01,   &
              1.1819453196151842D-01,1.0193011981724044D-01,   &
              8.3276741576704749D-02,6.2672048334109064D-02,   &
@@ -1367,12 +1367,12 @@ module MCLIB_UTILITIES_FORMER
     !
     implicit none
     !---Dummy Vars---
-    real(kind=KMCDF), intent(in)::X(*),Y(*), S1, SN
-    real(kind=KMCDF)::A(*),B(*),D(*), C(*)
-    integer(kind=KMCINT), intent(in)::N
+    real(kind=KINDDF), intent(in)::X(*),Y(*), S1, SN
+    real(kind=KINDDF)::A(*),B(*),D(*), C(*)
+    integer(kind=KINDINT), intent(in)::N
     !---Local Vars---
-    integer(kind=KMCINT)::N1, N2, I, K
-    real(kind=KMCDF)::R, SI, SI1, H, HI
+    integer(kind=KINDINT)::N1, N2, I, K
+    real(kind=KINDDF)::R, SI, SI1, H, HI
 
 
     #ifdef MC_PROFILING
@@ -1453,13 +1453,13 @@ module MCLIB_UTILITIES_FORMER
     !
     implicit none
     !---Dummy Vars---
-    integer(kind=KMCINT),intent(in)::N
-    real(kind=KMCDF),intent(in)::X(N),A(N),B(N),C(N),D(N)
-    real(kind=KMCDF)::XL, XU, SUM
+    integer(kind=KINDINT),intent(in)::N
+    real(kind=KINDDF),intent(in)::X(N),A(N),B(N),C(N),D(N)
+    real(kind=KINDDF)::XL, XU, SUM
 
     !---Local Vars---
-    real(kind=KMCDF)::SIGN, X1, X2, SUMP
-    integer(kind=KMCINT)::IWR, IL, IU, I
+    real(kind=KINDDF)::SIGN, X1, X2, SUMP
+    integer(kind=KINDINT)::IWR, IL, IU, I
 
     #ifdef MC_PROFILING
     call Time_Start(T_INTEG_Start)
@@ -1527,11 +1527,11 @@ module MCLIB_UTILITIES_FORMER
     !
     implicit none
     !---Dummy Vars---
-    integer(KIND=KMCINT), intent(in)::N
-    integer(KIND=KMCINT),intent(out)::I
-    real(KIND=KMCDF), intent(in)::X(*), XC
+    integer(KIND=KINDINT), intent(in)::N
+    integer(KIND=KINDINT),intent(out)::I
+    real(KIND=KINDDF), intent(in)::X(*), XC
     !---Local Vars---
-    integer(KIND=KMCINT)::I1, IT
+    integer(KIND=KINDINT)::I1, IT
 
     #ifdef MC_PROFILING
     call Time_Start(T_FINDI_Start)
@@ -1584,9 +1584,9 @@ module MCLIB_UTILITIES_FORMER
    !======================================================================
      implicit none
      !---Dummy Vars---
-     integer(KIND=KMCINT),intent(in)::n
-     real(KIND=KMCDF), intent(in)::a(n)
-     integer(KIND=KMCINT)::p(n)
+     integer(KIND=KINDINT),intent(in)::n
+     real(KIND=KINDDF), intent(in)::a(n)
+     integer(KIND=KINDINT)::p(n)
      !---Local Vars---
      integer::LGN, Q
      parameter (LGN=32, Q=11)
@@ -1711,13 +1711,13 @@ module MCLIB_UTILITIES_FORMER
     !     IW ............. OUTPUT UNIT.
     !
     IMPLICIT DOUBLE PRECISION (A-H,O-Z),CHARACTER(L)
-    integer(KIND=KMCINT), intent(in)::NF, NL, IW
-    real(KIND=KMCDF), intent(in)::X(*),Y(*),DY(*)
+    integer(KIND=KINDINT), intent(in)::NF, NL, IW
+    real(KIND=KINDDF), intent(in)::X(*),Y(*),DY(*)
     !Working space
-    real(KIND=KMCDF)::S(9)
+    real(KIND=KINDDF)::S(9)
     CHARACTER*1::L(91)
     CHARACTER*1, parameter::L1='+',L2=' ',L3='I',L4='*',L5='-',L6='(',L7=')'
-    integer(KIND=KMCINT)::I, J, IZERO, K, K1, K2
+    integer(KIND=KINDINT)::I, J, IZERO, K, K1, K2
 
     #ifdef MC_PROFILING
     call Time_Start(T_DRAFT_GRAPH_Start)

@@ -7,11 +7,11 @@ module MCLIB_CONSTANTS_GPU
 
     !***Box Info
 
-    real(kind=KMCSF),constant::dm_BOXBOUNDARY(3,2)                                ! siumulation box boundary, in unit of atomic radiua
-    real(kind=KMCSF),constant::dm_BOXSIZE(3)                                      ! simulation box size
-    real(kind=KMCSF),constant::dm_HBOXSIZE(3)                                     ! half box size
+    real(kind=KINDSF),constant::dm_BOXBOUNDARY(3,2)                                ! siumulation box boundary, in unit of atomic radiua
+    real(kind=KINDSF),constant::dm_BOXSIZE(3)                                      ! simulation box size
+    real(kind=KINDSF),constant::dm_HBOXSIZE(3)                                     ! half box size
     integer,constant::dm_PERIOD(3)
-    real(kind=KMCDF),constant::dm_TKB
+    real(kind=KINDDF),constant::dm_TKB
 
 
     !********************GPU Parameters******************************
@@ -28,9 +28,9 @@ module MCLIB_CONSTANTS_GPU
     subroutine copyInBoxParamsConstant(BOXBOUNDARY,BOXSIZE,HBOXSIZE)
         implicit none
         !---dummy Vars----
-        real(kind=KMCDF),intent(in)::BOXBOUNDARY(3,2)
-        real(kind=KMCDF),intent(in)::BOXSIZE(3)
-        real(kind=KMCDF),intent(in)::HBOXSIZE(3)
+        real(kind=KINDDF),intent(in)::BOXBOUNDARY(3,2)
+        real(kind=KINDDF),intent(in)::BOXSIZE(3)
+        real(kind=KINDDF),intent(in)::HBOXSIZE(3)
         !---Body----
         !*** copy to device constant memory
         dm_BOXBOUNDARY = BOXBOUNDARY

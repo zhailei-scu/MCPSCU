@@ -4,20 +4,17 @@ module MIGCOALE_ADDONDATA_HOST
     implicit none
 
 
-    real(kind=KMCDF)::m_FREEDIFCOES(3) = 0.D0                       ! the surface diffusion coeffciency
-    real(kind=KMCDF)::m_FREEDIFCOESPRE(3) = 0.D0                    ! the prefactor for the surface diffusion coeffciency
-    real(kind=KMCDF)::m_FREEDIFCOESES(3) = 0.D0                     ! the surface ative energy for surface diffusion coeffciency
+    real(kind=KINDDF)::m_FREEDIFCOES(3) = 0.D0                       ! the surface diffusion coeffciency
+    real(kind=KINDDF)::m_FREEDIFCOESPRE(3) = 0.D0                    ! the prefactor for the surface diffusion coeffciency
+    real(kind=KINDDF)::m_FREEDIFCOESES(3) = 0.D0                     ! the surface ative energy for surface diffusion coeffciency
 
-    real(kind=KMCDF)::m_FREESURDIFPRE = 0.D0
+    real(kind=KINDDF)::m_FREESURDIFPRE = 0.D0
 
-    real(kind=KMCDF)::m_GBDIFCOES(3) = 0.D0                     ! the surface diffusion coeffciency in GB
-    real(kind=KMCDF)::m_GBDIFCOESPRE(3) = 0.D0                  ! the prefactor for the surface diffusion coeffciency in GB
-    real(kind=KMCDF)::m_GBDIFCOESES(3) = 0.D0                   ! the surface ative energy for surface diffusion coeffciency in GB
+    real(kind=KINDDF)::m_GBDIFCOES(3) = 0.D0                     ! the surface diffusion coeffciency in GB
+    real(kind=KINDDF)::m_GBDIFCOESPRE(3) = 0.D0                  ! the prefactor for the surface diffusion coeffciency in GB
+    real(kind=KINDDF)::m_GBDIFCOESES(3) = 0.D0                   ! the surface ative energy for surface diffusion coeffciency in GB
 
-    real(kind=KMCDF)::m_GBSURDIFPRE = 0.D0
-
-    real(kind=KMCDF)::m_SURFE= C_JPERM2_TO_ERGPERCM2         ! the surface energy. In ERG/cm**2
-    real(kind=KMCDF)::m_RNFACTOR                             ! the factor in relation between radiius and number of atom
+    real(kind=KINDDF)::m_GBSURDIFPRE = 0.D0
                                                              ! 8*PI*SURFE/(3*KB*TEMP)
     logical::m_DumplicateBox = .true.
 
@@ -53,21 +50,6 @@ module MIGCOALE_ADDONDATA_HOST
             m_DumplicateBox = .true.
         end if
 
-
-        KEYWORD = "&SURENG"
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
-        call EXTRACT_NUMB(STR,1,N,STRTEMP)
-        if(N .LT. 1) then
-            write(*,*) "MCPSCUERROR: Too few parameters for surface energy at line: ",LINE
-            write(*,*) STR
-            write(*,*) "You should special: &SURENG THE SURFACE ENERGY OF A BUBBLE = ! (ERG/CM^2))"
-            pause
-            stop
-        end if
-        m_SURFE = DRSTR(STRTEMP(1))
-        m_RNFACTOR = 8.D0*PI*m_SURFE/(3.D0*Host_SimuCtrlParam%TKB)
-
-
         KEYWORD = "&SURDIF"
         call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
         call EXTRACT_NUMB(STR,6,N,STRTEMP)
@@ -83,7 +65,7 @@ module MIGCOALE_ADDONDATA_HOST
             m_FREEDIFCOESES(I) =  DRSTR(STRTEMP(2*I))
             m_FREEDIFCOES(I) = m_FREEDIFCOESPRE(I)*DEXP(-m_FREEDIFCOESES(I)*C_EV2ERG/Host_SimuCtrlParam%TKB)
         END DO
-        m_FREESURDIFPRE = (3.D0/(2.D0*PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_FREEDIFCOES(1)
+        m_FREESURDIFPRE = (3.D0/(2.D0*CP_PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_FREEDIFCOES(1)
 
         KEYWORD = "&GBSURDIF"
         call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
@@ -101,7 +83,7 @@ module MIGCOALE_ADDONDATA_HOST
             m_GBDIFCOES(I) = m_GBDIFCOESPRE(I)*DEXP(-m_GBDIFCOESES(I)*C_EV2ERG/Host_SimuCtrlParam%TKB)
         END DO
 
-        m_GBSURDIFPRE = (3.D0/(2.D0*PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_GBDIFCOES(1)
+        m_GBSURDIFPRE = (3.D0/(2.D0*CP_PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_GBDIFCOES(1)
 
         return
     end subroutine resolveAddOnData

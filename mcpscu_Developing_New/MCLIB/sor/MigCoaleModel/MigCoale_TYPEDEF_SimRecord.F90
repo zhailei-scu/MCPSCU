@@ -4,7 +4,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     implicit none
 
     type,public,extends(SimulationRecord)::MigCoalClusterRecord
-        real(kind=KMCDF),private::StartImplantTime = 0.D0
+        real(kind=KINDDF),private::StartImplantTime = 0.D0
         integer,private::ImplantedEntities = 0
         integer,private::LastRecordImplantNum = 0
         integer,private::NCUT = 0
@@ -12,14 +12,14 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         integer::RecordNCBeforeSweepOut_Integal(p_NUMBER_OF_STATU)  = 0
         integer,dimension(:,:),allocatable::RecordNCBeforeSweepOut_SingleBox
 
-        real(kind=KMCDF),private::LastUpdateAveSepTime = 0.D0
+        real(kind=KINDDF),private::LastUpdateAveSepTime = 0.D0
 
         integer,private::rescaleCount = 0
 
         integer::HSizeStatistic_TotalBox = 0
         integer::HSizeStatistic_EachBox = 0
-        real(kind=KMCDF),private::LastOutSizeDistTime_IntegralBox = 0.D0
-        real(kind=KMCDF),private::LastOutSizeDistTime_EachBox = 0.D0
+        real(kind=KINDDF),private::LastOutSizeDistTime_IntegralBox = 0.D0
+        real(kind=KINDDF),private::LastOutSizeDistTime_EachBox = 0.D0
 
         contains
         procedure,NON_OVERRIDABLE,public,pass::InitMigCoalClusterRecord
@@ -84,7 +84,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         integer,optional::TimeSection
         !---Local Vars---
         integer::Steps
-        real(kind=KMCDF)::Times
+        real(kind=KINDDF)::Times
         integer::Patchs
         integer::TheTimeSection
         !---Body-- -::
@@ -137,7 +137,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLass(MigCoalClusterRecord)::this
-        real(kind=KMCDF),intent(in)::TheTime
+        real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%StartImplantTime = TheTime
         return
@@ -147,7 +147,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLass(MigCoalClusterRecord)::this
-        real(kind=KMCDF),intent(out)::TheTime
+        real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%StartImplantTime
         return
@@ -256,7 +256,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLASS(MigCoalClusterRecord)::this
-        real(kind=KMCDF),intent(in)::TheTime
+        real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%LastOutSizeDistTime_IntegralBox = TheTime
 
@@ -267,7 +267,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLASS(MigCoalClusterRecord)::this
-        real(kind=KMCDF),intent(out)::TheTime
+        real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%LastOutSizeDistTime_IntegralBox
 
@@ -278,7 +278,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLASS(MigCoalClusterRecord)::this
-        real(kind=KMCDF),intent(in)::TheTime
+        real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%LastOutSizeDistTime_EachBox = TheTime
 
@@ -289,7 +289,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLASS(MigCoalClusterRecord)::this
-        real(kind=KMCDF),intent(out)::TheTime
+        real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%LastOutSizeDistTime_EachBox
 
@@ -388,7 +388,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLass(MigCoalClusterRecord)::this
-        real(kind=KMCDF),intent(in)::TheTime
+        real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%LastUpdateAveSepTime = TheTime
         return
@@ -398,7 +398,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLass(MigCoalClusterRecord)::this
-        real(kind=KMCDF),intent(out)::TheTime
+        real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%LastUpdateAveSepTime
         return

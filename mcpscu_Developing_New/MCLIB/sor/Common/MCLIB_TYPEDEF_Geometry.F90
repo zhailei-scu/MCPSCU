@@ -11,7 +11,7 @@ module MCLIB_TYPEDEF_GEOMETRY
     integer, parameter::p_GBInitSimple_ByGVolumCtl = 1
 
     type,public::GrainSeed
-        real(kind=KMCDF),dimension(3)::m_POS
+        real(kind=KINDDF),dimension(3)::m_POS
 
         contains
 
@@ -39,12 +39,12 @@ module MCLIB_TYPEDEF_GEOMETRY
         integer::GBInitType = p_GBIniConfig_Simple
         !---init by simple way---
         integer::GBInitSimple_Strategy = p_GBInitSimple_BySeedCtl
-        real(kind=KMCDF)::Cutoff(2) = 0.D0                                  ! min and max distance cut-off
+        real(kind=KINDDF)::Cutoff(2) = 0.D0                                  ! min and max distance cut-off
         integer::GrainNum = 0
-        real(kind=KMCDF)::SeedsDistINI = 0.D0
-        real(kind=KMCDF)::SeedsDistSD = 0.D0
-        real(kind=KMCDF)::GVolumINI = 0.D0
-        real(kind=KMCDF)::GVolumSD = 0.D0
+        real(kind=KINDDF)::SeedsDistINI = 0.D0
+        real(kind=KINDDF)::SeedsDistSD = 0.D0
+        real(kind=KINDDF)::GVolumINI = 0.D0
+        real(kind=KINDDF)::GVolumSD = 0.D0
         !---Init by external file----
         character*256::GBCfgFileName = ''
         !---Init by external function---
@@ -290,7 +290,7 @@ module MCLIB_TYPEDEF_GEOMETRY
         implicit none
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
-        real(kind=KMCDF),intent(in)::BOXBOUNDARY(3,2)
+        real(kind=KINDDF),intent(in)::BOXBOUNDARY(3,2)
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Body---
         select case(this%GBInitType)
@@ -314,7 +314,7 @@ module MCLIB_TYPEDEF_GEOMETRY
         implicit none
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
-        real(kind=KMCDF),intent(in)::BOXBOUNDARY(3,2)
+        real(kind=KINDDF),intent(in)::BOXBOUNDARY(3,2)
         !---Body---
         select case(this%GBInitSimple_Strategy)
             case(p_GBInitSimple_BySeedCtl)
@@ -336,18 +336,18 @@ module MCLIB_TYPEDEF_GEOMETRY
         implicit none
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
-        real(kind=KMCDF),intent(in)::BOXBOUNDARY(3,2)
+        real(kind=KINDDF),intent(in)::BOXBOUNDARY(3,2)
         !---Local Vars---
-        real(kind=KMCDF)::BOXSIZE(3)
-        real(kind=KMCDF)::BOXVOLUM
-        real(kind=KMCDF)::POS(3)
+        real(kind=KINDDF)::BOXSIZE(3)
+        real(kind=KINDDF)::BOXVOLUM
+        real(kind=KINDDF)::POS(3)
         integer::N
         integer::MaxSeedsNum
         type(GrainSeedList),pointer::TheGrainSeedList=>null()
         type(GrainSeedList),pointer::cursor=>null()
-        real(kind=KMCDF)::SEP(3)
-        real(kind=KMCDF)::Dist2
-        real(kind=KMCDF)::CutMin2
+        real(kind=KINDDF)::SEP(3)
+        real(kind=KINDDF)::Dist2
+        real(kind=KINDDF)::CutMin2
         logical::finded
         type(GrainSeed)::tempSeed
         integer::I
@@ -421,7 +421,7 @@ module MCLIB_TYPEDEF_GEOMETRY
         implicit none
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
-        real(kind=KMCDF),intent(in)::BOXBOUNDARY(3,2)
+        real(kind=KINDDF),intent(in)::BOXBOUNDARY(3,2)
         !---Body---
 
     end subroutine ConstructGrainBoundary_Simple_ByGVolumCtl
@@ -572,17 +572,17 @@ module MCLIB_TYPEDEF_GEOMETRY
         implicit none
         !---Dummy Vars---
         CLASS(GrainBoundary)::this
-        real(kind=KMCDF),intent(in)::POS(3)
-        real(kind=KMCDF),intent(in)::HBOXSIZE(3)
-        real(kind=KMCDF),intent(in)::BOXSIZE(3)
+        real(kind=KINDDF),intent(in)::POS(3)
+        real(kind=KINDDF),intent(in)::HBOXSIZE(3)
+        real(kind=KINDDF),intent(in)::BOXSIZE(3)
         type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
         integer::SeedID
         !---Local Vars---
         integer::I
         integer::NSeeds
-        real(kind=KMCDF)::SEP(3)
-        real(kind=KMCDF)::DIST2
-        real(kind=KMCDF)::MinDist2
+        real(kind=KINDDF)::SEP(3)
+        real(kind=KINDDF)::DIST2
+        real(kind=KINDDF)::MinDist2
         !---Body--
         SeedID = 0
 

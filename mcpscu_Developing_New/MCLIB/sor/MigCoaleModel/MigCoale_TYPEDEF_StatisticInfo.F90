@@ -8,11 +8,11 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
     type,public::MigCoaleStatisticOneBox
 
         integer::ICMAX(p_NUMBER_OF_STATU) = 0                               ! the ID of the largest cluster
-        real(kind=KMCDF)::RMAX(p_NUMBER_OF_STATU) = 0.D0                    ! the radius of the largest cluster at current time intervale
-        real(kind=KMCDF)::RMIN(p_NUMBER_OF_STATU) = 0.D0                    ! the radius of the smallest cluster at current time intervale, to be used to determine the time step
-        real(kind=KMCDF)::RAVA(p_NUMBER_OF_STATU) = 0.D0                    ! the average radius of the clusters at current time intervale
+        real(kind=KINDDF)::RMAX(p_NUMBER_OF_STATU) = 0.D0                    ! the radius of the largest cluster at current time intervale
+        real(kind=KINDDF)::RMIN(p_NUMBER_OF_STATU) = 0.D0                    ! the radius of the smallest cluster at current time intervale, to be used to determine the time step
+        real(kind=KINDDF)::RAVA(p_NUMBER_OF_STATU) = 0.D0                    ! the average radius of the clusters at current time intervale
 
-        real(kind=KMCDF)::DiffusorValueMax(p_NUMBER_OF_STATU) = 0.D0
+        real(kind=KINDDF)::DiffusorValueMax(p_NUMBER_OF_STATU) = 0.D0
 
         contains
         procedure,non_overridable,public,pass::InitStatisticInfo

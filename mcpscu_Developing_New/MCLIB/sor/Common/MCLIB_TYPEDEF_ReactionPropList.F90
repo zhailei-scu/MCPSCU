@@ -894,11 +894,11 @@ module MCLIB_TYPEDEF_ReactionPropList
         implicit none
         !---Dummy Vars---
         CLASS(ReadReactionPropList),target::this
-        real(kind=KMCDF),intent(in)::TKB
+        real(kind=KINDDF),intent(in)::TKB
         logical::TheResult
         !---Local Vars---
         type(ReadReactionPropList),pointer::cursor=>null()
-        real(kind=KMCDF)::TheValue
+        real(kind=KINDDF)::TheValue
         !---Body---
 
         TheResult = .false.

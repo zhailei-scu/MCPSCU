@@ -3,6 +3,7 @@
 module MCLIB_TYPEDEF_REACTIONSVALUE
     use MCLIB_CONSTANTS
     use iso_c_binding
+    use MODEL_ECR_CPU
     use MCLIB_TYPEDEF_ACLUSTER
     use MCLIB_UTILITIES
     implicit none
@@ -41,16 +42,16 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
     type,public::ReactionValue
         integer::ReactionCoefficientType PREASSIGN p_ReactionCoefficient_ByValue
 
-        real(kind=KMCDF)::ReactionCoefficient_Value PREASSIGN -1.D0 ! < 0 means not occur, >=1 means must occur
-        real(kind=KMCDF)::PreFactor PREASSIGN 0.D0
-        real(kind=KMCDF)::ActEnergy PREASSIGN 0.D0
+        real(kind=KINDDF)::ReactionCoefficient_Value PREASSIGN -1.D0 ! < 0 means not occur, >=1 means must occur
+        real(kind=KINDDF)::PreFactor PREASSIGN 0.D0
+        real(kind=KINDDF)::ActEnergy PREASSIGN 0.D0
 
         integer::ProductionType PREASSIGN p_ProductionType_BySimplePlus
         integer::ElemetIndex_Subject PREASSIGN 0
         integer::ElemetIndex_Object PREASSIGN 0
 
         integer::ECRValueType PREASSIGN p_ECR_ByValue
-        real(kind=KMCDF)::ECR PREASSIGN 0.D0
+        real(kind=KINDDF)::ECR PREASSIGN 0.D0
 
         contains
         procedure,private,non_overridable,pass::CopyReactionValueFromOther

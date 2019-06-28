@@ -27,15 +27,15 @@ module MCLIB_TYPEDEF_USUAL
 
         integer,private::SimulaitonSteps = 0
         integer,private::SimulationPatch = 1
-        real(kind=KMCDF),private::SimulationTimes = 0.D0
+        real(kind=KINDDF),private::SimulationTimes = 0.D0
         integer,private::TimeSections = 1
 
-        real(kind=KMCDF),private::LastUpdateStatisTime = 0.D0
+        real(kind=KINDDF),private::LastUpdateStatisTime = 0.D0
 
-        real(kind=KMCDF),private::LastUpdateNLTime = 0.D0
+        real(kind=KINDDF),private::LastUpdateNLTime = 0.D0
         integer,private::LastUpdateNL_NC0 = 1
 
-        real(kind=KMCDF),private::LastRecordOutConfigTime = 0.D0
+        real(kind=KINDDF),private::LastRecordOutConfigTime = 0.D0
         integer,private::OutPutIndex = 0
 
         contains
@@ -142,12 +142,12 @@ module MCLIB_TYPEDEF_USUAL
         !---Dummy Vars---
         CLASS(SimulationRecord)::this
         integer,optional::SimuSteps
-        real(kind=KMCDF),optional::SimuTimes
+        real(kind=KINDDF),optional::SimuTimes
         integer,optional::SimuPatchs
         integer,optional::TimeSections
         !---Local Vars---
         integer::Steps
-        real(kind=KMCDF)::Times
+        real(kind=KINDDF)::Times
         integer::Patchs
         integer::TheTimeSection
         !---Body---
@@ -223,12 +223,12 @@ module MCLIB_TYPEDEF_USUAL
     subroutine Set_SimuTimes(this,Times)
             implicit none
             CLASS(SimulationRecord)::this
-            real(kind=KMCDF)::Times
+            real(kind=KINDDF)::Times
             this%SimulationTimes = Times
     end subroutine
 
     !***************************************************
-    real(kind=KMCDF) function Get_SimuTimes(this)
+    real(kind=KINDDF) function Get_SimuTimes(this)
             implicit none
             CLASS(SimulationRecord)::this
             Get_SimuTimes = this%SimulationTimes
@@ -239,7 +239,7 @@ module MCLIB_TYPEDEF_USUAL
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord)::this
-        real(kind=KMCDF),intent(in)::increaseTime
+        real(kind=KINDDF),intent(in)::increaseTime
         !---Body---
         this%SimulationTimes = this%SimulationTimes + increaseTime
 
@@ -299,7 +299,7 @@ module MCLIB_TYPEDEF_USUAL
     end subroutine Increase_OneTimeSection
 
     !****************************************************
-    real(kind=KMCDF) function Get_LastUpdateStatisTime(this)
+    real(kind=KINDDF) function Get_LastUpdateStatisTime(this)
         implicit none
         CLASS(SimulationRecord)::this
 
@@ -312,7 +312,7 @@ module MCLIB_TYPEDEF_USUAL
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord)::this
-        real(kind=KMCDF),intent(in)::TIME
+        real(kind=KINDDF),intent(in)::TIME
         !---Body---
         this%LastUpdateStatisTime = TIME
 
@@ -324,7 +324,7 @@ module MCLIB_TYPEDEF_USUAL
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord)::this
-        real(kind=KMCDF),intent(out)::TheTime
+        real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%LastUpdateNLTime
         return
@@ -335,7 +335,7 @@ module MCLIB_TYPEDEF_USUAL
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord)::this
-        real(kind=KMCDF),intent(in)::TheTime
+        real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%LastUpdateNLTime = TheTime
         return
@@ -378,7 +378,7 @@ module MCLIB_TYPEDEF_USUAL
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord)::this
-        real(kind=KMCDF),intent(in)::TIME
+        real(kind=KINDDF),intent(in)::TIME
         !---Body---
         this%LastRecordOutConfigTime = TIME
 

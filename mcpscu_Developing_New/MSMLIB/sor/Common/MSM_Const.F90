@@ -46,6 +46,7 @@
       !--- math constants
       real(KINDDF), parameter::CP_PI      = 3.141592654D0
       real(KINDDF), parameter::CP_4PI3    = 4.D0*CP_PI/3.D0
+      real(KINDDF), parameter::CP_3_4PI    = 3.D0/(4.D0*CP_PI)    ! added by zhai
       real(KINDDF), parameter::CP_TWOPI   = 2.D0*CP_PI
       real(KINDDF), parameter::CP_FOURPI  = 4.D0*CP_PI
 

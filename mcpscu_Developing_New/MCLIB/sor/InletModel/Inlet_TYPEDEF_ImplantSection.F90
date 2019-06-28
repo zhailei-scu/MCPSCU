@@ -13,6 +13,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     use MIGCOALE_TYPEDEF_SIMRECORD
     use MIGCOALE_ADDONDATA_HOST
     use MIGCOALE_GLOBALVARS_DEV
+    use MODEL_ECR_GPU
     implicit none
 
 
@@ -37,15 +38,15 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         logical::InitFlag = .false.    ! the flag to record if the data structure had been initialization
 
-        real(kind=KMCDF),device,allocatable,dimension(:)::Dev_CompositWeight
+        real(kind=KINDDF),device,allocatable,dimension(:)::Dev_CompositWeight
 
-        real(kind=KMCDF),device,allocatable,dimension(:,:)::Dev_SUBBOXBOUNDARY
+        real(kind=KINDDF),device,allocatable,dimension(:,:)::Dev_SUBBOXBOUNDARY
 
-        real(kind=KMCDF),device,dimension(:),allocatable::Dev_LayerThick
+        real(kind=KINDDF),device,dimension(:),allocatable::Dev_LayerThick
 
         type(ACluster),device,dimension(:,:),allocatable::Dev_ClustersSample
 
-        real(kind=KMCDF),device,dimension(:,:),allocatable::Dev_ClustersSampleRate
+        real(kind=KINDDF),device,dimension(:,:),allocatable::Dev_ClustersSampleRate
 
         contains
         procedure,non_overridable,public,pass::CopyImplantInfo_DevPartFromOther
@@ -58,7 +59,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     type,public::ImplantSection
         integer::MemoryOccupyFactor = 10
         integer::ExpandFactor = 10
-        real(kind=KMCDF)::ImplantFlux = 0
+        real(kind=KINDDF)::ImplantFlux = 0
 
         integer::ImplantConfigType = -1
 
@@ -68,29 +69,29 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         character*10::Elemets(p_ATOMS_GROUPS_NUMBER) = ""
 
-        real(kind=KMCDF)::NAINI = 0.D0
+        real(kind=KINDDF)::NAINI = 0.D0
 
-        real(kind=KMCDF)::NASDINI = 0.D0
+        real(kind=KINDDF)::NASDINI = 0.D0
 
-        real(kind=KMCDF)::NACUT(2) = 0.D0
+        real(kind=KINDDF)::NACUT(2) = 0.D0
 
-        real(kind=KMCDF)::CompositWeight(p_ATOMS_GROUPS_NUMBER) = 0.D0
+        real(kind=KINDDF)::CompositWeight(p_ATOMS_GROUPS_NUMBER) = 0.D0
 
         integer::ImplantDepthDistType = -1
 
-        real(kind=KMCDF)::SUBBOXBOUNDARY(3,2) = 0.D0
+        real(kind=KINDDF)::SUBBOXBOUNDARY(3,2) = 0.D0
 
-        real(kind=KMCDF)::DepthINI = 0.D0
+        real(kind=KINDDF)::DepthINI = 0.D0
 
-        real(kind=KMCDF)::DepthSDINI = 0.D0
+        real(kind=KINDDF)::DepthSDINI = 0.D0
 
-        real(kind=KMCDF)::Sphere_Central(3) = 0.D0
+        real(kind=KINDDF)::Sphere_Central(3) = 0.D0
 
-        real(kind=KMCDF)::Sphere_Radius = 0.D0
+        real(kind=KINDDF)::Sphere_Radius = 0.D0
 
-        real(kind=KMCDF),dimension(:),allocatable::LayerThick
+        real(kind=KINDDF),dimension(:),allocatable::LayerThick
 
-        real(kind=KMCDF),dimension(:,:),allocatable::ClustersSampleRate
+        real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleRate
 
         type(ACluster),dimension(:,:),allocatable::ClustersSample
 
@@ -663,7 +664,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*32::KEYWORD
         character*20::STRTMP(10)
         integer::N
-        real(kind=KMCDF)::ReflectRatio
+        real(kind=KINDDF)::ReflectRatio
         !---Body---
         Do While(.true.)
             call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -879,7 +880,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*256::STRTEMP(1)
         integer::N
         type(MigCoalClusterRecord)::tempRecord
-        real(kind=KMCDF)::TotalSampleRate
+        real(kind=KINDDF)::TotalSampleRate
         integer::LayerNum
         !---Body---
 
@@ -986,10 +987,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 call this%Putin_OKMC_FORMAT18_Distribution(LayerNum)
 
             case(MF_OUTCFG_FORMAT18)
-                call SimBoxes%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFileName,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_RNFACTOR,m_FREESURDIFPRE)
+                call SimBoxes%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFileName,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_FREESURDIFPRE)
 
             case(SPMF_OUTCFG_FORMAT18)
-                call SimBoxes%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFileName,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_RNFACTOR,m_FREESURDIFPRE,m_GBSURDIFPRE)
+                call SimBoxes%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFileName,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_FREESURDIFPRE,m_GBSURDIFPRE)
 
             case(SRIM_DIST)
                 call this%Putin_SRIM2003_OUTCFG_Distribution(SimBoxes,Host_SimuCtrlParam,LayerNum)
@@ -1044,7 +1045,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::LayerNum
         integer::ILayer
         integer::Layer
-        real(kind=KMCDF)::SumOfThick
+        real(kind=KINDDF)::SumOfThick
         type(ACluster)::ImplantIon
         type(DiffusorValue)::TheDiffusorValue
         !---Body---
@@ -1100,7 +1101,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             case(p_ECR_ByBCluster)
                 ! Convert the number of atoms to radius
                 ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                ImplantIon%m_RAD = DSQRT(sum(ImplantIon%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                ImplantIon%m_RAD = Cal_ECR_ByBCluster(sum(ImplantIon%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
         end select
 
         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1199,11 +1200,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::StoppedNum
         integer::IIon
         integer::ILayer
-        real(kind=KMCDF)::SumOfThick
+        real(kind=KINDDF)::SumOfThick
         type(ACluster)::ImplantIon
         type(DiffusorValue)::TheDiffusorValue
-        real(kind=KMCDF),dimension(:,:),allocatable::StoppedPosition
-        real(kind=KMCDF)::Thickness
+        real(kind=KINDDF),dimension(:,:),allocatable::StoppedPosition
+        real(kind=KINDDF)::Thickness
         !---Body---
         LINE = 0
 
@@ -1332,7 +1333,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             case(p_ECR_ByBCluster)
                 ! Convert the number of atoms to radius
                 ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                ImplantIon%m_RAD = DSQRT(sum(ImplantIon%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                ImplantIon%m_RAD = Cal_ECR_ByBCluster(sum(ImplantIon%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
         end select
 
         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1400,7 +1401,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*32::KEYWORD
         integer::LINE
         type(MigCoalClusterRecord)::tempRecord
-        real(kind=KMCDF)::TotalSampleRate
+        real(kind=KINDDF)::TotalSampleRate
         !---Body---
 
 
@@ -1429,7 +1430,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::NElements
         integer::I
         integer::TheIndex
-        real(kind=KMCDF)::TotalSampleRate
+        real(kind=KINDDF)::TotalSampleRate
         !---Body---
         DO While(.true.)
             call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -1538,8 +1539,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::N
         integer::I
         integer::LayerNum
-        real(kind=KMCDF)::SumOfLayer
-        real(kind=KMCDF)::TotalSampleRate
+        real(kind=KINDDF)::SumOfLayer
+        real(kind=KINDDF)::TotalSampleRate
         !---Body---
 
         DO While(.true.)
@@ -1676,7 +1677,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
-        real(kind=KMCDF)::TSTEP
+        real(kind=KINDDF)::TSTEP
         !---Local Vars---
         integer::err
         integer::MultiBox
@@ -1686,7 +1687,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         logical::NeedAddExpdRange
         integer::NewAllocateNCEachBox
         integer::NewTotalSize
-        real(kind=KMCDF)::tempTSTEP
+        real(kind=KINDDF)::tempTSTEP
         integer::tempImplantNumEachBox
         integer::NSIZE
         integer::ImplantNumEachBox
@@ -1852,11 +1853,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationBoxes_GPU)::Dev_Boxes
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
-        real(kind=KMCDF)::TSTEP
+        real(kind=KINDDF)::TSTEP
         integer::ImplantNumEachBox_Ceiling
         !---Local Vars---
         integer::ImplantNumEachBox
-        real(kind=KMCDF)::VerifyTime
+        real(kind=KINDDF)::VerifyTime
         !---Body---
 
         DO While(.true.)
@@ -1885,13 +1886,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
         type(MigCoalClusterRecord)::Record
-        real(kind=KMCDF), intent(inout)::TSTEP
+        real(kind=KINDDF), intent(inout)::TSTEP
         integer, intent(inout)::ImplantNumEachBox_Ceiling
         integer, intent(inout)::NewAllocateNCEachBox
         logical, intent(inout)::TheStatu
         !---Local Vars---
         integer::err
-        real(kind=KMCDF)::newSimulatedTime
+        real(kind=KINDDF)::newSimulatedTime
         integer::MultiBox
         integer::IBox
         integer(kind=cuda_count_kind)::FreeMemSize,TotalMemSize
@@ -2051,10 +2052,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(DiffusorValue)::TheDiffusorValue
         integer::NC
         integer::NCUsed
-        real(kind=KMCDF)::POS(3)
+        real(kind=KINDDF)::POS(3)
         integer::MaxGroups
-        real(kind=KMCDF)::tempRand
-        real(kind=KMCDF)::GroupRateTemp
+        real(kind=KINDDF)::tempRand
+        real(kind=KINDDF)::GroupRateTemp
         integer::ILayer
         integer::IGroup
         logical::exitFlag
@@ -2158,7 +2159,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                     case(p_ECR_ByBCluster)
                                         ! Convert the number of atoms to radius
                                         ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                                 end select
 
                                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2205,7 +2206,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                     case(p_ECR_ByBCluster)
                                         ! Convert the number of atoms to radius
                                         ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                                 end select
 
                                 select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -2306,7 +2307,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       integer,intent(in)::NewAllocateNCEachBox
       !-----local variables---
       integer::MultiBox
-      real(kind=KMCDF)::POS(3)
+      real(kind=KINDDF)::POS(3)
       integer::IBox
       integer::NC
       integer::NCUsed
@@ -2314,8 +2315,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
       integer::ICFROM
       integer::ICTO
       integer::MaxGroups
-      real(kind=KMCDF)::tempRand
-      real(kind=KMCDF)::GroupRateTemp
+      real(kind=KINDDF)::tempRand
+      real(kind=KINDDF)::GroupRateTemp
       integer::ILayer
       integer::IGroup
       integer::IElement
@@ -2411,7 +2412,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             case(p_ECR_ByBCluster)
                                 ! Convert the number of atoms to radius
                                 ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                         end select
 
                         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2459,8 +2460,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
       integer,intent(in)::NewAllocateNCEachBox
       !-----local variables---
       integer::MultiBox
-      real(kind=KMCDF)::POS(3)
-      real(kind=KMCDF)::SUBBOXSIZE(3)
+      real(kind=KINDDF)::POS(3)
+      real(kind=KINDDF)::SUBBOXSIZE(3)
       integer::IBox, II, IC
       integer::I
       integer::NC
@@ -2544,7 +2545,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 case(p_ECR_ByBCluster)
                     ! Convert the number of atoms to radius
                     ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
              end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2585,10 +2586,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer,intent(in)::NewAllocateNCEachBox
         !---local variables---
         integer::MultiBox
-        real(kind=KMCDF)::POS(3)
-        real(kind=KMCDF)::SEP
-        real(kind=KMCDF)::BOXBOUNDARY(3,2)
-        real(kind=KMCDF)::BOXSIZE(3)
+        real(kind=KINDDF)::POS(3)
+        real(kind=KINDDF)::SEP
+        real(kind=KINDDF)::BOXBOUNDARY(3,2)
+        real(kind=KINDDF)::BOXSIZE(3)
         integer::IBox,II,IC
         integer::NAtoms
         integer::NC
@@ -2679,7 +2680,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     case(p_ECR_ByBCluster)
                         ! Convert the number of atoms to radius
                         ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = DSQRT(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2895,15 +2896,15 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
         integer,value::Nseeds
         type(GrainSeed),device::Dev_GrainSeeds(:)
-        real(kind=KMCDF),device::Dev_RandArray_SpaceDist(:)
-        real(kind=KMCDF),device::Dev_RandArray_SizeDist(:)
-        real(kind=KMCDF),value::LNACUT
-        real(kind=KMCDF),value::RNACUT
+        real(kind=KINDDF),device::Dev_RandArray_SpaceDist(:)
+        real(kind=KINDDF),device::Dev_RandArray_SizeDist(:)
+        real(kind=KINDDF),value::LNACUT
+        real(kind=KINDDF),value::RNACUT
         integer, device::Dev_SEVirtualIndexBox(:,:)
         integer, device::Dev_SEAddedClustersBoxes(:,:)
-        real(kind=KMCDF),device::Dev_LayerThick(:)
-        real(kind=KMCDF),device::Dev_ClustersSampleRate(:,:)
-        real(kind=KMCDF),device::Dev_CompositWeight(:)
+        real(kind=KINDDF),device::Dev_LayerThick(:)
+        real(kind=KINDDF),device::Dev_ClustersSampleRate(:,:)
+        real(kind=KINDDF),device::Dev_CompositWeight(:)
         !---Local Vars---
         integer::tid
         integer::bid
@@ -2911,17 +2912,17 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::IBox
         integer::cid0
         integer::ICTRUE
-        real(kind=KMCDF)::POS(3)
+        real(kind=KINDDF)::POS(3)
         integer::NLayer
         integer::MaxGroups
         integer::ILayer
         integer::IGroup
         logical::exitFlag
-        real(kind=KMCDF)::tempRand
-        real(kind=KMCDF)::GroupRateTemp
+        real(kind=KINDDF)::tempRand
+        real(kind=KINDDF)::GroupRateTemp
         integer::IElement
         type(DiffusorValue)::TheDiffusorValue
-        real(kind=KMCDF)::randSize
+        real(kind=KINDDF)::randSize
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
         bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -2983,7 +2984,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             case(p_ECR_ByValue)
                                 Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                             case(p_ECR_ByBCluster)
-                                Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                                Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
                         end select
 
                         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3111,13 +3112,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
         integer,value::Nseeds
         type(GrainSeed),device::Dev_GrainSeeds(:)
-        real(kind=KMCDF),device::Dev_RandArray_SpaceDist(:)
-        real(kind=KMCDF),device::Dev_RandArray_SizeDist(:)
-        real(kind=KMCDF),value::LNACUT
-        real(kind=KMCDF),value::RNACUT
+        real(kind=KINDDF),device::Dev_RandArray_SpaceDist(:)
+        real(kind=KINDDF),device::Dev_RandArray_SizeDist(:)
+        real(kind=KINDDF),value::LNACUT
+        real(kind=KINDDF),value::RNACUT
         integer, device::Dev_SEVirtualIndexBox(:,:)
-        real(kind=KMCDF),device::Dev_SUBBOXBOUNDARY(:,:)
-        real(kind=KMCDF),device::Dev_CompositWeight(:)
+        real(kind=KINDDF),device::Dev_SUBBOXBOUNDARY(:,:)
+        real(kind=KINDDF),device::Dev_CompositWeight(:)
         !---Local Vars---
         integer::tid
         integer::bid
@@ -3126,10 +3127,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::cid0
         integer::ICTRUE
         integer::I
-        real(kind=KMCDF)::POS(3)
+        real(kind=KINDDF)::POS(3)
         integer::IElement
         type(DiffusorValue)::TheDiffusorValue
-        real(kind=KMCDF)::randSize
+        real(kind=KINDDF)::randSize
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
         bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3176,7 +3177,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 case(p_ECR_ByValue)
                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                 case(p_ECR_ByBCluster)
-                    Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3292,12 +3293,12 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
         integer,value::Nseeds
         type(GrainSeed),device::Dev_GrainSeeds(:)
-        real(kind=KMCDF),device::Dev_RandArray_SpaceDist(:)
-        real(kind=KMCDF),device::Dev_RandArray_SizeDist(:)
-        real(kind=KMCDF),value::LNACUT
-        real(kind=KMCDF),value::RNACUT
+        real(kind=KINDDF),device::Dev_RandArray_SpaceDist(:)
+        real(kind=KINDDF),device::Dev_RandArray_SizeDist(:)
+        real(kind=KINDDF),value::LNACUT
+        real(kind=KINDDF),value::RNACUT
         integer, device::Dev_SEVirtualIndexBox(:,:)
-        real(kind=KMCDF),device::Dev_CompositWeight(:)
+        real(kind=KINDDF),device::Dev_CompositWeight(:)
         !---Local Vars---
         integer::tid
         integer::bid
@@ -3306,11 +3307,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::cid0
         integer::ICTRUE
         integer::I
-        real(kind=KMCDF)::POS(3)
+        real(kind=KINDDF)::POS(3)
         integer::IElement
         type(DiffusorValue)::TheDiffusorValue
-        real(kind=KMCDF)::randSize
-        real(kind=KMCDF)::randDepth
+        real(kind=KINDDF)::randSize
+        real(kind=KINDDF)::randDepth
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
         bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3365,7 +3366,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 case(p_ECR_ByValue)
                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                 case(p_ECR_ByBCluster)
-                    Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3477,11 +3478,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
         integer,value::Nseeds
         type(GrainSeed),device::Dev_GrainSeeds(:)
-        real(kind=KMCDF),device::Dev_RandArray_SpaceDist(:)
+        real(kind=KINDDF),device::Dev_RandArray_SpaceDist(:)
         integer, device::Dev_SEVirtualIndexBox(:,:)
-        real(kind=KMCDF),device::Dev_LayerThick(:)
+        real(kind=KINDDF),device::Dev_LayerThick(:)
         type(ACluster),device::Dev_ClustersSample(:,:)
-        real(kind=KMCDF),device::Dev_ClustersSampleRate(:,:)
+        real(kind=KINDDF),device::Dev_ClustersSampleRate(:,:)
         !---Local Vars---
         integer::tid
         integer::bid
@@ -3489,14 +3490,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::IBox
         integer::cid0
         integer::ICTRUE
-        real(kind=KMCDF)::POS(3)
+        real(kind=KINDDF)::POS(3)
         integer::NLayer
         integer::MaxGroups
         integer::ILayer
         integer::IGroup
         logical::exitFlag
-        real(kind=KMCDF)::tempRand
-        real(kind=KMCDF)::GroupRateTemp
+        real(kind=KINDDF)::tempRand
+        real(kind=KINDDF)::GroupRateTemp
         type(DiffusorValue)::TheDiffusorValue
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -3551,7 +3552,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 case(p_ECR_ByValue)
                                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                                 case(p_ECR_ByBCluster)
-                                    Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
                             end select
 
                             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3580,7 +3581,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 case(p_ECR_ByValue)
                                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_InGB
                                 case(p_ECR_ByBCluster)
-                                    Dev_Clusters(ICTRUE)%m_RAD = DSQRT(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)/dm_RNFACTOR)
+                                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
                             end select
 
                             select case(TheDiffusorValue%DiffusorValueType_InGB)

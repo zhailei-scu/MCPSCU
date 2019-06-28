@@ -1,5 +1,5 @@
 module MCLIB_CONSTANTS
-
+    use MSM_CONSTANTS
     implicit none
 
      !Date conversion
@@ -10,13 +10,9 @@ module MCLIB_CONSTANTS
     character(len=10),parameter::SPMF_OUTCFG_FORMAT18 = "&BOXSPMF18"
 
     ! Data type
-    integer,parameter::KMCDF  = 8
-    integer,parameter::KMCSF   = 4
     integer,parameter::KMCLINT = 8
-    integer,parameter::KMCINT  = 4
-    integer,parameter::KMCINT2 = 2
 
-    integer,parameter::KMCDF_SIZE_PGI = 8             ! 8 bit for a KMCDF kind
+    integer,parameter::KINDDF_SIZE_PGI = 8             ! 8 bit for a KINDDF kind
     integer,parameter::DEFAULT_SIZE_PGI = 4
 
 
@@ -79,10 +75,6 @@ module MCLIB_CONSTANTS
     integer,parameter::p_DiffuseDirection_ThreeDim = 1
     integer,parameter::p_DiffuseDirection_OneDim = 2
 
-    integer,parameter::p_ECRTypesNum = 2
-    integer,parameter::p_ECR_ByValue = 1
-    integer,parameter::p_ECR_ByBCluster = 2
-
     !*** The clusters type
     integer,parameter::p_NUMBER_OF_STATU = 7
     integer,parameter::p_ACTIVEFREE_STATU = 1
@@ -96,16 +88,16 @@ module MCLIB_CONSTANTS
     character*20,parameter::p_CStatu(p_NUMBER_OF_STATU) = (/"ACTIVEFREE","ACTIVEINGB","OUT_DESTROY","EXP_DESTRO","MIS_DESTROY","ABSORBED","ANNIHILATE"/)
 
 
-    real(kind=KMCDF),parameter::p_GAMMA = 4.D0                          ! the parameter for cluster diffusion
+    real(kind=KINDDF),parameter::p_GAMMA = 4.D0                          ! the parameter for cluster diffusion
 
     !--- numbers
-    real(kind=KMCDF), parameter::ZERO=0
-    real(kind=KMCDF), parameter::ONE=1
-    real(kind=KMCDF), parameter::TWO=2
-    real(kind=KMCDF), parameter::THREE=3
-    real(kind=KMCDF), parameter::TEN=10
-    real(kind=KMCDF), parameter::HUNDRED=100
-    integer(kind=KMCINT), parameter::IHUNDRED=100
+    real(kind=KINDDF), parameter::ZERO=0
+    real(kind=KINDDF), parameter::ONE=1
+    real(kind=KINDDF), parameter::TWO=2
+    real(kind=KINDDF), parameter::THREE=3
+    real(kind=KINDDF), parameter::TEN=10
+    real(kind=KINDDF), parameter::HUNDRED=100
+    integer(kind=KINDINT), parameter::IHUNDRED=100
     integer(kind=KMCLINT),parameter::TENPOWTHREE = 1*10**3
     integer(kind=KMCLINT),parameter::TENPOWFOUR = 1*10**4
     integer(kind=KMCLINT),parameter::TENPOWFIVE = 1*10**5
@@ -115,27 +107,20 @@ module MCLIB_CONSTANTS
 
 
     !*** Math. and  Phys. constants used
-    real(kind=KMCDF), parameter::PI=3.1415926535897932
-    real(kind=KMCDF), parameter::HALFPI=0.5D0*PI
-    real(kind=KMCDF), parameter::TWOPI=2.0D0*PI
-    real(kind=KMCDF), parameter::FOURPI=4.0D0*PI
-    real(kind=KMCDF), parameter::FRADEG=180.0D0/PI
-    real(kind=KMCDF), parameter::A0B=5.29177249D-9, &      !BOHR RADIU
+    real(kind=KINDDF), parameter::A0B=5.29177249D-9, &      !BOHR RADIU
                               AVOG=6.0221367D23            !Avigado constants
 
-    real(kind=KMCDF), parameter::C_FOURBYTHREE = 4.D0/3.D0
-    real(kind=KMCDF), parameter::C_4PI_3 = (4.D0*PI)/3.D0
-    real(kind=KMCDF), parameter::C_3_4PI = 3.D0/(4.D0*PI)
-    real(kind=KMCDF), parameter::C_ONEBYTHREE = 1.D0/3.D0
-    real(kind=KMCDF), parameter::C_UM2CM = 1.D-4
-    real(kind=KMCDF), parameter::C_CM2UM = 1.D4
-    real(kind=KMCDF), parameter::C_NM2CM = 1.D-7
-    real(kind=KMCDF), parameter::C_CM2NM = 1.D7
-    real(kind=KMCDF), parameter::C_AM2CM = 1.D-8
-    real(kind=KMCDF), parameter::C_CM2AM = 1.D8
-    real(kind=KMCDF), parameter::C_JPERM2_TO_ERGPERCM2 = 1.D3
-    real(kind=KMCDF), parameter::C_KB      =  1.38054D-16              !Boltzmann constant, in ERG/K
-    real(kind=KMCDF), parameter::C_EV2ERG   = 1.60219D-12
+    real(kind=KINDDF), parameter::C_FOURBYTHREE = 4.D0/3.D0
+
+    real(kind=KINDDF), parameter::C_UM2CM = 1.D-4
+    real(kind=KINDDF), parameter::C_CM2UM = 1.D4
+    real(kind=KINDDF), parameter::C_NM2CM = 1.D-7
+    real(kind=KINDDF), parameter::C_CM2NM = 1.D7
+    real(kind=KINDDF), parameter::C_AM2CM = 1.D-8
+    real(kind=KINDDF), parameter::C_CM2AM = 1.D8
+    real(kind=KINDDF), parameter::C_JPERM2_TO_ERGPERCM2 = 1.D3
+    real(kind=KINDDF), parameter::C_KB      =  1.38054D-16              !Boltzmann constant, in ERG/K
+    real(kind=KINDDF), parameter::C_EV2ERG   = 1.60219D-12
 
     !*** Memory management *****************
     integer, parameter::C_BYTE = 8    ! (8 bits)

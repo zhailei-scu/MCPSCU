@@ -14,8 +14,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                         ! neighborhood is defined by the m_NeighborNum which givend by
                                                                                         ! the user control file)
 
-  real(kind=KMCDF),private,device,dimension(:,:),allocatable::dm_CumulateSep
-  real(kind=KMCDF),private,dimension(:,:),allocatable::m_CumulateSep
+  real(kind=KINDDF),private,device,dimension(:,:),allocatable::dm_CumulateSep
+  real(kind=KINDDF),private,dimension(:,:),allocatable::m_CumulateSep
   integer,private,device,dimension(:,:),allocatable::dm_CumulateSepCount
   integer,private,dimension(:,:),allocatable::m_CumulateSepCount
 
@@ -29,7 +29,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     type(SimulationBoxes_GPU)::Dev_Boxes
     CLASS(SimulationRecord)::Record
     logical,optional::IfDirectly
-    real(kind=KMCDF),optional::RMAX
+    real(kind=KINDDF),optional::RMAX
     !---Local Vars---
     logical::SureToUpdateNL
     integer::NAct
@@ -104,13 +104,13 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     type(SimulationBoxes), intent(in)::Host_Boxes
     type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
-    real(kind=KMCDF),intent(in)::RMAX
+    real(kind=KINDDF),intent(in)::RMAX
     !---Local Vars---
     integer::MultiBox
     type(dim3) :: blocks
     type(dim3) :: threads
     integer::NB, NBX, NBY, BX, BY, err
-    real(kind=KMCDF)::RCUT,RCUT2
+    real(kind=KINDDF)::RCUT,RCUT2
     integer::BlockNumEachBox
     integer::NNearestNeighbor
     logical, device::Dev_ExplosiveMerge
@@ -217,7 +217,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer, device::Dev_SEExpdIndexBox(:,:)
     integer,device::KVOIS(:)
     integer,device::INDI(:,:)
-    real(kind=KMCDF), value::RCUT2
+    real(kind=KINDDF), value::RCUT2
     logical,device::Dev_ExplosiveMerge
     integer,value::BlockNumEachBox
     !---Local Vars---
@@ -228,10 +228,10 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::ICFROM,ICTO
     integer::STATU
     integer::I,JC
-    real(kind=KMCSF),shared,dimension(p_BLOCKSIZE)::Shared_PosX,Shared_PosY,Shared_PosZ
+    real(kind=KINDSF),shared,dimension(p_BLOCKSIZE)::Shared_PosX,Shared_PosY,Shared_PosZ
     integer,shared,dimension(p_BLOCKSIZE)::Shared_Statu
-    real(kind=KMCSF)::Pos_x,Pos_y,Pos_z,SEP_x,SEP_y,SEP_z
-    real(kind=KMCSF)::DIST2
+    real(kind=KINDSF)::Pos_x,Pos_y,Pos_z,SEP_x,SEP_y,SEP_z
+    real(kind=KINDSF)::DIST2
     integer::NN
     !---Body---
     tid  = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
@@ -412,12 +412,12 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::ICFROM,ICTO
     integer::STATU
     integer::I,JC,K
-    real(kind=KMCSF),shared,dimension(p_BLOCKSIZE)::Shared_PosX,Shared_PosY,Shared_PosZ
+    real(kind=KINDSF),shared,dimension(p_BLOCKSIZE)::Shared_PosX,Shared_PosY,Shared_PosZ
     integer,shared,dimension(p_BLOCKSIZE)::Shared_Statu
-    real(kind=KMCSF)::Pos_x,Pos_y,Pos_z,SEP_x,SEP_y,SEP_z
-    real(kind=KMCSF),dimension(p_MXNEAREST)::Nearest_DIST2
-    real(kind=KMCSF)::DIST2
-    real(kind=KMCSF)::Nearest_maxDIST2,temp_DIST2
+    real(kind=KINDSF)::Pos_x,Pos_y,Pos_z,SEP_x,SEP_y,SEP_z
+    real(kind=KINDSF),dimension(p_MXNEAREST)::Nearest_DIST2
+    real(kind=KINDSF)::DIST2
+    real(kind=KINDSF)::Nearest_maxDIST2,temp_DIST2
     integer::Nearest_maxDISTIndex
     integer::NN
     integer::mappedIndex,mapped_SharedIndex
@@ -640,12 +640,12 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::ICFROM,ICTO
     integer::STATU
     integer::I,JC,K
-    real(kind=KMCSF),shared,dimension(p_BLOCKSIZE)::Shared_PosX,Shared_PosY,Shared_PosZ
+    real(kind=KINDSF),shared,dimension(p_BLOCKSIZE)::Shared_PosX,Shared_PosY,Shared_PosZ
     integer,shared,dimension(p_BLOCKSIZE)::Shared_Statu
-    real(kind=KMCSF)::Pos_x,Pos_y,Pos_z,SEP_x,SEP_y,SEP_z
-    real(kind=KMCSF),dimension(p_MXNEAREST)::Nearest_DIST2
-    real(kind=KMCSF)::DIST2
-    real(kind=KMCSF)::Nearest_maxDIST2,temp_DIST2
+    real(kind=KINDSF)::Pos_x,Pos_y,Pos_z,SEP_x,SEP_y,SEP_z
+    real(kind=KINDSF),dimension(p_MXNEAREST)::Nearest_DIST2
+    real(kind=KINDSF)::DIST2
+    real(kind=KINDSF)::Nearest_maxDIST2,temp_DIST2
     integer::Nearest_maxDISTIndex
     integer::NN
     !---Body---
@@ -895,19 +895,19 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
         integer,device::Neighbor_KVOIS(:)
         integer,device::Neighbor_INDI(:,:)
         integer,device::CumulateSepCount(2,*)
-        real(kind=KMCDF),device::CumulateSep(2,*)
+        real(kind=KINDDF),device::CumulateSep(2,*)
         !---Local Vars---
         integer::tid,bid,bid0,cid
         integer::IC
         integer::IBox
         integer::scid,ecid
-        real(kind=KMCSF)::Pos_X,Pos_Y,Pos_Z
-        real(kind=KMCSF)::Sep_X,Sep_Y,Sep_Z
-        real(kind=KMCSF)::RADA,RADB,DIST,RR
+        real(kind=KINDSF)::Pos_X,Pos_Y,Pos_Z
+        real(kind=KINDSF)::Sep_X,Sep_Y,Sep_Z
+        real(kind=KINDSF)::RADA,RADB,DIST,RR
         integer::N_Neighbor
         integer::I,J,JC
-        real(kind=KMCDF)::MinDist
-        real(kind=KMCDF),shared::Share_CumulateSep(p_Reduce_BLOCKSIZE)
+        real(kind=KINDDF)::MinDist
+        real(kind=KINDDF),shared::Share_CumulateSep(p_Reduce_BLOCKSIZE)
         integer,shared::Share_CumulateSepCount(p_Reduce_BLOCKSIZE)
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
