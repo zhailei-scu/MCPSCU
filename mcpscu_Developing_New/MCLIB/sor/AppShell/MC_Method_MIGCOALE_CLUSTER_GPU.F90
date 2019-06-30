@@ -132,6 +132,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call m_ImplantList%Init(Host_SimBoxes,PSimCtrlParam)
 
                 call resolveAddOnData(Host_SimBoxes,PSimCtrlParam)
+                call resolveModelRelativeData(PSimCtrlParam%ModelData,Host_SimBoxes%Atoms_list)
                 call InitSimulationBoxesConfig(Host_SimBoxes,PSimCtrlParam,m_InitBoxSimCfgList,m_MigCoaleStatInfoWrap,m_MigCoalClusterRecord)
 
                 call Initital_Global_Variables_GPU(Host_SimBoxes, PSimCtrlParam,Dev_Boxes)
@@ -150,6 +151,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call resolveAddOnData(Host_SimBoxes,PSimCtrlParam)
 
                 call CopyAddOnDataToDev()
+
+                call resolveModelRelativeData(PSimCtrlParam%ModelData,Host_SimBoxes%Atoms_list)
+
+                call CopyModelRelativeDataToDev()
 
                 PImplantSection=>m_ImplantList%Get_P(PSimCtrlParam%ImplantSectID)
 
@@ -1434,8 +1439,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 select case(TheDiffusorValue%ECRValueType_Free)
                     case(p_ECR_ByValue)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case(p_ECR_ByBCluster)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                    case default
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1536,8 +1544,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                case(p_ECR_ByBCluster)
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                case default
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                               Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                               Host_SimuCtrlParam%TKB,                                      &
+                                                                                               Host_Boxes%LatticeLength)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1645,8 +1656,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 select case(TheDiffusorValue%ECRValueType_Free)
                     case(p_ECR_ByValue)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case(p_ECR_ByBCluster)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                    case default
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                           &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)

@@ -1,7 +1,7 @@
 module MCLIB_UTILITIES
   USE MCLIB_CONSTANTS
   USE MCLIB_TYPEDEF_ACLUSTER
-  use MCLIB_TYPEDEF_ATOMSLIST
+  use MODEL_TYPEDEF_ATOMSLIST
   USE MCLIB_UTILITIES_FORMER
   use MiniUtilities,only:LENTRIM,ISTR
   #ifdef MC_PROFILING
@@ -147,10 +147,10 @@ module MCLIB_UTILITIES
                 pause
                 stop
             else if(SepNum .eq. 2) then
-                if(IsStrEqual(NumRangeStr(2),p_InfStr)) then
+                if(ISSTREQUAL(NumRangeStr(2),p_InfStr)) then
                     TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
                     TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(1))
-                else if(IsStrEqual(NumRangeStr(1),p_InfStr)) then
+                else if(ISSTREQUAL(NumRangeStr(1),p_InfStr)) then
                     TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
                     TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(2))
                 else

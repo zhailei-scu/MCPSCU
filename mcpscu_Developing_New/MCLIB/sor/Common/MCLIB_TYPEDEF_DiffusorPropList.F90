@@ -2,7 +2,7 @@
 
 module MCLIB_TYPEDEF_DiffusorPropList
     use MCLIB_CONSTANTS
-    use MCLIB_TYPEDEF_ATOMSLIST
+    use MODEL_TYPEDEF_ATOMSLIST
     use MCLIB_TYPEDEF_DiffusorsValue
     use MCLIB_UTILITIES
     use MiniUtilities, only:ISTR
@@ -436,7 +436,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
         else
             cursor=>this%next
             cursorP=>this
-            if(IsStrEqual(cursorP%Diffusor%symbol,newOne%symbol)) then
+            if(ISSTREQUAL(cursorP%Diffusor%symbol,newOne%symbol)) then
                 write(*,*) "MCPSCUERROR: The Diffusor is dumplicated:",newOne%symbol
                 pause
                 stop
@@ -446,7 +446,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                 cursor=>cursor%next
                 cursorP=>cursorP%next
 
-                if(IsStrEqual(cursorP%Diffusor%symbol,newOne%symbol)) then
+                if(ISSTREQUAL(cursorP%Diffusor%symbol,newOne%symbol)) then
                     write(*,*) "MCPSCUERROR: The Diffusor is dumplicated:",newOne%symbol
                     pause
                     stop

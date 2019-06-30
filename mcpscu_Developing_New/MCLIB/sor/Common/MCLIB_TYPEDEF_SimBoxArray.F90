@@ -1,6 +1,6 @@
 module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   use MCLIB_CONSTANTS
-  use MCLIB_TYPEDEF_ATOMSLIST
+  use MODEL_TYPEDEF_ATOMSLIST
   use MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
   USE MCLIB_TYPEDEF_ClustersInfo_CPU
   use MCLIB_TYPEDEF_USUAL
@@ -926,6 +926,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     END DO
 
     call this%Atoms_list%AppendOne(tempAtom,AtomNumb)
+
+    if(this%Atoms_list%Get_ListCount() .GT. p_ATOMS_GROUPS_NUMBER) then
+        write(*,*) "MCPSCUERROR: The defined elements group number is greater than defined max atoms kinds: ",p_ATOMS_GROUPS_NUMBER
+        pause
+        stop
+    end if
 
     if(isMatrixAtom .eq. .true.) then
         this%MatrixAtom = tempAtom
@@ -2927,7 +2933,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call UPCASE(KEYWORD)
 
-    if(.not. IsStrEqual(adjustl(trim(KEYWORD)),OKMC_OUTCFG_FORMAT18)) then
+    if(.not. ISSTREQUAL(adjustl(trim(KEYWORD)),OKMC_OUTCFG_FORMAT18)) then
         write(*,*) "MCPSCUERROR: the format of OKMC configuration file is not right at LINE: ",LINE
         write(*,*) STR
         pause
@@ -3020,7 +3026,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     call GETKEYWORD("&",STR,KEYWORD)
                     call UPCASE(KEYWORD)
 
-                    if(.not. IsStrEqual(KEYWORD,"&SEEDDATA")) then
+                    if(.not. ISSTREQUAL(KEYWORD,"&SEEDDATA")) then
                         write(*,*) "MCPSCUERROR: The grain seeds number is less than the recorded one."
                         write(*,*) KEYWORD
                         pause
@@ -3084,7 +3090,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                         tempBoxesInfo%SEUsedIndexBox(IBox,1:2),  &
                                                                         tempBoxesInfo%SEExpdIndexBox(IBox,1:2),  &
                                                                         tempBoxesInfo%SEVirtualIndexBox(IBox,1:2)
-                    if(.not. IsStrEqual(CEmpty,"&BOXSEDATA")) then
+                    if(.not. ISSTREQUAL(CEmpty,"&BOXSEDATA")) then
                         write(*,*) "MCPSCUERROR: The box clusters start and end index record is less than the control file recorded."
                         pause
                         stop
@@ -3230,8 +3236,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                case(p_ECR_ByBCluster)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                case default
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                    &
+                                                                                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                         Host_SimuCtrlParam%TKB,                                &
+                                                                                         this%LatticeLength)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3259,8 +3268,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             select case(TheDiffusorValue%ECRValueType_InGB)
                 case(p_ECR_ByValue)
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                case(p_ECR_ByBCluster)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                case default
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_InGB,                    &
+                                                                                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                         Host_SimuCtrlParam%TKB,                                &
+                                                                                         this%LatticeLength)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -3383,7 +3395,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call UPCASE(KEYWORD)
 
-    if(.not. IsStrEqual(adjustl(trim(KEYWORD)),MF_OUTCFG_FORMAT18)) then
+    if(.not. ISSTREQUAL(adjustl(trim(KEYWORD)),MF_OUTCFG_FORMAT18)) then
         write(*,*) "MCPSCUERROR: the format of mean field configuration file is not right at LINE: ",LINE
         write(*,*) STR
         pause
@@ -3561,8 +3573,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         select case(TheDiffusorValue%ECRValueType_Free)
             case(p_ECR_ByValue)
                 ClustersSample(1,NClustersGroup)%m_RAD = TheDiffusorValue%ECR_Free
-            case(p_ECR_ByBCluster)
-                ClustersSample(1,NClustersGroup)%m_RAD = Cal_ECR_ByBCluster(sum(ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+            case default
+                ClustersSample(1,NClustersGroup)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                    &
+                                                                               ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA,      &
+                                                                               Host_SimuCtrlParam%TKB,                                &
+                                                                               this%LatticeLength)
         end select
 
         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3680,7 +3695,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call UPCASE(KEYWORD)
 
-    if(.not. IsStrEqual(adjustl(trim(KEYWORD)),SPMF_OUTCFG_FORMAT18)) then
+    if(.not. ISSTREQUAL(adjustl(trim(KEYWORD)),SPMF_OUTCFG_FORMAT18)) then
         write(*,*) "MCPSCUERROR: the format of space special mean field configuration file is not right at LINE: ",LINE
         write(*,*) STR
         pause
@@ -3762,7 +3777,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                     call UPCASE(KEYWORD)
 
-                    if(.not. IsStrEqual(KEYWORD(1:LENTRIM(KEYWORD)),"&LAYERTHICK")) then
+                    if(.not. ISSTREQUAL(KEYWORD(1:LENTRIM(KEYWORD)),"&LAYERTHICK")) then
                         write(*,*) "MCPSCUERROR: the layers number is less than the recorded layers number ."
                         pause
                         stop
@@ -3969,8 +3984,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
                     ClustersSample(ILayer,IGroup)%m_RAD = TheDiffusorValue%ECR_Free
-                case(p_ECR_ByBCluster)
-                    ClustersSample(ILayer,IGroup)%m_RAD = Cal_ECR_ByBCluster(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                case default
+                    ClustersSample(ILayer,IGroup)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,               &
+                                                                                ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA,    &
+                                                                                Host_SimuCtrlParam%TKB,                           &
+                                                                                this%LatticeLength)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3995,8 +4013,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             select case(TheDiffusorValue%ECRValueType_InGB)
                 case(p_ECR_ByValue)
                     ClustersSample(ILayer,IGroup)%m_RAD = TheDiffusorValue%ECR_InGB
-                case(p_ECR_ByBCluster)
-                    ClustersSample(ILayer,IGroup)%m_RAD = Cal_ECR_ByBCluster(sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                case default
+                    ClustersSample(ILayer,IGroup)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_InGB,               &
+                                                                                ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA,    &
+                                                                                Host_SimuCtrlParam%TKB,                           &
+                                                                                this%LatticeLength)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -4122,8 +4143,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         select case(TheDiffusorValue%ECRValueType_Free)
                             case(p_ECR_ByValue)
                                 this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                            case(p_ECR_ByBCluster)
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                            case default
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                        &
+                                                                                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,    &
+                                                                                                     Host_SimuCtrlParam%TKB,                                    &
+                                                                                                     this%LatticeLength)
                         end select
 
                         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -4167,8 +4191,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         select case(TheDiffusorValue%ECRValueType_InGB)
                             case(p_ECR_ByValue)
                                 this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                            case(p_ECR_ByBCluster)
-                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                            case default
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_InGB,                        &
+                                                                                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,    &
+                                                                                                     Host_SimuCtrlParam%TKB,                                    &
+                                                                                                     this%LatticeLength)
                         end select
 
                         select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -4236,8 +4263,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             select case(TheDiffusorValue%ECRValueType_Free)
                                 case(p_ECR_ByValue)
                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                                case(p_ECR_ByBCluster)
-                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                                case default
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                        &
+                                                                                                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,    &
+                                                                                                         Host_SimuCtrlParam%TKB,                                    &
+                                                                                                         this%LatticeLength)
                             end select
 
                             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -4279,8 +4309,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             select case(TheDiffusorValue%ECRValueType_InGB)
                                 case(p_ECR_ByValue)
                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                                case(p_ECR_ByBCluster)
-                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                                case default
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_InGB,                        &
+                                                                                                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,    &
+                                                                                                         Host_SimuCtrlParam%TKB,                                    &
+                                                                                                         this%LatticeLength)
                             end select
 
                             select case(TheDiffusorValue%DiffusorValueType_InGB)

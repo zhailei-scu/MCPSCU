@@ -12,6 +12,7 @@ module MCLIB_CONSTANTS_GPU
     real(kind=KINDSF),constant::dm_HBOXSIZE(3)                                     ! half box size
     integer,constant::dm_PERIOD(3)
     real(kind=KINDDF),constant::dm_TKB
+    real(kind=KINDDF),constant::dm_LatticeLength
 
 
     !********************GPU Parameters******************************
@@ -25,17 +26,20 @@ module MCLIB_CONSTANTS_GPU
     contains
 
 
-    subroutine copyInBoxParamsConstant(BOXBOUNDARY,BOXSIZE,HBOXSIZE)
+    subroutine copyInBoxParamsConstant(BOXBOUNDARY,BOXSIZE,HBOXSIZE,LatticeLength)
         implicit none
         !---dummy Vars----
         real(kind=KINDDF),intent(in)::BOXBOUNDARY(3,2)
         real(kind=KINDDF),intent(in)::BOXSIZE(3)
         real(kind=KINDDF),intent(in)::HBOXSIZE(3)
+        real(kind=KINDDF),intent(in)::LatticeLength
         !---Body----
         !*** copy to device constant memory
         dm_BOXBOUNDARY = BOXBOUNDARY
         dm_BOXSIZE  = BOXSIZE
         dm_HBOXSIZE = HBOXSIZE
+
+        dm_LatticeLength = LatticeLength
 
         return
     end subroutine

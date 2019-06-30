@@ -38,5 +38,6 @@
         include "TOFNAME.F          "
         include "UPCASE.F           "
         include "LENTRIM.F          "
+	include "ISSTREQUAL.F       "
 
       end module MiniUtilities

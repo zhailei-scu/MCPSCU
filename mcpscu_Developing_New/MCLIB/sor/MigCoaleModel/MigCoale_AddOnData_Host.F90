@@ -31,7 +31,9 @@ module MIGCOALE_ADDONDATA_HOST
         character*20::STRTEMP(10)
         integer::N
         integer::I
+        integer::hFile
         !---Body---
+        hFile = 6
 
         KEYWORD = "&DUMPLICATEBOX"
         call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
@@ -85,7 +87,25 @@ module MIGCOALE_ADDONDATA_HOST
 
         m_GBSURDIFPRE = (3.D0/(2.D0*CP_PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_GBDIFCOES(1)
 
+        call PrintResolveAddOnData(hFile)
+
         return
     end subroutine resolveAddOnData
+
+    subroutine PrintResolveAddOnData(hFile)
+        implicit none
+        !---Dummy Vars---
+        integer,intent(in)::hFile
+        !---Body---
+        write(*,*) "***************The Add On Data****************"
+        if(m_DumplicateBox .eq. .true.) then
+            write(hFile,fmt="('!',A70,'!',2x,A10)") "Whether rescale box = ","true"
+        else
+            write(hFile,fmt="('!',A70,'!',2x,A10)") "Whether rescale box = ","false"
+        end if
+        write(hFile,fmt="('!',A70,'!',2x,1ES10.4)") "Prefactor for bigger cluster model  in free maxtrix = ",m_FREESURDIFPRE
+        write(hFile,fmt="('!',A70,'!',2x,1ES10.4)") "Prefactor for bigger cluster model  in GB = ",m_GBSURDIFPRE
+        return
+    end subroutine PrintResolveAddOnData
 
 end module MIGCOALE_ADDONDATA_HOST

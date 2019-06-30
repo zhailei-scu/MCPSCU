@@ -1,6 +1,6 @@
 module MCLIB_TYPEDEF_ReactionPropList
     use MCLIB_TYPEDEF_REACTIONSVALUE
-    use MCLIB_TYPEDEF_ATOMSLIST
+    use MODEL_TYPEDEF_ATOMSLIST
     use MCLIB_TYPEDEF_ACLUSTER
     use MCLIB_UTILITIES
 
@@ -481,13 +481,13 @@ module MCLIB_TYPEDEF_ReactionPropList
         else
             cursor=>this%next
             cursorP=>this
-            if(IsStrEqual(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol) .AND. IsStrEqual(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol)) then
+            if(ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol) .AND. ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol)) then
                 write(*,*) "MCPSCUERROR: The Reaction is dumplicated: Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                 pause
                 stop
             end if
 
-            if(IsStrEqual(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol) .AND. IsStrEqual(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol)) then
+            if(ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol) .AND. ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol)) then
                 write(*,*) "MCPSCUERROR: The Reaction is dumplicated for pairs Subject : ",cursorP%Reaction%SubjectSymbol," object: ",cursorP%Reaction%ObjectSymbol
                 write(*,*) "and : Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                 pause
@@ -498,13 +498,13 @@ module MCLIB_TYPEDEF_ReactionPropList
                 cursor=>cursor%next
                 cursorP=>cursorP%next
 
-                if(IsStrEqual(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol) .AND. IsStrEqual(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol)) then
+                if(ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol) .AND. ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol)) then
                     write(*,*) "MCPSCUERROR: The Reaction is dumplicated: Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                     pause
                     stop
                 end if
 
-                if(IsStrEqual(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol) .AND. IsStrEqual(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol)) then
+                if(ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol) .AND. ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol)) then
                     write(*,*) "MCPSCUERROR: The Reaction is dumplicated for pairs Subject : ",cursorP%Reaction%SubjectSymbol," object: ",cursorP%Reaction%ObjectSymbol
                     write(*,*) "and : Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                     pause

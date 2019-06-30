@@ -149,7 +149,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
     call this%dm_ReactionsMap%copyFromHost(Host_Boxes%m_ReactionsMap)
 
-    call copyInBoxParamsConstant(Host_Boxes%BOXBOUNDARY,Host_Boxes%BOXSIZE,Host_Boxes%HBOXSIZE)
+    call copyInBoxParamsConstant(Host_Boxes%BOXBOUNDARY,Host_Boxes%BOXSIZE,Host_Boxes%HBOXSIZE,Host_Boxes%LatticeLength)
 
     return
   end subroutine CopyInBoxesArray_FromHost

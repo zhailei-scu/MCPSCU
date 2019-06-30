@@ -37,6 +37,7 @@
 		<Unit filename="sor/MODEL_ECR_GPU.F90">
 			<Option weight="1" />
 		</Unit>
+		<Unit filename="sor/MODEL_TYPEDEF_ATOMSLIST.F90" />
 		<Extensions>
 			<envvars />
 			<code_completion />

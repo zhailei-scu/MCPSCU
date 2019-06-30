@@ -1,6 +1,6 @@
-module MCLIB_TYPEDEF_ATOMSLIST
-    use MCLIB_CONSTANTS
-    use MCLIB_UTILITIES_FORMER
+module MODEL_TYPEDEF_ATOMSLIST
+    use MSM_CONSTANTS
+    use MiniUtilities,only:ISSTREQUAL
     implicit none
 
     type,public::ATOM
@@ -137,14 +137,14 @@ module MCLIB_TYPEDEF_ATOMSLIST
             cursorP=>this
             cursor=>this%next
 
-            if(IsStrEqual(cursorP%m_Atom%m_Symbol,newOne%m_Symbol)) then
+            if(ISSTREQUAL(cursorP%m_Atom%m_Symbol,newOne%m_Symbol)) then
                 write(*,*) "MCPSCUERROR: The element symbol is redifined: ",newOne%m_Symbol
                 pause
                 stop
             end if
 
             DO While(associated(cursor))
-                if(IsStrEqual(cursor%m_Atom%m_Symbol,newOne%m_Symbol)) then
+                if(ISSTREQUAL(cursor%m_Atom%m_Symbol,newOne%m_Symbol)) then
                     write(*,*) "MCPSCUERROR: The element symbol is redifined: ",newOne%m_Symbol
                     pause
                     stop
@@ -165,12 +165,6 @@ module MCLIB_TYPEDEF_ATOMSLIST
         end if
 
         this%m_ListCount = this%m_ListCount + 1
-
-        if(this%m_ListCount .GT. p_ATOMS_GROUPS_NUMBER) then
-            write(*,*) "MCPSCUERROR: The defined elements group number is greater than defined max atoms kinds: ",p_ATOMS_GROUPS_NUMBER
-            pause
-            stop
-        end if
 
         Nullify(cursorP)
         cursorP=>null()
@@ -249,7 +243,7 @@ module MCLIB_TYPEDEF_ATOMSLIST
 
         DO While(associated(cursor))
 
-            if(IsStrEqual(tempSymbol,cursor%m_Atom%m_Symbol)) then
+            if(ISSTREQUAL(tempSymbol,cursor%m_Atom%m_Symbol)) then
                 TheIndex = tempIndex
                 if(TheIndex .ne. cursor%m_Atom%m_ID) then
                     write(*,*) "MCPSCUERROR: The elements id is not stored correct: ",Symbol
@@ -381,5 +375,5 @@ module MCLIB_TYPEDEF_ATOMSLIST
         return
     end subroutine Clean_AtomsList
 
-end module MCLIB_TYPEDEF_ATOMSLIST
+end module MODEL_TYPEDEF_ATOMSLIST
 

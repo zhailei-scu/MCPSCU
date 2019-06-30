@@ -218,8 +218,11 @@ module MIGCOALE_EVOLUTION_GPU
             select case(TheDiffusorValue%ECRValueType_InGB)
                 case(p_ECR_ByValue)
                     Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                case(p_ECR_ByBCluster)
-                    Dev_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                case default
+                    Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
+                                                                       Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                       dm_TKB,                                                  &
+                                                                       dm_LatticeLength)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -737,8 +740,11 @@ module MIGCOALE_EVOLUTION_GPU
                 select case(TheDiffusorValue%ECRValueType_Free)
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case(p_ECR_ByBCluster)
-                        Dev_Clusters(IC)%m_RAD =  Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                    case default
+                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
+                                                                           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                           dm_TKB,                                                  &
+                                                                           dm_LatticeLength)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -764,8 +770,11 @@ module MIGCOALE_EVOLUTION_GPU
                 select case(TheDiffusorValue%ECRValueType_InGB)
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                    case(p_ECR_ByBCluster)
-                        Dev_Clusters(IC)%m_RAD =  Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                    case default
+                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
+                                                                           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                           dm_TKB,                                                  &
+                                                                           dm_LatticeLength)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -992,8 +1001,11 @@ module MIGCOALE_EVOLUTION_GPU
                 select case(TheDiffusorValue%ECRValueType_Free)
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case(p_ECR_ByBCluster)
-                        Dev_Clusters(IC)%m_RAD =  Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                    case default
+                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
+                                                                           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                           dm_TKB,                                                  &
+                                                                           dm_LatticeLength)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1019,8 +1031,11 @@ module MIGCOALE_EVOLUTION_GPU
                 select case(TheDiffusorValue%ECRValueType_InGB)
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                    case(p_ECR_ByBCluster)
-                        Dev_Clusters(IC)%m_RAD =  Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                    case default
+                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
+                                                                           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                           dm_TKB,                                                  &
+                                                                           dm_LatticeLength)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_InGB)

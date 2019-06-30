@@ -474,7 +474,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         call UPCASE(KEYWORD)
 
-        if(.not. IsStrEqual(KEYWORD,m_IMPFINPUTF)) then
+        if(.not. ISSTREQUAL(KEYWORD,m_IMPFINPUTF)) then
             write(*,*) "MCPSCUERROR: Unknown file header: ",KEYWORD
             write(*,*) "In file: ",truePath
             pause
@@ -884,7 +884,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::LayerNum
         !---Body---
 
-        if(.not. IsStrEqual(PreKEYWORD,"&EXTFSUBCTL")) then
+        if(.not. ISSTREQUAL(PreKEYWORD,"&EXTFSUBCTL")) then
             write(*,*) "MCPSCUERROR: You must special the &EXTFSUBCTL when the implant strategy is chosen by outer file ."
             write(*,*) "However, you had special the key word :",KEYWORD
             write(*,*) "At line: ",LINE
@@ -922,7 +922,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                     this%ImplantCfgFileType = adjustl(trim(KEYWORD_HEAD))//adjustl(trim(STRTEMP(1)))
 
-                    if(IsStrEqual(trim(this%ImplantCfgFileType),SRIM_DIST) .or.  IsStrEqual(trim(this%ImplantCfgFileType),PANDA_DIST)) then
+                    if(ISSTREQUAL(trim(this%ImplantCfgFileType),SRIM_DIST) .or.  ISSTREQUAL(trim(this%ImplantCfgFileType),PANDA_DIST)) then
                         call EXTRACT_SUBSTR(STR,2,N,STRTEMP)
 
                         if(N .LT. 2) then
@@ -937,7 +937,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         this%Elemets(1) = adjustl(trim((STRTEMP(2))))
                     end if
 
-                    if(IsStrEqual(trim(this%ImplantCfgFileType),SRIM_DIST) .or. IsStrEqual( trim(this%ImplantCfgFileType),OKMC_DIST_FORMAT18)) then
+                    if(ISSTREQUAL(trim(this%ImplantCfgFileType),SRIM_DIST) .or. ISSTREQUAL( trim(this%ImplantCfgFileType),OKMC_DIST_FORMAT18)) then
                         call EXTRACT_NUMB(STR,1,N,STRTEMP)
 
                         if(N .LT. 1) then
@@ -1098,10 +1098,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
         select case(TheDiffusorValue%ECRValueType_Free)
             case(p_ECR_ByValue)
                 ImplantIon%m_RAD = TheDiffusorValue%ECR_Free
-            case(p_ECR_ByBCluster)
-                ! Convert the number of atoms to radius
-                ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                ImplantIon%m_RAD = Cal_ECR_ByBCluster(sum(ImplantIon%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+            case default
+                ImplantIon%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,    &
+                                                         ImplantIon%m_Atoms(:)%m_NA,            &
+                                                         Host_SimuCtrlParam%TKB,                &
+                                                         SimBoxes%LatticeLength)
         end select
 
         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -1330,10 +1331,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
         select case(TheDiffusorValue%ECRValueType_Free)
             case(p_ECR_ByValue)
                 ImplantIon%m_RAD = TheDiffusorValue%ECR_Free
-            case(p_ECR_ByBCluster)
-                ! Convert the number of atoms to radius
-                ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                ImplantIon%m_RAD = Cal_ECR_ByBCluster(sum(ImplantIon%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+            case default
+                ImplantIon%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,    &
+                                                         ImplantIon%m_Atoms(:)%m_NA,            &
+                                                         Host_SimuCtrlParam%TKB,                &
+                                                         SimBoxes%LatticeLength)
         end select
 
         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2156,10 +2158,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 select case(TheDiffusorValue%ECRValueType_Free)
                                     case(p_ECR_ByValue)
                                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                                    case(p_ECR_ByBCluster)
-                                        ! Convert the number of atoms to radius
-                                        ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                                    case default
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                                   Host_SimuCtrlParam%TKB,                                      &
+                                                                                                                   Host_Boxes%LatticeLength)
                                 end select
 
                                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2203,10 +2206,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 select case(TheDiffusorValue%ECRValueType_InGB)
                                     case(p_ECR_ByValue)
                                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                                    case(p_ECR_ByBCluster)
-                                        ! Convert the number of atoms to radius
-                                        ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                                    case default
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_InGB,                          &
+                                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                                   Host_SimuCtrlParam%TKB,                                      &
+                                                                                                                   Host_Boxes%LatticeLength)
                                 end select
 
                                 select case(TheDiffusorValue%DiffusorValueType_InGB)
@@ -2409,10 +2413,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         select case(TheDiffusorValue%ECRValueType_Free)
                             case(p_ECR_ByValue)
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                            case(p_ECR_ByBCluster)
-                                ! Convert the number of atoms to radius
-                                ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                            case default
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                           Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                           Host_SimuCtrlParam%TKB,                                      &
+                                                                                                           Host_Boxes%LatticeLength)
                         end select
 
                         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2542,10 +2547,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
             select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                case(p_ECR_ByBCluster)
-                    ! Convert the number of atoms to radius
-                    ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                case default
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                               Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                               Host_SimuCtrlParam%TKB,                                      &
+                                                                                               Host_Boxes%LatticeLength)
              end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2677,10 +2683,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 select case(TheDiffusorValue%ECRValueType_Free)
                     case(p_ECR_ByValue)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case(p_ECR_ByBCluster)
-                        ! Convert the number of atoms to radius
-                        ! Ref. Modelling Simul. Mater. Sci. Eng.16(2008)055003
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ByBCluster(sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA),Host_SimuCtrlParam%TKB)
+                    case default
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
                 end select
 
                 select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -2983,8 +2990,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         select case(TheDiffusorValue%ECRValueType_Free)
                             case(p_ECR_ByValue)
                                 Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
-                            case(p_ECR_ByBCluster)
-                                Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                            case default
+                                Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                        &
+                                                                                       Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                                       dm_TKB,                                                    &
+                                                                                       dm_LatticeLength)
                         end select
 
                         select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3176,8 +3186,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
             select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
-                case(p_ECR_ByBCluster)
-                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                case default
+                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                        &
+                                                                           Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                           dm_TKB,                                                    &
+                                                                           dm_LatticeLength)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3365,8 +3378,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
             select case(TheDiffusorValue%ECRValueType_Free)
                 case(p_ECR_ByValue)
                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
-                case(p_ECR_ByBCluster)
-                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                case default
+                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                        &
+                                                                           Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                           dm_TKB,                                                    &
+                                                                           dm_LatticeLength)
             end select
 
             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3551,8 +3567,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             select case(TheDiffusorValue%ECRValueType_Free)
                                 case(p_ECR_ByValue)
                                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
-                                case(p_ECR_ByBCluster)
-                                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                                case default
+                                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                        &
+                                                                                           Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                                           dm_TKB,                                                    &
+                                                                                           dm_LatticeLength)
                             end select
 
                             select case(TheDiffusorValue%DiffusorValueType_Free)
@@ -3580,8 +3599,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             select case(TheDiffusorValue%ECRValueType_InGB)
                                 case(p_ECR_ByValue)
                                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_InGB
-                                case(p_ECR_ByBCluster)
-                                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ByBCluster_Dev(sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1),dm_TKB)
+                                case default
+                                    Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                        &
+                                                                                           Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                                           dm_TKB,                                                    &
+                                                                                           dm_LatticeLength)
                             end select
 
                             select case(TheDiffusorValue%DiffusorValueType_InGB)

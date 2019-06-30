@@ -72,6 +72,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      !*****restored statments for special problem*************
      type(Statementlist),pointer::AddOnData=>null()
+     type(Statementlist),pointer::ModelData=>null()
 
      !***File path and name restore*****
      character*256::InputFilePath = ""
@@ -114,6 +115,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      procedure,non_overridable,pass,private::Load_Ctrl_Implant
      procedure,non_overridable,pass,private::Load_Ctrl_TimeStep
      procedure,non_overridable,pass,private::Load_AddOnDataStatments
+     procedure,non_overridable,pass,private::Load_ModelDataStatments
      Generic::Assignment(=)=>CopyFromOther
      Final::Clean
 
@@ -135,6 +137,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
   private::Load_Ctrl_Implant
   private::Load_Ctrl_TimeStep
   private::Load_AddOnDataStatments
+  private::Load_ModelDataStatments
   private::Clean
 
 
@@ -246,6 +249,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
     call Copy_StatementList(otherOne%AddOnData,this%AddOnData)
 
+    call Copy_StatementList(otherOne%ModelData,this%ModelData)
+
     return
   end subroutine CopyFromOther
 
@@ -331,6 +336,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      call Release_StatementList(this%AddOnData)
      this%AddOnData=>null()
+
+     call Release_StatementList(this%ModelData)
+     this%ModelData=>null()
 
   end subroutine CleanOneSimulationCtrlParam
 
@@ -477,6 +485,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      call Release_StatementList(this%AddOnData)
      this%AddOnData=>null()
+
+     call Release_StatementList(this%ModelData)
+     this%ModelData=>null()
 
      this%next=>null()
 
@@ -800,6 +811,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 call this%Load_Ctrl_TimeStep(hFile,*100)
             case("&ADDONDATA")
                 call this%Load_AddOnDataStatments(hFile,*100)
+            case("&MODELDATA")
+                call this%Load_ModelDataStatments(hFile,*100)
         end select
     END DO
 
@@ -1348,6 +1361,39 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     return
     100 return 1
   end subroutine
+
+
+  !********************************************
+  subroutine Load_ModelDataStatments(this,hFile,*)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationCtrlParam),target::this
+    integer,intent(in)::hFile
+    !---Local Vars---
+    integer::LINE
+    integer::N
+    character*256::STR
+    character*32::KEYWORD
+    !---Body---
+    DO While(.true.)
+        call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
+        call RemoveComments(STR,"!")
+        STR = adjustl(STR)
+        call GETKEYWORD("&", STR, KEYWORD)
+        call UPCASE(KEYWORD)
+
+        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&ENDSUBCTL")
+                exit
+            case default
+                call Add_StatementList(this%ModelData, STR, LINE)
+        end select
+
+    END DO
+
+    return
+    100 return 1
+  end subroutine Load_ModelDataStatments
 
   !********************************************
   subroutine Print_CtrlParameters(this,hFile)
