@@ -55,6 +55,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
         contains
         procedure,private,non_overridable,pass::CopyReactionValueFromOther
+        procedure,private,non_overridable,pass::CleanReactionValue
         GENERIC::Assignment(=)=>CopyReactionValueFromOther
         !*********Important note: The PGI CUDA Fortran not support the Final symbol, the final symbol would cause the
         !*********Compiler error************
@@ -71,6 +72,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
         contains
         procedure,public,non_overridable,pass::CopyReactionEntityFromOther
+        procedure,private,non_overridable,pass::CleanReactionEntity
         Generic::Assignment(=)=>CopyReactionEntityFromOther
         !---Similarly, the final procedure cannot be used here---
     end type ReactionEntity
@@ -105,7 +107,9 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
     private::Convert2ReactionValue
     !private::CleanReadedReactionPair
     private::CopyReactionValueFromOther
+    private::CleanReactionValue
     private::CopyReactionEntityFromOther
+    private::CleanReactionEntity
     private::putToReactionsMap
     private::getValueFromReactionsMap
     private::ReactionsMapConstructor
@@ -232,7 +236,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
     subroutine CleanReactionValue(this)
         implicit none
         !---Dummy Vars---
-        type(ReactionValue)::this
+        Class(ReactionValue)::this
         !---Body---
 
         this%ReactionCoefficientType = p_ReactionCoefficient_ByValue
@@ -270,6 +274,19 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
     end subroutine CopyReactionEntityFromOther
 
     !********************************************
+    subroutine CleanReactionEntity(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(ReactionEntity)::this
+        !---Body---
+        this%SubjectCode = 0
+        this%ObjectCode = 0
+        this%NextIndex = 0
+        call this%TheValue%CleanReactionValue()
+        return
+    end subroutine
+
+    !********************************************
     subroutine ReactionsMapConstructor(this,SingleAtomsDivideArrays,MapLength)
         implicit none
         !---Dummy Vars---
@@ -279,6 +296,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         !---Local Vars---
         integer::tempLength
         integer::MapBitLength
+        integer::I
         !---Body---
 
         MapBitLength = 0
@@ -313,6 +331,10 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         this%SingleAtomsDivideArrays = SingleAtomsDivideArrays
 
         allocate(this%RecordsEntities(this%MapLength))
+
+        DO I = 1,this%MapLength
+            call this%RecordsEntities(I)%CleanReactionEntity()
+        END DO
 
         return
     end subroutine ReactionsMapConstructor

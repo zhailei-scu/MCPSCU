@@ -3261,9 +3261,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
-
-            write(*,*) "Capture radius",this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD/this%LatticeLength
-
         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
                 case(p_ECR_ByValue)
@@ -3291,7 +3288,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                           TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
             end select
         end if
-
 
         this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) + 1
         this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) + 1
