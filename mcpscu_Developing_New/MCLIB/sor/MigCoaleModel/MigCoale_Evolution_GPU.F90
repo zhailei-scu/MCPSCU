@@ -128,6 +128,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(DiffusorValue)::TheDiffusorValue
     real(kind=KINDDF)::VectorLen
     integer::RandomSign
+    integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -219,8 +220,9 @@ module MIGCOALE_EVOLUTION_GPU
                 case(p_ECR_ByValue)
                     Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                 case default
+                    ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                     Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
-                                                                       Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                       ATOMS,                                                   &
                                                                        dm_TKB,                                                  &
                                                                        dm_LatticeLength)
             end select
@@ -593,11 +595,12 @@ module MIGCOALE_EVOLUTION_GPU
     integer::ObjectStatu
     type(DiffusorValue)::TheDiffusorValue
     type(ReactionValue)::TheReactionValue
-    real(kind=KINDDF)::ReactionCoeff
+    real(kind=KINDDF)::ReactionProp
     integer::SubjectElementIndex
     integer::ObjectElementIndex
     integer::SubjectNANum
     integer::ObjectNANum
+    integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -702,16 +705,16 @@ module MIGCOALE_EVOLUTION_GPU
 
           call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
 
-          ReactionCoeff = 0.D0
+          ReactionProp = 0.D0
           select case(TheReactionValue%ReactionCoefficientType)
             case(p_ReactionCoefficient_ByValue)
-                 ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
+                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
             case(p_ReactionCoefficient_ByArrhenius)
-                 ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
           end select
 
           ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
-          if(ReactionCoeff .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
 
             select case(TheReactionValue%ProductionType)
                 case(p_ProductionType_BySimplePlus)
@@ -741,8 +744,9 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                     case default
+                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                         Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
-                                                                           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                           ATOMS,                                                   &
                                                                            dm_TKB,                                                  &
                                                                            dm_LatticeLength)
                 end select
@@ -771,8 +775,9 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                     case default
+                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                         Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
-                                                                           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                           ATOMS,                                                   &
                                                                            dm_TKB,                                                  &
                                                                            dm_LatticeLength)
                 end select
@@ -854,11 +859,12 @@ module MIGCOALE_EVOLUTION_GPU
     integer::ObjectStatu
     type(DiffusorValue)::TheDiffusorValue
     type(ReactionValue)::TheReactionValue
-    real(kind=KINDDF)::ReactionCoeff
+    real(kind=KINDDF)::ReactionProp
     integer::SubjectElementIndex
     integer::ObjectElementIndex
     integer::SubjectNANum
     integer::ObjectNANum
+    integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -963,16 +969,16 @@ module MIGCOALE_EVOLUTION_GPU
 
           call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
 
-          ReactionCoeff = 0.D0
+          ReactionProp = 0.D0
           select case(TheReactionValue%ReactionCoefficientType)
             case(p_ReactionCoefficient_ByValue)
-                 ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
+                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
             case(p_ReactionCoefficient_ByArrhenius)
-                 ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
           end select
 
           ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
-          if(ReactionCoeff .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
 
             select case(TheReactionValue%ProductionType)
                 case(p_ProductionType_BySimplePlus)
@@ -1002,8 +1008,9 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
                     case default
+                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                         Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
-                                                                           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                           ATOMS,                                                   &
                                                                            dm_TKB,                                                  &
                                                                            dm_LatticeLength)
                 end select
@@ -1032,8 +1039,9 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_ECR_ByValue)
                         Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
                     case default
+                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                         Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
-                                                                           Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,  &
+                                                                           ATOMS,                                                   &
                                                                            dm_TKB,                                                  &
                                                                            dm_LatticeLength)
                 end select

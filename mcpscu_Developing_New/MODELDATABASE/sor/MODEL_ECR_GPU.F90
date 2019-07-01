@@ -44,7 +44,7 @@ module MODEL_ECR_GPU
         implicit none
         !---Dummy Vars--
         integer,intent(in)::ECR_CalModelType
-        integer,intent(in)::NAtoms(:)
+        integer,intent(in),dimension(:)::NAtoms
         real(kind=KINDDF),intent(in)::TKB
         real(kind=KINDDF),intent(in)::LatticeLength
         real(kind=KINDDF),intent(out)::TheECR

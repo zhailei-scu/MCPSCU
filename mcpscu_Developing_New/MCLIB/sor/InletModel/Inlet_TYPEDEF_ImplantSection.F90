@@ -2930,6 +2930,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::IElement
         type(DiffusorValue)::TheDiffusorValue
         real(kind=KINDDF)::randSize
+        integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
         bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -2991,8 +2992,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             case(p_ECR_ByValue)
                                 Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                             case default
+                                ATOMS = Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                                 Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                        &
-                                                                                       Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                                       ATOMS,                                                     &
                                                                                        dm_TKB,                                                    &
                                                                                        dm_LatticeLength)
                         end select
@@ -3141,6 +3143,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::IElement
         type(DiffusorValue)::TheDiffusorValue
         real(kind=KINDDF)::randSize
+        integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
         bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3187,8 +3190,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 case(p_ECR_ByValue)
                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                 case default
+                    ATOMS = Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                     Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                        &
-                                                                           Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                           ATOMS,                                                     &
                                                                            dm_TKB,                                                    &
                                                                            dm_LatticeLength)
             end select
@@ -3325,6 +3329,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(DiffusorValue)::TheDiffusorValue
         real(kind=KINDDF)::randSize
         real(kind=KINDDF)::randDepth
+        integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
         bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3379,8 +3384,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 case(p_ECR_ByValue)
                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                 case default
+                    ATOMS = Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                     Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                        &
-                                                                           Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                           ATOMS,                                                     &
                                                                            dm_TKB,                                                    &
                                                                            dm_LatticeLength)
             end select
@@ -3515,6 +3521,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF)::tempRand
         real(kind=KINDDF)::GroupRateTemp
         type(DiffusorValue)::TheDiffusorValue
+        integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
         !---Body---
         tid = (threadidx%y - 1)*blockdim%x + threadidx%x
         bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3568,8 +3575,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 case(p_ECR_ByValue)
                                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_Free
                                 case default
+                                    ATOMS = Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                                     Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                        &
-                                                                                           Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                                           ATOMS,                                                     &
                                                                                            dm_TKB,                                                    &
                                                                                            dm_LatticeLength)
                             end select
@@ -3600,8 +3608,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 case(p_ECR_ByValue)
                                     Dev_Clusters(ICTRUE)%m_RAD = TheDiffusorValue%ECR_InGB
                                 case default
+                                    ATOMS = Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                                     Dev_Clusters(ICTRUE)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                        &
-                                                                                           Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,&
+                                                                                           ATOMS,                                                     &
                                                                                            dm_TKB,                                                    &
                                                                                            dm_LatticeLength)
                             end select
