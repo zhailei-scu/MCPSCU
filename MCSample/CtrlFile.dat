@@ -1,6 +1,6 @@
 &CTLF
  &COMMSUBCTL
-    &BOX box in one test = 64 , total num = 64 , independent = 1
+    &BOX box in one test = 1 , total num = 1 , independent = 1
     &RANDSEED random number seed = 8845, 63879542
   &ENDSUBCTL
 
@@ -17,7 +17,7 @@
     &ENDSUBCTL
 
     &BOUNDSUBCTL
-        &PERIDIC If use periodic boundary condition: X = 1, Y = 1, Z = 0
+        &PERIDIC If use periodic boundary condition: X = 1, Y = 1, Z = 1
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
@@ -42,8 +42,8 @@
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
-        &OUTPUT_CONF     Output instant configuration flag = 0 , the interval = 1                    ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 1 , the interval for each box = 1      
+        &OUTPUT_CONF     Output instant configuration flag = 0 , the interval = 100                  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 1 , the interval for each box = 10      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -52,11 +52,18 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 1     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&SURENG THE SURFACE ENERGY OF A BUBBLE = 3890             ! (ERG/CM^2))
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
     &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
+    &ENDSUBCTL	
 
   &ENDSUBCTL #1
 
@@ -99,13 +106,19 @@
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
-
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 1     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&SURENG THE SURFACE ENERGY OF A BUBBLE = 3890             ! (ERG/CM^2))
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
     &ENDSUBCTL
 
   &ENDSUBCTL #2
@@ -152,10 +165,17 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 1     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&SURENG THE SURFACE ENERGY OF A BUBBLE = 3890             ! (ERG/CM^2))
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
     &ENDSUBCTL
 
   &ENDSUBCTL #3
@@ -202,10 +222,17 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 1     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&SURENG THE SURFACE ENERGY OF A BUBBLE = 3890             ! (ERG/CM^2))
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
     &ENDSUBCTL
 
   &ENDSUBCTL #4
@@ -252,10 +279,17 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 1     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&SURENG THE SURFACE ENERGY OF A BUBBLE = 3890             ! (ERG/CM^2))
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
     &ENDSUBCTL
 
   &ENDSUBCTL #5
@@ -302,10 +336,17 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 1     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&SURENG THE SURFACE ENERGY OF A BUBBLE = 3890             ! (ERG/CM^2))
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
     &ENDSUBCTL
 
   &ENDSUBCTL #6
@@ -352,10 +393,17 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 1     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&SURENG THE SURFACE ENERGY OF A BUBBLE = 3890             ! (ERG/CM^2))
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
     &ENDSUBCTL
 
   &ENDSUBCTL #7
@@ -402,10 +450,17 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 1     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&SURENG THE SURFACE ENERGY OF A BUBBLE = 3890             ! (ERG/CM^2))
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
     &ENDSUBCTL
 
   &ENDSUBCTL #8

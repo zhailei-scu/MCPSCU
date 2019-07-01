@@ -44,26 +44,26 @@
 
 &INITINPUTF
 
-  &GROUPSUBCTL
-         &TYPE The atomical initial type = 0 ! 0 by simple inner way, 1 by from external file, 2 by function
-  
-  	 &NUMBER THE INITIAL NUMBER OF ENTRIES = 1
-  
-         &SIZESUBCTL
-            &NATOMDIST The atoms number in each cluster distribution as Gauss that central = 1 , distribution half width = 0 , left cut = 0 , right cut = 100
-            &ELEMENTCOMPOSIT The included element = "He" , "H" ,The includeed element = (1 , 0)
-         &ENDSUBCTL
-  
-         &DEPTHSUBCTL ! only used the first distribution in below
-            &DEPTH_LAYER THE NUMBER OF DEPTH DISTRIBUTION LAYER = 2 , THE THINCKNESS DISTRIBUTION = (0.5,0.5) ,THE ENTRIES DISTRIBUTION = (0.5,0.5)
-            !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = 50, Y = 50, Z = 50
-            !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0
-         &ENDSUBCTL
-  &ENDSUBCTL
-
   !&GROUPSUBCTL
-         !&TYPE The atomical initial type = 1 ! 0 by simple inner way, 1 by from external file, 2 by function
-         !&INITFILE The init file path = "./FromMF973K/Config309.dat"
+  !       &TYPE The atomical initial type = 0 ! 0 by simple inner way, 1 by from external file, 2 by function
+  !
+  !	 &NUMBER THE INITIAL NUMBER OF ENTRIES = 1
+  !
+  !       &SIZESUBCTL
+  !          &NATOMDIST The atoms number in each cluster distribution as Gauss that central = 1 , distribution half width = 0 , left cut = 0 , right cut = 100
+  !          &ELEMENTCOMPOSIT The included element = "He" , "H" ,The includeed element = (1 , 0)
+  !       &ENDSUBCTL
+  !
+  !       &DEPTHSUBCTL ! only used the first distribution in below
+  !          &DEPTH_LAYER THE NUMBER OF DEPTH DISTRIBUTION LAYER = 2 , THE THINCKNESS DISTRIBUTION = (0.5,0.5) ,THE ENTRIES DISTRIBUTION = (0.5,0.5)
+  !          !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = 50, Y = 50, Z = 50
+  !          !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0
+  !       &ENDSUBCTL
   !&ENDSUBCTL
+
+  &GROUPSUBCTL
+         &TYPE The atomical initial type = 1 ! 0 by simple inner way, 1 by from external file, 2 by function
+         &INITFILE The init file path = "CascadeBox/Config_Job1_Section1_0.dat"
+  &ENDSUBCTL
 
 &ENDINITINPUTF
