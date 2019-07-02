@@ -34,7 +34,6 @@ libname  := libMC_$(objname).$(LIB_EXT)
 nlist    :=  MCLIB_CONSTANTS               	 \
 	     MCLIB_TYPEDEF_ACLUSTER        	 \
              MCLIB_Utilities_Former		 \
-	     MCLIB_TYPEDEF_ATOMSLIST		 \
 	     MCLIB_Utilities		 	 \
 	     MCLIB_TYPEDEF_DiffusorsValue        \
              MCLIB_TYPEDEF_ReactionsValue        \
@@ -71,15 +70,9 @@ $(tgt)$(Segment)MCLIB_Utilities_Former.o : $(sor)$(Segment)MCLIB_Utilities_Forme
 				           $(tgt)$(Segment)MCLIB_CONSTANTS.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MCLIB_TYPEDEF_ATOMSLIST.o : $(sor)$(Segment)MCLIB_TYPEDEF_ATOMSLIST.F90  \
-				            $(tgt)$(Segment)MCLIB_CONSTANTS.o            \
-                                            $(tgt)$(Segment)MCLIB_Utilities_Former.o
-	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
-
 $(tgt)$(Segment)MCLIB_Utilities.o : $(sor)$(Segment)MCLIB_Utilities.F90  \
 			            $(tgt)$(Segment)MCLIB_Utilities_Former.o  \
-			            $(tgt)$(Segment)MCLIB_TYPEDEF_ACLUSTER.o  \
-				    $(tgt)$(Segment)MCLIB_TYPEDEF_ATOMSLIST.o
+			            $(tgt)$(Segment)MCLIB_TYPEDEF_ACLUSTER.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_DiffusorsValue.o : $(sor)$(Segment)MCLIB_TYPEDEF_DiffusorsValue.F90  \
@@ -97,14 +90,12 @@ $(tgt)$(Segment)MCLIB_TYPEDEF_ReactionsValue.o : $(sor)$(Segment)MCLIB_TYPEDEF_R
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_DiffusorPropList.o : $(sor)$(Segment)MCLIB_TYPEDEF_DiffusorPropList.F90  \
                                                    $(tgt)$(Segment)MCLIB_CONSTANTS.o                   \
-                                                   $(tgt)$(Segment)MCLIB_TYPEDEF_ATOMSLIST.o           \
                                                    $(tgt)$(Segment)MCLIB_Utilities.o                   \
                                                    $(tgt)$(Segment)MCLIB_TYPEDEF_DiffusorsValue.o 
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_ReactionPropList.o : $(sor)$(Segment)MCLIB_TYPEDEF_ReactionPropList.F90  \
                                                    $(tgt)$(Segment)MCLIB_CONSTANTS.o                   \
-                                                   $(tgt)$(Segment)MCLIB_TYPEDEF_ATOMSLIST.o           \
                                                    $(tgt)$(Segment)MCLIB_Utilities.o                   \
                                                    $(tgt)$(Segment)MCLIB_TYPEDEF_ReactionsValue.o 
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@

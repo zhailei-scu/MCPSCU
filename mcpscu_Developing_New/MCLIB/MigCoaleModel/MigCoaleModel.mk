@@ -34,14 +34,13 @@ libname  := libMC_$(objname).$(LIB_EXT)
 #######################################################          
 nlist := MigCoale_AddOnData_Host		\
 	       MigCoale_AddOnData_Dev		\
-	     	 MigCoale_TYPEDEF_SimRecord		\
+	       MigCoale_TYPEDEF_SimRecord	\
 	       MigCoale_TYPEDEF_StatisticInfo	\
 	       MigCoale_Statistic_CPU		\
 	       MigCoale_Statistic_GPU		\
 	       MigCoale_TimeCtl			\
 	       MigCoale_GlobalVars_Dev		\
-	       MigCoale_Evolution_GPU		\
-	       MigCoale_Implantation_GPU
+	       MigCoale_Evolution_GPU
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
 modules  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).mod)
@@ -85,15 +84,6 @@ $(tgt)$(Segment)MigCoale_Evolution_GPU.o : $(sor)$(Segment)MigCoale_Evolution_GP
 				                                   $(tgt)$(Segment)MigCoale_GlobalVars_Dev.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_Implantation_GPU.o : $(sor)$(Segment)MigCoale_Implantation_GPU.F90   \
-			       	                                $(tgt)$(Segment)MigCoale_AddOnData_Host.o  	  \
-			                                        $(tgt)$(Segment)MigCoale_AddOnData_Dev.o	  \
-				                                      $(tgt)$(Segment)MigCoale_TYPEDEF_SimRecord.o    \
-				                                      $(tgt)$(Segment)MigCoale_Statistic_CPU.o	  \
-				                                      $(tgt)$(Segment)MigCoale_Statistic_GPU.o	  \
-				                                      $(tgt)$(Segment)MigCoale_TimeCtl.o		  \
-				                                      $(tgt)$(Segment)MigCoale_GlobalVars_Dev.o
-	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 ######################################################################
 clean:
 	-rm $(objects) $(libname) $(modules) 

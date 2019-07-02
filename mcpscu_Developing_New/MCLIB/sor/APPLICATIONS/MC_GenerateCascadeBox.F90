@@ -226,7 +226,7 @@ module MC_GenerateCascadeBox
         !-----------Body--------------
         processid = 0
 
-        CascadeNum = 8
+        CascadeNum = 1
 
         ClusterNumOneCase = 80
 

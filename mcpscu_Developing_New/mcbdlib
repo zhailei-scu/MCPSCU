@@ -1,10 +1,10 @@
 #!/bin/bash
-mcpscusor=/d/ZhaiLei/mcpscu_2019_02_11
-tccpath=/d/ZhaiLei/tcc-0.9.27/
-mcworkspace=/d/ZhaiLei/mcworkspace/mcpscu_2019_02_11
+mcpscusor=/home/zhail/Development/public/mcpscu_2019_07_01
+tccpath=/home/zhail/Development/public/tcc-0.9.27/
+mcworkspace=/home/zhail/Development/public/mcworkspace/mcpscu_2019_07_01
 cudaVersion=cuda8.0
-computerCapability=cc2x
-operateSystem=CYGWIN
+computerCapability=cc35
+operateSystem=LINUX
 
 if [ "$operateSystem" = "CYGWIN" ];then
 	

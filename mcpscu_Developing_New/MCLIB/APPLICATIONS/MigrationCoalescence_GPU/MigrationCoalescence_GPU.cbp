@@ -41,7 +41,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/scratch/p1/ZhaiLei/Cascade/AllWithoutEvolution/Cascade8Box1600LU/SampleSetup.dat 0 1" />
+				<Option parameters="~/mcworkspace/MCSample_New/SampleSetup.dat 0 1" />
 				<Compiler>
 					<Add option="-fast" />
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />

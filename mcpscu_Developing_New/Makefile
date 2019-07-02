@@ -33,12 +33,20 @@ endif
 msmlibnames	  := MSMLIB
 
 ifeq ($(operateSystem), CYGWIN)
+  export MODELDATABASEDIRS  := $(mcpscusor)$(Segment)MODELDATABASE$(Segment)sor
+endif
+ifeq ($(operateSystem), LINUX)
+  export MODELDATABASEDIRS  := $(mcpscusor)$(Segment)MODELDATABASE$(Segment)sor
+endif
+modeldatabasenames	  := MODELDATABASE
+
+ifeq ($(operateSystem), CYGWIN)
   export MCLIBDIRS  := $(mcpscusor)$(Segment)MCLIB$(Segment)sor
 endif
 ifeq ($(operateSystem), LINUX)
   export MCLIBDIRS  := $(mcpscusor)$(Segment)MCLIB$(Segment)sor
 endif
-mclibnames	  := Common CommonGPU MigCoaleModel AppShell
+mclibnames	  := Common CommonGPU MigCoaleModel InletModel AppShell
 
 ifeq ($(operateSystem), CYGWIN)
   export LIBDIRD    := $(mcworkspace)$(Segment)LIB$(Segment)$(ConfigName)
@@ -59,12 +67,18 @@ all:
 
 #the MSMLIB library
 	$(MAKE) -f $(mcpscusor)$(Segment)MSMLIB$(Segment)MSMLIB.mk
+
+#the model data base library
+	$(MAKE) -f $(mcpscusor)$(Segment)MODELDATABASE$(Segment)MODELDATABASE.mk
+
 #the common mc library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)Common$(Segment)Common.mk
 #the commonGPU mc library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)CommonGPU$(Segment)CommonGPU.mk
 #the MigCoale mc library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MigCoaleModel$(Segment)MigCoaleModel.mk
+#the inlet model library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)InletModel$(Segment)InletModel.mk
 #the BubbleGrowth mc library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)AppShell$(Segment)AppShell.mk
 
@@ -77,7 +91,9 @@ clean:
 	$(MAKE) clean -f $(mcpscusor)$(Segment)LIB$(Segment)RandGenerators$(Segment)RandGenerators.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)TCCLIB$(Segment)TCCLIB.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MSMLIB$(Segment)MSMLIB.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MODELDATABASE$(Segment)MODELDATABASE.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)Common$(Segment)Common.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)CommonGPU$(Segment)CommonGPU.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)MigCoaleModel$(Segment)MigCoaleModel.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)InletModel$(Segment)InletModel.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)AppShell$(Segment)AppShell.mk
