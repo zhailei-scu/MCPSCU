@@ -809,12 +809,14 @@ module MIGCOALE_EVOLUTION_GPU
 
             if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .LE. 0) then
                 Dev_Clusters(IC)%m_Statu = p_ANNIHILATE_STATU
+                Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
                 S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_ANNIHILATE_STATU)
             end if
 
             !Dev_Clusters(JC)%m_RAD = 0.D0
             Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
             Dev_Clusters(JC)%m_Atoms(:)%m_NA = 0
+            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
           end if
 
           !---Step 4:Release self
@@ -1072,12 +1074,14 @@ module MIGCOALE_EVOLUTION_GPU
 
             if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .LE. 0) then
                 Dev_Clusters(IC)%m_Statu = p_ANNIHILATE_STATU
+                 Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
                 S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_ANNIHILATE_STATU)
             end if
 
             !Dev_Clusters(JC)%m_RAD = 0.D0
             Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
             Dev_Clusters(JC)%m_Atoms(:)%m_NA = 0
+            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
           end if
 
           !---Step 4:Release self

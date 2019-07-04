@@ -48,6 +48,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
     integer, device, dimension(:,:), allocatable::dm_SEAddedClustersBoxes         ! the start and end index for added clusters in each Box
 
+    integer,device,dimension(:,:),allocatable::dm_RecordNCBeforeSweepOut_SingleBox
+    integer,device,dimension(:),allocatable::dm_RecordNCBeforeSweepOut_Integal
+
 
     contains
     procedure,non_overridable,public,pass::InitSimulationBoxes_Dev=>Init_SimulationBoxes_Dev
@@ -132,9 +135,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
   end subroutine Init_SimulationBoxes_Dev
 
   !**********************************************
-  subroutine CopyInBoxesArray_FromHost(this,Host_Boxes,NSIZE,IfCpyNL)
+  subroutine CopyInBoxesArray_FromHost(this,Host_Boxes,NSIZE,Host_Record,IfCpyNL)
     CLASS(SimulationBoxes_GPU)::this
     type(SimulationBoxes)::Host_Boxes
+    CLASS(SimulationRecord)::Host_Record
     integer,intent(in)::NSIZE
     logical::IfCpyNL
     !---Body---
@@ -143,7 +147,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
     call this%dm_GrainBoundary%CopyInGrainBoundaryFromHost(Host_Boxes%m_GrainBoundary)
 
-    call this%CopyInBoxesInfoFromHost(Host_Boxes)
+    call this%CopyInBoxesInfoFromHost(Host_Boxes,Host_Record)
 
     call this%dm_DiffusorTypesMap%copyFromHost(Host_Boxes%m_DiffusorTypesMap)
 
@@ -177,6 +181,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
     call AllocateArray_GPU(this%dm_SEAddedClustersBoxes,MULTIBOX,2,"dm_SEAddedClustersBoxes")
 
+    call AllocateArray_GPU(this%dm_RecordNCBeforeSweepOut_SingleBox,MULTIBOX,p_NUMBER_OF_STATU,"dm_RecordNCBeforeSweepOut_SingleBox")
+
+    call AllocateArray_GPU(this%dm_RecordNCBeforeSweepOut_Integal,p_NUMBER_OF_STATU,"dm_RecordNCBeforeSweepOut_Integal")
+
     return
   end subroutine Init_BoxesInfo_GPU
 
@@ -199,15 +207,19 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
     call DeAllocateArray_GPU(this%dm_SEAddedClustersBoxes,"dm_SEAddedClustersBoxes")
 
+    call DeAllocateArray_GPU(this%dm_RecordNCBeforeSweepOut_SingleBox,"dm_RecordNCBeforeSweepOut_SingleBox")
+    call DeAllocateArray_GPU(this%dm_RecordNCBeforeSweepOut_Integal,"dm_RecordNCBeforeSweepOut_Integal")
+
     return
   end subroutine CleanBoxesInfo_GPU
 
   !**************************************************
-  subroutine CopyIn_BoxesInfoFromHost(this,Host_Boxes)
+  subroutine CopyIn_BoxesInfoFromHost(this,Host_Boxes,Host_Record)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes_GPU)::this
     type(SimulationBoxes)::Host_Boxes
+    CLASS(SimulationRecord)::Host_Record
     !---Local Vars---
 
     this%dm_SEActIndexBox = Host_Boxes%m_BoxesInfo%SEActIndexBox
@@ -216,18 +228,21 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
     this%dm_SEExpdIndexBox = Host_Boxes%m_BoxesInfo%SEExpdIndexBox
     this%dm_SEAddedClustersBoxes = Host_Boxes%m_BoxesInfo%SEAddedClustersBoxes
 
+    this%dm_RecordNCBeforeSweepOut_Integal = Host_Record%RecordNCBeforeSweepOut_Integal
+    this%dm_RecordNCBeforeSweepOut_SingleBox = Host_Record%RecordNCBeforeSweepOut_SingleBox
 
     return
   end subroutine CopyIn_BoxesInfoFromHost
 
 
     !*****************************************************************
-    subroutine Expand_ClustersInfor_CPUToGPU_BoxByBox(this,Host_Boxes,Host_SimuCtrlParams,ExpandNCNum)
+    subroutine Expand_ClustersInfor_CPUToGPU_BoxByBox(this,Host_Boxes,Host_SimuCtrlParams,Host_Record,ExpandNCNum)
         implicit none
         !-----Dummy Vars-------
         CLASS(SimulationBoxes_GPU)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParams
+        CLASS(SimulationRecord)::Host_Record
         integer,intent(in),dimension(:),allocatable::ExpandNCNum
         !---Local Vars---
         integer::NewTotalSize
@@ -251,19 +266,20 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
         call this%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParams)
 
-        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
+        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,Host_Record,IfCpyNL=.false.)
 
         return
     end subroutine Expand_ClustersInfor_CPUToGPU_BoxByBox
 
 
     !*****************************************************************
-    subroutine Expand_ClustersInfor_CPUToGPU_EqualNum(this,Host_Boxes,Host_SimuCtrlParams,ExpandNCNum)
+    subroutine Expand_ClustersInfor_CPUToGPU_EqualNum(this,Host_Boxes,Host_SimuCtrlParams,Host_Record,ExpandNCNum)
         implicit none
         !-----Dummy Vars-------
         CLASS(SimulationBoxes_GPU)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParams
+        CLASS(SimulationRecord)::Host_Record
         integer,intent(in)::ExpandNCNum
         !---Local Vars---
         integer::NewTotalSize
@@ -287,19 +303,20 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
         call this%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParams)
 
-        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
+        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,Host_Record,IfCpyNL=.false.)
 
         return
     end subroutine Expand_ClustersInfor_CPUToGPU_EqualNum
 
 
     !*****************************************************************
-    subroutine Expand_ClustersInfor_GPUToCPU_BoxByBox(this,Host_Boxes,Host_SimuCtrlParams,ExpandNCNum)
+    subroutine Expand_ClustersInfor_GPUToCPU_BoxByBox(this,Host_Boxes,Host_SimuCtrlParams,Host_Record,ExpandNCNum)
         implicit none
         !-----Dummy Vars-------
         CLASS(SimulationBoxes_GPU)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParams
+        CLASS(SimulationRecord)::Host_Record
         integer,intent(in),dimension(:),allocatable::ExpandNCNum
         !---Local Vars---
         integer::MultiBox
@@ -332,18 +349,19 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
         call this%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParams)
 
-        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
+        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,Host_Record,IfCpyNL=.false.)
 
         return
     end subroutine Expand_ClustersInfor_GPUToCPU_BoxByBox
 
     !*****************************************************************
-    subroutine Expand_ClustersInfor_GPUToCPU_EqualNum(this,Host_Boxes,Host_SimuCtrlParams,ExpandNCNum)
+    subroutine Expand_ClustersInfor_GPUToCPU_EqualNum(this,Host_Boxes,Host_SimuCtrlParams,Host_Record,ExpandNCNum)
         implicit none
         !-----Dummy Vars-------
         CLASS(SimulationBoxes_GPU)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParams
+        CLASS(SimulationRecord)::Host_Record
         integer,intent(in)::ExpandNCNum
         !---Local Vars---
         integer::MultiBox
@@ -378,18 +396,19 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
         call this%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParams)
 
-        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
+        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,Host_Record,IfCpyNL=.false.)
 
         return
     end subroutine Expand_ClustersInfor_GPUToCPU_EqualNum
 
     !************************************************************
-    subroutine Rescale_Boxes_GPUToCPU(this,Host_Boxes,Host_SimuCtrlParams,DUPXYZ)
+    subroutine Rescale_Boxes_GPUToCPU(this,Host_Boxes,Host_SimuCtrlParams,Host_Record,DUPXYZ)
         implicit none
         !---Dummy Vars---
         CLASS(SimulationBoxes_GPU)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParams
+        CLASS(SimulationRecord)::Host_Record
         integer,intent(in)::DUPXYZ(3)
         !---Local Vars---
         integer::OldTotalSize
@@ -418,17 +437,18 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
         call this%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParams)
 
-        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
+        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,Host_Record,IfCpyNL=.false.)
 
         return
     end subroutine Rescale_Boxes_GPUToCPU
 
     !************************************************************
-    subroutine Sweep_UnActiveMemory_GPUToCPU(this,Host_Boxes,Host_SimuCtrlParams)
+    subroutine Sweep_UnActiveMemory_GPUToCPU(this,Host_Boxes,Host_SimuCtrlParams,Host_Record)
         !---Dummy Vars---
         CLASS(SimulationBoxes_GPU)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParams
+        CLASS(SimulationRecord)::Host_Record
         !---Local Vars---
         integer::MultiBox
         integer::OldTotalSize
@@ -457,17 +477,18 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
         call this%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParams)
 
-        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
+        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,Host_Record,IfCpyNL=.false.)
 
         return
     end subroutine Sweep_UnActiveMemory_GPUToCPU
 
     !************************************************************
-    subroutine Sweep_UnActiveMemory_CPUToGPU(this,Host_Boxes,Host_SimuCtrlParams)
+    subroutine Sweep_UnActiveMemory_CPUToGPU(this,Host_Boxes,Host_SimuCtrlParams,Host_Record)
         !---Dummy Vars---
         CLASS(SimulationBoxes_GPU)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParams
+        CLASS(SimulationRecord)::Host_Record
         !---Local Vars---
         integer::MultiBox
         integer::NewTotalSize
@@ -487,7 +508,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
         call this%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParams)
 
-        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
+        call this%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,Host_Record,IfCpyNL=.false.)
 
         return
     end subroutine Sweep_UnActiveMemory_CPUToGPU

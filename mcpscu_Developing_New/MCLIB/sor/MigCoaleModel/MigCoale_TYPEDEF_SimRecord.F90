@@ -1,5 +1,5 @@
 module MIGCOALE_TYPEDEF_SIMRECORD
-    use MCLIB_TYPEDEF_USUAL
+    use MCLIB_TYPEDEF_BASICRECORD
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
 
@@ -8,9 +8,6 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         integer,private::ImplantedEntities = 0
         integer,private::LastRecordImplantNum = 0
         integer,private::NCUT = 0
-
-        integer::RecordNCBeforeSweepOut_Integal(p_NUMBER_OF_STATU)  = 0
-        integer,dimension(:,:),allocatable::RecordNCBeforeSweepOut_SingleBox
 
         real(kind=KINDDF),private::LastUpdateAveSepTime = 0.D0
 
@@ -36,7 +33,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,NON_OVERRIDABLE,public,pass::GetLastRecordImplantNum=>Get_LastRecordImplantNum
         procedure,NON_OVERRIDABLE,public,pass::SetNCUT=>Set_NCUT
         procedure,NON_OVERRIDABLE,public,pass::GetNCUT=>Get_NCUT
-        procedure,NON_OVERRIDABLE,public,pass::RecordNC_ForSweepOut
+
         procedure,NON_OVERRIDABLE,public,pass::SetLastOutSizeDistTime_IntegralBox
         procedure,NON_OVERRIDABLE,public,pass::GetLastOutSizeDistTime_IntegralBox
         procedure,NON_OVERRIDABLE,public,pass::SetLastOutSizeDistTime_EachBox
@@ -61,7 +58,6 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::Get_LastRecordImplantNum
     private::Set_NCUT
     private::Get_NCUT
-    private::RecordNC_ForSweepOut
     private::SetLastOutSizeDistTime_IntegralBox
     private::GetLastOutSizeDistTime_IntegralBox
     private::SetLastOutSizeDistTime_EachBox
@@ -109,10 +105,6 @@ module MIGCOALE_TYPEDEF_SIMRECORD
             TheTimeSection = TimeSection
         end if
 
-        call AllocateArray_Host(this%RecordNCBeforeSweepOut_SingleBox,MultiBox,p_NUMBER_OF_STATU,"RecordNCBeforeSweepOut_SingleBox")
-        this%RecordNCBeforeSweepOut_SingleBox = 0
-        this%RecordNCBeforeSweepOut_Integal = 0
-
         this%LastUpdateAveSepTime = 0.D0
 
         this%rescaleCount = 0
@@ -120,7 +112,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         this%LastOutSizeDistTime_IntegralBox = 0.D0
         this%LastOutSizeDistTime_EachBox = 0.D0
 
-        call this%InitSimulationRecord(SimuSteps=Steps,SimuTimes=Times,SimuPatchs=Patchs,TimeSections=TheTimeSection)
+        call this%InitSimulationRecord(MultiBox,SimuSteps=Steps,SimuTimes=Times,SimuPatchs=Patchs,TimeSections=TheTimeSection)
 
         this%StartImplantTime = 0
 
@@ -229,28 +221,6 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
         return
     end subroutine Set_NCUT
-
-    subroutine RecordNC_ForSweepOut(this,MultiBox,TheBoxesBasicStatistic)
-        implicit none
-        !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
-        integer,intent(in)::MultiBox
-        type(BoxesBasicStatistic),intent(in)::TheBoxesBasicStatistic
-        !---Local Vars---
-        integer::IBox
-        !---Body---
-        DO IBox = 1,MultiBox
-            this%RecordNCBeforeSweepOut_SingleBox(IBox,:) = TheBoxesBasicStatistic%BoxesStatis_Single(IBox)%NC + this%RecordNCBeforeSweepOut_SingleBox(IBox,:)
-            this%RecordNCBeforeSweepOut_SingleBox(IBox,p_ACTIVEFREE_STATU) = TheBoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU)
-            this%RecordNCBeforeSweepOut_SingleBox(IBox,p_ACTIVEINGB_STATU) = TheBoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEINGB_STATU)
-        END DO
-
-        this%RecordNCBeforeSweepOut_Integal= TheBoxesBasicStatistic%BoxesStatis_Integral%NC + this%RecordNCBeforeSweepOut_Integal
-        this%RecordNCBeforeSweepOut_Integal(p_ACTIVEFREE_STATU) = TheBoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU)
-        this%RecordNCBeforeSweepOut_Integal(p_ACTIVEINGB_STATU) = TheBoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEINGB_STATU)
-
-        return
-    end subroutine
 
     subroutine SetLastOutSizeDistTime_IntegralBox(this,TheTime)
         implicit none

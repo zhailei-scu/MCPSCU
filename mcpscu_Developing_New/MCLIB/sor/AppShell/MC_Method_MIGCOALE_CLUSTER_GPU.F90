@@ -135,7 +135,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call resolveModelRelativeData(PSimCtrlParam%ModelData,Host_SimBoxes%Atoms_list)
                 call InitSimulationBoxesConfig(Host_SimBoxes,PSimCtrlParam,m_InitBoxSimCfgList,m_MigCoaleStatInfoWrap,m_MigCoalClusterRecord)
 
-                call Initital_Global_Variables_GPU(Host_SimBoxes, PSimCtrlParam,Dev_Boxes)
+                call Initital_Global_Variables_GPU(Host_SimBoxes, PSimCtrlParam,m_MigCoalClusterRecord,Dev_Boxes)
 
                 call m_MigCoale_GVarsDev%Init(Host_SimBoxes, PSimCtrlParam)
             end if
@@ -255,7 +255,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 !dumplicate the simulation boxes
 
                 call Record%RecordNC_ForSweepOut(Host_SimuCtrlParam%MultiBox,Host_SimBoxes%m_BoxesBasicStatistic)
-                call Dev_Boxes%RescaleBoxes_GPUToCPU(Host_SimBoxes, Host_SimuCtrlParam,DUPXYZ)
+                call Dev_Boxes%RescaleBoxes_GPUToCPU(Host_SimBoxes, Host_SimuCtrlParam,Record,DUPXYZ)
 
                 if(Host_SimBoxes%m_BoxesInfo%SEVirtualIndexBox(Host_SimuCtrlParam%MultiBox,2) .GT. 0) then
                     TotalSize = Host_SimBoxes%m_BoxesInfo%SEVirtualIndexBox(Host_SimuCtrlParam%MultiBox,2) - Host_SimBoxes%m_BoxesInfo%SEVirtualIndexBox(1,1) + 1
@@ -1464,6 +1464,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                 Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
                 Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
 
@@ -1568,6 +1571,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             end select
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
             Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
             Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
@@ -1681,6 +1687,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
                 Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
                 Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1

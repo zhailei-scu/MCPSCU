@@ -8,7 +8,7 @@ module MC_MethodClass_Factory_GPU
             use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             use MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             use MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
-            use MCLIB_TYPEDEF_USUAL
+            use MCLIB_TYPEDEF_BASICRECORD
             implicit none
             type(SimulationBoxes)::Host_SimBoxes
             type(SimulationCtrlParam),target::Host_SimuCtrlParam

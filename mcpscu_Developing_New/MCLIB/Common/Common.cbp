@@ -43,6 +43,9 @@
 		<Unit filename="../sor/Common/MCLIB_TYPEDEF_ACLUSTER.F90">
 			<Option weight="1" />
 		</Unit>
+		<Unit filename="../sor/Common/MCLIB_TYPEDEF_BASICRECORD.F90">
+			<Option weight="3" />
+		</Unit>
 		<Unit filename="../sor/Common/MCLIB_TYPEDEF_ClustersInfo_CPU.F90">
 			<Option weight="4" />
 		</Unit>
@@ -68,9 +71,6 @@
 			<Option weight="5" />
 		</Unit>
 		<Unit filename="../sor/Common/MCLIB_TYPEDEF_SimCtrlParam.F90">
-			<Option weight="3" />
-		</Unit>
-		<Unit filename="../sor/Common/MCLIB_TYPEDEF_USUAL.F90">
 			<Option weight="3" />
 		</Unit>
 		<Unit filename="../sor/Common/MCLIB_Utilities.F90">

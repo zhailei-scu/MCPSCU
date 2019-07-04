@@ -88,6 +88,8 @@ module MCLIB_Utilities_GPU
 
         Dist%m_DiffuseDirection = Source%m_DiffuseDirection
 
+        Dist%m_Record = Source%m_Record
+
         return
     end subroutine
 

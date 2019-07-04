@@ -1,7 +1,7 @@
 module INLET_TYPEDEF_IMPLANTSECTION
     use cudafor
     use MCLIB_CONSTANTS_GPU
-    use MCLIB_TYPEDEF_USUAL
+    use MCLIB_TYPEDEF_BASICRECORD
     use MCLIB_TYPEDEF_ACLUSTER
     use MCLIB_GLOBAL_GPU
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
@@ -1718,7 +1718,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
             call Record%RecordNC_ForSweepOut(MultiBox,Host_Boxes%m_BoxesBasicStatistic)
 
-            call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam)
+            call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam,Record)
 
             call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
@@ -1732,7 +1732,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                 write(*,*) ".....Add virtual range...."
 
-                call Dev_Boxes%ExpandClustersInfo_GPUToCPU_EqualNum(Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+                call Dev_Boxes%ExpandClustersInfo_GPUToCPU_EqualNum(Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
 
                 if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(MultiBox,2) .GT. 0) then
                     NewTotalSize = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(MultiBox,2) - Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(1,1) + 1
@@ -1743,7 +1743,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeImplantRandNum(MultiBox*NewAllocateNCEachBox)
 
-                call this%DoImplantTillVirtualBoundary_CPUTOGPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,NewAllocateNCEachBox)
+                call this%DoImplantTillVirtualBoundary_CPUTOGPU(Host_Boxes,Host_SimuCtrlParam,Record,Dev_Boxes,NewAllocateNCEachBox)
 
                 call GetBoxesMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record)
 
@@ -1989,21 +1989,22 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end function Cal_ImplantANDExpandSize
 
     !*************************************************************
-    subroutine DoImplantTillVirtualBoundary_CPU(this,Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+    subroutine DoImplantTillVirtualBoundary_CPU(this,Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Body---
         select case(this%ImplantConfigType)
             case(p_ImplantConfig_Simple)
-                call this%FillVirtualBoundary_CPU_Simple(Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+                call this%FillVirtualBoundary_CPU_Simple(Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
             case(p_ImplantConfig_SpecialDistFromFile)
-                call this%FillVirtualBoundary_CPU_FromFile(Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+                call this%FillVirtualBoundary_CPU_FromFile(Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
             case(p_ImplantConfig_SpecialDistFromExteFunc)
-                call this%FillVirtualBoundary_CPU_FromExteFunc(Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+                call this%FillVirtualBoundary_CPU_FromExteFunc(Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
             case default
                 write(*,*) "MCPSCUERROR: Unknown strategy for the implantation configuration:",this%ImplantConfigType
                 pause
@@ -2013,20 +2014,21 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine DoImplantTillVirtualBoundary_CPU
 
     !*************************************************************
-    subroutine FillVirtualBoundary_CPU_Simple(this,SimBoxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+    subroutine FillVirtualBoundary_CPU_Simple(this,SimBoxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Body--
         select case(this%ImplantDepthDistType)
             case(p_DEPT_DIS_Layer)
-                call this%FillVirtualBoundary_CPU_Depth_LAY(SimBoxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+                call this%FillVirtualBoundary_CPU_Depth_LAY(SimBoxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
             case(p_DEPT_DIS_BOX)
-                call this%FillVirtualBoundary_CPU_Depth_SubBox(SimBoxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+                call this%FillVirtualBoundary_CPU_Depth_SubBox(SimBoxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
             case(p_DEPT_DIS_GAS)
-                call this%FillVirtualBoundary_CPU_Depth_Gauss(SimBoxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+                call this%FillVirtualBoundary_CPU_Depth_Gauss(SimBoxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
             case default
                 write(*,*) "MCPSCUERROR : Unknown way to Unknown strategy for the simple implantation configuration: ",this%ImplantDepthDistType
                 pause
@@ -2037,13 +2039,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine FillVirtualBoundary_CPU_Simple
 
     !*************************************************************
-    subroutine FillVirtualBoundary_CPU_FromFile(this,Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+    subroutine FillVirtualBoundary_CPU_FromFile(this,Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
         use RAND32_MODULE
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Local Vars---
         integer::MultiBox
@@ -2062,6 +2065,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::IGroup
         logical::exitFlag
         integer::LayerNum
+        integer::NCAccum
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2113,6 +2117,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             end if
 
             MaxGroups = size(this%ClustersSampleRate,dim=2)
+
+            NCAccum = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) + sum(Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
 
             DO IC = ICFROM,ICTO
 
@@ -2230,6 +2236,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 end select
                             end if
 
+                            NCAccum = NCAccum + 1
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = NCAccum
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                             exitFlag = .true.
 
                             exit
@@ -2247,12 +2257,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine FillVirtualBoundary_CPU_FromFile
 
     !*************************************************************
-    subroutine FillVirtualBoundary_CPU_FromExteFunc(this,Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+    subroutine FillVirtualBoundary_CPU_FromExteFunc(this,Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Body---
 
@@ -2260,13 +2271,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
 
     !*************************************************************
-    subroutine DoImplantTillVirtualBoundary_CPUTOGPU(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,NewAllocateNCEachBox)
+    subroutine DoImplantTillVirtualBoundary_CPUTOGPU(this,Host_Boxes,Host_SimuCtrlParam,Record,Dev_Boxes,NewAllocateNCEachBox)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
+        type(MigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Local Vars---
         integer::MultiBox
@@ -2274,7 +2286,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
-        call this%DoImplantTillVirtualBoundary_CPU(Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+        call this%DoImplantTillVirtualBoundary_CPU(Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
 
         if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(MultiBox,2) .GT. 0) then
             NSIZE = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(MultiBox,2) - Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(1,1) + 1
@@ -2299,7 +2311,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine DoImplantTillVirtualBoundary_CPUTOGPU
 
     !**************************************************************
-    subroutine FillVirtualBoundary_CPU_Depth_LAY(this,Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+    subroutine FillVirtualBoundary_CPU_Depth_LAY(this,Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
       !*** Purpose: To initialize the system (clusters distributed as the form of layer)
       ! Host_Boxes: the boxes information in host
       use RAND32_MODULE
@@ -2308,6 +2320,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       CLASS(ImplantSection)::this
       type(SimulationBoxes)::Host_Boxes
       type(SimulationCtrlParam)::Host_SimuCtrlParam
+      type(MigCoalClusterRecord)::Record
       integer,intent(in)::NewAllocateNCEachBox
       !-----local variables---
       integer::MultiBox
@@ -2328,6 +2341,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       type(DiffusorValue)::TheDiffusorValue
       logical::exitFlag
       integer::LayerNum
+      integer::NCAccum
       !---Body---
       MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2368,6 +2382,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         end if
 
         MaxGroups = size(this%ClustersSampleRate,dim=2)
+
+        NCAccum = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) + sum(Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
 
         DO IC=ICFROM,ICTO
 
@@ -2438,6 +2454,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+                        NCAccum = NCAccum + 1
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = NCAccum
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                         exitFlag = .true.
                         exit
 
@@ -2453,7 +2473,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine FillVirtualBoundary_CPU_Depth_LAY
 
     !**************************************************************
-    subroutine FillVirtualBoundary_CPU_Depth_SubBox(this,Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+    subroutine FillVirtualBoundary_CPU_Depth_SubBox(this,Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
       !*** Purpose: To initialize the system (clusters distributed as the form of layer)
       ! Host_Boxes: the boxes information in host
       use RAND32_MODULE
@@ -2462,6 +2482,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       CLASS(ImplantSection)::this
       type(SimulationBoxes)::Host_Boxes
       type(SimulationCtrlParam)::Host_SimuCtrlParam
+      type(MigCoalClusterRecord)::Record
       integer,intent(in)::NewAllocateNCEachBox
       !-----local variables---
       integer::MultiBox
@@ -2474,6 +2495,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       integer::NAtoms
       integer::IElement
       type(DiffusorValue)::TheDiffusorValue
+      integer::NCAccum
       !---Body---
       MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2513,6 +2535,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             pause
             stop
         end if
+
+        NCAccum = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) + sum(Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
 
         DO II = 1, NewAllocateNCEachBox
 
@@ -2572,6 +2596,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+            NCAccum = NCAccum + 1
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = NCAccum
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
         END DO
 
       END DO
@@ -2580,7 +2608,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine FillVirtualBoundary_CPU_Depth_SubBox
 
     !**************************************************************
-    subroutine FillVirtualBoundary_CPU_Depth_Gauss(this,Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
+    subroutine FillVirtualBoundary_CPU_Depth_Gauss(this,Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
         !*** Purpose: To initialize the system (clusters distributed as the form of gauss in depth)
         ! Host_Boxes: the boxes information in host
         use RAND32_MODULE
@@ -2589,6 +2617,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---local variables---
         integer::MultiBox
@@ -2602,6 +2631,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::NCUsed
         integer::IElement
         type(DiffusorValue)::TheDiffusorValue
+        integer::NCAccum
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
         BOXBOUNDARY = Host_Boxes%BOXBOUNDARY
@@ -2639,6 +2669,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 pause
                 stop
             end if
+
+            NCAccum = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) + sum(Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
 
             DO II = 1, NewAllocateNCEachBox
 
@@ -2707,6 +2739,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
+                NCAccum = NCAccum + 1
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = NCAccum
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
             END DO
 
@@ -2868,6 +2904,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                             this%NACUT(1),                                            &
                                                                             this%NACUT(2),                                            &
                                                                             Dev_Boxes%dm_SEVirtualIndexBox,                           &
+                                                                            Dev_Boxes%dm_RecordNCBeforeSweepOut_SingleBox,            &
                                                                             this%dm_ImplantInfo_DevPart%Dev_LayerThick,               &
                                                                             this%dm_ImplantInfo_DevPart%Dev_ClustersSampleRate,       &
                                                                             this%dm_ImplantInfo_DevPart%Dev_CompositWeight)
@@ -2891,6 +2928,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                     LNACUT,                      &
                                                                     RNACUT,                      &
                                                                     Dev_SEVirtualIndexBox,       &
+                                                                    Dev_RecordNCBeforeSweepOut_SingleBox, &
                                                                     Dev_LayerThick,              &
                                                                     Dev_ClustersSampleRate,      &
                                                                     Dev_CompositWeight)
@@ -2908,7 +2946,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF),value::LNACUT
         real(kind=KINDDF),value::RNACUT
         integer, device::Dev_SEVirtualIndexBox(:,:)
-        integer, device::Dev_SEAddedClustersBoxes(:,:)
+        integer, device::Dev_RecordNCBeforeSweepOut_SingleBox(:,:)
         real(kind=KINDDF),device::Dev_LayerThick(:)
         real(kind=KINDDF),device::Dev_ClustersSampleRate(:,:)
         real(kind=KINDDF),device::Dev_CompositWeight(:)
@@ -3017,6 +3055,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                         Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+                        Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
+                                                           Dev_SEVirtualIndexBox(IBox,2)
+                        Dev_Clusters(ICTRUE)%m_Record(2) = 0
+
+
                         exitFlag = .true.
                         exit
 
@@ -3090,6 +3133,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                             this%NACUT(1),                                            &
                                                                             this%NACUT(2),                                            &
                                                                             Dev_Boxes%dm_SEVirtualIndexBox,                           &
+                                                                            Dev_Boxes%dm_RecordNCBeforeSweepOut_SingleBox,            &
                                                                             this%dm_ImplantInfo_DevPart%Dev_SUBBOXBOUNDARY,           &
                                                                             this%dm_ImplantInfo_DevPart%Dev_CompositWeight)
             end if
@@ -3113,6 +3157,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                     LNACUT,                      &
                                                                     RNACUT,                      &
                                                                     Dev_SEVirtualIndexBox,       &
+                                                                    Dev_RecordNCBeforeSweepOut_SingleBox, &
                                                                     Dev_SUBBOXBOUNDARY,          &
                                                                     Dev_CompositWeight)
         implicit none
@@ -3129,6 +3174,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF),value::LNACUT
         real(kind=KINDDF),value::RNACUT
         integer, device::Dev_SEVirtualIndexBox(:,:)
+        integer, device::Dev_RecordNCBeforeSweepOut_SingleBox(:,:)
         real(kind=KINDDF),device::Dev_SUBBOXBOUNDARY(:,:)
         real(kind=KINDDF),device::Dev_CompositWeight(:)
         !---Local Vars---
@@ -3215,6 +3261,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+            Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
+                                               Dev_SEVirtualIndexBox(IBox,2)
+            Dev_Clusters(ICTRUE)%m_Record(2) = 0
+
         end if
 
         return
@@ -3279,6 +3329,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                             this%NACUT(1),                                            &
                                                                             this%NACUT(2),                                            &
                                                                             Dev_Boxes%dm_SEVirtualIndexBox,                           &
+                                                                            Dev_Boxes%dm_RecordNCBeforeSweepOut_SingleBox,            &
                                                                             this%dm_ImplantInfo_DevPart%Dev_CompositWeight)
             end if
 
@@ -3300,6 +3351,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                     LNACUT,                      &
                                                                     RNACUT,                      &
                                                                     Dev_SEVirtualIndexBox,       &
+                                                                    Dev_RecordNCBeforeSweepOut_SingleBox, &
                                                                     Dev_CompositWeight)
         implicit none
         !---Dummy Vars---
@@ -3315,6 +3367,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF),value::LNACUT
         real(kind=KINDDF),value::RNACUT
         integer, device::Dev_SEVirtualIndexBox(:,:)
+        integer, device::Dev_RecordNCBeforeSweepOut_SingleBox(:,:)
         real(kind=KINDDF),device::Dev_CompositWeight(:)
         !---Local Vars---
         integer::tid
@@ -3409,6 +3462,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+            Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
+                                               Dev_SEVirtualIndexBox(IBox,2)
+            Dev_Clusters(ICTRUE)%m_Record(2) = 0
+
         end if
 
         return
@@ -3469,7 +3526,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                         Dev_Boxes%dm_SEVirtualIndexBox,                           &
                                                                         this%dm_ImplantInfo_DevPart%Dev_LayerThick,               &
                                                                         this%dm_ImplantInfo_DevPart%Dev_ClustersSample,           &
-                                                                        this%dm_ImplantInfo_DevPart%Dev_ClustersSampleRate)
+                                                                        this%dm_ImplantInfo_DevPart%Dev_ClustersSampleRate,       &
+                                                                        Dev_Boxes%dm_RecordNCBeforeSweepOut_SingleBox)
             end if
 
         END ASSOCIATE
@@ -3490,7 +3548,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                   Dev_SEVirtualIndexBox,       &
                                                                   Dev_LayerThick,              &
                                                                   Dev_ClustersSample,          &
-                                                                  Dev_ClustersSampleRate)
+                                                                  Dev_ClustersSampleRate,      &
+                                                                  Dev_RecordNCBeforeSweepOut_SingleBox)
         implicit none
         !---Dummy Vars---
         integer, value::TotalAllocateNC
@@ -3505,6 +3564,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF),device::Dev_LayerThick(:)
         type(ACluster),device::Dev_ClustersSample(:,:)
         real(kind=KINDDF),device::Dev_ClustersSampleRate(:,:)
+        integer, device::Dev_RecordNCBeforeSweepOut_SingleBox(:,:)
         !---Local Vars---
         integer::tid
         integer::bid
@@ -3631,6 +3691,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                             end select
                         end if
+
+                        Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
+                                                           Dev_SEVirtualIndexBox(IBox,2)
+                        Dev_Clusters(ICTRUE)%m_Record(2) = 0
 
                         exitFlag = .true.
                         exit
