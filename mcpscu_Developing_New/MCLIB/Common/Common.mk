@@ -40,7 +40,7 @@ nlist    :=  MCLIB_CONSTANTS               	 \
              MCLIB_TYPEDEF_DiffusorPropList      \
 	     MCLIB_TYPEDEF_ReactionPropList      \
 	     MCLIB_TYPEDEF_Geometry		 \
-	     MCLIB_TYPEDEF_USUAL		 \
+	     MCLIB_TYPEDEF_BASICRECORD		 \
 	     MCLIB_TYPEDEF_NEIGHBOR_LIST   	 \
 	     MCLIB_TYPEDEF_ClustersInfo_CPU      \
 	     MCLIB_TYPEDEF_SimCtrlParam    	 \
@@ -100,8 +100,9 @@ $(tgt)$(Segment)MCLIB_TYPEDEF_ReactionPropList.o : $(sor)$(Segment)MCLIB_TYPEDEF
                                                    $(tgt)$(Segment)MCLIB_TYPEDEF_ReactionsValue.o 
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MCLIB_TYPEDEF_USUAL.o : $(sor)$(Segment)MCLIB_TYPEDEF_USUAL.F90  \
-				        $(tgt)$(Segment)MCLIB_Utilities.o
+$(tgt)$(Segment)MCLIB_TYPEDEF_BASICRECORD.o : $(sor)$(Segment)MCLIB_TYPEDEF_BASICRECORD.F90  \
+				              $(tgt)$(Segment)MCLIB_Utilities.o		     \
+					      $(tgt)$(Segment)MCLIB_CONSTANTS.o	
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_NEIGHBOR_LIST.o : $(sor)$(Segment)MCLIB_TYPEDEF_NEIGHBOR_LIST.F90  \
@@ -128,7 +129,7 @@ $(tgt)$(Segment)MCLIB_TYPEDEF_SimBoxArray.o : $(sor)$(Segment)MCLIB_TYPEDEF_SimB
 				              $(tgt)$(Segment)MCLIB_TYPEDEF_Geometry.o	        \
 				              $(tgt)$(Segment)MCLIB_Utilities_Former.o 	        \
 				              $(tgt)$(Segment)MCLIB_Utilities.o		        \
-				              $(tgt)$(Segment)MCLIB_TYPEDEF_USUAL.o		\
+				              $(tgt)$(Segment)MCLIB_TYPEDEF_BASICRECORD.o	\
                                               $(tgt)$(Segment)MCLIB_TYPEDEF_DiffusorPropList.o  \
 					      $(tgt)$(Segment)MCLIB_TYPEDEF_ReactionPropList.o  \
 				              $(tgt)$(Segment)MCLIB_TYPEDEF_ClustersInfo_CPU.o  \

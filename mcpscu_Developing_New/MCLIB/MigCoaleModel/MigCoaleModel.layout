@@ -2,29 +2,19 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
-	<File name="../sor/MigCoaleModel/MigCoale_GlobalVars_Dev.F90" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/MigCoaleModel/MigCoale_TYPEDEF_SimRecord.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2032" topLine="240" />
+			<Cursor1 position="3245" topLine="51" />
 		</Cursor>
 	</File>
-	<File name="../sor/MigCoaleModel/MigCoale_Evolution_GPU.F90" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/MigCoaleModel/MigCoale_TYPEDEF_StatisticInfo.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="0" topLine="0" />
+			<Cursor1 position="2034" topLine="30" />
 		</Cursor>
 	</File>
-	<File name="../sor/MigCoaleModel/MigCoale_AddOnData_Dev.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/MigCoaleModel/MigCoale_Evolution_GPU.F90" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="355" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="../sor/MigCoaleModel/MigCoale_AddOnData_Host.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1043" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="../sor/MigCoaleModel/MigCoale_Statistic_GPU.F90" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="873" topLine="3" />
+			<Cursor1 position="36015" topLine="784" />
 		</Cursor>
 	</File>
 	<File name="../sor/MigCoaleModel/MigCoale_Statistic_CPU.F90" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -32,24 +22,29 @@
 			<Cursor1 position="5547" topLine="129" />
 		</Cursor>
 	</File>
-	<File name="../sor/MigCoaleModel/MigCoale_TYPEDEF_SimRecord.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/MigCoaleModel/MigCoale_AddOnData_Host.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2791" topLine="9" />
-		</Cursor>
-	</File>
-	<File name="../sor/MigCoaleModel/MigCoale_Implantation_GPU.F90" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="165274" topLine="3514" />
+			<Cursor1 position="1043" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="../sor/MigCoaleModel/MigCoale_TimeCtl.F90" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="6329" topLine="114" />
+			<Cursor1 position="2170" topLine="51" />
 		</Cursor>
 	</File>
-	<File name="../sor/MigCoaleModel/MigCoale_TYPEDEF_StatisticInfo.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/MigCoaleModel/MigCoale_Statistic_GPU.F90" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2034" topLine="30" />
+			<Cursor1 position="873" topLine="3" />
+		</Cursor>
+	</File>
+	<File name="../sor/MigCoaleModel/MigCoale_GlobalVars_Dev.F90" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2032" topLine="240" />
+		</Cursor>
+	</File>
+	<File name="../sor/MigCoaleModel/MigCoale_AddOnData_Dev.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="355" topLine="0" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>
