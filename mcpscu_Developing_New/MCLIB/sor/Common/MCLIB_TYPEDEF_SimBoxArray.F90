@@ -640,8 +640,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     100 return 1
   end subroutine Load_OneSecton_AtomDefine
 
-
-
   !*********************************************
   subroutine Load_Box_Diffusors(this,hBoxFile,*)
     implicit none
@@ -681,7 +679,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     100 return 1
   end subroutine Load_Box_Diffusors
-
 
   !************************************************
   subroutine LoadDiffusorsValue(this,hBoxFile,*)
@@ -2312,7 +2309,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Sweep_UnActiveMemory_CPU
 
   !**********************OutPut***************************
-  subroutine Puout_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,RescaleCount)
+  subroutine Puout_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,RescaleCount,SweepOutCount)
     !***    Purpose: to output Intermediate Status
     !           this: the boxes info in host
     !           SimuRecord: the simulation records
@@ -2323,6 +2320,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     Class(SimulationRecord)::SimuRecord
     integer, optional::RescaleCount
+    integer, optional::SweepOutCount
     !---Local Vars---
     type(AtomsList),pointer::cursor=>null()
     character*256::c_ITIME
@@ -2349,6 +2347,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         write(c_ITIME,*) RescaleCount
         c_ITIME = adjustl(c_ITIME)
         c_ITIME = "BeforeRescale"//c_ITIME
+    else if(present(SweepOutCount)) then
+        write(c_ITIME,*) SweepOutCount
+        c_ITIME = adjustl(c_ITIME)
+        c_ITIME = "BeforeSweepOut"//c_ITIME
     else
         write(c_ITIME,*) SimuRecord%GetOutPutIndex()
 
@@ -2477,11 +2479,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     KEYWORD = "&TYPE"
     CFormat = ""
-    CFormat = "(A,1x,8(A15,1x),"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
-    write(hFile,FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),"IBox", "Layer","GBSeed1","GBSeed2","Statu","x(LU)","y(LU)","z(LU)",AtomsStr(1:ElementsKind)
+    CFormat = "(A,1x,10(A15,1x),"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
+    write(hFile,FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),"IBox", "Layer","GBSeed1","GBSeed2","Statu","Record1","Record2","x(LU)","y(LU)","z(LU)",AtomsStr(1:ElementsKind)
 
     CFormat = ""
-    CFormat = "(A,1x,5(I15, 1x),3(1PE15.4, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x))"
+    CFormat = "(A,1x,7(I15, 1x),3(1PE15.4, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x))"
     DO IBox = 1,MultiBox
         ICFROM = this%m_BoxesInfo%SEUsedIndexBox(IBox,1)
         ICTO   = this%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -2491,14 +2493,14 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         end if
 
         DO IC = ICFROM, ICTO
-
-            if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+            if(Host_SimuCtrlParam%OutPutConfContent(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu) .eq. .true. ) then
 
                 write(hFile,fmt=CFormat(1:LENTRIM(CFormat))) "     ",                                                             &
                                                             IBox,                                                                 &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer,                       &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID,                     &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu,                       &
+                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1:2),                 &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)/this%LatticeLength, &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(1:ElementsKind)%m_NA
             end if
@@ -2879,7 +2881,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             exit
         end if
 
-        call EXTRACT_NUMB(STR,8+p_ATOMS_GROUPS_NUMBER,N,STRTMP)
+        call EXTRACT_NUMB(STR,10+p_ATOMS_GROUPS_NUMBER,N,STRTMP)
         atomsInfo = 0
 
         IBox = ISTR(STRTMP(1))
@@ -2913,12 +2915,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         IStatu = ISTR(STRTMP(5))
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = IStatu
 
+        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ISTR(STRTMP(6))
+        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = ISTR(STRTMP(7))
+
         DO I = 1,3
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = DRSTR(STRTMP(5+I))
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = DRSTR(STRTMP(7+I))
         END DO
 
         DO I = 1,NATomsUsed
-            atomsInfo(I) = DRSTR(STRTMP(5+3+I))
+            atomsInfo(I) = DRSTR(STRTMP(7+3+I))
         END DO
 
         Do IElement = 1,NATomsUsed
@@ -2987,8 +2992,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             end select
         end if
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - this%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) .LE. 0) then
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - this%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+        end if
 
         this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) + 1
         this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) + 1

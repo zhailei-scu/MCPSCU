@@ -60,6 +60,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      integer::OutPutConfFlag = mp_OutTimeFlag_ByIntervalSteps           ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), flag = 2 by magnification
      real::OutPutConfValue = 100                                        ! output configuration interval value
 
+     logical::OutPutConfContent(p_NUMBER_OF_STATU) = .true.             ! to determine which status of clusters need to be output
+
+     logical::OutPutConf_SweepOut = .true.
+
      integer::OutPutSCFlag = mp_OutTimeFlag_ByIntervalSteps             ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), flag = 2 by magnification
      real::OutPutSCValue_IntegralBox = 100                              ! output statistic configuration interval value(for integral box)
      real::OutPutSCValue_EachBox = 100                                  ! output statistic configuration interval value(for integral box)
@@ -215,6 +219,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%OutPutConfFlag = otherOne%OutPutConfFlag
     this%OutPutConfValue = otherOne%OutPutConfValue
 
+    this%OutPutConfContent = otherOne%OutPutConfContent
+    this%OutPutConf_SweepOut = otherOne%OutPutConf_SweepOut
+
     this%OutPutSCFlag = otherOne%OutPutSCFlag
     this%OutPutSCValue_IntegralBox = otherOne%OutPutSCValue_IntegralBox
     this%OutPutSCValue_EachBox = otherOne%OutPutSCValue_EachBox
@@ -301,6 +308,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      this%OutPutConfFlag = mp_OutTimeFlag_ByIntervalSteps
      this%OutPutConfValue = 100
+
+     this%OutPutConfContent = .true.
+     this%OutPutConf_SweepOut = .true.
 
      this%OutPutSCFlag = mp_OutTimeFlag_ByIntervalSteps
      this%OutPutSCValue_IntegralBox = 100
@@ -449,6 +459,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      this%OutPutConfFlag = mp_OutTimeFlag_ByIntervalSteps
      this%OutPutConfValue = 100
+
+     this%OutPutConfContent = .true.
+     this%OutPutConf_SweepOut = .true.
 
      this%OutPutSCFlag = mp_OutTimeFlag_ByIntervalSteps
      this%OutPutSCValue_IntegralBox = 100
@@ -1091,7 +1104,13 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer::N
     character*256::STR
     character*32::KEYWORD
-    character*32::STRNUMB(10)
+    character*32::STRNUMB(20)
+    integer::I
+    integer::IStatu
+    character*32::OneContent
+    logical::Finded
+    !---Body---
+
 
     DO While(.TRUE.)
       call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
@@ -1225,6 +1244,60 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              end if
 
            end if
+
+        case("&CONFIG_CONTENT")
+            call EXTRACT_SUBSTR(STR,p_NUMBER_OF_STATU,N,STRNUMB)
+
+            if(N .LT. 1) then
+                write(*,*) "MCPSCUERROR: Too few content to out put for CONFIG_CONTENT setting"
+                write(*,*) "At control file line: ",LINE
+                write(*,*) "Should be '&CONFIG_CONTENT  The information that is specialed to be out in config is '' , '' , '' "
+                write(*,*) STR
+                pause
+                stop
+            end if
+
+            this%OutPutConfContent = .false.
+
+            DO I = 1,N
+                Finded = .false.
+
+                OneContent = STRNUMB(I)
+                call UPCASE(OneContent)
+
+                DO IStatu = 1,p_NUMBER_OF_STATU
+                    if(ISSTREQUAL(p_CStatu(IStatu),OneContent) .eq. .true. ) then
+                        Finded = .true.
+                        this%OutPutConfContent(IStatu) = .true.
+                        exit
+                    end if
+                END DO
+
+                if(Finded .eq. .false.) then
+                    write(*,*) "MCPSCUERROR: Unknown output configure content: ",STRNUMB(I)
+                    write(*,*) "At control file line: ",LINE
+                    write(*,*) STR
+                    pause
+                    stop
+                end if
+            END DO
+
+        case("&CONFIG_SWEEP")
+            call EXTRACT_NUMB(STR,1,N,STRNUMB)
+
+            if(N .LT. 1) then
+                write(*,*) "MCPSCUERROR: Too few parameter to out put for CONFIG_SWEEP setting"
+                write(*,*) "At control file line: ",LINE
+                write(*,*) "Should be '&CONFIG_SWEEP  Whether output configure file before sweep out the menory = ' "
+                write(*,*) STR
+                pause
+                stop
+            end if
+            if(ISTR(STRNUMB(1)) .LE. 0) then
+                this%OutPutConf_SweepOut = .false.
+            else
+                this%OutPutConf_SweepOut = .true.
+            end if
 
         case("&OUTPUT_SC")
            call EXTRACT_NUMB(STR,3,N,STRNUMB)
@@ -1404,6 +1477,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !---Local Vars---
     type(SimulationCtrlParam),pointer::cursor=>null()
     integer::ISect
+    integer::IStatu
+    character*256::ConfigContent
     !---Body---
 
     write(hFile,*) "!****************Control file information***********************"
@@ -1456,6 +1531,19 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.4)") "The update statistic frequency flag =, the correspond value = ",cursor%TUpdateStatisFlag,cursor%TUpdateStatisValue
 
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.4)") "Output instant configuration flag = , the interval =",cursor%OutPutConfFlag,cursor%OutPutConfValue
+
+        ConfigContent = ""
+
+        DO IStatu = 1,p_NUMBER_OF_STATU
+            if(cursor%OutPutConfContent(IStatu) .eq. .true.) then
+                ConfigContent = adjustl(ConfigContent)
+                ConfigContent = adjustl(trim(ConfigContent))//adjustl(trim(p_CStatu(IStatu)))//" ,"
+            end if
+        END DO
+
+        write(hFile,fmt="('!',A70,'!',2x,A256)") "The information that is specialed to be out in config is ",adjustl(trim(ConfigContent))
+
+        write(hFile,fmt="('!',A70,'!',2x,L10)") "Whether output configure file before sweep out the menory = ",cursor%OutPutConf_SweepOut
 
         write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE10.4))") "Output instant size statistic information flag =, the interval for integral box =, the interval for each box =",           &
                                                                cursor%OutPutSCFlag,cursor%OutPutSCValue_IntegralBox,cursor%OutPutSCValue_EachBox

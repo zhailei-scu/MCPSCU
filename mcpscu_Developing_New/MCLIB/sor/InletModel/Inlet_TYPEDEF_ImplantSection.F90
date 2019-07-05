@@ -1694,6 +1694,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::NSIZE
         integer::ImplantNumEachBox
         integer::TotalImplantNum
+        integer::NC0
         !---Body---
 
         TotalImplantNum = 0
@@ -1713,10 +1714,22 @@ module INLET_TYPEDEF_IMPLANTSECTION
             end if
         END DO
 
+        if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(Host_SimuCtrlParam%MultiBox,2) .GT. 0) then
+            NC0 = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(Host_SimuCtrlParam%MultiBox,2) - Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(1,1) + 1
+        else
+            NC0 = 0
+        end if
+
         if(NeedAddVirtualRange .eq. .true.) then
 
             call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
             call Record%RecordNC_ForSweepOut(MultiBox,Host_Boxes%m_BoxesBasicStatistic)
+
+            call Record%IncreaseOneSweepOutCount()
+
+            call Dev_Boxes%dm_ClusterInfo_GPU%CopyOutToHost(Host_Boxes%m_ClustersInfo_CPU,NC0,IfCpyNL=.false.)
+
+            call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record,SweepOutCount=Record%GetSweepOutCount())
 
             call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam,Record)
 

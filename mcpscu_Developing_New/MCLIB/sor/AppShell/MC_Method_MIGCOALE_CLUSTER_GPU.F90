@@ -243,7 +243,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end if
 
                 call Record%IncreaseOneRescaleCount()
-                call Host_SimBoxes%PutoutCfg(Host_SimuCtrlParam,Record,Record%GetRescaleCount())
+                call Host_SimBoxes%PutoutCfg(Host_SimuCtrlParam,Record,RescaleCount=Record%GetRescaleCount())
 
                 call GetBoxesMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
 

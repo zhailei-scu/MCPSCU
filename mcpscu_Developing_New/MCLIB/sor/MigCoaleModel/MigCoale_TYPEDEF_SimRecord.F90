@@ -13,6 +13,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
         integer,private::rescaleCount = 0
 
+        integer,private::SweepOutCount = 0
+
         integer::HSizeStatistic_TotalBox = 0
         integer::HSizeStatistic_EachBox = 0
         real(kind=KINDDF),private::LastOutSizeDistTime_IntegralBox = 0.D0
@@ -26,6 +28,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,non_overridable,public,pass::SetLastUpdateAveSepTime=>Set_LastUpdateAveSepTime
         procedure,non_overridable,public,pass::IncreaseOneRescaleCount=>Increase_OneRescaleCount
         procedure,non_overridable,public,pass::GetRescaleCount=>Get_RescaleCount
+        procedure,non_overridable,public,pass::IncreaseOneSweepOutCount=>Increase_OneSweepOutCount
+        procedure,non_overridable,public,pass::GetSweepOutCount=>Get_SweepOutCount
         procedure,NON_OVERRIDABLE,public,pass::AddImplantedEntitiesNum=>Add_ImplantedEntitiesNum
         procedure,NON_OVERRIDABLE,public,pass::GetImplantedEntitiesNum=>Get_ImplantedEntitiesNum
         procedure,NON_OVERRIDABLE,public,pass::SetImplantedEntitiesNum=>Set_ImplantedEntitiesNum
@@ -51,6 +55,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::Get_LastUpdateAveSepTime
     private::Increase_OneRescaleCount
     private::Get_RescaleCount
+    private::Increase_OneSweepOutCount
+    private::Get_SweepOutCount
     private::Add_ImplantedEntitiesNum
     private::Get_ImplantedEntitiesNum
     private::Set_ImplantedEntitiesNum
@@ -108,6 +114,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         this%LastUpdateAveSepTime = 0.D0
 
         this%rescaleCount = 0
+
+        this%SweepOutCount = 0
 
         this%LastOutSizeDistTime_IntegralBox = 0.D0
         this%LastOutSizeDistTime_EachBox = 0.D0
@@ -352,6 +360,25 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         rescaleCount = this%rescaleCount
         return
     end function Get_RescaleCount
+
+    !**************************************************************
+    subroutine Increase_OneSweepOutCount(this)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+
+        this%SweepOutCount = this%SweepOutCount + 1
+        return
+    end subroutine Increase_OneSweepOutCount
+
+    !**************************************************************
+    function Get_SweepOutCount(this) result(SweepOutCount)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+        integer::SweepOutCount
+
+        SweepOutCount = this%SweepOutCount
+        return
+    end function Get_SweepOutCount
 
     !*******************************************************
     subroutine Set_LastUpdateAveSepTime(this,TheTime)
