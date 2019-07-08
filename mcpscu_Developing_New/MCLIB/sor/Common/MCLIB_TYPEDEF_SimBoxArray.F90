@@ -2053,14 +2053,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                             stop
                                         end if
 
+                                        temp_ClustersInfo%m_Clusters(IP) = this%m_ClustersInfo_CPU%m_Clusters(IC)
+
                                         temp_ClustersInfo%m_Clusters(IP)%m_POS(1) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) + dble(K)*tempBOXSIZE(1)
                                         temp_ClustersInfo%m_Clusters(IP)%m_POS(2) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) + dble(J)*tempBOXSIZE(2)
                                         temp_ClustersInfo%m_Clusters(IP)%m_POS(3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) + dble(I)*tempBOXSIZE(3)
-                                        temp_ClustersInfo%m_Clusters(IP)%m_Atoms  = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms
-                                        temp_ClustersInfo%m_Clusters(IP)%m_RAD    = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
-                                        temp_ClustersInfo%m_Clusters(IP)%m_Layer  = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer
-                                        temp_ClustersInfo%m_Clusters(IP)%m_Statu  = TheStatu
-                                        temp_ClustersInfo%m_Clusters(IP)%m_DiffCoeff = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff
 
                                         temp_ClustersInfo%m_ActiveIndex(IP) = IP
 
