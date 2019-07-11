@@ -199,6 +199,227 @@ module MC_StatisticClusters_Offline
         return
     end subroutine StatisticClusters_MorethanNAtom
 
+    !*******************************************************************************
+    subroutine StatisticClusters_ReactionBetweenGroups(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+        implicit none
+        !---Dummy Vars---
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        CLASS(SimulationRecord)::Record
+        integer::hFileOutEachBox
+        integer::hFileOutTotalBox
+        !---Local Vars---
+        integer::MultiBox
+        integer::IBox
+        integer::IC
+        integer::ICFROM
+        integer::ICTO
+        integer::IStatu
+        integer::length
+        integer::trueLength
+        character*28,dimension(:),allocatable::CCNum_SIA
+        character*28,dimension(:),allocatable::CNAVA_SIA
+        character*28,dimension(:),allocatable::CCNum_Vac
+        character*28,dimension(:),allocatable::CNAVA_Vac
+        real(kind=KINDDF),dimension(:),allocatable::NAVAEachBox_SIA
+        real(kind=KINDDF),dimension(:),allocatable::NAVAEachBox_Vac
+        real(kind=KINDDF)::NAVA_SIA(p_NUMBER_OF_STATU)
+        real(kind=KINDDF)::NAVA_Vac(p_NUMBER_OF_STATU)
+        integer,dimension(:),allocatable::NCCountEachBox_SIA
+        integer,dimension(:),allocatable::NCCountEachBox_Vac
+        integer::NCCount_SIA(p_NUMBER_OF_STATU)
+        integer::NCCount_Vac(p_NUMBER_OF_STATU)
+        integer::NATOMS_SIA
+        integer::NATOMS_Vac
+        integer::SIAIndex
+        integer::VacIndex
+        integer::NC_InterCascadeReact
+        integer::NC_InterCascadeReact_EachBox
+        integer::NCEachCascade
+        integer::CascadeIndex
+        !---Body---
+        SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
+        VacIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
+
+
+        MultiBox = Host_SimuCtrlParam%MultiBox
+
+        NCEachCascade = 128
+
+        if(FirstTimeVist .eq. .true.) then
+            !---The final one is used for the total boxes
+            allocate(CCNum_SIA(p_NUMBER_OF_STATU),CCNum_Vac(p_NUMBER_OF_STATU))
+            allocate(CNAVA_SIA(p_NUMBER_OF_STATU),CNAVA_Vac(p_NUMBER_OF_STATU))
+
+            DO IStatu = 1,p_NUMBER_OF_STATU
+                CCNum_SIA(IStatu) = "NUM_"//adjustl(trim(p_CStatu(IStatu)))//"_SIA"
+                length = len(CCNum_SIA(IStatu))
+                trueLength = LENTRIM(CCNum_SIA(IStatu))
+                CCNum_SIA(IStatu)(length-trueLength+1:length) = CCNum_SIA(IStatu)(1:trueLength)
+                CCNum_SIA(IStatu)(1:length-trueLength) = ""
+
+                CCNum_Vac(IStatu) = "NUM_"//adjustl(trim(p_CStatu(IStatu)))//"_VAC"
+                length = len(CCNum_Vac(IStatu))
+                trueLength = LENTRIM(CCNum_Vac(IStatu))
+                CCNum_Vac(IStatu)(length-trueLength+1:length) = CCNum_Vac(IStatu)(1:trueLength)
+                CCNum_Vac(IStatu)(1:length-trueLength) = ""
+
+                CNAVA_SIA(IStatu) = "NAVA_"//adjustl(trim(p_CStatu(IStatu)))//"_SIA"
+                length = len(CNAVA_SIA(IStatu))
+                trueLength = LENTRIM(CNAVA_SIA(IStatu))
+                CNAVA_SIA(IStatu)(length-trueLength+1:length) = CNAVA_SIA(IStatu)(1:trueLength)
+                CNAVA_SIA(IStatu)(1:length-trueLength) = ""
+
+                CNAVA_Vac(IStatu) = "NAVA_"//adjustl(trim(p_CStatu(IStatu)))//"_VAC"
+                length = len(CNAVA_Vac(IStatu))
+                trueLength = LENTRIM(CNAVA_Vac(IStatu))
+                CNAVA_Vac(IStatu)(length-trueLength+1:length) = CNAVA_Vac(IStatu)(1:trueLength)
+                CNAVA_Vac(IStatu)(1:length-trueLength) = ""
+
+            END DO
+
+            write(hFileOutEachBox, fmt="(130(A30,1x))")           "IBox",                          &
+                                                                  "Time(s)",                       &
+                                                                  CCNum_SIA(1:p_NUMBER_OF_STATU),  &
+                                                                  CCNum_Vac(1:p_NUMBER_OF_STATU),  &
+                                                                  CNAVA_SIA(1:p_NUMBER_OF_STATU),  &
+                                                                  CNAVA_Vac(1:p_NUMBER_OF_STATU),  &
+                                                                  "NUM_IntercascadeReact"
+
+
+            write(hFileOutTotalBox, fmt="(130(A30,1x))")          "Time(s)",                       &
+                                                                  CCNum_SIA(1:p_NUMBER_OF_STATU),  &
+                                                                  CCNum_Vac(1:p_NUMBER_OF_STATU),  &
+                                                                  CNAVA_SIA(1:p_NUMBER_OF_STATU),  &
+                                                                  CNAVA_Vac(1:p_NUMBER_OF_STATU),  &
+                                                                  "NUM_IntercascadeReact"
+
+
+            FirstTimeVist = .false.
+
+        end if
+
+        call AllocateArray_Host(NAVAEachBox_SIA,p_NUMBER_OF_STATU,"NAVAEachBox_SIA")
+        call AllocateArray_Host(NAVAEachBox_Vac,p_NUMBER_OF_STATU,"NAVAEachBox_Vac")
+        call AllocateArray_Host(NCCountEachBox_SIA,p_NUMBER_OF_STATU,"NCCountEachBox_SIA")
+        call AllocateArray_Host(NCCountEachBox_Vac,p_NUMBER_OF_STATU,"NCCountEachBox_Vac")
+
+        NAVA_SIA = 0.D0
+        NAVA_Vac = 0.D0
+        NCCount_SIA = 0
+        NCCount_Vac = 0
+        NC_InterCascadeReact = 0
+
+        DO IBox = 1,MultiBox
+
+            NAVAEachBox_SIA = 0.D0
+            NCCountEachBox_SIA = 0
+            NAVAEachBox_Vac = 0.D0
+            NCCountEachBox_Vac = 0
+            NC_InterCascadeReact_EachBox = 0
+
+            ICFROM = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
+            ICTO = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+
+            DO IC = ICFROM,ICTO
+                DO IStatu = 1,p_NUMBER_OF_STATU
+
+                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. IStatu) then
+
+                        NATOMS_SIA = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA
+                        if(NATOMS_SIA .GT. 0) then
+                            NAVAEachBox_SIA(IStatu) = NAVAEachBox_SIA(IStatu) + NATOMS_SIA
+                            NCCountEachBox_SIA(IStatu) = NCCountEachBox_SIA(IStatu) + 1
+                        end if
+
+                        NATOMS_Vac = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacIndex)%m_NA
+                        if(NATOMS_Vac .GT. 0) then
+                            NAVAEachBox_Vac(IStatu) = NAVAEachBox_Vac(IStatu) + NATOMS_Vac
+                            NCCountEachBox_Vac(IStatu) = NCCountEachBox_Vac(IStatu) + 1
+                        end if
+
+                        if(NATOMS_SIA .GT. 0 .and. NATOMS_Vac .GT. 0) then
+                            write(*,*) "MCPSUCERROR: it is impossible to existence both SIA and vacancy in one cluster."
+                            write(*,*) "For cluster: ",IC
+                            pause
+                            stop
+                        end if
+                    end if
+
+                END DO
+
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ABSORBED_STATU .or. &
+                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ANNIHILATE_STATU) then
+                   CascadeIndex = (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) - 1)/NCEachCascade + 1
+                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .GT. CascadeIndex*NCEachCascade .or. &
+                       Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .LT. (CascadeIndex-1)*NCEachCascade) then
+                        NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
+                    end if
+                end if
+
+            END DO
+
+            NAVA_SIA = NAVA_SIA + NAVAEachBox_SIA
+            NCCount_SIA = NCCount_SIA + NCCountEachBox_SIA
+            NAVA_Vac = NAVA_Vac + NAVAEachBox_Vac
+            NCCount_Vac = NCCount_Vac + NCCountEachBox_Vac
+            NC_InterCascadeReact = NC_InterCascadeReact + NC_InterCascadeReact_EachBox
+
+            DO IStatu = 1,p_NUMBER_OF_STATU
+                if(NCCountEachBox_SIA(IStatu) .GT. 0) then
+                    NAVAEachBox_SIA(IStatu) = NAVAEachBox_SIA(IStatu)/dble(NCCountEachBox_SIA(IStatu))
+                end if
+
+                if(NCCountEachBox_Vac(IStatu) .GT. 0) then
+                    NAVAEachBox_Vac(IStatu) = NAVAEachBox_Vac(IStatu)/dble(NCCountEachBox_Vac(IStatu))
+                end if
+            END DO
+
+            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30)")        IBox,                                  &
+                                                                                                                Record%GetSimuTimes(),                         &
+                                                                                                                NCCountEachBox_SIA(1:p_NUMBER_OF_STATU),       &
+                                                                                                                NCCountEachBox_Vac(1:p_NUMBER_OF_STATU),       &
+                                                                                                                NAVAEachBox_SIA(1:p_NUMBER_OF_STATU),          &
+                                                                                                                NAVAEachBox_Vac(1:p_NUMBER_OF_STATU),          &
+                                                                                                                NC_InterCascadeReact_EachBox
+
+
+        END DO
+
+        DO IStatu = 1,p_NUMBER_OF_STATU
+            if(NCCount_SIA(IStatu) .GT. 0) then
+                NAVA_SIA(IStatu) = NAVA_SIA(IStatu)/dble(NCCount_SIA(IStatu))
+            end if
+
+            if(NCCount_Vac(IStatu) .GT. 0) then
+                NAVA_Vac(IStatu) = NAVA_Vac(IStatu)/dble(NCCount_Vac(IStatu))
+            end if
+        END DO
+
+
+        write(hFileOutTotalBox,fmt="(1PE30.8,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30)")      Record%GetSimuTimes(),                  &
+                                                                                                            NCCount_SIA(1:p_NUMBER_OF_STATU),       &
+                                                                                                            NCCount_Vac(1:p_NUMBER_OF_STATU),       &
+                                                                                                            NAVA_SIA(1:p_NUMBER_OF_STATU),          &
+                                                                                                            NAVA_Vac(1:p_NUMBER_OF_STATU),          &
+                                                                                                            NC_InterCascadeReact
+
+
+
+
+        call DeAllocateArray_Host(NAVAEachBox_SIA,"NAVAEachBox_SIA")
+        call DeAllocateArray_Host(NCCountEachBox_SIA,"NCCountEachBox_SIA")
+        call DeAllocateArray_Host(NAVAEachBox_Vac,"NAVAEachBox_Vac")
+        call DeAllocateArray_Host(NCCountEachBox_Vac,"NCCountEachBox_Vac")
+
+        if(allocated(CCNum_SIA)) deallocate(CCNum_SIA)
+        if(allocated(CNAVA_SIA)) deallocate(CNAVA_SIA)
+        if(allocated(CCNum_Vac)) deallocate(CCNum_Vac)
+        if(allocated(CNAVA_Vac)) deallocate(CNAVA_Vac)
+
+        return
+    end subroutine StatisticClusters_ReactionBetweenGroups
+
 end module
 
 program Main_StatisticClusters_Offline
@@ -286,7 +507,8 @@ program Main_StatisticClusters_Offline
 
                 GTNAtom = 1
 
-                call StatisticClusters_MorethanNAtom(Host_Boxes,Host_SimuCtrlParam,GTNAtom,Record,hFileOutEachBox,hFileOutTotalBox)
+                !call StatisticClusters_MorethanNAtom(Host_Boxes,Host_SimuCtrlParam,GTNAtom,Record,hFileOutEachBox,hFileOutTotalBox)
+                call StatisticClusters_ReactionBetweenGroups(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
 
                 call Host_Boxes%Clean()
 

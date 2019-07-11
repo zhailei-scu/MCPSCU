@@ -1,30 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
-	<ActiveTarget name="Debug" />
-	<File name="../sor/Common/MCLIB_TYPEDEF_SimBoxArray.F90" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<ActiveTarget name="Release" />
+	<File name="../sor/Common/MCLIB_TYPEDEF_ACLUSTER.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="4172" topLine="72" />
-		</Cursor>
-	</File>
-	<File name="../sor/Common/MCLIB_TYPEDEF_Geometry.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="17646" topLine="579" />
-		</Cursor>
-	</File>
-	<File name="../sor/Common/MCLIB_CAL_NEIGHBOR_LIST.F90" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4678" topLine="80" />
-		</Cursor>
-	</File>
-	<File name="../sor/Common/MCLIB_Utilities.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="308" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="../sor/Common/MCLIB_TYPEDEF_BASICRECORD.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="23967" topLine="665" />
+			<Cursor1 position="429" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="../sor/Common/MCLIB_TYPEDEF_DiffusorsValue.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -32,19 +12,39 @@
 			<Cursor1 position="12118" topLine="259" />
 		</Cursor>
 	</File>
-	<File name="../sor/Common/MCLIB_Utilities_Former.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="12183" topLine="419" />
-		</Cursor>
-	</File>
-	<File name="../sor/Common/MCLIB_TYPEDEF_ACLUSTER.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="850" topLine="18" />
-		</Cursor>
-	</File>
 	<File name="../sor/Common/MCLIB_TYPEDEF_DiffusorPropList.F90" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="29215" topLine="696" />
+		</Cursor>
+	</File>
+	<File name="../sor/Common/MCLIB_TYPEDEF_ReactionPropList.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="33297" topLine="754" />
+		</Cursor>
+	</File>
+	<File name="../sor/Common/MCLIB_TYPEDEF_SimCtrlParam.F90" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="24899" topLine="710" />
+		</Cursor>
+	</File>
+	<File name="../sor/Common/MCLIB_TYPEDEF_Geometry.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="17646" topLine="579" />
+		</Cursor>
+	</File>
+	<File name="../sor/Common/MCLIB_GLOBAL.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="514" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="../sor/Common/MCLIB_CAL_NEIGHBOR_LIST.F90" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4678" topLine="80" />
+		</Cursor>
+	</File>
+	<File name="../sor/Common/MCLIB_TYPEDEF_SimBoxArray.F90" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="78985" topLine="2048" />
 		</Cursor>
 	</File>
 	<File name="../sor/Common/MCLIB_TYPEDEF_NEIGHBOR_LIST.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -52,19 +52,14 @@
 			<Cursor1 position="1347" topLine="14" />
 		</Cursor>
 	</File>
-	<File name="../sor/Common/MCLIB_TYPEDEF_ClustersInfo_CPU.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/Common/MCLIB_TYPEDEF_ReactionsValue.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3461" topLine="81" />
+			<Cursor1 position="2195" topLine="23" />
 		</Cursor>
 	</File>
-	<File name="../sor/Common/MCLIB_TYPEDEF_SimCtrlParam.F90" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/Common/MCLIB_TYPEDEF_BASICRECORD.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="53638" topLine="1453" />
-		</Cursor>
-	</File>
-	<File name="../sor/Common/MCLIB_GLOBAL.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="8266" topLine="241" />
+			<Cursor1 position="23967" topLine="665" />
 		</Cursor>
 	</File>
 	<File name="../sor/Common/MCLIB_CONSTANTS.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -72,14 +67,19 @@
 			<Cursor1 position="3726" topLine="75" />
 		</Cursor>
 	</File>
-	<File name="../sor/Common/MCLIB_TYPEDEF_ReactionsValue.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/Common/MCLIB_Utilities.F90" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2195" topLine="23" />
+			<Cursor1 position="308" topLine="291" />
 		</Cursor>
 	</File>
-	<File name="../sor/Common/MCLIB_TYPEDEF_ReactionPropList.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/Common/MCLIB_TYPEDEF_ClustersInfo_CPU.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="33297" topLine="754" />
+			<Cursor1 position="3461" topLine="81" />
+		</Cursor>
+	</File>
+	<File name="../sor/Common/MCLIB_Utilities_Former.F90" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="12183" topLine="485" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>
