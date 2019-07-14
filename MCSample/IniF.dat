@@ -12,8 +12,8 @@
 !
 !         &DEPTHSUBCTL ! only used the first distribution in below
 !            &DEPTH_LAYER THE NUMBER OF DEPTH DISTRIBUTION LAYER = 2, THE ENTRIES DISTRIBUTION = (0.5,0.5)
-!            !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = 50, Y = 50, Z = 50
-!            !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0
+!            !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = ( -50 , 50 ), Y = ( -50 , 50 ), Z = ( -50 , 50 ) (in LU)
+!            !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0 (in LU)
 !         &ENDSUBCTL
 !  &ENDSUBCTL
 !
@@ -29,8 +29,8 @@
 !
 !         &DEPTHSUBCTL ! only used the first distribution in below
 !            &DEPTH_LAYER THE NUMBER OF DEPTH DISTRIBUTION LAYER = 2, THE ENTRIES DISTRIBUTION = (0.5,0.5)
-!            !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = 50, Y = 50, Z = 50
-!            !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0
+!            !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = ( -50 , 50 ), Y = ( -50 , 50 ), Z = ( -50 , 50 ) (in LU)
+!            !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0  (in LU)
 !         &ENDSUBCTL
 !  &ENDSUBCTL
 !
@@ -56,8 +56,8 @@
   !
   !       &DEPTHSUBCTL ! only used the first distribution in below
   !          &DEPTH_LAYER THE NUMBER OF DEPTH DISTRIBUTION LAYER = 2 , THE THINCKNESS DISTRIBUTION = (0.5,0.5) ,THE ENTRIES DISTRIBUTION = (0.5,0.5)
-  !          !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = 50, Y = 50, Z = 50
-  !          !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0
+  !          !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = ( -50 , 50 ), Y = ( -50 , 50 ), Z = ( -50 , 50 ) (in LU)
+  !          !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0  (in LU)
   !       &ENDSUBCTL
   !&ENDSUBCTL
 
