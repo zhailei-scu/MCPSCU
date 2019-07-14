@@ -1216,17 +1216,31 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                     InitBoxCfg%InitDepthDistType = p_DEPT_DIS_BOX
 
-                    call EXTRACT_NUMB(STR,3,N,STRTMP)
-                    if(N .LT. 3) then
+                    call EXTRACT_NUMB(STR,6,N,STRTMP)
+                    if(N .LT. 6) then
                         write(*,*) "MCPSCUERROR: Too few parameters for the bubble depth distribution subbox type"
-                        write(*,*) "You shoud special: &DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X =, Y =, Z ="
+                        write(*,*) "You shoud special: &DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X1 = , x2= , Y1 = , Y2 =, Z1=, Z2= in (LU) "
                         write(*,*) "At line: ",LINE
                         pause
                         stop
                     end if
                     DO I=1, 3
-                        InitBoxCfg%SUBBOXBOUNDARY(I,1) = Host_SimBoxes%BOXBOUNDARY(I,1) - DRSTR(STRTMP(I))*C_NM2CM/2
-                        InitBoxCfg%SUBBOXBOUNDARY(I,2) = Host_SimBoxes%BOXBOUNDARY(I,2) + DRSTR(STRTMP(I))*C_NM2CM/2
+                        InitBoxCfg%SUBBOXBOUNDARY(I,1) = DRSTR(STRTMP((I-1)*2 + 1))*Host_SimBoxes%LatticeLength
+                        InitBoxCfg%SUBBOXBOUNDARY(I,2) = DRSTR(STRTMP((I-1)*2 + 2))*Host_SimBoxes%LatticeLength
+
+                        if(InitBoxCfg%SUBBOXBOUNDARY(I,1) .LT. Host_SimBoxes%BOXBOUNDARY(I,1) .or. InitBoxCfg%SUBBOXBOUNDARY(I,1) .GT. Host_SimBoxes%BOXBOUNDARY(I,2)) then
+                            write(*,*) "MCPSCUERROR: The subbox boundary should not beyond the origin box.",InitBoxCfg%SUBBOXBOUNDARY(I,1)
+                            write(*,*) Host_SimBoxes%BOXBOUNDARY(I,1),Host_SimBoxes%BOXBOUNDARY(I,2)
+                            pause
+                            stop
+                        end if
+
+                        if(InitBoxCfg%SUBBOXBOUNDARY(I,2) .LT. Host_SimBoxes%BOXBOUNDARY(I,1) .or. InitBoxCfg%SUBBOXBOUNDARY(I,2) .GT. Host_SimBoxes%BOXBOUNDARY(I,2)) then
+                            write(*,*) "MCPSCUERROR: The subbox boundary should not beyond the origin box.",InitBoxCfg%SUBBOXBOUNDARY(I,2)
+                            write(*,*) Host_SimBoxes%BOXBOUNDARY(I,1),Host_SimBoxes%BOXBOUNDARY(I,2)
+                            pause
+                            stop
+                        end if
                     END DO
 
                 CASE("&DEPTH_GAUSS")
@@ -1236,13 +1250,13 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     call EXTRACT_NUMB(STR,2,N,STRTMP)
                     if(N .LT. 2) then
                         write(*,*) "MCPSCUERROR: Too few parameters for the bubble depth distribution gauss type"
-                        write(*,*) "You shoud special: &DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = , THE HALF WIDTH = "
+                        write(*,*) "You shoud special: &DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = , THE HALF WIDTH = (in LU) "
                         write(*,*) "At line: ",LINE
                         pause
                         stop
                     end if
-                    InitBoxCfg%DepthINI = DRSTR(STRTMP(1))*C_NM2CM
-                    InitBoxCfg%DepthSDINI = DRSTR(STRTMP(2))*C_NM2CM
+                    InitBoxCfg%DepthINI = DRSTR(STRTMP(1))*Host_SimBoxes%LatticeLength
+                    InitBoxCfg%DepthSDINI = DRSTR(STRTMP(2))*Host_SimBoxes%LatticeLength
                 CASE default
                     write(*,*) "MCPSCUERROR: Illegal Symbol: ", KEYWORD
                     pause

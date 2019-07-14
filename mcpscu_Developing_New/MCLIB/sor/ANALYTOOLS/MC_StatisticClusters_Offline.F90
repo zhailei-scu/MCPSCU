@@ -244,7 +244,7 @@ module MC_StatisticClusters_Offline
 
         MultiBox = Host_SimuCtrlParam%MultiBox
 
-        NCEachCascade = 128
+        NCEachCascade = 160
 
         if(FirstTimeVist .eq. .true.) then
             !---The final one is used for the total boxes
