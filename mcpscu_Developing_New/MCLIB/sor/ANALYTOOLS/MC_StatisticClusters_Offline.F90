@@ -237,6 +237,8 @@ module MC_StatisticClusters_Offline
         integer::NC_InterCascadeReact_EachBox
         integer::NCEachCascade
         integer::CascadeIndex
+        integer::Num_AnnihilateEachBox
+        integer::Num_Annihilate
         !---Body---
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -284,7 +286,8 @@ module MC_StatisticClusters_Offline
                                                                   CCNum_Vac(1:p_NUMBER_OF_STATU),  &
                                                                   CNAVA_SIA(1:p_NUMBER_OF_STATU),  &
                                                                   CNAVA_Vac(1:p_NUMBER_OF_STATU),  &
-                                                                  "NUM_IntercascadeReact"
+                                                                  "NUM_IntercascadeReact",         &
+                                                                  "NUM_Annihilate"
 
 
             write(hFileOutTotalBox, fmt="(130(A30,1x))")          "Time(s)",                       &
@@ -292,7 +295,8 @@ module MC_StatisticClusters_Offline
                                                                   CCNum_Vac(1:p_NUMBER_OF_STATU),  &
                                                                   CNAVA_SIA(1:p_NUMBER_OF_STATU),  &
                                                                   CNAVA_Vac(1:p_NUMBER_OF_STATU),  &
-                                                                  "NUM_IntercascadeReact"
+                                                                  "NUM_IntercascadeReact",         &
+                                                                  "NUM_Annihilate"
 
 
             FirstTimeVist = .false.
@@ -310,6 +314,8 @@ module MC_StatisticClusters_Offline
         NCCount_Vac = 0
         NC_InterCascadeReact = 0
 
+        Num_Annihilate = 0
+
         DO IBox = 1,MultiBox
 
             NAVAEachBox_SIA = 0.D0
@@ -317,6 +323,8 @@ module MC_StatisticClusters_Offline
             NAVAEachBox_Vac = 0.D0
             NCCountEachBox_Vac = 0
             NC_InterCascadeReact_EachBox = 0
+
+            Num_AnnihilateEachBox = 0
 
             ICFROM = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTO = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -359,11 +367,21 @@ module MC_StatisticClusters_Offline
 
             END DO
 
+
+            if(sum(NAVAEachBox_SIA) .ne. sum(NAVAEachBox_Vac)) then
+                write(*,*) "MCPSCUERROR: It is not possible that atoms number of vacancy not equal with SIA"
+                pause
+                stop
+            end if
+
+            Num_AnnihilateEachBox = ((ICTO - ICFROM + 1)*1 - sum(NAVAEachBox_SIA) - sum(NAVAEachBox_Vac))/2
+
             NAVA_SIA = NAVA_SIA + NAVAEachBox_SIA
             NCCount_SIA = NCCount_SIA + NCCountEachBox_SIA
             NAVA_Vac = NAVA_Vac + NAVAEachBox_Vac
             NCCount_Vac = NCCount_Vac + NCCountEachBox_Vac
             NC_InterCascadeReact = NC_InterCascadeReact + NC_InterCascadeReact_EachBox
+            Num_Annihilate = Num_Annihilate + Num_AnnihilateEachBox
 
             DO IStatu = 1,p_NUMBER_OF_STATU
                 if(NCCountEachBox_SIA(IStatu) .GT. 0) then
@@ -375,13 +393,14 @@ module MC_StatisticClusters_Offline
                 end if
             END DO
 
-            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30)")        IBox,                                  &
+            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")        IBox,                              &
                                                                                                                 Record%GetSimuTimes(),                         &
                                                                                                                 NCCountEachBox_SIA(1:p_NUMBER_OF_STATU),       &
                                                                                                                 NCCountEachBox_Vac(1:p_NUMBER_OF_STATU),       &
                                                                                                                 NAVAEachBox_SIA(1:p_NUMBER_OF_STATU),          &
                                                                                                                 NAVAEachBox_Vac(1:p_NUMBER_OF_STATU),          &
-                                                                                                                NC_InterCascadeReact_EachBox
+                                                                                                                NC_InterCascadeReact_EachBox,                  &
+                                                                                                                Num_AnnihilateEachBox
 
 
         END DO
@@ -397,12 +416,13 @@ module MC_StatisticClusters_Offline
         END DO
 
 
-        write(hFileOutTotalBox,fmt="(1PE30.8,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30)")      Record%GetSimuTimes(),                  &
+        write(hFileOutTotalBox,fmt="(1PE30.8,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")      Record%GetSimuTimes(),              &
                                                                                                             NCCount_SIA(1:p_NUMBER_OF_STATU),       &
                                                                                                             NCCount_Vac(1:p_NUMBER_OF_STATU),       &
                                                                                                             NAVA_SIA(1:p_NUMBER_OF_STATU),          &
                                                                                                             NAVA_Vac(1:p_NUMBER_OF_STATU),          &
-                                                                                                            NC_InterCascadeReact
+                                                                                                            NC_InterCascadeReact,                   &
+                                                                                                            Num_Annihilate
 
 
 
