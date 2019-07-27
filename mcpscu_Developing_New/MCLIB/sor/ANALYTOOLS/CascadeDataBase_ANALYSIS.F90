@@ -68,6 +68,12 @@ module CascadeDataBase_ANALYSIS
     real(kind=KINDDF)::Distance
     integer::IC
     integer::JC
+    integer::MaxSIANumEachCluster
+    integer::MinSIANumEachCluster
+    integer::MaxVACNumEachCluster
+    integer::MinVACNumEachCluster
+    integer::MaxMIXNumEachCluster
+    integer::MinMIXNumEachCluster
     real(kind=KINDDF)::MaxDistanceSIA_ToCent
     real(kind=KINDDF)::MaxDistanceVAC_ToCent
     real(kind=KINDDF)::MaxDistanceMIX_ToCent
@@ -96,6 +102,9 @@ module CascadeDataBase_ANALYSIS
     integer,dimension(:),allocatable::ClusterGap_DistVAC
     integer,dimension(:),allocatable::ClusterGap_DistMIX
     integer,dimension(:),allocatable::ClusterGap_SIAToVAC
+    integer,dimension(:),allocatable::NAtomSIA
+    integer,dimension(:),allocatable::NAtomVAC
+    integer,dimension(:),allocatable::NAtomMIX
     integer::TotalCountSIA_GapCToC
     integer::TotalCountVAC_GapCToC
     integer::TotalCount_GapSIAToVAC
@@ -103,6 +112,9 @@ module CascadeDataBase_ANALYSIS
     integer::TotalCountSIA_ToCent
     integer::TotalCountVAC_ToCent
     integer::TotalCountMIX_ToCent
+    integer::TotalCountSIA_NAtom
+    integer::TotalCountVAC_NAtom
+    integer::TotalCountMIX_NAtom
     integer::NBOX
     integer::BinID
     !---Body---
@@ -136,6 +148,13 @@ module CascadeDataBase_ANALYSIS
     MinDistanceMIX_BetweenCluster = 1.D32
     MinDistanceSIAToVAC_BetweenCluster = 1.D32
 
+    MaxSIANumEachCluster = -1
+    MaxVACNumEachCluster = -1
+    MaxMIXNumEachCluster = -1
+    MinSIANumEachCluster = 1.D32
+    MinVACNumEachCluster = 1.D32
+    MinMIXNumEachCluster = 1.D32
+
     write(C_ICFGSIA,*) Index_SIAConfig
     C_ICFGSIA = adjustl(C_ICFGSIA)
     RemindZeroNum = MaxNumLen - LENTRIM(C_ICFGSIA)
@@ -164,6 +183,9 @@ module CascadeDataBase_ANALYSIS
         !---SIA---
         fileName = adjustl(trim(pathIn))//"/SIA/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGSIA))
         call ReadOnConifg(fileName,SIAIndex,ClustersArraySIA,NAtomEachClusterSIA,NSIAClusterEachBox)
+
+        MaxSIANumEachCluster = max(MaxSIANumEachCluster,maxval(NAtomEachClusterSIA))
+        MinSIANumEachCluster = min(MinSIANumEachCluster,minval(NAtomEachClusterSIA))
 
         CentPosSIA = 0.D0
         DO IC = 1,NSIAClusterEachBox
@@ -214,6 +236,9 @@ module CascadeDataBase_ANALYSIS
         !---VAC---
         fileName = adjustl(trim(pathIn))//"/VAC/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGVAC))
         call ReadOnConifg(fileName,VACIndex,ClustersArrayVAC,NAtomEachClusterVAC,NVACClusterEachBox)
+
+        MaxVACNumEachCluster = max(MaxVACNumEachCluster,maxval(NAtomEachClusterVAC))
+        MinVACNumEachCluster = min(MinVACNumEachCluster,minval(NAtomEachClusterVAC))
 
         CentPosVAC = 0.D0
         DO IC = 1,NVACClusterEachBox
@@ -321,6 +346,9 @@ module CascadeDataBase_ANALYSIS
 
     END DO
 
+    MaxMIXNumEachCluster = max(MaxSIANumEachCluster,MaxVACNumEachCluster)
+    MinMIXNumEachCluster = min(MinSIANumEachCluster,MinVACNumEachCluster)
+
     close(hFileOutSIA)
     close(hFileOutVAC)
     close(hFileOutMIX)
@@ -373,6 +401,18 @@ module CascadeDataBase_ANALYSIS
     allocate(ClusterGap_SIAToVAC(BinNum))
     ClusterGap_SIAToVAC = 0.D0
 
+    if(allocated(NAtomSIA)) deallocate(NAtomSIA)
+    allocate(NAtomSIA(MaxSIANumEachCluster - MinSIANumEachCluster + 1))
+    NAtomSIA = 0
+
+    if(allocated(NAtomVAC)) deallocate(NAtomVAC)
+    allocate(NAtomVAC(MaxVACNumEachCluster - MinVACNumEachCluster + 1))
+    NAtomVAC = 0
+
+    if(allocated(NAtomMIX)) deallocate(NAtomMIX)
+    allocate(NAtomMIX(MaxMIXNumEachCluster - MinMIXNumEachCluster + 1))
+    NAtomMIX = 0
+
     NSIAClusterEachBox_AVE = 0
     NVACClusterEachBox_AVE = 0
     NBOX = 0
@@ -390,6 +430,23 @@ module CascadeDataBase_ANALYSIS
         !---SIA---
         fileName = adjustl(trim(pathIn))//"/SIA/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGSIA))
         call ReadOnConifg(fileName,SIAIndex,ClustersArraySIA,NAtomEachClusterSIA,NSIAClusterEachBox)
+
+        DO IC = 1,NSIAClusterEachBox
+            if(NAtomEachClusterSIA(IC) .LE. 0) then
+                write(*,*) "It is impossible that atoms size less than 0",IC
+                write(*,*) NAtomEachClusterSIA(IC)
+                pause
+                stop
+            end if
+
+            BinID = NAtomEachClusterSIA(IC) - MinSIANumEachCluster + 1
+            if(BinID .GT. size(NAtomSIA)) then
+                write(*,*) "Opps, the bin index exceed the array."
+                write(*,*) BinID
+                write(*,*) size(NAtomSIA)
+            end if
+            NAtomSIA(BinID) = NAtomSIA(BinID) + 1
+        END DO
 
         CentPosSIA = 0.D0
         DO IC = 1,NSIAClusterEachBox
@@ -443,6 +500,25 @@ module CascadeDataBase_ANALYSIS
         !---VAC---
         fileName = adjustl(trim(pathIn))//"/VAC/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGVAC))
         call ReadOnConifg(fileName,VACIndex,ClustersArrayVAC,NAtomEachClusterVAC,NVACClusterEachBox)
+
+
+
+        DO IC = 1,NVACClusterEachBox
+            if(NAtomEachClusterVAC(IC) .LE. 0) then
+                write(*,*) "It is impossible that atoms size less than 0",IC
+                write(*,*) NAtomEachClusterVAC(IC)
+                pause
+                stop
+            end if
+
+            BinID = NAtomEachClusterVAC(IC) - MinVACNumEachCluster + 1
+            if(BinID .GT. size(NAtomVAC)) then
+                write(*,*) "Opps, the bin index exceed the array."
+                write(*,*) BinID
+                write(*,*) size(NAtomVAC)
+            end if
+            NAtomVAC(BinID) = NAtomVAC(BinID) + 1
+        END DO
 
         CentPosVAC = 0.D0
         DO IC = 1,NVACClusterEachBox
@@ -514,6 +590,43 @@ module CascadeDataBase_ANALYSIS
         END DO
 
         !---MIX---
+
+        DO IC = 1,NSIAClusterEachBox
+            if(NAtomEachClusterSIA(IC) .LE. 0) then
+                write(*,*) "It is impossible that atoms size less than 0",IC
+                write(*,*) NAtomEachClusterSIA(IC)
+                pause
+                stop
+            end if
+
+            BinID = NAtomEachClusterSIA(IC) - MinMIXNumEachCluster + 1
+            if(BinID .GT. size(NAtomMIX)) then
+                write(*,*) "Opps, the bin index exceed the array."
+                write(*,*) BinID
+                write(*,*) size(NAtomMIX)
+            end if
+            NAtomMIX(BinID) = NAtomMIX(BinID) + 1
+        END DO
+
+        DO IC = 1,NVACClusterEachBox
+            if(NAtomEachClusterVAC(IC) .LE. 0) then
+                write(*,*) "It is impossible that atoms size less than 0",IC
+                write(*,*) NAtomEachClusterVAC(IC)
+                pause
+                stop
+            end if
+
+            BinID = NAtomEachClusterVAC(IC) - MinMIXNumEachCluster + 1
+            if(BinID .GT. size(NAtomMIX)) then
+                write(*,*) "Opps, the bin index exceed the array."
+                write(*,*) BinID
+                write(*,*) size(NAtomMIX)
+            end if
+            NAtomMIX(BinID) = NAtomMIX(BinID) + 1
+        END DO
+
+
+
         if((NSIAClusterEachBox + NVACClusterEachBox) .GT. 0) then
             CentPosMIX = CentPosMIX/(NSIAClusterEachBox + NVACClusterEachBox)
         end if
@@ -550,6 +663,11 @@ module CascadeDataBase_ANALYSIS
     write(hFileOutMIX,fmt="(A,1x,I10)") "&NSIACLUSTER",ceiling(dble(NSIAClusterEachBox_AVE)/dble(NBOX))
     write(hFileOutMIX,fmt="(A,1x,I10)") "&NVACCLUSTER",ceiling(dble(NVACClusterEachBox_AVE)/dble(NBOX))
 
+    write(hFileOutSIA,fmt="(10(A14,1x))") "&DISTANCE"
+    write(hFileOutVAC,fmt="(10(A14,1x))") "&DISTANCE"
+    write(hFileOutSIAToVAC,fmt="(10(A14,1x))") "&DISTANCE"
+    write(hFileOutMIX,fmt="(10(A14,1x))") "&DISTANCE"
+
     write(hFileOutSIA,fmt="(10(A14,1x))") "!ToCent","Count","GapCToC","Count"
     write(hFileOutVAC,fmt="(10(A14,1x))") "!ToCent","Count","GapCToC","Count"
     write(hFileOutSIAToVAC,fmt="(10(A14,1x))") "!GapSIAToVac","Count"
@@ -558,32 +676,65 @@ module CascadeDataBase_ANALYSIS
     TotalCountSIA_GapCToC = sum(ClusterGap_DistSIA)
     TotalCountSIA_ToCent = sum(ToCent_DistSIA)
     DO I = 1,BinNum
-        write(hFileOutSIA,fmt="(4(1F14.6,1x))") BinWidthSIA_ToCenter*(I - 0.D50),ToCent_DistSIA(I)/float(TotalCountSIA_ToCent),BinWidthSIA_BetweenCluster*(I - 0.D50),ClusterGap_DistSIA(I)/float(TotalCountSIA_GapCToC)
+        write(hFileOutSIA,fmt="(4(1F14.6,1x))") BinWidthSIA_ToCenter*(I - 0.D50) + MinDistanceSIA_ToCent, &
+                                                ToCent_DistSIA(I)/float(TotalCountSIA_ToCent),&
+                                                BinWidthSIA_BetweenCluster*(I - 0.D50) + MinDistanceSIA_BetweenCluster,&
+                                                ClusterGap_DistSIA(I)/float(TotalCountSIA_GapCToC)
     END DO
-    close(hFileOutSIA)
 
     TotalCountVAC_GapCToC = sum(ClusterGap_DistVAC)
     TotalCountVAC_ToCent = sum(ToCent_DistVAC)
     DO I = 1,BinNum
-        write(hFileOutVAC,fmt="(4(1F14.6,1x))") BinWidthVAC_ToCenter*(I - 0.D50),ToCent_DistVAC(I)/float(TotalCountVAC_ToCent),BinWidthVAC_BetweenCluster*(I - 0.D50),ClusterGap_DistVAC(I)/float(TotalCountVAC_GapCToC)
+        write(hFileOutVAC,fmt="(4(1F14.6,1x))") BinWidthVAC_ToCenter*(I - 0.D50) + MinDistanceVAC_ToCent, &
+                                                ToCent_DistVAC(I)/float(TotalCountVAC_ToCent),&
+                                                BinWidthVAC_BetweenCluster*(I - 0.D50) + MinDistanceVAC_BetweenCluster,&
+                                                ClusterGap_DistVAC(I)/float(TotalCountVAC_GapCToC)
     END DO
-    close(hFileOutVAC)
 
     TotalCount_GapSIAToVAC = sum(ClusterGap_SIAToVAC)
     DO I = 1,BinNum
-        write(hFileOutSIAToVAC,fmt="(2(1F14.6,1x))") BinWidthSIAToVAC_BetweenCluster*(I - 0.D50),ClusterGap_SIAToVAC(I)/float(TotalCount_GapSIAToVAC)
+        write(hFileOutSIAToVAC,fmt="(2(1F14.6,1x))") BinWidthSIAToVAC_BetweenCluster*(I - 0.D50) + MinDistanceSIAToVAC_BetweenCluster, &
+                                                     ClusterGap_SIAToVAC(I)/float(TotalCount_GapSIAToVAC)
     END DO
-    close(hFileOutSIATOVAC)
 
     TotalCountMIX_ToCent = sum(ToCent_DistMIX)
     TotalCountMIX_GapCToC = sum(ClusterGap_DistMIX)
     DO I = 1,BinNum
-        write(hFileOutMIX,fmt="(4(1F14.6,1x))") BinWidthMIX_ToCenter*(I - 0.D50), &
+        write(hFileOutMIX,fmt="(4(1F14.6,1x))") BinWidthMIX_ToCenter*(I - 0.D50) + MinDistanceMIX_ToCent, &
                                                 ToCent_DistMIX(I)/float(TotalCountMIX_ToCent),&
-                                                BinWidthMIX_BetweenCluster*(I - 0.D50), &
+                                                BinWidthMIX_BetweenCluster*(I - 0.D50) + MinDistanceMIX_BetweenCluster, &
                                                 ClusterGap_DistMIX(I)/float(TotalCountMIX_GapCToC)
     END DO
+
+    write(hFileOutSIA,fmt="(10(A14,1x))") "&NATOMS"
+    write(hFileOutVAC,fmt="(10(A14,1x))") "&NATOMS"
+    write(hFileOutMIX,fmt="(10(A14,1x))") "&NATOMS"
+
+    write(hFileOutSIA,fmt="(10(A14,1x))") "!NA","Count"
+    write(hFileOutVAC,fmt="(10(A14,1x))") "!NA","Count"
+    write(hFileOutMIX,fmt="(10(A14,1x))") "!NA","Count"
+
+    TotalCountSIA_NAtom = sum(NAtomSIA)
+    DO IC = MinSIANumEachCluster,MaxSIANumEachCluster
+        write(hFileOutSIA,fmt="(I14,1x,1F14.6,1x)") IC,NAtomSIA(IC-MinSIANumEachCluster+1)/float(TotalCountSIA_NAtom)
+    END DO
+
+    TotalCountVAC_NAtom = sum(NAtomVAC)
+    DO IC = MinVACNumEachCluster,MaxVACNumEachCluster
+        write(hFileOutVAC,fmt="(I14,1x,1F14.6,1x)") IC,NAtomVAC(IC-MinVACNumEachCluster+1)/float(TotalCountVAC_NAtom)
+    END DO
+
+    TotalCountMIX_NAtom = sum(NAtomMIX)
+    DO IC = MinMIXNumEachCluster,MaxMIXNumEachCluster
+        write(hFileOutMIX,fmt="(I14,1x,1F14.6,1x)") IC,NAtomMIX(IC-MinMIXNumEachCluster+1)/float(TotalCountMIX_NAtom)
+    END DO
+
+
+    close(hFileOutSIA)
+    close(hFileOutVAC)
+    close(hFileOutSIATOVAC)
     close(hFileOutMIX)
+
 
 
     if(allocated(ClustersArraySIA)) deallocate(ClustersArraySIA)
