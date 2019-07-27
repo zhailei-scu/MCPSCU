@@ -9,10 +9,17 @@ module MC_GenerateCascadeBox
 
     implicit none
 
+    integer,parameter::CascadeGenWay_ByUniform = 0
+    integer,parameter::CascadeGenWay_ByMDDataBase = 1
+
     contains
 
     !***************************************************************
-    subroutine Generate_Cascade_Random()
+    subroutine Generate_Cascade_FormMDDataBase(MDDataBaseFile,CascadeNum)
+        !---Dummy Vars---
+        character*256::MDDataBaseFile
+        integer::CascadeNum
+        !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
@@ -20,11 +27,12 @@ module MC_GenerateCascadeBox
         integer::err
         !---Parameters---
         integer::MultiBox
-        integer::CascadeNum
         integer::ClusterNumOneCase
         real(kind=KINDDF),dimension(:,:),allocatable::Sphere_Central
         real(kind=KINDDF),dimension(:),allocatable::Sphere_Radius
         integer::I
+        integer::J
+        integer::K
         integer::IBox
         integer::ICase
         integer::IC
@@ -37,12 +45,12 @@ module MC_GenerateCascadeBox
         real(kind=KINDDF)::ZDirection
         real(kind=KINDDF)::XDirection
         integer::ExitCount
+        integer::CellNum_OneDim
+        integer::CellNum
+        integer::ICell
+        real(kind=KINDDF),dimension(:,:),allocatable::CellCentralPos
         !-----------Body--------------
         processid = 0
-
-        CascadeNum = 4
-
-        ClusterNumOneCase = 80
 
         call AllocateArray_Host(Sphere_Central,CascadeNum,3,"Sphere_Central")
         call AllocateArray_Host(Sphere_Radius,CascadeNum,"Sphere_Radius")
@@ -77,12 +85,30 @@ module MC_GenerateCascadeBox
 
         Sphere_Radius = 80*Host_Boxes%LatticeLength
 
+
+        !---ReDraw the cells-----
+        CellNum_OneDim = floor(CascadeNum**C_UTH + 0.5D0)
+        CellNum = CellNum_OneDim**3
+
+        call AllocateArray_Host(CellCentralPos,CellNum,3,"CellCentralPos")
+
+        ICell = 0
+        DO I = 1,CellNum_OneDim
+            DO J = 1,CellNum_OneDim
+                DO K = 1,CellNum_OneDim
+                    ICell = ICell + 1
+                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I + 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
+                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J + 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
+                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K + 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                END DO
+            END DO
+        END DO
+        !------------------------
+
         IC = 0
         DO IBox = 1,Host_SimuCtrlParam%MultiBox
             DO ICase = 1,CascadeNum
-                Sphere_Central(ICase,1) = Host_Boxes%BOXBOUNDARY(1,1) + DRAND32()*Host_Boxes%BOXSIZE(1)
-                Sphere_Central(ICase,2) = Host_Boxes%BOXBOUNDARY(2,1) + DRAND32()*Host_Boxes%BOXSIZE(2)
-                Sphere_Central(ICase,3) = Host_Boxes%BOXBOUNDARY(3,1) + DRAND32()*Host_Boxes%BOXSIZE(3)
+                Sphere_Central(ICase,:) = CellCentralPos(ICase,:)
 
                 DO IIC = 1,ClusterNumOneCase
 
@@ -189,25 +215,28 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
 
+        call DeAllocateArray_Host(CellCentralPos,"CellCentralPos")
+
         call DeAllocateArray_Host(Sphere_Central,"Sphere_Central")
         call DeAllocateArray_Host(Sphere_Radius,"Sphere_Radius")
 
         call Host_Boxes%Clean()
 
         return
-    end subroutine
+    end subroutine Generate_Cascade_FormMDDataBase
 
     !***************************************************************
-    subroutine Generate_Cascade_Uniform()
+    subroutine Generate_Cascade_Uniform(CascadeNum,ClusterNumOneCase)
+        !---Dummy Vars---
+        integer,intent(in)::CascadeNum
+        integer,intent(in)::ClusterNumOneCase
+        !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
         character*256::OutFolder
         integer::err
-        !---Parameters---
         integer::MultiBox
-        integer::CascadeNum
-        integer::ClusterNumOneCase
         real(kind=KINDDF),dimension(:,:),allocatable::Sphere_Central
         real(kind=KINDDF),dimension(:),allocatable::Sphere_Radius
         integer::I
@@ -231,10 +260,6 @@ module MC_GenerateCascadeBox
         real(kind=KINDDF),dimension(:,:),allocatable::CellCentralPos
         !-----------Body--------------
         processid = 0
-
-        CascadeNum = 1
-
-        ClusterNumOneCase = 80
 
         call AllocateArray_Host(Sphere_Central,CascadeNum,3,"Sphere_Central")
         call AllocateArray_Host(Sphere_Radius,CascadeNum,"Sphere_Radius")
@@ -414,8 +439,83 @@ end module MC_GenerateCascadeBox
 program Main_MC_GenerateCascadeBox
     use MC_GenerateCascadeBox
     implicit none
+    integer::arg_Num
+    integer::CascadeGenWay
+    character*256::ARG
+    character*256::SampleFile
+    integer::CascadeNum
+    integer::NClusterEachCascade
+    character*256::MDDataBaseFile
+    !---Body---
+    arg_Num = Command_Argument_count()
 
-    call Generate_Cascade_Uniform()
+    if(arg_Num .LT. 2) then
+        write(*,*) "MCPSCUERROR: You must special the sample file, cascade generate way (0 by uniform way, 1 by from MD database)"
+        pause
+        stop
+    end if
+
+    call Get_Command_Argument(0,ARG)
+
+    call Get_Command_Argument(1,ARG)
+    Read(ARG,fmt="(A256)") SampleFile
+    write(*,*) "The sample file is: ",SampleFile
+
+    call Get_Command_Argument(2,ARG)
+    Read(ARG,*) CascadeGenWay
+
+    select case(CascadeGenWay)
+        case(CascadeGenWay_ByUniform)
+
+            write(*,*) "The cascade generate way is by uniform way"
+
+            if(arg_Num .LT. 4) then
+                write(*,*) "MCPSCUERROR: You must special 1: the sample file"
+                write(*,*) "2: cascade generate way (0 by uniform way, 1 by from MD database)"
+                write(*,*) "3: cascade number in each box"
+                write(*,*) "4: cluster number in each cascade"
+                pause
+                stop
+            end if
+
+            call Get_Command_Argument(3,ARG)
+            Read(ARG,*) CascadeNum
+            write(*,*) "The cascade number in each box is: ",CascadeNum
+
+            call Get_Command_Argument(4,ARG)
+            Read(ARG,*) NClusterEachCascade
+            write(*,*) "The cluster number in each cascade is: ",NClusterEachCascade
+
+            call Generate_Cascade_Uniform(CascadeNum,NClusterEachCascade)
+
+        case(CascadeGenWay_ByMDDataBase)
+            write(*,*) "The cascade generate way is by MD DataBase way"
+
+            if(arg_Num .LT. 4) then
+                write(*,*) "MCPSCUERROR: You must special 1: the sample file"
+                write(*,*) "2: cascade generate way (0 by uniform way, 1 by from MD database)"
+                write(*,*) "3: MD DataBase"
+                write(*,*) "4: cascade number in each box"
+                pause
+                stop
+            end if
+
+            call Get_Command_Argument(3,ARG)
+            Read(ARG,fmt="(A256)") MDDataBaseFile
+            write(*,*) "The MD DataBase file is: ",MDDataBaseFile
+
+            call Get_Command_Argument(4,ARG)
+            Read(ARG,*) CascadeNum
+            write(*,*) "The cascade number in each box is: ",CascadeNum
+
+            call Generate_Cascade_FormMDDataBase(MDDataBaseFile,CascadeNum)
+
+        case default
+            write(*,*) "MCPSCUERROR: Unknown way to generate cascade(0 by uniform way, 1 by from MD database)"
+            write(*,*) CascadeGenWay
+            pause
+            stop
+    end select
 
 
 end program Main_MC_GenerateCascadeBox
