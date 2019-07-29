@@ -335,16 +335,12 @@ module MC_StatisticClusters_Offline
                     if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. IStatu) then
 
                         NATOMS_SIA = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA
-                        if(NATOMS_SIA .GT. 0) then
-                            NAVAEachBox_SIA(IStatu) = NAVAEachBox_SIA(IStatu) + NATOMS_SIA
-                            NCCountEachBox_SIA(IStatu) = NCCountEachBox_SIA(IStatu) + 1
-                        end if
+                        NAVAEachBox_SIA(IStatu) = NAVAEachBox_SIA(IStatu) + NATOMS_SIA
+                        NCCountEachBox_SIA(IStatu) = NCCountEachBox_SIA(IStatu) + 1
 
                         NATOMS_Vac = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacIndex)%m_NA
-                        if(NATOMS_Vac .GT. 0) then
-                            NAVAEachBox_Vac(IStatu) = NAVAEachBox_Vac(IStatu) + NATOMS_Vac
-                            NCCountEachBox_Vac(IStatu) = NCCountEachBox_Vac(IStatu) + 1
-                        end if
+                        NAVAEachBox_Vac(IStatu) = NAVAEachBox_Vac(IStatu) + NATOMS_Vac
+                        NCCountEachBox_Vac(IStatu) = NCCountEachBox_Vac(IStatu) + 1
 
                         if(NATOMS_SIA .GT. 0 .and. NATOMS_Vac .GT. 0) then
                             write(*,*) "MCPSUCERROR: it is impossible to existence both SIA and vacancy in one cluster."
@@ -365,16 +361,15 @@ module MC_StatisticClusters_Offline
                     end if
                 end if
 
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ABSORBED_STATU) then
+                    if(any(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA .LT. 0)) then
+                        Num_AnnihilateEachBox = Num_AnnihilateEachBox + 1
+                    end if
+                end if
+
             END DO
 
-
-            if(sum(NAVAEachBox_SIA) .ne. sum(NAVAEachBox_Vac)) then
-                write(*,*) "MCPSCUERROR: It is not possible that atoms number of vacancy not equal with SIA"
-                pause
-                stop
-            end if
-
-            Num_AnnihilateEachBox = ((ICTO - ICFROM + 1)*1 - sum(NAVAEachBox_SIA) - sum(NAVAEachBox_Vac))/2
+            Num_AnnihilateEachBox = Num_AnnihilateEachBox + NCCountEachBox_SIA(p_ANNIHILATE_STATU) + NCCountEachBox_VAC(p_ANNIHILATE_STATU)
 
             NAVA_SIA = NAVA_SIA + NAVAEachBox_SIA
             NCCount_SIA = NCCount_SIA + NCCountEachBox_SIA
