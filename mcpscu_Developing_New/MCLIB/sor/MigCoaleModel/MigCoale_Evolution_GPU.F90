@@ -720,6 +720,8 @@ module MIGCOALE_EVOLUTION_GPU
                 case(p_ProductionType_BySimplePlus)
                     Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
                                                                               Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                 case(p_ProductionType_BySubtract)
 
                     SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
@@ -734,6 +736,13 @@ module MIGCOALE_EVOLUTION_GPU
                     Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
 
                     Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
+
+                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+
+                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
+
             end select
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
@@ -815,7 +824,6 @@ module MIGCOALE_EVOLUTION_GPU
 
             !Dev_Clusters(JC)%m_RAD = 0.D0
             Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
-            Dev_Clusters(JC)%m_Atoms(:)%m_NA = 0
             Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
           end if
 
@@ -986,6 +994,8 @@ module MIGCOALE_EVOLUTION_GPU
                 case(p_ProductionType_BySimplePlus)
                     Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
                                                                               Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
                 case(p_ProductionType_BySubtract)
 
                     SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
@@ -1000,6 +1010,12 @@ module MIGCOALE_EVOLUTION_GPU
                     Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
 
                     Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
+
+                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+
+                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
             end select
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
@@ -1080,7 +1096,6 @@ module MIGCOALE_EVOLUTION_GPU
 
             !Dev_Clusters(JC)%m_RAD = 0.D0
             Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
-            Dev_Clusters(JC)%m_Atoms(:)%m_NA = 0
             Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
           end if
 

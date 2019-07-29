@@ -1508,15 +1508,9 @@ module MC_GenerateCascadeBox
         DO IBox = 1,Host_SimuCtrlParam%MultiBox
 
             DO ICase = 1,CascadeNum
-
-                write(*,*) "ICase",ICase
-                pause
-
                 Sphere_Central(ICase,:) = CellCentralPos(ICase,:)
 
                 DO IIC = 1,TheMDStatistic%NSIAClusterEachBox_AVE
-                    write(*,*) "IC",IC
-
                     IC = IC + 1
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
@@ -1605,10 +1599,6 @@ module MC_GenerateCascadeBox
 
                                 if(Distance .GT. Gap) then
                                     GapCondition = 1
-
-                                    write(*,*) "DistanceBetweenSIA",Distance
-                                    write(*,*) "GapBetweenSIA",Gap
-
                                     exit
                                 end if
                             end if
@@ -1639,10 +1629,6 @@ module MC_GenerateCascadeBox
 
                                 if(Distance .GT. Gap) then
                                     GapCondition = 1
-
-                                    write(*,*) "DistanceSIAToVac",Distance
-                                    write(*,*) "GapSIAToVac",Gap
-
                                     exit
                                 end if
                             end if
