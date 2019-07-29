@@ -183,7 +183,7 @@
 
 &BOXF
   &BOXSUBCTL
-    &SIZE   bx(LU)= 1600  by(LU) = 1600 , bz(LU) = 1600
+    &SIZE   bx(LU)= 400  by(LU) = 400 , bz(LU) = 400
     &LATT   latiice constant(nm) = 0.31652
   &ENDSUBCTL
 
