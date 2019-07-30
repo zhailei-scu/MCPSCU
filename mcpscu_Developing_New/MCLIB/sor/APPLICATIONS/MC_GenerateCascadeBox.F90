@@ -9,8 +9,9 @@ module MC_GenerateCascadeBox
 
     implicit none
 
-    integer,parameter::CascadeGenWay_ByUniform = 0
-    integer,parameter::CascadeGenWay_ByMDDataBase = 1
+    integer,parameter::CascadeGenWay_ByCentUniform = 0
+    integer,parameter::CascadeGenWay_ByMDDataBase_Locally = 1
+    integer,parameter::CascadeGenWay_ByMDDataBase_Uniform = 2
 
     type,public::ClusterAtom
         real(kind=KINDDF)::POS(3)
@@ -1408,7 +1409,7 @@ module MC_GenerateCascadeBox
     end subroutine
 
     !***************************************************************
-    subroutine Generate_Cascade_FormMDDataBase(MDDataBaseCtrlFile,CascadeNum)
+    subroutine Generate_Cascade_Locally_FormMDDataBase(MDDataBaseCtrlFile,CascadeNum)
         !---Dummy Vars---
         character*256,intent(in)::MDDataBaseCtrlFile
         integer,intent(in)::CascadeNum
@@ -1816,11 +1817,274 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%Clean()
 
+        call TheMDStatistic%Clean_MDStatistic()
+
         return
-    end subroutine Generate_Cascade_FormMDDataBase
+    end subroutine Generate_Cascade_Locally_FormMDDataBase
 
     !***************************************************************
-    subroutine Generate_Cascade_Uniform(CascadeNum,ClusterNumOneCase)
+    subroutine Generate_Cascade_Uniform_FormMDDataBase(MDDataBaseCtrlFile,CascadeNum)
+        !---Dummy Vars---
+        character*256,intent(in)::MDDataBaseCtrlFile
+        integer,intent(in)::CascadeNum
+        !---Local Vars---
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoalClusterRecord)::Record
+        character*256::OutFolder
+        type(MDStatistic)::TheMDStatistic
+        integer::err
+        integer::MultiBox
+        integer::I
+        integer::IBox
+        integer::ICase
+        integer::IC
+        integer::JC
+        integer::IIC
+        integer::processid
+        integer::ISEED0,ISEED(2)
+        integer::SIAIndex
+        integer::VacancyIndex
+        real(kind=KINDDF)::Distance
+        integer::GapCondition
+        real(kind=KINDDF)::Accum
+        real(kind=KINDDF)::RandNum
+        integer::IBin
+        integer::TheBin
+        !-----------Body--------------
+
+        call ResloveMDDataBaseControlFile(MDDataBaseCtrlFile,TheMDStatistic)
+
+        processid = 0
+
+        !*********Create/Open log file********************
+        call OpenLogFile(m_hFILELOG)
+
+        !********Load Global vars from input file**************
+        call Initialize_Global_Variables(Host_SimuCtrlParam,Host_Boxes)
+
+
+        ISEED0 = Host_SimuCtrlParam%RANDSEED(1)
+        call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+        ISEED0 = ISEED0 + processid - 1
+        call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+        call DRAND32_PUTSEED(ISEED)
+
+        call Print_Global_Variables(6,Host_SimuCtrlParam,Host_Boxes)
+
+        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"CascadeBox/")
+
+        Host_SimuCtrlParam%OutFilePath = trim(adjustl(OutFolder))
+
+        call Host_Boxes%m_ClustersInfo_CPU%Clean()
+
+        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
+
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE))
+
+        SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
+        VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
+
+        !------------------------
+
+        IC = 0
+        DO IBox = 1,Host_SimuCtrlParam%MultiBox
+
+            DO ICase = 1,CascadeNum
+
+                DO IIC = 1,TheMDStatistic%NSIAClusterEachBox_AVE
+                    IC = IC + 1
+                    call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
+                    Accum = 0.D0
+                    RandNum = DRAND32()
+                    DO IBin = 1,size(TheMDStatistic%NAtomSIA)
+                        Accum = Accum + TheMDStatistic%NAtomSIA(IBin)
+
+                        if(Accum .GE. RandNum) then
+                            TheBin = IBin
+                            exit
+                        end if
+                    END DO
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheMDStatistic%BinSIA_NAtomArray(TheBin)
+
+                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .LE. 0) then
+                        write(*,*) "Opps...,the SIA cluster size cannot less than 0"
+                        write(*,*) "For cluster: ",IC
+                        write(*,*) Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA
+                        pause
+                        stop
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+
+
+                    DO While(.true.)
+
+                        DO I = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + Host_Boxes%BOXSIZE(I)*DRAND32()
+                        END DO
+
+                        !---Consider the minimum Gap between SIA clusters
+                        GapCondition = 0
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
+
+                                Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
+
+                                if(Distance .LT. TheMDStatistic%MinDistanceSIA_BetweenCluster) then
+                                    GapCondition = 1
+                                    exit
+                                end if
+                            end if
+                        END DO
+
+                        if(GapCondition .GT. 0) then
+                            cycle
+                        end if
+
+                        !---Consider the minimum Gap between SIA cluster and VAC Cluster
+                        GapCondition = 0
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0) then
+
+                                Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
+
+                                if(Distance .LT. TheMDStatistic%MinDistanceSIAToVAC_BetweenCluster) then
+                                    GapCondition = 1
+                                    exit
+                                end if
+                            end if
+                        END DO
+
+                        if(GapCondition .GT. 0) then
+                            cycle
+                        else
+                            exit
+                        end if
+
+                    END DO
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + 1
+                    Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) + 1
+
+                END DO
+
+                DO IIC = 1,TheMDStatistic%NVACClusterEachBox_AVE
+
+                    IC = IC + 1
+                    call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
+                    Accum = 0.D0
+                    RandNum = DRAND32()
+                    DO IBin = 1,size(TheMDStatistic%NAtomVAC)
+                        Accum = Accum + TheMDStatistic%NAtomVAC(IBin)
+
+                        if(Accum .GE. RandNum) then
+                            TheBin = IBin
+                            exit
+                        end if
+                    END DO
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = TheMDStatistic%BinVAC_NAtomArray(TheBin)
+
+                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .LE. 0) then
+                        write(*,*) "Opps...,the VAC cluster size cannot less than 0"
+                        write(*,*) "For cluster: ",IC
+                        write(*,*) Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA
+                        pause
+                        stop
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+
+                    DO While(.true.)
+
+                        DO I = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + Host_Boxes%BOXSIZE(I)*DRAND32()
+                        END DO
+
+                        !---Consider the minimum Gap between VAC clusters
+                        GapCondition = 0
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0) then
+
+                                Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
+
+                                if(Distance .LT. TheMDStatistic%MinDistanceVAC_BetweenCluster) then
+                                    GapCondition = 1
+                                    exit
+                                end if
+                            end if
+                        END DO
+
+                        if(GapCondition .GT. 0) then
+                            cycle
+                        end if
+
+                        !---Consider the minimum Gap between SIA cluster and VAC Cluster
+                        GapCondition = 0
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
+
+                                Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
+
+                                if(Distance .LT. TheMDStatistic%MinDistanceSIAToVAC_BetweenCluster) then
+                                    GapCondition = 1
+                                    exit
+                                end if
+                            end if
+                        END DO
+
+                        if(GapCondition .GT. 0) then
+                            cycle
+                        else
+                            exit
+                        end if
+
+                    END DO
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + 1
+                    Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) + 1
+
+                END DO
+
+            END DO
+
+        END DO
+
+        call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
+
+        call Host_Boxes%Clean()
+
+        call TheMDStatistic%Clean_MDStatistic()
+
+        return
+    end subroutine Generate_Cascade_Uniform_FormMDDataBase
+
+
+
+    !***************************************************************
+    subroutine Generate_Cascade_Locally_CentUniform(CascadeNum,ClusterNumOneCase)
         !---Dummy Vars---
         integer,intent(in)::CascadeNum
         integer,intent(in)::ClusterNumOneCase
@@ -2026,7 +2290,7 @@ module MC_GenerateCascadeBox
         call Host_Boxes%Clean()
 
         return
-    end subroutine Generate_Cascade_Uniform
+    end subroutine Generate_Cascade_Locally_CentUniform
 
 end module MC_GenerateCascadeBox
 
@@ -2044,7 +2308,10 @@ program Main_MC_GenerateCascadeBox
     arg_Num = Command_Argument_count()
 
     if(arg_Num .LT. 2) then
-        write(*,*) "MCPSCUERROR: You must special the sample file, cascade generate way (0 by uniform way, 1 by from MD database)"
+        write(*,*) "MCPSCUERROR: You must special the sample file, cascade generate way"
+        write(*,*) "0 by Locally ,center uniform way"
+        write(*,*) "1 by from MD database, locally"
+        write(*,*) "2 by from MD database, uniform"
         pause
         stop
     end if
@@ -2059,13 +2326,13 @@ program Main_MC_GenerateCascadeBox
     Read(ARG,*) CascadeGenWay
 
     select case(CascadeGenWay)
-        case(CascadeGenWay_ByUniform)
+        case(CascadeGenWay_ByCentUniform)
 
-            write(*,*) "The cascade generate way is by uniform way"
+            write(*,*) "The cascade generate way is by Locally ,center uniform way"
 
             if(arg_Num .LT. 4) then
                 write(*,*) "MCPSCUERROR: You must special 1: the sample file"
-                write(*,*) "2: cascade generate way (0 by uniform way, 1 by from MD database)"
+                write(*,*) "2: cascade generate way (0 by Locally ,center uniform way; 1 by from MD database,locally;2 by from MD database, uniform)"
                 write(*,*) "3: cascade number in each box"
                 write(*,*) "4: cluster number in each cascade"
                 pause
@@ -2080,14 +2347,14 @@ program Main_MC_GenerateCascadeBox
             Read(ARG,*) NClusterEachCascade
             write(*,*) "The cluster number in each cascade is: ",NClusterEachCascade
 
-            call Generate_Cascade_Uniform(CascadeNum,NClusterEachCascade)
+            call Generate_Cascade_Locally_CentUniform(CascadeNum,NClusterEachCascade)
 
-        case(CascadeGenWay_ByMDDataBase)
-            write(*,*) "The cascade generate way is by MD DataBase way"
+        case(CascadeGenWay_ByMDDataBase_Locally)
+            write(*,*) "The cascade generate way is by MD database,locally"
 
             if(arg_Num .LT. 4) then
                 write(*,*) "MCPSCUERROR: You must special 1: the sample file"
-                write(*,*) "2: cascade generate way (0 by uniform way, 1 by from MD database)"
+                write(*,*) "2: cascade generate way (0 by Locally ,center uniform way; 1 by from MD database,locally;2 by from MD database,uniform)"
                 write(*,*) "3: MD DataBase control file"
                 write(*,*) "4: Cascade number each box."
                 pause
@@ -2102,7 +2369,29 @@ program Main_MC_GenerateCascadeBox
             Read(ARG,*) CascadeNum
             write(*,*) "The cascade number in each box is: ",CascadeNum
 
-            call Generate_Cascade_FormMDDataBase(MDDataBaseControlFile,CascadeNum)
+            call Generate_Cascade_Locally_FormMDDataBase(MDDataBaseControlFile,CascadeNum)
+
+        case(CascadeGenWay_ByMDDataBase_Uniform)
+            write(*,*) "The cascade generate way is by MD database, uniform"
+
+            if(arg_Num .LT. 4) then
+                write(*,*) "MCPSCUERROR: You must special 1: the sample file"
+                write(*,*) "2: cascade generate way (0 by Locally ,center uniform way; 1 by MD database,locally;2 by MD database,uniform)"
+                write(*,*) "3: MD DataBase control file"
+                write(*,*) "4: Cascade number each box."
+                pause
+                stop
+            end if
+
+            call Get_Command_Argument(3,ARG)
+            Read(ARG,fmt="(A256)") MDDataBaseControlFile
+            write(*,*) "The MD DataBase path is: ",MDDataBaseControlFile
+
+            call Get_Command_Argument(4,ARG)
+            Read(ARG,*) CascadeNum
+            write(*,*) "The cascade number in each box is: ",CascadeNum
+
+            call Generate_Cascade_Uniform_FormMDDataBase(MDDataBaseControlFile,CascadeNum)
 
         case default
             write(*,*) "MCPSCUERROR: Unknown way to generate cascade(0 by uniform way, 1 by from MD database)"
