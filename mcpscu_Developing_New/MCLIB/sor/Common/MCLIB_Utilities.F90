@@ -60,24 +60,6 @@ module MCLIB_UTILITIES
 
   contains
 
-  function DRSTR_New(Text) result(TheResult)
-    !---Based on our test, the DRSTR function in Miniutilities seems would meet compiling error---
-  	!---For PGI 2019 (19.4) compiler and cuda10.0 version, so we rewrtite the DRSTR_New function here---
-  	!---to make the program more complicate---
-	implicit none
-	!---Dummy Vars---
-    character*(*),intent(in)::Text
-    real(kind=KINDDF),intent(out)::TheResult
-    !---Body---
-    read(Text,*,err=100) TheResult
-    return
-  	100  write(*, fmt="(A)") "Error when convert string'"//  &
-                                  Text(1:len_trim(Text))//  &
-                                  "'into real number"
-       	write(*, fmt="(A)") "Process to be stpped"
-       	stop
-  end function DRSTR_New
-
   !*************************************************
   function ResolveSymbol2AtomsSetRange(symbol,BasicAtomsList) result(TheAtomsSetRange)
         implicit none
