@@ -36,11 +36,12 @@ ifeq ($(origin Coflags), undefined)
 
   ifeq ($(operateSystem), LINUX)
       ifeq ($(ConfigName), Release)
-        Coflags := -Wall -Mconcur -O2 -Minform=warn -Minfo=all
+#Coflags := -Wall -Mconcur -O2 -Minform=warn -Minfo=all
+        Coflags := -Wall -O2
       endif
 
       ifeq ($(ConfigName), Debug)
-        Coflags := -Wall -g -O0 -Minform=warn -Minfo=all
+        Coflags := -Wall -g -O0
       endif
 
       CP := -c

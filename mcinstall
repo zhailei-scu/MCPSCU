@@ -12,7 +12,8 @@ TINYCCPATH=$PWD/tcc-0.9.27/
 VER=Developing_New
 FULLNAME=mcpscu_$VER 
 tar -xvf $FULLNAME.tar.bz2
-#---- set the envirenment variables
+
+#---- set the cuda driver version variables
 OSVER=$(cat /proc/version | head -c 5)
 
 if [ "$OSVER" = "CYGWI" ]; then
@@ -29,52 +30,111 @@ if [ "$OSVER" = "Linux" ]; then
   COMPUTCAPABILITY=cc35
 fi
 
+echo -n 'Reset CUDA Version (y/n)?'
+read Y
+if [ "$Y" = "y" ]; then
+  echo -n 'Please input the CUDA version '
+  read -e CUDAV
+  export CUDAV
+  echo -n 'Please input the computer capability '
+  read -e CUDAC
+  export CUDAC
+
+  echo "#---The environment for CUDA Driver---" >> $HOME/.bashrc
+  echo "CUDAV=$CUDAV; export CUDAV" >> $HOME/.bashrc
+  echo "CUDAC=$CUDAC; export CUDAC" >> $HOME/.bashrc
+  echo "#---End environment for CUDA Driver---" >> $HOME/.bashrc
+fi
+
+if [ "$CUDAV" != "" ]; then
+  CUDAVERSION='cuda'$CUDAV
+fi
+if [ "$CUDAC" != "" ]; then
+  L=${CUDAC%.*}
+  R=${CUDAC#*.}
+  COMPUTCAPABILITY='cc'$L$R
+fi
+echo 'The CUDA version is: ' $CUDAVERSION ' ,the computer capability is: ' $COMPUTCAPABILITY
+
+#---- set the PGI compiler vars ---
+echo -n 'Reset the PGI path for environment (y/n)?'
+read Y
+if [ "$Y" = "y" ]; then
+  echo -n 'Please input the path for PGI (for instance /opt/pgi/): '
+  read -e PGIPATH
+  echo -n 'The PGI version is(for instance 19.4): '
+  read -e PGIVER
+  echo 'The PGI path is: '$PGIPATH' ,the version is: '$PGIVER
+  PGI=$PGIPATH
+  export PGI      #or use export PGI=$PGIPATH
+
+  L=${PGIVER%.*}
+  R=${PGIVER#*.}
+  
+  PATH="$PGIPATH/linux86-64/$L.$R/bin":"$PGIPATH/linux86-64/20$L/include":$PATH;
+  export PATH=$PATH
+
+  echo "#---The environment for PGI compiler---" >>$HOME/.bashrc
+  echo "PGI=$PGIPATH; export PGI" >>$HOME/.bashrc
+  echo "PATH=$PATH; export PATH" >> $HOME/.bashrc
+  echo "#---End environment for PGI compiler---" >>$HOME/.bashrc
+fi
+
+source $HOME/.bashrc
+
 MCPSCUINST=$PWD
 MCPSCUSOR=$MCPSCUINST/$FULLNAME
 MCWORKSPACE=$MCPSCUINST/mcworkspace/$FULLNAME
 mkdir -p $MCWORKSPACE
 
-sed -i '2,7{/mcpscusor=/d}' $MCPSCUSOR/mcbdlib
+sed -i '2,8{/mcpscusor=/d}' $MCPSCUSOR/mcbdlib
 sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/mcbdlib
-sed -i '2,7{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,8{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
 sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,7{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,8{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,7{/tccpath=/d}' $MCPSCUSOR/mcbdlib
+sed -i '2,8{/tccpath=/d}' $MCPSCUSOR/mcbdlib
 sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/mcbdlib
-sed -i '2,7{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,8{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
 sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,7{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,8{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,7{/mcworkspace=/d}' $MCPSCUSOR/mcbdlib
+sed -i '2,8{/mcworkspace=/d}' $MCPSCUSOR/mcbdlib
 sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/mcbdlib
-sed -i '2,7{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,8{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
 sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,7{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,8{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,7{/cudaVersion=/d}' $MCPSCUSOR/mcbdlib
+sed -i '2,8{/cudaVersion=/d}' $MCPSCUSOR/mcbdlib
 sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/mcbdlib
-sed -i '2,7{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,8{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
 sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,7{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,8{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,7{/computerCapability=/d}' $MCPSCUSOR/mcbdlib
+sed -i '2,8{/computerCapability=/d}' $MCPSCUSOR/mcbdlib
 sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/mcbdlib
-sed -i '2,7{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,8{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
 sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,7{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,8{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,7{/operateSystem=/d}' $MCPSCUSOR/mcbdlib
+sed -i '2,8{/operateSystem=/d}' $MCPSCUSOR/mcbdlib
 sed -i "7i operateSystem=""$OS" $MCPSCUSOR/mcbdlib
-sed -i '2,7{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,8{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
 sed -i "7i operateSystem=""$OS" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,7{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,8{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 sed -i "7i operateSystem=""$OS" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+
+sed -i '2,8{/source/d}' $MCPSCUSOR/mcbdlib
+sed -i "8i source $HOME/.bashrc" $MCPSCUSOR/mcbdlib
+sed -i '2,8{/source/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "8i source $HOME/.bashrc" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,8{/source/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "8i source $HOME/.bashrc" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
 #---- create mcworkspace
 rm $MCPSCUINST/mcapps

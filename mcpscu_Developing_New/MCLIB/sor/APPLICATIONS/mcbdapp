@@ -86,20 +86,22 @@ if [ $# -ge 2 ]; then
 fi
 
 #Set the compiler flag
+#Based on our test, the compiler option -Mnollvm is also necessary in host code, if not, in centos 7, CUDA10.0 PGICE 19.4, the
+#error"PGF90-F-0000-Internal compiler error. bitcaset with differing size -4" would occur
 if [ "$ConfigName" = "Release" ];then 
        # the compling option for CYGWIN
        if [ "$operateSystem" = "CYGWIN" ]; then
-       	  export oflags="-fast -D $operateSystem -D NODEVRAN -Minform=warn -Minfo=all -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability";
+       	  export oflags="-fast -D $operateSystem -D NODEVRAN -Mnollvm -Minform=warn -Minfo=all -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability";
        # the compling option for LINUX
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-fast -tp sandybridge-64 -D $operateSystem -Minform=warn -Minfo=all  -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability,nollvm";
+       	  export oflags="-fast -tp sandybridge-64 -D $operateSystem -Mnollvm -Minform=warn -Minfo=all  -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability,nollvm";
        fi        
 else
        # the compling option for CYGWI
        if [ "$operateSystem" = "CYGWIN" ]; then
-       	  export oflags="-g -Mcuda=$cudaVersion,$computerCapability,nodebug -D $operateSystem -D NODEVRAN";
+       	  export oflags="-g -Mnollvm -Mcuda=$cudaVersion,$computerCapability,nodebug -D $operateSystem -D NODEVRAN";
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-g -Mcuda=$cudaVersion,$computerCapability,nollvm,nodebug -D $operateSystem -D NODEVRAN";
+       	  export oflags="-g -Mnollvm -Mcuda=$cudaVersion,$computerCapability,nollvm,nodebug -D $operateSystem -D NODEVRAN";
        fi
 fi
 
