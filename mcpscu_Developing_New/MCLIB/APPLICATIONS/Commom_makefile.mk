@@ -5,8 +5,7 @@ ifeq ($(origin ConfigName), undefined)
 ConfigName := Release
 endif
 
-#Note: the -Mcudalib=curand is necessray in cygwin, but unnecessary in linux
-oflags_this := $(oflags) -Mcudalib=curand
+oflags_this := $(oflags) $(otherlinkoptions)
 
 # include directeries
 LIBDIRD    := $(mcworkspace)$(Segment)LIB$(Segment)$(ConfigName)
