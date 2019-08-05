@@ -93,41 +93,55 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(SimulationBoxes)::Host_SimBoxes
         type(SimulationCtrlParam),target::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        integer,intent(in)::JobIndex
+        integer::JobIndex
         !---Local Vars---
         type(SimulationCtrlParam),pointer::PSimCtrlParam=>null()
         type(ImplantSection),pointer::PImplantSection=>null()
-        integer::ITIME0
-        real::TIME0
+        integer::TimeStep0
+        real::SimTime0
+        integer::TimeSection0
+        integer::JobIndex0
         integer::ITEST
         integer::TestLoop0,TestLoop1
-        integer::TimeSection0
         !---Body---
+        TimeStep0 = 0
+        SimTime0 = ZERO
+        TimeSection0 = 1
+        JobIndex0 = 1
+
+        call m_MigCoalClusterRecord%InitMigCoalClusterRecord(Host_SimuCtrlParam%MultiBox,SimuSteps=TimeStep0,SimuTimes=SimTime0,SimuPatchs=JobIndex0,TimeSection=TimeSection0)
+
+        call ReadInitBoxSimCfgList(Host_SimBoxes,Host_SimuCtrlParam,m_InitBoxSimCfgList,m_MigCoalClusterRecord)
+
+        TimeStep0 = m_MigCoalClusterRecord%GetSimuSteps()
+        SimTime0 = m_MigCoalClusterRecord%GetSimuTimes()
+        TimeSection0 = m_MigCoalClusterRecord%GetTimeSections()
+
         if(Host_SimuCtrlParam%INDEPBOX) then
+            if(JobIndex .LT. m_MigCoalClusterRecord%GetSimuPatch()) then
+                return
+            end if
+
             TestLoop0 = 1
             TestLoop1 = 1
         else
-            TestLoop0 = 1
+            TestLoop0 = m_MigCoalClusterRecord%GetSimuPatch()
             TestLoop1 = Host_SimuCtrlParam%TOTALBOX/Host_SimuCtrlParam%MultiBox
         end if
 
-        ITIME0 = 0
-        TIME0 = ZERO
-        TimeSection0 = 1
-
-        PSimCtrlParam=>Host_SimuCtrlParam
-
         DO ITEST = TestLoop0,TestLoop1
 
+            PSimCtrlParam=>Host_SimuCtrlParam%Get_P(TimeSection0)
+
             if(Host_SimuCtrlParam%INDEPBOX) then
-                call m_MigCoalClusterRecord%InitMigCoalClusterRecord(PSimCtrlParam%MultiBox,SimuSteps=ITIME0,SimuTimes=TIME0,SimuPatchs=JobIndex,TimeSection=TimeSection0)
+                call m_MigCoalClusterRecord%InitMigCoalClusterRecord(PSimCtrlParam%MultiBox,SimuSteps=TimeStep0,SimuTimes=SimTime0,SimuPatchs=JobIndex,TimeSection=TimeSection0)
             else
-                call m_MigCoalClusterRecord%InitMigCoalClusterRecord(PSimCtrlParam%MultiBox,SimuSteps=ITIME0,SimuTimes=TIME0,SimuPatchs=ITEST,TimeSection=TimeSection0)
+                call m_MigCoalClusterRecord%InitMigCoalClusterRecord(PSimCtrlParam%MultiBox,SimuSteps=TimeStep0,SimuTimes=SimTime0,SimuPatchs=ITEST,TimeSection=TimeSection0)
             end if
 
             if(ITEST .eq. 1) then
 
-                call m_MigCoaleStatInfoWrap%Init(Host_SimuCtrlParam%MultiBox)
+                call m_MigCoaleStatInfoWrap%Init(PSimCtrlParam%MultiBox)
 
                 call m_ImplantList%Init(Host_SimBoxes,PSimCtrlParam)
 
@@ -629,13 +643,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
         !---Local Vars---
-        logical::existed
-        integer::hFile
-        character*256::STR
-        character*32::KEYWORD
-        character*32::STRTMP(10)
-        integer::LINE
-        integer::N
         character*256::path
         character*18,dimension(:),allocatable::CRMin
         character*18,dimension(:),allocatable::CRMax
@@ -644,56 +651,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::I
         integer::length,trueLength
         !---Body---
-        existed = .false.
-
-        LINE = 0
-
-        call InitBoxCfgList%Clean_InitBoxSimCfgList()
-
-        INQUIRE(File=SimBoxes%IniConfig(1:LENTRIM(SimBoxes%IniConfig)),exist=existed)
-
-        if(.not. existed) then
-            write(*,*) "MCPSCUERROR: The box initial file do not existed!"
-            write(*,*) SimBoxes%IniConfig
-            pause
-            stop
-        end if
-
-        hFile = openExistedFile(SimBoxes%IniConfig)
-
-        call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
-        call RemoveComments(STR,"!")
-        STR = adjustl(STR)
-        call GETKEYWORD("&",STR,KEYWORD)
-        call UPCASE(KEYWORD)
-        if(KEYWORD(1:LENTRIM(KEYWORD)) .ne. m_INIFSTARTFLAG) then
-            write(*,*) "MCPSCUERROR: The Start Flag of Init box Parameters is Illegal: ",KEYWORD(1:LENTRIM(KEYWORD))
-            pause
-            stop
-        end if
-
-        DO While(.true.)
-            call GETINPUTSTRLINE(hFile,STR,LINE, "!", *100)
-            call RemoveComments(STR,"!")
-            STR = adjustl(STR)
-            call GETKEYWORD("&",STR,KEYWORD)
-            call UPCASE(KEYWORD)
-
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
-                case("&ENDINITINPUTF")
-                    exit
-                case("&GROUPSUBCTL")
-                    call ReadInitBoxSimCfg_OneGroup(hFile,SimBoxes,Host_SimuCtrlParam,InitBoxCfgList,LINE,*100)
-
-                case default
-                    write(*,*) "MCPSCUERROR: You must speical the initial input group by group"
-                    write(*,*) "By the way: &GROUPSUBCTL 'TYPE' "
-                    write(*,*) "However, the words you input is: ",STR
-                    write(*,*) "At LINE: ",LINE
-                    pause
-                    stop
-            end select
-        END DO
 
         call DOInitSimulationBoxesConfig(SimBoxes,Host_SimuCtrlParam,Record,InitBoxCfgList)
 
@@ -787,13 +744,123 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         call PutOut_Instance_Statistic_EachBox(SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
 
         return
+    end subroutine InitSimulationBoxesConfig
+
+    !*****************************************************************
+    subroutine ReadInitBoxSimCfgList(SimBoxes,Host_SimuCtrlParam,InitBoxCfgList,SimuRecord)
+        implicit none
+        !---Dummy Vars---
+        type(SimulationBoxes)::SimBoxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(InitBoxSimCfgList),target::InitBoxCfgList
+        CLASS(SimulationRecord)::SimuRecord
+        !---Local Vars---
+        logical::existed
+        integer::hFile
+        character*256::STR
+        character*32::KEYWORD
+        character*32::STRTMP(10)
+        integer::LINE
+        integer::N
+        type(InitBoxSimCfgList),pointer::cursor=>null()
+        integer::RecordNum
+        !---Body---
+        existed = .false.
+
+        LINE = 0
+
+        RecordNum = 0
+        call InitBoxCfgList%Clean_InitBoxSimCfgList()
+
+        INQUIRE(File=SimBoxes%IniConfig(1:LENTRIM(SimBoxes%IniConfig)),exist=existed)
+
+        if(.not. existed) then
+            write(*,*) "MCPSCUERROR: The box initial file do not existed!"
+            write(*,*) SimBoxes%IniConfig
+            pause
+            stop
+        end if
+
+        hFile = openExistedFile(SimBoxes%IniConfig)
+
+        call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+        call RemoveComments(STR,"!")
+        STR = adjustl(STR)
+        call GETKEYWORD("&",STR,KEYWORD)
+        call UPCASE(KEYWORD)
+        if(KEYWORD(1:LENTRIM(KEYWORD)) .ne. m_INIFSTARTFLAG) then
+            write(*,*) "MCPSCUERROR: The Start Flag of Init box Parameters is Illegal: ",KEYWORD(1:LENTRIM(KEYWORD))
+            pause
+            stop
+        end if
+
+        DO While(.true.)
+            call GETINPUTSTRLINE(hFile,STR,LINE, "!", *100)
+            call RemoveComments(STR,"!")
+            STR = adjustl(STR)
+            call GETKEYWORD("&",STR,KEYWORD)
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&ENDINITINPUTF")
+                    exit
+                case("&GROUPSUBCTL")
+                    call ReadInitBoxSimCfg_OneGroup(hFile,SimBoxes,Host_SimuCtrlParam,InitBoxCfgList,LINE,*100)
+
+                case default
+                    write(*,*) "MCPSCUERROR: You must speical the initial input group by group"
+                    write(*,*) "By the way: &GROUPSUBCTL 'TYPE' "
+                    write(*,*) "However, the words you input is: ",STR
+                    write(*,*) "At LINE: ",LINE
+                    pause
+                    stop
+            end select
+        END DO
+
+        cursor=>InitBoxCfgList
+
+        DO While(associated(cursor))
+
+            if(cursor%TheValue%InitType .eq. p_ClusterIniConfig_SpecialDistFromFile) then
+                hFile = OpenExistedFile(cursor%TheValue%InitCfgFileName)
+
+                call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+                call RemoveComments(STR,"!")
+
+                STR = adjustl(STR)
+
+                call GETKEYWORD("&",STR,KEYWORD)
+
+                call UPCASE(KEYWORD)
+
+                if(ISSTREQUAL(adjustl(trim(KEYWORD)),OKMC_OUTCFG_FORMAT18)) then
+                    if(RecordNum .GE. 1) then
+                        write(*,*) "MCPSCUERROR: Do not allow two records for initialization."
+                        pause
+                        stop
+                    end if
+
+                    call SimBoxes%Putin_OKMC_OUTCFG_FORMAT18_SimRecord(hFile,SimuRecord,LINE)
+                    RecordNum = RecordNum + 1
+                end if
+
+                close(hFile)
+
+            end if
+
+            cursor=>cursor%next
+        END DO
+
+        Nullify(cursor)
+
+        return
 
         100 write(*,*) "MCPSCUERROR : Load init config file"//SimBoxes%IniConfig(1:LENTRIM(SimBoxes%IniConfig))//"failed !"
             write(*,*) "At line :",LINE
             write(*,*) "The program would stop."
             pause
             stop
-    end subroutine InitSimulationBoxesConfig
+    end subroutine ReadInitBoxSimCfgList
 
     !*****************************************************************
     subroutine ReadInitBoxSimCfg_OneGroup(hFile,SimBoxes,Host_SimuCtrlParam,InitBoxCfgList,LINE,*)

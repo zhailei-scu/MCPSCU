@@ -105,6 +105,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      contains
      procedure,non_overridable,pass,public::AppendOne_SimulationCtrlParam
+     procedure,non_overridable,pass,public::Get_P=>GetSimulationCtrlParam_P
      procedure,non_overridable,pass,private::CopyFromOther
      procedure,non_overridable,nopass,private::CleanSimulationCtrlParam
      procedure,non_overridable,pass,public::DefaultValue_CtrlParam
@@ -126,6 +127,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
   end type
 
   private::AppendOne_SimulationCtrlParam
+  private::GetSimulationCtrlParam_P
   private::CopyFromOther
   private::CleanOneSimulationCtrlParam
   private::CleanSimulationCtrlParam
@@ -169,6 +171,49 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     cursorP%next=>cursor
     return
   end subroutine AppendOne_SimulationCtrlParam
+
+
+  !***********************************************************************
+  function GetSimulationCtrlParam_P(this,TheIndex) result(TheResult)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationCtrlParam),target::this
+    integer,intent(in)::TheIndex
+    type(SimulationCtrlParam),intent(out),pointer::TheResult
+    !---Local Vars---
+    type(SimulationCtrlParam),pointer::cursor=>null()
+    integer::CountTemp
+    !---Body---
+
+    TheResult=>null()
+
+    cursor=>this
+
+    CountTemp = 0
+
+    DO While(associated(cursor))
+
+        CountTemp = CountTemp + 1
+
+        if(CountTemp .eq. TheIndex) then
+            TheResult=>cursor
+            exit
+        end if
+
+        cursor=>cursor%next
+    END DO
+
+    Nullify(cursor)
+
+    if(.not. associated(TheResult)) then
+        write(*,*) "MCPSCUERROR: Cannot find the simulation control section by the id: ",TheIndex
+        pause
+        stop
+    end if
+
+    return
+  end function GetSimulationCtrlParam_P
+
 
   !****************************************************************
   subroutine CopyFromOther(this,otherOne)

@@ -88,6 +88,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     procedure,non_overridable,pass,public::GetOneBoxBasicStatistic_AllStatu_CPU
     procedure,non_overridable,public,pass::PutoutCfg=>Puout_Instance_Config_SimBoxArray
     procedure,non_overridable,public,pass::PutinCfg=>Putin_Instance_Config_SimBoxArray
+    procedure,non_overridable,public,pass::Putin_OKMC_OUTCFG_FORMAT18_SimRecord
     procedure,non_overridable,private,pass::Putin_OKMC_OUTCFG_FORMAT18
     procedure,non_overridable,private,pass::Putin_MF_OUTCFG_FORMAT18
     procedure,non_overridable,public,pass::Putin_MF_OUTCFG_FORMAT18_Distribution
@@ -136,6 +137,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   private::DestorySimulationBoxes
   private::Puout_Instance_Config_SimBoxArray
   private::Putin_Instance_Config_SimBoxArray
+  private::Putin_OKMC_OUTCFG_FORMAT18_SimRecord
   private::Putin_OKMC_OUTCFG_FORMAT18
   private::Putin_MF_OUTCFG_FORMAT18
   private::Putin_MF_OUTCFG_FORMAT18_Distribution
@@ -2565,6 +2567,67 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         stop
   end subroutine Putin_Instance_Config_SimBoxArray
 
+
+  !*************************************************************
+  subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord(this,hFile,SimuRecord,LINE)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationBoxes)::this
+    integer,intent(in)::hFile
+    CLASS(SimulationRecord)::SimuRecord
+    integer,intent(inout)::LINE
+    !---Local Vars---
+    character*256::STR
+    character*32::KEYWORD
+    character*32::STRTMP(20)
+    integer::N
+    !---Body---
+
+    DO While(.true.)
+        call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+        call RemoveComments(STR,"!")
+
+        call GETKEYWORD("&",STR,KEYWORD)
+
+        STR = adjustl(STR)
+
+        call UPCASE(KEYWORD)
+
+        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&TIME")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetSimuTimes(DRSTR(STRTMP(1)))
+
+            case("&ISTEP")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetSimuSteps(ISTR(STRTMP(1)))
+
+            case("&IPATCH")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetSimuPatch(ISTR(STRTMP(1)))
+
+            case("&ITIMESECTION")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetTimeSections(ISTR(STRTMP(1)))
+                exit
+
+            case default
+                write(*,*) "MCPSCUERROR: Illegal flag: ",KEYWORD
+                write(*,*) STR
+                pause
+                stop
+        end select
+
+    END DO
+
+    return
+    100 write(*,*) "MCPSCUERROR: Fail to load the configuration file"
+        write(*,*) "At line: ",LINE
+        write(*,*) "STR",STR
+        pause
+        stop
+  end subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord
+
   !*************************************************************
   subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
     implicit none
@@ -2637,6 +2700,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         stop
     end if
 
+    call this%Putin_OKMC_OUTCFG_FORMAT18_SimRecord(hFile,SimuRecord,LINE)
+
     DO While(.true.)
         call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
         call RemoveComments(STR,"!")
@@ -2650,22 +2715,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         select case(KEYWORD(1:LENTRIM(KEYWORD)))
             case("&TYPE")
                 exit
-
-            case("&TIME")
-                call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetSimuTimes(DRSTR(STRTMP(1)))
-
-            case("&ISTEP")
-                call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetSimuSteps(ISTR(STRTMP(1)))
-
-            case("&IPATCH")
-                call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetSimuPatch(ISTR(STRTMP(1)))
-
-            case("&ITIMESECTION")
-                call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetTimeSections(ISTR(STRTMP(1)))
 
             case("&LATT")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
