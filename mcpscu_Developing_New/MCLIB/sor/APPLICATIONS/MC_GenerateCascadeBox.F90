@@ -9,7 +9,7 @@ module MC_GenerateCascadeBox
 
     implicit none
 
-    integer,parameter::CascadeGenWay_ByCentUniform = 0
+    integer,parameter::CascadeGenWay_ByCentUniform_Locally = 0
     integer,parameter::CascadeGenWay_ByMDDataBase_Locally = 1
     integer,parameter::CascadeGenWay_ByMDDataBase_Uniform = 2
 
@@ -66,8 +66,7 @@ module MC_GenerateCascadeBox
         integer,dimension(:),allocatable::BinSIA_NAtomArray
         integer,dimension(:),allocatable::BinVAC_NAtomArray
         integer,dimension(:),allocatable::BinMIX_NAtomArray
-        integer::NSIAClusterEachBox_AVE = 0
-        integer::NVACClusterEachBox_AVE = 0
+        integer::NFrankelParisEachBox_AVE = 0
         real(kind=KINDDF)::TotalCountSIA_GapCToC = 0
         real(kind=KINDDF)::TotalCountVAC_GapCToC = 0
         real(kind=KINDDF)::TotalCount_GapSIAToVAC = 0
@@ -97,6 +96,7 @@ module MC_GenerateCascadeBox
 
     integer,parameter::SIAIndex_MD = 1
     integer,parameter::VACIndex_MD = 4
+    integer,parameter::RefSiteIndex_MD = 8
 
     real(kind=KINDDF),parameter::p_RoundOff = 1.D-8
 
@@ -221,8 +221,7 @@ module MC_GenerateCascadeBox
 
         call CopyArray(this%BinMIX_NAtomArray,others%BinMIX_NAtomArray)
 
-        this%NSIAClusterEachBox_AVE = others%NSIAClusterEachBox_AVE
-        this%NVACClusterEachBox_AVE = others%NVACClusterEachBox_AVE
+        this%NFrankelParisEachBox_AVE = others%NFrankelParisEachBox_AVE
 
         this%TotalCountSIA_GapCToC = others%TotalCountSIA_GapCToC
         this%TotalCountVAC_GapCToC = others%TotalCountVAC_GapCToC
@@ -317,8 +316,7 @@ module MC_GenerateCascadeBox
 
         if(allocated(this%BinMIX_NAtomArray)) deallocate(this%BinMIX_NAtomArray)
 
-        this%NSIAClusterEachBox_AVE = 0
-        this%NVACClusterEachBox_AVE = 0
+        this%NFrankelParisEachBox_AVE = 0
 
         this%TotalCountSIA_GapCToC = 0
         this%TotalCountVAC_GapCToC = 0
@@ -465,7 +463,7 @@ module MC_GenerateCascadeBox
 
         !---SIA---
         fileName = adjustl(trim(pathIn))//"/SIA/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGSIA))
-        call ReadOnConifg(fileName,SIAIndex_MD,ClustersArraySIA,NAtomEachClusterSIA,NSIAClusterEachBox)
+        call ReadOnConifg_SIA(fileName,ClustersArraySIA,NAtomEachClusterSIA,NSIAClusterEachBox)
 
         TheMDStatistic%MaxSIANumEachCluster = max(TheMDStatistic%MaxSIANumEachCluster,maxval(NAtomEachClusterSIA))
         TheMDStatistic%MinSIANumEachCluster = min(TheMDStatistic%MinSIANumEachCluster,minval(NAtomEachClusterSIA))
@@ -518,7 +516,7 @@ module MC_GenerateCascadeBox
 
         !---VAC---
         fileName = adjustl(trim(pathIn))//"/VAC/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGVAC))
-        call ReadOnConifg(fileName,VACIndex_MD,ClustersArrayVAC,NAtomEachClusterVAC,NVACClusterEachBox)
+        call ReadOnConifg_VAC(fileName,ClustersArrayVAC,NAtomEachClusterVAC,NVACClusterEachBox)
 
         TheMDStatistic%MaxVACNumEachCluster = max(TheMDStatistic%MaxVACNumEachCluster,maxval(NAtomEachClusterVAC))
         TheMDStatistic%MinVACNumEachCluster = min(TheMDStatistic%MinVACNumEachCluster,minval(NAtomEachClusterVAC))
@@ -729,8 +727,7 @@ module MC_GenerateCascadeBox
     allocate(TheMDStatistic%BinMIX_NAtomArray(TheMDStatistic%MaxMIXNumEachCluster - TheMDStatistic%MinMIXNumEachCluster + 1))
     TheMDStatistic%BinMIX_NAtomArray = 0
 
-    TheMDStatistic%NSIAClusterEachBox_AVE = 0
-    TheMDStatistic%NVACClusterEachBox_AVE = 0
+    TheMDStatistic%NFrankelParisEachBox_AVE = 0
     NBOX = 0
     DO IBox = Index_StartBox,Index_EndBox
         write(C_IBOX,*) IBox
@@ -745,7 +742,7 @@ module MC_GenerateCascadeBox
 
         !---SIA---
         fileName = adjustl(trim(pathIn))//"/SIA/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGSIA))
-        call ReadOnConifg(fileName,SIAIndex_MD,ClustersArraySIA,NAtomEachClusterSIA,NSIAClusterEachBox)
+        call ReadOnConifg_SIA(fileName,ClustersArraySIA,NAtomEachClusterSIA,NSIAClusterEachBox)
 
         DO IC = 1,NSIAClusterEachBox
             if(NAtomEachClusterSIA(IC) .LE. 0) then
@@ -812,13 +809,11 @@ module MC_GenerateCascadeBox
             END DO
         END DO
 
-        TheMDStatistic%NSIAClusterEachBox_AVE = TheMDStatistic%NSIAClusterEachBox_AVE + NSIAClusterEachBox
+        TheMDStatistic%NFrankelParisEachBox_AVE = TheMDStatistic%NFrankelParisEachBox_AVE + sum(NAtomEachClusterSIA)
 
         !---VAC---
         fileName = adjustl(trim(pathIn))//"/VAC/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGVAC))
-        call ReadOnConifg(fileName,VACIndex_MD,ClustersArrayVAC,NAtomEachClusterVAC,NVACClusterEachBox)
-
-
+        call ReadOnConifg_VAC(fileName,ClustersArrayVAC,NAtomEachClusterVAC,NVACClusterEachBox)
 
         DO IC = 1,NVACClusterEachBox
             if(NAtomEachClusterVAC(IC) .LE. 0) then
@@ -882,7 +877,13 @@ module MC_GenerateCascadeBox
             END DO
         END DO
 
-        TheMDStatistic%NVACClusterEachBox_AVE = TheMDStatistic%NVACClusterEachBox_AVE + NVACClusterEachBox
+        if(sum(NAtomEachClusterSIA) .ne. sum(NAtomEachClusterVAC)) then
+            write(*,*) "MCPSCUERROR: It is impossible that SIA number not equal with VAC number"
+            write(*,*) sum(NAtomEachClusterSIA),sum(NAtomEachClusterVAC)
+            write(*,*) "For box: ",C_IBOX
+            pause
+            stop
+        end if
 
         !---Gap Between SIA and VAC---
         DO IC = 1,NSIAClusterEachBox
@@ -910,7 +911,6 @@ module MC_GenerateCascadeBox
         END DO
 
         !---MIX---
-
         DO IC = 1,NSIAClusterEachBox
             if(NAtomEachClusterSIA(IC) .LE. 0) then
                 write(*,*) "It is impossible that atoms size less than 0",IC
@@ -1071,12 +1071,10 @@ module MC_GenerateCascadeBox
     hFileOutVAC = CreateNewFile(pathOutVAC)
     hFileOutMIX = CreateNewFile(pathOutMIX)
 
-    TheMDStatistic%NSIAClusterEachBox_AVE = ceiling(dble(TheMDStatistic%NSIAClusterEachBox_AVE)/dble(NBOX))
-    TheMDStatistic%NVACClusterEachBox_AVE = ceiling(dble(TheMDStatistic%NVACClusterEachBox_AVE)/dble(NBOX))
-    write(hFileOutSIA,fmt="(A,1x,I10)") "&NSIACLUSTER",TheMDStatistic%NSIAClusterEachBox_AVE
-    write(hFileOutVAC,fmt="(A,1x,I10)") "&NVACCLUSTER",TheMDStatistic%NVACClusterEachBox_AVE
-    write(hFileOutMIX,fmt="(A,1x,I10)") "&NSIACLUSTER",TheMDStatistic%NSIAClusterEachBox_AVE
-    write(hFileOutMIX,fmt="(A,1x,I10)") "&NVACCLUSTER",TheMDStatistic%NVACClusterEachBox_AVE
+    TheMDStatistic%NFrankelParisEachBox_AVE = ceiling(dble(TheMDStatistic%NFrankelParisEachBox_AVE)/dble(NBOX))
+    write(hFileOutSIA,fmt="(A,1x,I10)") "&NFRANKELPAIRS",TheMDStatistic%NFrankelParisEachBox_AVE
+    write(hFileOutVAC,fmt="(A,1x,I10)") "&NFRANKELPAIRS",TheMDStatistic%NFrankelParisEachBox_AVE
+    write(hFileOutMIX,fmt="(A,1x,I10)") "&NFRANKELPAIRS",TheMDStatistic%NFrankelParisEachBox_AVE
 
 
     write(hFileOutSIA,fmt="(A,1x,I10)") "&MinSIANumEachCluster",TheMDStatistic%MinSIANumEachCluster
@@ -1139,10 +1137,220 @@ module MC_GenerateCascadeBox
   end subroutine CascadeDataBase_ANALYSIS_SIAANDVAC
 
   !*************************************************************************
-  subroutine ReadOnConifg(fileName,SpecialAtomsType,ClustersArray,NAtomEachCluster,NClusterEachBox)
+  subroutine ReadOnConifg_SIA(fileName,ClustersArray,NAtomEachCluster,NClusterEachBox)
     !---Dummy Vars---
     character*256,intent(in)::fileName
-    integer,intent(in)::SpecialAtomsType
+    type(ClusterAtom),dimension(:),allocatable::ClustersArray
+    integer,dimension(:),allocatable::NAtomEachCluster
+    integer::NClusterEachBox
+    !---Local Vars---
+    integer::hFile
+    character*256::STR
+    integer::LINE
+    character*32::KEYWORD
+    integer::STA
+    integer::N
+    character*32::STRTMP(30)
+    integer::LastRecordClusterID
+    integer::ClusterID
+    integer::AtomType
+    real(kind=KINDDF)::Distance
+    integer::IC
+    real(kind=KINDDF)::LatticeLength
+    integer,dimension(:),allocatable::NAtomsRef
+    !---Body---
+    hFile = OpenExistedFile(fileName)
+    LINE = 0
+
+    DO While(.true.)
+        call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+        STR = adjustl(STR)
+        call RemoveComments(STR,"!")
+
+        call GETKEYWORD("&",STR,KEYWORD)
+
+        call UPCASE(KEYWORD)
+
+        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&LATT")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    LatticeLength = DRSTR(STRTMP(1))
+            case("&SITETYP-SIA")
+            exit
+        end select
+    END DO
+
+    NClusterEachBox = 0
+    LastRecordClusterID = 0
+
+    DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!") )
+        STR = adjustl(STR)
+        call RemoveComments(STR,"!")
+
+        if(LENTRIM(STR) .LE. 0) then
+            cycle
+        end if
+
+        call EXTRACT_NUMB(STR,11,N,STRTMP)
+
+        AtomType = ISTR(STRTMP(1))
+
+        if(AtomType .eq. RefSiteIndex_MD) then
+
+            ClusterID = ISTR(STRTMP(11))
+
+            if(LastRecordClusterID .LT. ClusterID) then
+                NClusterEachBox = NClusterEachBox + 1
+                LastRecordClusterID = ClusterID
+            end if
+        end if
+
+    END DO
+
+    if(NClusterEachBox .LE. 0) then
+        write(*,*) "Warning: the file: ",fileName," do not have any one of cluster."
+        return
+    end if
+
+    if(allocated(ClustersArray)) deallocate(ClustersArray)
+    allocate(ClustersArray(NClusterEachBox))
+    DO IC = 1,NClusterEachBox
+        ClustersArray(IC)%POS = 0.D0
+    END DO
+
+    if(allocated(NAtomEachCluster)) deallocate(NAtomEachCluster)
+    allocate(NAtomEachCluster(NClusterEachBox))
+    NAtomEachCluster = 0
+
+    if(allocated(NAtomsRef)) deallocate(NAtomsRef)
+    allocate(NAtomsRef(NClusterEachBox))
+    NAtomsRef = 0
+
+    rewind(hFile)
+
+    LINE = 0
+    DO While(.true.)
+        call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+        STR = adjustl(STR)
+        call RemoveComments(STR,"!")
+
+        call GETKEYWORD("&",STR,KEYWORD)
+
+        call UPCASE(KEYWORD)
+
+        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&SITETYP-SIA")
+            exit
+        end select
+    END DO
+
+    NClusterEachBox = 0
+    LastRecordClusterID = 0
+    DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!") )
+        LINE = LINE + 1
+        STR = adjustl(STR)
+        call RemoveComments(STR,"!")
+
+        if(LENTRIM(STR) .LE. 0) then
+            cycle
+        end if
+
+        call EXTRACT_NUMB(STR,11,N,STRTMP)
+
+        AtomType = ISTR(STRTMP(1))
+
+        ClusterID = ISTR(STRTMP(11))
+
+        if(AtomType .eq. RefSiteIndex_MD) then
+
+            if(LastRecordClusterID .LT. ClusterID) then
+
+                NClusterEachBox = NClusterEachBox + 1
+                LastRecordClusterID = ClusterID
+
+                if(NClusterEachBox .GT. 1) then
+                    if(NAtomsRef(NClusterEachBox -1) .LE. 0) then
+                        write(*,*) "MCPSCUERROR: The Reference cluster number cannot less than 1"
+                        write(*,*) "For file: ",fileName
+                        write(*,*) "Cluster ID: ",NClusterEachBox -1
+                        pause
+                        stop
+                    end if
+
+                    ClustersArray(NClusterEachBox -1)%POS = ClustersArray(NClusterEachBox -1)%POS/NAtomsRef(NClusterEachBox -1)
+                end if
+
+                NAtomsRef(NClusterEachBox) = 1
+
+                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
+            else
+                NAtomsRef(NClusterEachBox) = NAtomsRef(NClusterEachBox) + 1
+                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
+            end if
+
+        end if
+
+        if(AtomType .eq. SIAIndex_MD) then
+            if(NClusterEachBox .LE. 0) then
+                write(*,*) "You must speicial the reference site first..."
+                write(*,*) "For file:",fileName
+                write(*,*) "At line: ",LINE
+                write(*,*) STR
+                pause
+                stop
+            end if
+
+            NAtomEachCluster(NClusterEachBox) = NAtomEachCluster(NClusterEachBox) + 1
+        end if
+
+    END DO
+
+    !---Last one---
+    if(NClusterEachBox .GT. 0) then
+        if(NAtomsRef(NClusterEachBox) .LE. 0) then
+            write(*,*) "MCPSCUERROR: The Reference cluster number cannot less than 1"
+            write(*,*) "For file: ",fileName
+            write(*,*) "Cluster ID: ",NClusterEachBox
+            pause
+            stop
+        end if
+
+        ClustersArray(NClusterEachBox)%POS = ClustersArray(NClusterEachBox)%POS/NAtomsRef(NClusterEachBox)
+    end if
+
+    NAtomEachCluster = NAtomEachCluster - NAtomsRef
+
+    close(unit=hFile,IOSTAT=STA)
+
+
+    if(STA .GT. 0) then
+        write(*,*) "MCPSCUERROR: Close file:",fileName," Failed!"
+        pause
+        stop
+    end if
+
+    call DeAllocateArray_Host(NAtomsRef,"NAtomsRef")
+
+    return
+
+    100 write(*,*) "MCPSCUERROR: Fail to load the configuration file"
+    write(*,*) "At line: ",LINE
+    write(*,*) "STR",STR
+    write(*,*) "fileName",fileName
+    pause
+    stop
+    return
+  end subroutine ReadOnConifg_SIA
+
+
+  !*************************************************************************
+  subroutine ReadOnConifg_VAC(fileName,ClustersArray,NAtomEachCluster,NClusterEachBox)
+    !---Dummy Vars---
+    character*256,intent(in)::fileName
     type(ClusterAtom),dimension(:),allocatable::ClustersArray
     integer,dimension(:),allocatable::NAtomEachCluster
     integer::NClusterEachBox
@@ -1197,7 +1405,7 @@ module MC_GenerateCascadeBox
 
         AtomType = ISTR(STRTMP(1))
 
-        if(AtomType .eq. SpecialAtomsType) then
+        if(AtomType .eq. VACIndex_MD) then
 
             ClusterID = ISTR(STRTMP(11))
 
@@ -1257,7 +1465,7 @@ module MC_GenerateCascadeBox
 
         AtomType = ISTR(STRTMP(1))
 
-        if(AtomType .eq. SpecialAtomsType) then
+        if(AtomType .eq. VACIndex_MD) then
 
             ClusterID = ISTR(STRTMP(11))
 
@@ -1308,14 +1516,19 @@ module MC_GenerateCascadeBox
     pause
     stop
     return
-  end subroutine ReadOnConifg
+  end subroutine ReadOnConifg_VAC
 
-    subroutine ResloveMDDataBaseControlFile(MDDataBaseCtrlFile,TheMDStatistic)
+
+
+  subroutine ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox,TheMDStatistic)
         !---Dummy Vars---
-        character*256,intent(in)::MDDataBaseCtrlFile
+        integer,intent(in)::hFile
+        logical,intent(out)::WhetherIncludeSIA
+        logical,intent(out)::WhetherIncludeVAC
+        integer,intent(out)::CascadeNum
+        logical,intent(out)::WhetherCascadeSameInOneBox
         type(MDStatistic)::TheMDStatistic
         !---Local Vars---
-        integer::hFile
         integer::LINE
         character*256::STR
         character*30::KEYWORD
@@ -1326,11 +1539,13 @@ module MC_GenerateCascadeBox
         integer::Index_EndBox
         integer::Index_SIAConfig
         integer::Index_VACConfig
-        !---Body---
+        logical::Finded
 
-        hFile = OpenExistedFile(MDDataBaseCtrlFile)
+        !---Body---
         LINE = 0
 
+        Finded = .false.
+        rewind(hFile)
         Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
             LINE = LINE + 1
             STR = adjustl(STR)
@@ -1345,6 +1560,197 @@ module MC_GenerateCascadeBox
             call UPCASE(KEYWORD)
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&CASCADENUMBER")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the cascade number in one box."
+                        pause
+                        stop
+                    end if
+                    CascadeNum = ISTR(STRTMP(1))
+
+                    if(CascadeNum .LE. 0) then
+                        write(*,*) "MCPSCUERROR: The cascade number in one box cannot less than 0"
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the cascade number in one box."
+           pause
+           stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
+                case("&CASCADESAME")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special whether cascades are same in the box."
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        WhetherCascadeSameInOneBox = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        WhetherCascadeSameInOneBox = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether cascades are same in the box."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special whether cascades are same in the box."
+           pause
+           stop
+        end if
+
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
+                case("&INCLUDESIACLUSTER")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special whether include SIA in box."
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        WhetherIncludeSIA = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        WhetherIncludeSIA = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether include SIA in box."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special whether include SIA in box."
+           pause
+           stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
+                case("&INCLUDEVACCLUSTER")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special whether include VAC in box."
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        WhetherIncludeVAC = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        WhetherIncludeVAC = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether include VAC in box."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special whether include VAC in box."
+           pause
+           stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
                 case("&MDDATABASEPATH")
                     call EXTRACT_SUBSTR(STR,1,N,STRTMP)
                     if(N .LE. 0) then
@@ -1354,6 +1760,33 @@ module MC_GenerateCascadeBox
                     end if
                     MDDataBasePath = adjustl(trim(STRTMP(1)))
                     write(*,*) MDDataBasePath
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the MD DataBase path."
+           pause
+           stop
+        end if
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
 
                 case("&INDEX_STARTBOX")
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
@@ -1365,6 +1798,33 @@ module MC_GenerateCascadeBox
                     Index_StartBox = ISTR(STRTMP(1))
                     write(*,*) Index_StartBox
 
+                    Finded = .true.
+            end select
+         END DO
+
+         if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special start box index."
+           pause
+           stop
+         end if
+
+         Finded = .false.
+         rewind(hFile)
+         Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
                 case("&INDEX_ENDBOX")
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
                     if(N .LE. 0) then
@@ -1375,6 +1835,33 @@ module MC_GenerateCascadeBox
                     Index_EndBox = ISTR(STRTMP(1))
                     write(*,*) Index_EndBox
 
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special end box index."
+           pause
+           stop
+        end if
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
                 case("&INDEX_SIACONFIG")
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
                     if(N .LE. 0) then
@@ -1384,6 +1871,32 @@ module MC_GenerateCascadeBox
                     end if
                     Index_SIAConfig = ISTR(STRTMP(1))
                     write(*,*) Index_SIAConfig
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special SIA configuration index."
+           pause
+           stop
+        end if
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
 
                 case("&INDEX_VACCONFIG")
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
@@ -1395,30 +1908,198 @@ module MC_GenerateCascadeBox
                     Index_VACConfig = ISTR(STRTMP(1))
                     write(*,*) Index_VACConfig
 
-                case default
-                    write(*,*) "MCPSCUERROR: Unknown keyword: ",KEYWORD(1:LENTRIM(KEYWORD))
-                    write(*,*) "At Line: ",LINE
-                    pause
-                    stop
+                    Finded = .true.
             end select
-        End Do
+
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special VAC configuration index."
+           pause
+           stop
+        end if
+
 
         call CascadeDataBase_ANALYSIS_SIAANDVAC(MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,TheMDStatistic)
 
         return
     end subroutine
 
-    !***************************************************************
-    subroutine Generate_Cascade_Locally_FormMDDataBase(MDDataBaseCtrlFile,CascadeNum)
+
+    !**************************************************************
+    subroutine GenerateClustersSize(TheMDStatistic,NSIACluster,NAtomEachSIACluster,NVACCluster,NAtomEachVACCluster)
+        implicit none
         !---Dummy Vars---
-        character*256,intent(in)::MDDataBaseCtrlFile
-        integer,intent(in)::CascadeNum
+        type(MDStatistic)::TheMDStatistic
+        integer::NSIACluster
+        integer,dimension(:),allocatable::NAtomEachSIACluster
+        integer::NVACCluster
+        integer,dimension(:),allocatable::NAtomEachVACCluster
+        !---Local Vars---
+        integer::NSIARemind
+        integer::NVACRemind
+        logical::exitTotal
+        integer::I
+        integer::NSIAAccum
+        integer::NVACAccum
+        integer::EndBin
+        integer::IBin
+        real(kind=KINDDF)::Accum
+        real(kind=KINDDF)::RandNum
+        integer::TheBin
+        logical::exitflag
+        !---Body---
+
+        if(allocated(NAtomEachSIACluster)) deallocate(NAtomEachSIACluster)
+        allocate(NAtomEachSIACluster(TheMDStatistic%NFrankelParisEachBox_AVE))
+        NAtomEachSIACluster = 0
+
+        if(allocated(NAtomEachVACCluster)) deallocate(NAtomEachVACCluster)
+        allocate(NAtomEachVACCluster(TheMDStatistic%NFrankelParisEachBox_AVE))
+        NAtomEachVACCluster = 0
+
+
+        DO While(.true.)
+          NSIACluster = 0
+          NAtomEachSIACluster = 0
+
+          NSIARemind = TheMDStatistic%NFrankelParisEachBox_AVE
+          exitTotal = .false.
+
+          DO I = 1,TheMDStatistic%NFrankelParisEachBox_AVE
+
+            if(NSIARemind .eq. 0) then
+                exitTotal = .true.
+                exit
+            else if(NSIARemind .GE. TheMDStatistic%MinSIANumEachCluster) then
+
+                NSIAAccum = 0
+                DO IBin = 1,size(TheMDStatistic%BinSIA_NAtomArray)
+                    NSIAAccum = NSIAAccum + TheMDStatistic%BinSIA_NAtomArray(IBin)
+
+                    if(NSIAAccum .GE. NSIARemind) then
+                        EndBin = IBin
+                        exit
+                    end if
+                END DO
+
+                exitflag = .false.
+                DO While(.true.)
+                    Accum = 0.D0
+                    RandNum = DRAND32()
+                    DO IBin = 1,EndBin
+                        Accum = Accum + TheMDStatistic%NAtomSIA(IBin)
+
+                        if(Accum .GE. RandNum) then
+                            TheBin = IBin
+                            exitflag = .true.
+
+                            NSIARemind = NSIARemind -TheMDStatistic%BinSIA_NAtomArray(TheBin)
+
+                            NSIACluster = NSIACluster + 1
+                            NAtomEachSIACluster(NSIACluster) = TheMDStatistic%BinSIA_NAtomArray(TheBin)
+                            exit
+                        end if
+                    END DO
+
+                    if(exitflag .eq. .true.) then
+                        exit
+                    end if
+                END DO
+            else if(NSIARemind .LT. TheMDStatistic%MinSIANumEachCluster) then
+                exitTotal = .false.
+                exit
+            end if
+
+          END DO
+
+          if(exitTotal .eq. .true.) then
+            exit
+          end if
+        END DO
+
+
+        DO While(.true.)
+          NVACCluster = 0
+          NAtomEachVACCluster = 0
+
+          NVACRemind = TheMDStatistic%NFrankelParisEachBox_AVE
+          exitTotal = .false.
+
+          DO I = 1,TheMDStatistic%NFrankelParisEachBox_AVE
+
+            if(NVACRemind .eq. 0) then
+                exitTotal = .true.
+                exit
+            else if(NVACRemind .GE. TheMDStatistic%MinVACNumEachCluster) then
+
+                NVACAccum = 0
+                DO IBin = 1,size(TheMDStatistic%BinVAC_NAtomArray)
+                    NVACAccum = NVACAccum + TheMDStatistic%BinVAC_NAtomArray(IBin)
+
+                    if(NVACAccum .GE. NVACRemind) then
+                        EndBin = IBin
+                        exit
+                    end if
+                END DO
+
+                exitflag = .false.
+                DO While(.true.)
+                    Accum = 0.D0
+                    RandNum = DRAND32()
+                    DO IBin = 1,EndBin
+                        Accum = Accum + TheMDStatistic%NAtomVAC(IBin)
+
+                        if(Accum .GE. RandNum) then
+                            TheBin = IBin
+                            exitflag = .true.
+
+                            NVACRemind = NVACRemind -TheMDStatistic%BinVAC_NAtomArray(TheBin)
+
+                            NVACCluster = NVACCluster + 1
+                            NAtomEachVACCluster(NVACCluster) = TheMDStatistic%BinVAC_NAtomArray(TheBin)
+                            exit
+                        end if
+                    END DO
+
+                    if(exitflag .eq. .true.) then
+                        exit
+                    end if
+                END DO
+            else if(NVACRemind .LT. TheMDStatistic%MinVACNumEachCluster) then
+                exitTotal = .false.
+                exit
+            end if
+
+          END DO
+
+          if(exitTotal .eq. .true.) then
+            exit
+          end if
+        END DO
+
+        return
+    end subroutine GenerateClustersSize
+
+    !***************************************************************
+    subroutine Generate_Cascade_Locally_FormMDDataBase(hFile)
+        implicit none
+        !---Dummy Vars---
+        integer,intent(in)::hFile
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
         character*256::OutFolder
+        logical::WhetherIncludeSIA
+        logical::WhetherIncludeVAC
+        integer::CascadeNum
+        logical::WhetherCascadeSameInOneBox
         type(MDStatistic)::TheMDStatistic
+        integer::NSIACluster
+        integer,dimension(:),allocatable::NAtomEachSIACluster
+        integer::NVACCluster
+        integer,dimension(:),allocatable::NAtomEachVACCluster
         integer::err
         integer::MultiBox
         real(kind=KINDDF),dimension(:,:),allocatable::Sphere_Central
@@ -1449,10 +2130,22 @@ module MC_GenerateCascadeBox
         real(kind=KINDDF)::Distance
         real(kind=KINDDF)::Gap
         integer::GapCondition
+        integer::CheckSIAEachBox
+        integer::CheckVACEachBox
         !-----------Body--------------
+        WhetherIncludeSIA = .false.
+        WhetherIncludeVAC = .false.
+        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox,TheMDStatistic)
 
-        call ResloveMDDataBaseControlFile(MDDataBaseCtrlFile,TheMDStatistic)
+        call GenerateClustersSize(TheMDStatistic,NSIACluster,NAtomEachSIACluster,NVACCluster,NAtomEachVACCluster)
 
+        if(WhetherIncludeSIA .eq. .false.) then
+            NSIACluster = 0
+        end if
+
+        if(WhetherIncludeVAC .eq. .false.) then
+            NVACCluster = 0
+        end if
 
         processid = 0
 
@@ -1481,7 +2174,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
 
-        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE))
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -1508,24 +2201,19 @@ module MC_GenerateCascadeBox
         IC = 0
         DO IBox = 1,Host_SimuCtrlParam%MultiBox
 
+            CheckSIAEachBox = 0
+            CheckVACEachBox = 0
+
             DO ICase = 1,CascadeNum
                 Sphere_Central(ICase,:) = CellCentralPos(ICase,:)
 
-                DO IIC = 1,TheMDStatistic%NSIAClusterEachBox_AVE
+                DO IIC = 1,NSIACluster
                     IC = IC + 1
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
-                    Accum = 0.D0
-                    RandNum = DRAND32()
-                    DO IBin = 1,size(TheMDStatistic%NAtomSIA)
-                        Accum = Accum + TheMDStatistic%NAtomSIA(IBin)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = NAtomEachSIACluster(IIC)
 
-                        if(Accum .GE. RandNum) then
-                            TheBin = IBin
-                            exit
-                        end if
-                    END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheMDStatistic%BinSIA_NAtomArray(TheBin)
+                    CheckSIAEachBox = CheckSIAEachBox + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA
 
                     if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .LE. 0) then
                         write(*,*) "Opps...,the SIA cluster size cannot less than 0"
@@ -1593,7 +2281,7 @@ module MC_GenerateCascadeBox
                         Gap = TheMDStatistic%BinSIA_BetweenClusterArray(TheBin)
 
                         GapCondition = 0
-                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
 
                                 Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
@@ -1623,7 +2311,7 @@ module MC_GenerateCascadeBox
                         Gap = TheMDStatistic%BinSIAToVAC_BetweenClusterArray(TheBin)
 
                         GapCondition = 0
-                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0) then
 
                                 Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
@@ -1658,22 +2346,14 @@ module MC_GenerateCascadeBox
 
                 END DO
 
-                DO IIC = 1,TheMDStatistic%NVACClusterEachBox_AVE
+                DO IIC = 1,NVACCluster
 
                     IC = IC + 1
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
-                    Accum = 0.D0
-                    RandNum = DRAND32()
-                    DO IBin = 1,size(TheMDStatistic%NAtomVAC)
-                        Accum = Accum + TheMDStatistic%NAtomVAC(IBin)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = NAtomEachVACCluster(IIC)
 
-                        if(Accum .GE. RandNum) then
-                            TheBin = IBin
-                            exit
-                        end if
-                    END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = TheMDStatistic%BinVAC_NAtomArray(TheBin)
+                    CheckVACEachBox = CheckVACEachBox + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA
 
                     if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .LE. 0) then
                         write(*,*) "Opps...,the VAC cluster size cannot less than 0"
@@ -1740,7 +2420,7 @@ module MC_GenerateCascadeBox
                         Gap = TheMDStatistic%BinVAC_BetweenClusterArray(TheBin)
 
                         GapCondition = 0
-                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0) then
 
                                 Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
@@ -1770,7 +2450,7 @@ module MC_GenerateCascadeBox
                         Gap = TheMDStatistic%BinSIAToVAC_BetweenClusterArray(TheBin)
 
                         GapCondition = 0
-                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
 
                                 Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
@@ -1807,6 +2487,17 @@ module MC_GenerateCascadeBox
 
             END DO
 
+            if(WhetherIncludeSIA .eq. .true. .and. WhetherIncludeVAC .eq. .true.) then
+                if(CheckSIAEachBox .ne. CheckVACEachBox) then
+                    write(*,*) "MCPSCUERROR: the SIA number is not equal with VAC number"
+                    write(*,*) "SIA: ",CheckSIAEachBox
+                    write(*,*) "VAC: ",CheckVACEachBox
+                    write(*,*) "In box: ",IBox
+                    pause
+                    stop
+                end if
+            end if
+
         END DO
 
         call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
@@ -1814,6 +2505,10 @@ module MC_GenerateCascadeBox
         call DeAllocateArray_Host(CellCentralPos,"CellCentralPos")
 
         call DeAllocateArray_Host(Sphere_Central,"Sphere_Central")
+
+        call DeAllocateArray_Host(NAtomEachSIACluster,"NAtomEachSIACluster")
+
+        call DeAllocateArray_Host(NAtomEachVACCluster,"NAtomEachVACCluster")
 
         call Host_Boxes%Clean()
 
@@ -1823,16 +2518,23 @@ module MC_GenerateCascadeBox
     end subroutine Generate_Cascade_Locally_FormMDDataBase
 
     !***************************************************************
-    subroutine Generate_Cascade_Uniform_FormMDDataBase(MDDataBaseCtrlFile,CascadeNum)
+    subroutine Generate_Cascade_Uniform_FormMDDataBase(hFile)
         !---Dummy Vars---
-        character*256,intent(in)::MDDataBaseCtrlFile
-        integer,intent(in)::CascadeNum
+        integer,intent(in)::hFile
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
         character*256::OutFolder
+        logical::WhetherIncludeSIA
+        logical::WhetherIncludeVAC
+        integer::CascadeNum
+        logical::WhetherCascadeSameInOneBox
         type(MDStatistic)::TheMDStatistic
+        integer::NSIACluster
+        integer,dimension(:),allocatable::NAtomEachSIACluster
+        integer::NVACCluster
+        integer,dimension(:),allocatable::NAtomEachVACCluster
         integer::err
         integer::MultiBox
         integer::I
@@ -1851,9 +2553,23 @@ module MC_GenerateCascadeBox
         real(kind=KINDDF)::RandNum
         integer::IBin
         integer::TheBin
+        integer::CheckSIAEachBox
+        integer::CheckVACEachBox
         !-----------Body--------------
 
-        call ResloveMDDataBaseControlFile(MDDataBaseCtrlFile,TheMDStatistic)
+        WhetherIncludeSIA = .false.
+        WhetherIncludeVAC = .false.
+        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox,TheMDStatistic)
+
+        call GenerateClustersSize(TheMDStatistic,NSIACluster,NAtomEachSIACluster,NVACCluster,NAtomEachVACCluster)
+
+        if(WhetherIncludeSIA .eq. .false.) then
+            NSIACluster = 0
+        end if
+
+        if(WhetherIncludeVAC .eq. .false.) then
+            NVACCluster = 0
+        end if
 
         processid = 0
 
@@ -1880,7 +2596,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
 
-        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE))
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -1890,23 +2606,18 @@ module MC_GenerateCascadeBox
         IC = 0
         DO IBox = 1,Host_SimuCtrlParam%MultiBox
 
+            CheckSIAEachBox = 0
+            CheckVACEachBox = 0
+
             DO ICase = 1,CascadeNum
 
-                DO IIC = 1,TheMDStatistic%NSIAClusterEachBox_AVE
+                DO IIC = 1,NSIACluster
                     IC = IC + 1
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
-                    Accum = 0.D0
-                    RandNum = DRAND32()
-                    DO IBin = 1,size(TheMDStatistic%NAtomSIA)
-                        Accum = Accum + TheMDStatistic%NAtomSIA(IBin)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = NAtomEachSIACluster(IIC)
 
-                        if(Accum .GE. RandNum) then
-                            TheBin = IBin
-                            exit
-                        end if
-                    END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheMDStatistic%BinSIA_NAtomArray(TheBin)
+                    CheckSIAEachBox = CheckSIAEachBox + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA
 
                     if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .LE. 0) then
                         write(*,*) "Opps...,the SIA cluster size cannot less than 0"
@@ -1927,7 +2638,7 @@ module MC_GenerateCascadeBox
 
                         !---Consider the minimum Gap between SIA clusters
                         GapCondition = 0
-                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
 
                                 Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
@@ -1945,7 +2656,7 @@ module MC_GenerateCascadeBox
 
                         !---Consider the minimum Gap between SIA cluster and VAC Cluster
                         GapCondition = 0
-                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0) then
 
                                 Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
@@ -1980,22 +2691,14 @@ module MC_GenerateCascadeBox
 
                 END DO
 
-                DO IIC = 1,TheMDStatistic%NVACClusterEachBox_AVE
+                DO IIC = 1,NVACCluster
 
                     IC = IC + 1
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
-                    Accum = 0.D0
-                    RandNum = DRAND32()
-                    DO IBin = 1,size(TheMDStatistic%NAtomVAC)
-                        Accum = Accum + TheMDStatistic%NAtomVAC(IBin)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = NAtomEachVACCluster(IIC)
 
-                        if(Accum .GE. RandNum) then
-                            TheBin = IBin
-                            exit
-                        end if
-                    END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = TheMDStatistic%BinVAC_NAtomArray(TheBin)
+                    CheckVACEachBox = CheckVACEachBox + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA
 
                     if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .LE. 0) then
                         write(*,*) "Opps...,the VAC cluster size cannot less than 0"
@@ -2015,7 +2718,7 @@ module MC_GenerateCascadeBox
 
                         !---Consider the minimum Gap between VAC clusters
                         GapCondition = 0
-                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0) then
 
                                 Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
@@ -2033,7 +2736,7 @@ module MC_GenerateCascadeBox
 
                         !---Consider the minimum Gap between SIA cluster and VAC Cluster
                         GapCondition = 0
-                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(TheMDStatistic%NSIAClusterEachBox_AVE + TheMDStatistic%NVACClusterEachBox_AVE),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+                        DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
 
                                 Distance = DSQRT(sum((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS)**2))
@@ -2070,9 +2773,25 @@ module MC_GenerateCascadeBox
 
             END DO
 
+
+            if(WhetherIncludeSIA .eq. .true. .and. WhetherIncludeVAC .eq. .true.) then
+                if(CheckSIAEachBox .ne. CheckVACEachBox) then
+                    write(*,*) "MCPSCUERROR: the SIA number is not equal with VAC number"
+                    write(*,*) "SIA: ",CheckSIAEachBox
+                    write(*,*) "VAC: ",CheckVACEachBox
+                    write(*,*) "In box: ",IBox
+                    pause
+                    stop
+                end if
+            end if
+
         END DO
 
         call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
+
+        call DeAllocateArray_Host(NAtomEachSIACluster,"NAtomEachSIACluster")
+
+        call DeAllocateArray_Host(NAtomEachVACCluster,"NAtomEachVACCluster")
 
         call Host_Boxes%Clean()
 
@@ -2081,18 +2800,275 @@ module MC_GenerateCascadeBox
         return
     end subroutine Generate_Cascade_Uniform_FormMDDataBase
 
+    !*************************************************************
+    subroutine ResloveCascadeControlFile_Locally_CentUniform(hFile,WhetherIncludeSIA,WhetherIncludeVAC,ClusterNumOneCase,CascadeNum,WhetherCascadeSameInOneBox)
+        !---Dummy Vars---
+        integer,intent(in)::hFile
+        integer,intent(out)::ClusterNumOneCase
+        logical,intent(out)::WhetherIncludeSIA
+        logical,intent(out)::WhetherIncludeVAC
+        integer,intent(out)::CascadeNum
+        logical,intent(out)::WhetherCascadeSameInOneBox
+        !---Local Vars---
+        integer::LINE
+        character*256::STR
+        character*30::KEYWORD
+        character*200::STRTMP(10)
+        integer::N
+        logical::Finded
+        !---Body---
 
+        LINE = 0
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&NSIAVACPAIRSEACHCASCADE")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special frankel pairs the cluster number in one cascade."
+                        pause
+                        stop
+                    end if
+                    ClusterNumOneCase = ISTR(STRTMP(1))
+
+                    if(ClusterNumOneCase .LE. 0) then
+                        write(*,*) "MCPSCUERROR: The frankel pairs in one cascade cannot less than 0"
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the frankel pairs in one box."
+           pause
+           stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&CASCADENUMBER")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the cascade number in one box."
+                        pause
+                        stop
+                    end if
+                    CascadeNum = ISTR(STRTMP(1))
+
+                    if(CascadeNum .LE. 0) then
+                        write(*,*) "MCPSCUERROR: The cascade number in one box cannot less than 0"
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the cascade number in one box."
+           pause
+           stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
+                case("&CASCADESAME")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special whether cascades are same in the box."
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        WhetherCascadeSameInOneBox = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        WhetherCascadeSameInOneBox = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether cascades are same in the box."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special whether cascades are same in the box."
+           pause
+           stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
+                case("&INCLUDESIACLUSTER")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special whether include SIA in box."
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        WhetherIncludeSIA = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        WhetherIncludeSIA = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether include SIA in box."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special whether include SIA in box."
+           pause
+           stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
+                case("&INCLUDEVACCLUSTER")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special whether include VAC in box."
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        WhetherIncludeVAC = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        WhetherIncludeVAC = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether include VAC in box."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special whether include VAC in box."
+           pause
+           stop
+        end if
+
+        return
+    end subroutine ResloveCascadeControlFile_Locally_CentUniform
 
     !***************************************************************
-    subroutine Generate_Cascade_Locally_CentUniform(CascadeNum,ClusterNumOneCase)
+    subroutine Generate_Cascade_Locally_CentUniform(hFile)
         !---Dummy Vars---
-        integer,intent(in)::CascadeNum
-        integer,intent(in)::ClusterNumOneCase
+        integer,intent(in)::hFile
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
         character*256::OutFolder
+        logical::WhetherIncludeSIA
+        logical::WhetherIncludeVAC
+        integer::NSIACluster
+        integer::NVACCluster
+        integer::ClusterNumOneCase
+        integer::CascadeNum
+        logical::WhetherCascadeSameInOneBox
         integer::err
         integer::MultiBox
         real(kind=KINDDF),dimension(:,:),allocatable::Sphere_Central
@@ -2117,6 +3093,21 @@ module MC_GenerateCascadeBox
         integer::ICell
         real(kind=KINDDF),dimension(:,:),allocatable::CellCentralPos
         !-----------Body--------------
+
+        call ResloveCascadeControlFile_Locally_CentUniform(hFile,WhetherIncludeSIA,WhetherIncludeVAC,ClusterNumOneCase,CascadeNum,WhetherCascadeSameInOneBox)
+
+        if(WhetherIncludeSIA .eq. .false.) then
+            NSIACluster = 0
+        else
+            NSIACluster = ClusterNumOneCase
+        end if
+
+        if(WhetherIncludeVAC .eq. .false.) then
+            NVACCluster = 0
+        else
+            NVACCluster = ClusterNumOneCase
+        end if
+
         processid = 0
 
         call AllocateArray_Host(Sphere_Central,CascadeNum,3,"Sphere_Central")
@@ -2145,7 +3136,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
 
-        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,2*CascadeNum*ClusterNumOneCase)
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(NSIACluster + NVACCluster))
 
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -2177,7 +3168,7 @@ module MC_GenerateCascadeBox
             DO ICase = 1,CascadeNum
                 Sphere_Central(ICase,:) = CellCentralPos(ICase,:)
 
-                DO IIC = 1,ClusterNumOneCase
+                DO IIC = 1,NSIACluster
 
                     IC = IC + 1
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
@@ -2225,7 +3216,9 @@ module MC_GenerateCascadeBox
 
                     Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + 1
                     Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) + 1
+                END DO
 
+                DO  IIC = 1,NVACCluster
 
                     IC = IC + 1
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
@@ -2303,15 +3296,19 @@ program Main_MC_GenerateCascadeBox
     character*256::SampleFile
     integer::CascadeNum
     integer::NClusterEachCascade
-    character*256::MDDataBaseControlFile
+    character*256::CascadeControlFile
+    integer::hFile
+    integer::LINE
+    character*256::STR
+    character*256::STRTMP(10)
+    integer::FinededCascadeGenWay
+    character*32::KEYWORD
+    integer::N
     !---Body---
     arg_Num = Command_Argument_count()
 
     if(arg_Num .LT. 2) then
-        write(*,*) "MCPSCUERROR: You must special the sample file, cascade generate way"
-        write(*,*) "0 by Locally ,center uniform way"
-        write(*,*) "1 by from MD database, locally"
-        write(*,*) "2 by from MD database, uniform"
+        write(*,*) "MCPSCUERROR: You must special the sample file, cascade control file"
         pause
         stop
     end if
@@ -2323,75 +3320,61 @@ program Main_MC_GenerateCascadeBox
     write(*,*) "The sample file is: ",SampleFile
 
     call Get_Command_Argument(2,ARG)
-    Read(ARG,*) CascadeGenWay
+    Read(ARG,fmt="(A256)") CascadeControlFile
+    write(*,*) "The cascade control file is: ",CascadeControlFile
+
+    hFile = OpenExistedFile(CascadeControlFile)
+    LINE = 0
+
+    FinededCascadeGenWay = 0
+    Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+        LINE = LINE + 1
+        STR = adjustl(STR)
+        call RemoveComments(STR,"!")
+
+        if(LENTRIM(STR) .LE. 0) then
+            cycle
+        end if
+
+        call GETKEYWORD("&",STR,KEYWORD)
+        call UPCASE(KEYWORD)
+
+        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&GENERATEWAY")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                if(N .LE. 0) then
+                    write(*,*) "MCPSCUERROR: You must special the cascade generate way."
+                    pause
+                    stop
+                end if
+                CascadeGenWay = ISTR(STRTMP(1))
+                FinededCascadeGenWay = 1
+        end select
+    End Do
+
+    if(FinededCascadeGenWay .LE. 0) then
+        write(*,*) "You must special the cascade generate way."
+        write(*,*) "By the way: '&GENERATEWAY  the cascade generate way = "
+        write(*,*)  "0 by Locally ,center uniform way; 1 by from MD database,locally;2 by from MD database, uniform)"
+        pause
+        stop
+    end if
 
     select case(CascadeGenWay)
-        case(CascadeGenWay_ByCentUniform)
-
+        case(CascadeGenWay_ByCentUniform_Locally)
             write(*,*) "The cascade generate way is by Locally ,center uniform way"
 
-            if(arg_Num .LT. 4) then
-                write(*,*) "MCPSCUERROR: You must special 1: the sample file"
-                write(*,*) "2: cascade generate way (0 by Locally ,center uniform way; 1 by from MD database,locally;2 by from MD database, uniform)"
-                write(*,*) "3: cascade number in each box"
-                write(*,*) "4: cluster number in each cascade"
-                pause
-                stop
-            end if
-
-            call Get_Command_Argument(3,ARG)
-            Read(ARG,*) CascadeNum
-            write(*,*) "The cascade number in each box is: ",CascadeNum
-
-            call Get_Command_Argument(4,ARG)
-            Read(ARG,*) NClusterEachCascade
-            write(*,*) "The cluster number in each cascade is: ",NClusterEachCascade
-
-            call Generate_Cascade_Locally_CentUniform(CascadeNum,NClusterEachCascade)
+            call Generate_Cascade_Locally_CentUniform(hFile)
 
         case(CascadeGenWay_ByMDDataBase_Locally)
             write(*,*) "The cascade generate way is by MD database,locally"
 
-            if(arg_Num .LT. 4) then
-                write(*,*) "MCPSCUERROR: You must special 1: the sample file"
-                write(*,*) "2: cascade generate way (0 by Locally ,center uniform way; 1 by from MD database,locally;2 by from MD database,uniform)"
-                write(*,*) "3: MD DataBase control file"
-                write(*,*) "4: Cascade number each box."
-                pause
-                stop
-            end if
-
-            call Get_Command_Argument(3,ARG)
-            Read(ARG,fmt="(A256)") MDDataBaseControlFile
-            write(*,*) "The MD DataBase path is: ",MDDataBaseControlFile
-
-            call Get_Command_Argument(4,ARG)
-            Read(ARG,*) CascadeNum
-            write(*,*) "The cascade number in each box is: ",CascadeNum
-
-            call Generate_Cascade_Locally_FormMDDataBase(MDDataBaseControlFile,CascadeNum)
+            call Generate_Cascade_Locally_FormMDDataBase(hFile)
 
         case(CascadeGenWay_ByMDDataBase_Uniform)
             write(*,*) "The cascade generate way is by MD database, uniform"
 
-            if(arg_Num .LT. 4) then
-                write(*,*) "MCPSCUERROR: You must special 1: the sample file"
-                write(*,*) "2: cascade generate way (0 by Locally ,center uniform way; 1 by MD database,locally;2 by MD database,uniform)"
-                write(*,*) "3: MD DataBase control file"
-                write(*,*) "4: Cascade number each box."
-                pause
-                stop
-            end if
-
-            call Get_Command_Argument(3,ARG)
-            Read(ARG,fmt="(A256)") MDDataBaseControlFile
-            write(*,*) "The MD DataBase path is: ",MDDataBaseControlFile
-
-            call Get_Command_Argument(4,ARG)
-            Read(ARG,*) CascadeNum
-            write(*,*) "The cascade number in each box is: ",CascadeNum
-
-            call Generate_Cascade_Uniform_FormMDDataBase(MDDataBaseControlFile,CascadeNum)
+            call Generate_Cascade_Uniform_FormMDDataBase(hFile)
 
         case default
             write(*,*) "MCPSCUERROR: Unknown way to generate cascade(0 by uniform way, 1 by from MD database)"
@@ -2400,5 +3383,6 @@ program Main_MC_GenerateCascadeBox
             stop
     end select
 
+    close(hFile)
 
 end program Main_MC_GenerateCascadeBox
