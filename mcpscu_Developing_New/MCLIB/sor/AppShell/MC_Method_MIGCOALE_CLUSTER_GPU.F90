@@ -93,7 +93,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(SimulationBoxes)::Host_SimBoxes
         type(SimulationCtrlParam),target::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        integer::JobIndex
+        integer,intent(in)::JobIndex
         !---Local Vars---
         type(SimulationCtrlParam),pointer::PSimCtrlParam=>null()
         type(ImplantSection),pointer::PImplantSection=>null()
