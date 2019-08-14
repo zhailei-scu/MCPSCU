@@ -3,7 +3,7 @@
 #---- a monte carlo parckage developed
 #---- at Sichuan University
 
-
+ 
 #---- Some Vars that users can modify ----
 TINYCCPATH=$PWD/tcc-0.9.27/
 
