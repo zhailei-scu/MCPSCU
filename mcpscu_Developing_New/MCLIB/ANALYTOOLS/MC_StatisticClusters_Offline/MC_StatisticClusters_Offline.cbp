@@ -11,7 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/scratch/p1/ZhaiLei/Fixed_Bubble/C1E18/100eV/Flux1E18/Fixed10_LongTime/SampleSetup.dat" />
+				<Option parameters="/scratch/110doc00/ZhaiLei/New_Cascade/BoxSizeInf/20keV/Locally/New_Cascade1Box200LU_NBox800_NoDump/SampleSetup.dat /scratch/110doc00/ZhaiLei/New_Cascade/BoxSizeInf/20keV/Locally/New_Cascade1Box200LU_NBox800_NoDump/CascadeBox/CascadeGenerateCtrlFile.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
