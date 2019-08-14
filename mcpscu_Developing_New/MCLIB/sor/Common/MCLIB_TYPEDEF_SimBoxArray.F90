@@ -86,6 +86,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     procedure,NON_OVERRIDABLE,pass,public::SweepUnActiveMemory_CPU=>Sweep_UnActiveMemory_CPU
     procedure,non_overridable,pass,public::GetBoxesBasicStatistic_AllStatu_CPU
     procedure,non_overridable,pass,public::GetOneBoxBasicStatistic_AllStatu_CPU
+    procedure,non_overridable,public,pass::PutoutToFile
     procedure,non_overridable,public,pass::PutoutCfg=>Puout_Instance_Config_SimBoxArray
     procedure,non_overridable,public,pass::PutinCfg=>Putin_Instance_Config_SimBoxArray
     procedure,non_overridable,public,pass::Putin_OKMC_OUTCFG_FORMAT18_SimRecord
@@ -135,6 +136,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   private::Get_MaxClustersNum
   private::CleanSimulationBoxes
   private::DestorySimulationBoxes
+  private::PutoutToFile
   private::Puout_Instance_Config_SimBoxArray
   private::Putin_Instance_Config_SimBoxArray
   private::Putin_OKMC_OUTCFG_FORMAT18_SimRecord
@@ -2308,28 +2310,18 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Sweep_UnActiveMemory_CPU
 
   !**********************OutPut***************************
-  subroutine Puout_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,RescaleCount,SweepOutCount)
-    !***    Purpose: to output Intermediate Status
-    !           this: the boxes info in host
-    !           SimuRecord: the simulation records
-    !        RescaleCount : (optional)the ith rescale
+  subroutine PutoutToFile(this,Host_SimuCtrlParam,SimuRecord,hFile)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     Class(SimulationRecord)::SimuRecord
-    integer, optional::RescaleCount
-    integer, optional::SweepOutCount
+    integer,intent(in)::hFile
     !---Local Vars---
     type(AtomsList),pointer::cursor=>null()
-    character*256::c_ITIME
-    character*256::C_TIMESECTION
-    character*256::C_JOB
     integer::MultiBox
     integer::IBox
     integer::IAKind
-    character*256::path
-    integer::hFile
     integer::IC, ICFROM, ICTO
     integer::ISeed
     integer::ILayer
@@ -2342,39 +2334,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::ElementsKind
     !---Body---
 
-    if(present(RescaleCount)) then
-        write(c_ITIME,*) RescaleCount
-        c_ITIME = adjustl(c_ITIME)
-        c_ITIME = "BeforeRescale"//c_ITIME
-    else if(present(SweepOutCount)) then
-        write(c_ITIME,*) SweepOutCount
-        c_ITIME = adjustl(c_ITIME)
-        c_ITIME = "BeforeSweepOut"//c_ITIME
-    else
-        write(c_ITIME,*) SimuRecord%GetOutPutIndex()
-
-        call SimuRecord%IncreaseOneOutPutIndex()
-
-        c_ITIME = adjustl(c_ITIME)
-    end if
-
-    write(C_TIMESECTION,*) SimuRecord%GetTimeSections()
-    C_TIMESECTION = adjustl(C_TIMESECTION)
-    C_TIMESECTION = "Section"//C_TIMESECTION
-
-    write(C_JOB,*) SimuRecord%GetSimuPatch()
-    C_JOB = adjustl(C_JOB)
-    C_JOB = "Job"//C_JOB
-
-
     ! output the configuration(can also be for the restart)
     MultiBox = Host_SimuCtrlParam%MultiBox
-
-    path = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"Config_"//trim(C_JOB)//"_"//trim(C_TIMESECTION)//"_"//trim(c_ITIME)//".dat"
-
-    hFile = CreateNewFile(path)
-
-    open(hFile,file=path, form="formatted")
 
     !---Start to write---
     write(hFile,FMT="(A)") OKMC_OUTCFG_FORMAT18
@@ -2506,9 +2467,69 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         END DO
     END DO
 
+    Nullify(cursor)
+
+    return
+  end subroutine PutoutToFile
+
+
+  subroutine Puout_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,RescaleCount,SweepOutCount)
+    !***    Purpose: to output Intermediate Status
+    !           this: the boxes info in host
+    !           SimuRecord: the simulation records
+    !        RescaleCount : (optional)the ith rescale
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationBoxes)::this
+    type(SimulationCtrlParam)::Host_SimuCtrlParam
+    Class(SimulationRecord)::SimuRecord
+    integer, optional::RescaleCount
+    integer, optional::SweepOutCount
+    !---Local Vars---
+    character*256::c_ITIME
+    character*256::C_TIMESECTION
+    character*256::C_JOB
+    character*256::path
+    integer::hFile
+    !---Body---
+
+    if(present(RescaleCount)) then
+        write(c_ITIME,*) RescaleCount
+        c_ITIME = adjustl(c_ITIME)
+        c_ITIME = "BeforeRescale"//c_ITIME
+    else if(present(SweepOutCount)) then
+        write(c_ITIME,*) SweepOutCount
+        c_ITIME = adjustl(c_ITIME)
+        c_ITIME = "BeforeSweepOut"//c_ITIME
+    else
+        write(c_ITIME,*) SimuRecord%GetOutPutIndex()
+
+        call SimuRecord%IncreaseOneOutPutIndex()
+
+        c_ITIME = adjustl(c_ITIME)
+    end if
+
+    write(C_TIMESECTION,*) SimuRecord%GetTimeSections()
+    C_TIMESECTION = adjustl(C_TIMESECTION)
+    C_TIMESECTION = "Section"//C_TIMESECTION
+
+    write(C_JOB,*) SimuRecord%GetSimuPatch()
+    C_JOB = adjustl(C_JOB)
+    C_JOB = "Job"//C_JOB
+
+
+    ! output the configuration(can also be for the restart)
+
+    path = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"Config_"//trim(C_JOB)//"_"//trim(C_TIMESECTION)//"_"//trim(c_ITIME)//".dat"
+
+    hFile = CreateNewFile(path)
+
+    open(hFile,file=path, form="formatted")
+
+    call this%PutoutToFile(Host_SimuCtrlParam,SimuRecord,hFile)
+
     close(hFile)
 
-    Nullify(cursor)
 
     return
   end subroutine Puout_Instance_Config_SimBoxArray
