@@ -11,6 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
+				<Option parameters="/scratch/110doc00/ZhaiLei/New_Cascade/BoxSizeInf/20keV/Locally/New_Cascade1Box200LU_NBox800_NoDump/SampleSetup.dat /scratch/110doc00/ZhaiLei/New_Cascade/BoxSizeInf/20keV/Locally/New_Cascade1Box200LU_NBox800_NoDump/1000K/Config_Job1_Section10_83.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
@@ -68,7 +69,9 @@
 		<Compiler>
 			<Add option="-Minform=inform" />
 		</Compiler>
-		<Unit filename="../../sor/ANALYTOOLS/MC_HomogenizeBox.F90" />
+		<Unit filename="../../sor/ANALYTOOLS/MC_HomogenizeBox.F90">
+			<Option weight="0" />
+		</Unit>
 		<Extensions>
 			<envvars />
 			<code_completion />
