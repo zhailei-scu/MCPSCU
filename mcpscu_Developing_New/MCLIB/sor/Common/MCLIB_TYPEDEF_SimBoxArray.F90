@@ -47,12 +47,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !***********Boxes Basic Statistic Info********
     type(BoxesBasicStatistic)::m_BoxesBasicStatistic
 
-    !**************Init file****************
-    character*256::IniConfig = ""
-
-    !**********Implantation file************
-    character*256::ImpFile = ""
-
     !***********Info for diffusor************
     type(ReadDiffusorPropList),pointer::ReadDiffusorProp_List=>null()
 
@@ -179,11 +173,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     this%HBOXSIZE = 0
     this%BOXVOLUM    = 0
 
-    !***Peridic boundary
-    this%IniConfig = ""
-
-    this%ImpFile = ""
-
     return
   end subroutine DefaultValue_SimulationBoxes
 
@@ -228,10 +217,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     ! The Assignment(=) had been override
     this%m_BoxesBasicStatistic = Other%m_BoxesBasicStatistic
-
-    this%IniConfig = Other%IniConfig
-
-    this%ImpFile = Other%ImpFile
 
     ! The Assignment(=) had been override
     if(associated(this%ReadDiffusorProp_List)) then
@@ -4338,10 +4323,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     call this%MatrixAtom%CleanAtom()
 
     call this%Atoms_list%CleanAtomsList()
-
-    this%IniConfig = ""
-
-    this%ImpFile = ""
 
     call this%ReadDiffusorProp_List%Clean_ReadDiffusorPropList()
 

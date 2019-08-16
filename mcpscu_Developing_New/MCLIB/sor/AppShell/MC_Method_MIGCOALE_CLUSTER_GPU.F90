@@ -3,6 +3,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     !--- This module is created for the KMC method based on migration-coalesence model---!
     !--- for CLUSTER object                                                           ---!
     !--- Creator: Zhai Lei, 2018-05-23, in Sichuan University                         ---!
+    use RAND32_MODULE
+    use RAND32SEEDLIB_MODULE
     use MCLIB_CAL_NEIGHBOR_LIST_GPU
     use MIGCOALE_EVOLUTION_GPU
     use MIGCOALE_TIMECTL
@@ -81,6 +83,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     private::CleanInitBoxSimCfg
     private::AppendOne_InintSimBoxCfg
     private::GetInitBoxSimCfgList_Count
+    private::ReadInitBoxSimCfgList
+    private::ReadInitBoxSimRecord
     private::Clean_InitBoxSimCfgList
     private::CleanInitBoxSimCfgList
 
@@ -97,12 +101,18 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Local Vars---
         type(SimulationCtrlParam),pointer::PSimCtrlParam=>null()
         type(ImplantSection),pointer::PImplantSection=>null()
+        type(InitBoxSimCfg)::tempInitBoxSimCfg
         integer::TimeStep0
         real::SimTime0
         integer::TimeSection0
         integer::JobIndex0
         integer::ITEST
         integer::TestLoop0,TestLoop1
+        integer::I
+        integer::SEEDBefore(2)
+        integer::ISEED0
+        integer::ISEED(2)
+        logical::exitflag
         !---Body---
         TimeStep0 = 0
         SimTime0 = ZERO
@@ -111,7 +121,50 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call m_MigCoalClusterRecord%InitMigCoalClusterRecord(Host_SimuCtrlParam%MultiBox,SimuSteps=TimeStep0,SimuTimes=SimTime0,SimuPatchs=JobIndex0,TimeSection=TimeSection0)
 
-        call ReadInitBoxSimCfgList(Host_SimBoxes,Host_SimuCtrlParam,m_InitBoxSimCfgList,m_MigCoalClusterRecord)
+        if(Host_SimuCtrlParam%RESTARTAT .GT. 0) then
+            call m_InitBoxSimCfgList%Clean_InitBoxSimCfgList()
+            call tempInitBoxSimCfg%Clean_InitBoxSimCfg()
+            tempInitBoxSimCfg%InitType = p_ClusterIniConfig_SpecialDistFromFile
+            tempInitBoxSimCfg%InitCfgFileName = Host_SimuCtrlParam%RestartCfg
+            call m_InitBoxSimCfgList%AppendOne_InintSimBoxCfg(tempInitBoxSimCfg)
+        else
+            call ReadInitBoxSimCfgList(Host_SimBoxes,Host_SimuCtrlParam,m_InitBoxSimCfgList,m_MigCoalClusterRecord)
+        end if
+
+        call ReadInitBoxSimRecord(Host_SimBoxes,m_InitBoxSimCfgList,m_MigCoalClusterRecord)
+
+        if(Host_SimuCtrlParam%RESTARTAT .GT. 0) then
+            !---For restart, we should use the random number in the sequence before last running---
+            !---However, it too hard to realize, currently, we should at least that the random number in---
+            !---the restart job is not same with last running, so, it is necessary to change the random seed again---
+            call DRAND32_GETSEED(SEEDBefore)
+            DO While(.true.)
+                exitflag = .true.
+
+                ISEED0 = Host_SimuCtrlParam%RANDSEED(1) + m_MigCoalClusterRecord%GetSimuSteps() + DRAND32()*RAND32SEEDLIB_SIZE
+
+                if(m_MigCoalClusterRecord%GetSimuTimes() .GT. 0.D0) then
+                    ISEED0 = ISEED0 + max(RAND32SEEDLIB_SIZE/m_MigCoalClusterRecord%GetSimuTimes(), &
+                                          RAND32SEEDLIB_SIZE*m_MigCoalClusterRecord%GetSimuTimes())
+                end if
+
+                call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+                ISEED0 = ISEED0 + JobIndex + m_MigCoalClusterRecord%GetTimeSections() - 1
+                call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+
+                DO I = 1,size(ISEED)
+                    if(ISEED(I) .eq. SEEDBefore(I)) then
+                        exitflag = .false.
+                        exit
+                    end if
+                END DO
+
+                if(exitflag .eq. .true.) then
+                    call DRAND32_PUTSEED(ISEED)
+                    exit
+                end if
+            END DO
+        end if
 
         TimeStep0 = m_MigCoalClusterRecord%GetSimuSteps()
         SimTime0 = m_MigCoalClusterRecord%GetSimuTimes()
@@ -762,26 +815,22 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         character*32::STRTMP(10)
         integer::LINE
         integer::N
-        type(InitBoxSimCfgList),pointer::cursor=>null()
-        integer::RecordNum
         !---Body---
         existed = .false.
 
         LINE = 0
-
-        RecordNum = 0
         call InitBoxCfgList%Clean_InitBoxSimCfgList()
 
-        INQUIRE(File=SimBoxes%IniConfig(1:LENTRIM(SimBoxes%IniConfig)),exist=existed)
+        INQUIRE(File=Host_SimuCtrlParam%IniConfig(1:LENTRIM(Host_SimuCtrlParam%IniConfig)),exist=existed)
 
         if(.not. existed) then
             write(*,*) "MCPSCUERROR: The box initial file do not existed!"
-            write(*,*) SimBoxes%IniConfig
+            write(*,*) Host_SimuCtrlParam%IniConfig
             pause
             stop
         end if
 
-        hFile = openExistedFile(SimBoxes%IniConfig)
+        hFile = openExistedFile(Host_SimuCtrlParam%IniConfig)
 
         call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
         call RemoveComments(STR,"!")
@@ -817,12 +866,42 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             end select
         END DO
 
+        return
+
+        100 write(*,*) "MCPSCUERROR : Load init config file"//Host_SimuCtrlParam%IniConfig(1:LENTRIM(Host_SimuCtrlParam%IniConfig))//"failed !"
+            write(*,*) "At line :",LINE
+            write(*,*) "The program would stop."
+            pause
+            stop
+    end subroutine ReadInitBoxSimCfgList
+
+    !*****************************************************************
+    subroutine ReadInitBoxSimRecord(SimBoxes,InitBoxCfgList,SimuRecord)
+        !---Dummy Vars---
+        type(SimulationBoxes)::SimBoxes
+        type(InitBoxSimCfgList),target::InitBoxCfgList
+        CLASS(SimulationRecord)::SimuRecord
+        !---Local Vars---
+        type(InitBoxSimCfgList),pointer::cursor=>null()
+        integer::hFile
+        character*256::STR
+        character*32::KEYWORD
+        character*256::fileName
+        integer::LINE
+        integer::RecordNum
+        !---Body---
+
+        RecordNum = 0
+
         cursor=>InitBoxCfgList
 
         DO While(associated(cursor))
 
             if(cursor%TheValue%InitType .eq. p_ClusterIniConfig_SpecialDistFromFile) then
-                hFile = OpenExistedFile(cursor%TheValue%InitCfgFileName)
+                fileName = cursor%TheValue%InitCfgFileName
+                hFile = OpenExistedFile(fileName)
+
+                LINE = 0
 
                 call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
                 call RemoveComments(STR,"!")
@@ -855,12 +934,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         return
 
-        100 write(*,*) "MCPSCUERROR : Load init config file"//SimBoxes%IniConfig(1:LENTRIM(SimBoxes%IniConfig))//"failed !"
+        100 write(*,*) "MCPSCUERROR : Load init config file"//fileName//"failed !"
             write(*,*) "At line :",LINE
             write(*,*) "The program would stop."
             pause
             stop
-    end subroutine ReadInitBoxSimCfgList
+    end subroutine
 
     !*****************************************************************
     subroutine ReadInitBoxSimCfg_OneGroup(hFile,SimBoxes,Host_SimuCtrlParam,InitBoxCfgList,LINE,*)
@@ -1442,7 +1521,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     subroutine Init_Depth_Dis_LAY(Host_Boxes,Host_SimuCtrlParam,InitBoxCfg)
       !*** Purpose: To initialize the system (clusters distributed as the form of layer)
       ! Host_Boxes: the boxes information in host
-      use RAND32_MODULE
       implicit none
       !---Dummy Vars---
       type(SimulationBoxes)::Host_Boxes
@@ -1569,7 +1647,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     subroutine Init_Depth_Dis_SubBox(Host_Boxes,Host_SimuCtrlParam,InitBoxCfg)
       !*** Purpose: To initialize the system (clusters distributed as the form of layer)
       ! Host_Boxes: the boxes information in host
-      use RAND32_MODULE
       implicit none
       !---Dummy Vars---
       type(SimulationBoxes)::Host_Boxes
@@ -1675,7 +1752,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     subroutine Init_Depth_Dis_Gauss(Host_Boxes,Host_SimuCtrlParam,InitBoxCfg)
         !*** Purpose: To initialize the system (clusters distributed as the form of gauss in depth)
         ! Host_Boxes: the boxes information in host
-        use RAND32_MODULE
         implicit none
         !-------Dummy Vars------
         type(SimulationBoxes)::Host_Boxes

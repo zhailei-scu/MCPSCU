@@ -81,7 +81,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      !***File path and name restore*****
      character*256::InputFilePath = ""
      character*256::InputFileshortName = ""
+     character*256::IniConfig = ""
+     character*256::ImpFile = ""
      character*256::OutFilePath = ""
+     character*256::RestartCfg = ""
 
      !*********Parameters for analysis processes*************
      integer::STARTJOB = -1
@@ -280,7 +283,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !***File path and name restore*****
     this%InputFilePath = otherOne%InputFilePath
     this%InputFileshortName = otherOne%InputFileshortName
+    this%IniConfig = otherOne%IniConfig
+    this%ImpFile = otherOne%ImpFile
     this%OutFilePath = otherOne%OutFilePath
+    this%RestartCfg = otherOne%RestartCfg
 
     !---Determine whether the reaction are considered
     this%FreeDiffusion = otherOne%FreeDiffusion
@@ -370,7 +376,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      !***File path and name restore*****
      this%InputFilePath = ""
      this%InputFileshortName = ""
+     this%IniConfig = ""
+     this%ImpFile = ""
      this%OutFilePath = ""
+     this%RestartCfg = ""
 
      !---Determine whether the reaction are considered
      this%FreeDiffusion = .false.
@@ -521,8 +530,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      !***File path and name restore*****
      this%InputFilePath = ""
      this%InputFileshortName = ""
+     this%IniConfig = ""
+     this%ImpFile = ""
      this%OutFilePath = ""
-
+     this%RestartCfg = ""
 
      !---Determine whether the reaction are considered
      this%FreeDiffusion = .false.

@@ -461,7 +461,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         !---Body---
         LINE = 0
 
-        truePath = INQUIREFILE(Host_Boxes%ImpFile)
+        truePath = INQUIREFILE(Host_SimuCtrlParam%ImpFile)
 
         hFile = OpenExistedFile(truePath)
 

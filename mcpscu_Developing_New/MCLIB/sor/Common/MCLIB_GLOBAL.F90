@@ -31,7 +31,7 @@ module MCLIB_GLOBAL
     integer::fileUnit,length,ISTAT
     integer::LINE
     character*32::KEYWORD
-    character*256::ctlFile,boxFile,initFile,impFile,outPath
+    character*256::ctlFile,boxFile,initFile,impFile,outPath,restartFile
     character*256::STRTMP(5)
     integer::N
     !---Body---
@@ -123,7 +123,7 @@ module MCLIB_GLOBAL
                 stop
             end if
             initFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParam%InputFilePath)
-            SimBoxes%IniConfig = adjustl(trim(initFile))
+            CtrlParam%IniConfig = adjustl(trim(initFile))
 
           case("&IMPF")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
@@ -135,7 +135,7 @@ module MCLIB_GLOBAL
                 stop
             end if
             impFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParam%InputFilePath)
-            SimBoxes%ImpFile = adjustl(trim(impFile))
+            CtrlParam%ImpFile = adjustl(trim(impFile))
 
           case("&COUT")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
@@ -146,6 +146,19 @@ module MCLIB_GLOBAL
             else
                 CtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
             end if
+
+          case("&RESTARTF")
+            call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+            if(N .LT. 1) then
+                write(*,*) "MCPSCUERROR: You must special the restart file name or path"
+                write(*,*) STR
+                write(*,*) "At line: ",LINE
+                pause
+                stop
+            end if
+            restartFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParam%InputFilePath)
+            CtrlParam%RestartCfg = adjustl(restartFile)
+
       end select
     END DO
 
