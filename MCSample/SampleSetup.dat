@@ -6,3 +6,13 @@
   &IMPF "ImpF.dat"
   &COUT "1000K/"
 &END
+
+
+&RESTART_MIGCOALE_CLUSTER_GPU
+  &BOXF "BoxFile.dat"
+  &CTLF "CtrlFile.dat"
+  &INIF "IniF.dat"
+  &IMPF "ImpF.dat"
+  &RESTARTF "1000K/Config_Job1_Section5_28.dat"
+  &COUT "1000K_Restart/"
+&END
