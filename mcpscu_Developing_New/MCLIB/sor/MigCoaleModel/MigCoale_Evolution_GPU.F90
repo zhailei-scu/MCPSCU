@@ -621,11 +621,12 @@ module MIGCOALE_EVOLUTION_GPU
 
       SubjectStatu = Dev_ActiveStatu(IC)
 
-      if(SubjectStatu .eq. p_ACTIVEFREE_STATU .or. SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+      N_Merge = Dev_MergeKVOIS(IC)
 
-        N_Merge = Dev_MergeKVOIS(IC)
+      DO I=1,N_Merge
+        !---Note, in each cycle, the SubjectStatu may be changed, so it is necessary to judge the SubjectStatu here
+        if(SubjectStatu .eq. p_ACTIVEFREE_STATU .or. SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
-        DO I=1,N_Merge
           JC = Dev_MergeINDI(IC,I)
 
           ObjectStatu = Dev_ActiveStatu(JC)
@@ -634,12 +635,12 @@ module MIGCOALE_EVOLUTION_GPU
             cycle
           end if
 
-          !---Step 1: Self check and atomicadd one
+          !---Step 1: Self check and lock
           if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
             return
           end if
 
-          !--Step 2: Object check and  atomicadd one
+          !--Step 2: Object check and lock
           if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
             S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
             cycle
@@ -737,11 +738,16 @@ module MIGCOALE_EVOLUTION_GPU
 
                     Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
 
-                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
 
-                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
 
-                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
+                    if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
+                        SubjectStatu = p_ANNIHILATE_STATU
+                        Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
+                        Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
+                        Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
+                    end if
 
             end select
 
@@ -811,15 +817,8 @@ module MIGCOALE_EVOLUTION_GPU
 
             if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
                 if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
-                    Dev_Clusters(IC)%m_Statu = p_EXP_DESTROY_STATU
-                    S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_EXP_DESTROY_STATU)
+                    SubjectStatu = p_EXP_DESTROY_STATU
                 endif
-            end if
-
-            if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .LE. 0) then
-                Dev_Clusters(IC)%m_Statu = p_ANNIHILATE_STATU
-                Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
-                S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_ANNIHILATE_STATU)
             end if
 
             !Dev_Clusters(JC)%m_RAD = 0.D0
@@ -828,10 +827,12 @@ module MIGCOALE_EVOLUTION_GPU
           end if
 
           !---Step 4:Release self
+          Dev_Clusters(IC)%m_Statu = SubjectStatu
+
           S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
 
-         END DO
-      end if
+        end if
+      END DO
     end if
 
     return
@@ -895,11 +896,12 @@ module MIGCOALE_EVOLUTION_GPU
 
       SubjectStatu = Dev_ActiveStatu(IC)
 
-      if(SubjectStatu .eq. p_ACTIVEFREE_STATU .or. SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+      N_Merge = Dev_MergeKVOIS(IC)
 
-        N_Merge = Dev_MergeKVOIS(IC)
+      DO I=1,N_Merge
+        !---Note, in each cycle, the SubjectStatu may be changed, so it is necessary to judge the SubjectStatu here
+        if(SubjectStatu .eq. p_ACTIVEFREE_STATU .or. SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
-        DO I=1,N_Merge
           JC = Dev_MergeINDI(IC,I)
 
           ObjectStatu = Dev_ActiveStatu(JC)
@@ -908,12 +910,12 @@ module MIGCOALE_EVOLUTION_GPU
             cycle
           end if
 
-          !---Step 1: Self check and atomicadd one
+          !---Step 1: Self check and lock
           if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
             return
           end if
 
-          !--Step 2: Object check and  atomicadd one
+          !--Step 2: Object check and lock
           if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
             S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
             cycle
@@ -1011,11 +1013,17 @@ module MIGCOALE_EVOLUTION_GPU
 
                     Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
 
-                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
 
-                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
 
-                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
+                    if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
+                        SubjectStatu = p_ANNIHILATE_STATU
+                        Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
+                        Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
+                        Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
+                    end if
+
             end select
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
@@ -1072,6 +1080,7 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+
                     case(p_DiffuseCoefficient_BySIACluster)
                         Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
                                                         TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
@@ -1083,15 +1092,8 @@ module MIGCOALE_EVOLUTION_GPU
 
             if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
                 if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
-                    Dev_Clusters(IC)%m_Statu = p_EXP_DESTROY_STATU
-                    S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_EXP_DESTROY_STATU)
+                    SubjectStatu = p_EXP_DESTROY_STATU
                 endif
-            end if
-
-            if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .LE. 0) then
-                Dev_Clusters(IC)%m_Statu = p_ANNIHILATE_STATU
-                 Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
-                S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,p_ANNIHILATE_STATU)
             end if
 
             !Dev_Clusters(JC)%m_RAD = 0.D0
@@ -1100,13 +1102,15 @@ module MIGCOALE_EVOLUTION_GPU
           end if
 
           !---Step 4:Release self
+          Dev_Clusters(IC)%m_Statu = SubjectStatu
+
           S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
 
-         END DO
-      end if
+        end if
+      END DO
     end if
 
     return
-  end subroutine MergeBack_Kernel
+  end subroutine MergePre_Kernel
 
 end module MIGCOALE_EVOLUTION_GPU
