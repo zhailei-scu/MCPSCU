@@ -1111,6 +1111,6 @@ module MIGCOALE_EVOLUTION_GPU
     end if
 
     return
-  end subroutine MergePre_Kernel
+  end subroutine MergeBack_Kernel
 
 end module MIGCOALE_EVOLUTION_GPU
