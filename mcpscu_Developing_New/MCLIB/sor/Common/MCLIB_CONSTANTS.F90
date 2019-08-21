@@ -2,8 +2,10 @@ module MCLIB_CONSTANTS
     use MSM_CONSTANTS
     implicit none
 
-    !---This macro function used to translate the macro to string
-    #define _S(x) #x
+    !---This macro function used to translate the symbol x to string (but not unfold the macro)
+    #define __S(x) #x
+    !---This macro function used to translate the symbol x to string (and unfold the macro)
+    #define _S(x) __S(x)
 
     #ifdef MCVERSION
     character(LEN = 30),parameter::mp_Version = _S(MCVERSION)
