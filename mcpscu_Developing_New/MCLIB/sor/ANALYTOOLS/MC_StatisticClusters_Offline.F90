@@ -1142,7 +1142,7 @@ program Main_StatisticClusters_Offline
                 select case(adjustl(trim(TheVersion)))
                     case("2019_08_16")
                         call StatisticClusters_SIAAndVAC_Ver2019_08_16(CascadeControlFile,Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
-                    case("2019_08_20")
+                    case(adjustl(trim(mp_Version)))
                         call StatisticClusters_SIAAndVAC_Ver2019_08_20(CascadeControlFile,Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
                     case default
                         call StatisticClusters_SIAAndVAC_Ver2019_08_16(CascadeControlFile,Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
