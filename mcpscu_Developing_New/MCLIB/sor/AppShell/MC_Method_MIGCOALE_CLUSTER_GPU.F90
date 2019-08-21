@@ -889,6 +889,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         character*256::fileName
         integer::LINE
         integer::RecordNum
+        character*30::TheVersion
         !---Body---
 
         RecordNum = 0
@@ -919,7 +920,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                         stop
                     end if
 
-                    call SimBoxes%Putin_OKMC_OUTCFG_FORMAT18_SimRecord(hFile,SimuRecord,LINE)
+                    call SimBoxes%Putin_OKMC_OUTCFG_FORMAT18_SimRecord(hFile,SimuRecord,TheVersion,LINE)
                     RecordNum = RecordNum + 1
                 end if
 
@@ -1498,9 +1499,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
         type(InitBoxSimCfg)::InitBoxCfg
+        character*30::TheVersion
         !---Body---
 
-        call SimBoxes%PutinCfg(Host_SimuCtrlParam,Record,InitBoxCfg%InitCfgFileName,m_FREESURDIFPRE,m_GBSURDIFPRE)
+        call SimBoxes%PutinCfg(Host_SimuCtrlParam,Record,InitBoxCfg%InitCfgFileName,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion)
+        write(*,*) "The KMC Configuration version is: ",TheVersion
 
         return
     end subroutine DoInitSimulationBoxesConfig_SpecialDistFromFile

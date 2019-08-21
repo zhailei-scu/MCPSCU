@@ -2,6 +2,18 @@ module MCLIB_CONSTANTS
     use MSM_CONSTANTS
     implicit none
 
+    !---This macro function used to translate the macro to string
+    #define _S(x) #x
+
+    #ifdef MCVERSION
+    character(LEN = 30),parameter::mp_Version = _S(MCVERSION)
+    #else
+    !As the code::block cannot identify the macro string, so in code::block IDE
+    !we fix the following macro. While we public the package, these should be remove because when we
+    !use the makefile instead of code::block IDE, we can define these macro while installing and building
+    character(LEN = 30),parameter::mp_Version = "Developing_New"
+    #endif
+
      !Date conversion
     character(len=1),parameter::KEYWORD_HEAD = "&"
     ! Data File type

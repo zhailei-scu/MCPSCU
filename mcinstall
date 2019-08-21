@@ -108,81 +108,88 @@ MCPSCUSOR=$MCPSCUINST/$FULLNAME
 MCWORKSPACE=$MCPSCUINST/mcworkspace/$FULLNAME
 mkdir -p $MCWORKSPACE
 
-sed -i '2,9{/mcpscusor=/d}' $MCPSCUSOR/mcbdlib
-sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/mcbdlib
-sed -i '2,9{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,9{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-sed -i "2i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,10{/version=/d}' $MCPSCUSOR/mcbdlib
+sed -i "2i version=""$VER" $MCPSCUSOR/mcbdlib
+sed -i '2,10{/version=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "2i version=""$VER" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/version=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "2i version=""$VER" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,9{/tccpath=/d}' $MCPSCUSOR/mcbdlib
-sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/mcbdlib
-sed -i '2,9{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,9{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-sed -i "3i tccpath=""$TINYCCPATH" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,10{/mcpscusor=/d}' $MCPSCUSOR/mcbdlib
+sed -i "3i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/mcbdlib
+sed -i '2,10{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "3i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/mcpscusor=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "3i mcpscusor=""$MCPSCUSOR" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,9{/mcworkspace=/d}' $MCPSCUSOR/mcbdlib
-sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/mcbdlib
-sed -i '2,9{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,9{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-sed -i "4i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,10{/tccpath=/d}' $MCPSCUSOR/mcbdlib
+sed -i "4i tccpath=""$TINYCCPATH" $MCPSCUSOR/mcbdlib
+sed -i '2,10{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "4i tccpath=""$TINYCCPATH" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/tccpath=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "4i tccpath=""$TINYCCPATH" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,9{/cudaVersion=/d}' $MCPSCUSOR/mcbdlib
-sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/mcbdlib
-sed -i '2,9{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,9{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-sed -i "5i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,10{/mcworkspace=/d}' $MCPSCUSOR/mcbdlib
+sed -i "5i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/mcbdlib
+sed -i '2,10{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "5i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/mcworkspace=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "5i mcworkspace=""$MCWORKSPACE" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,9{/computerCapability=/d}' $MCPSCUSOR/mcbdlib
-sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/mcbdlib
-sed -i '2,9{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,9{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-sed -i "6i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,10{/cudaVersion=/d}' $MCPSCUSOR/mcbdlib
+sed -i "6i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/mcbdlib
+sed -i '2,10{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "6i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/cudaVersion=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "6i cudaVersion=""$CUDAVERSION" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,9{/operateSystem=/d}' $MCPSCUSOR/mcbdlib
-sed -i "7i operateSystem=""$OS" $MCPSCUSOR/mcbdlib
-sed -i '2,9{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i "7i operateSystem=""$OS" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,9{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-sed -i "7i operateSystem=""$OS" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,10{/computerCapability=/d}' $MCPSCUSOR/mcbdlib
+sed -i "7i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/mcbdlib
+sed -i '2,10{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "7i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/computerCapability=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "7i computerCapability=""$COMPUTCAPABILITY" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
-sed -i '2,9{/source/d}' $MCPSCUSOR/mcbdlib
-sed -i '2,9{/export/d}' $MCPSCUSOR/mcbdlib
-sed -i '2,9{/source/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,9{/export/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-sed -i '2,9{/source/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-sed -i '2,9{/export/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,10{/operateSystem=/d}' $MCPSCUSOR/mcbdlib
+sed -i "8i operateSystem=""$OS" $MCPSCUSOR/mcbdlib
+sed -i '2,10{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i "8i operateSystem=""$OS" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/operateSystem=/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i "8i operateSystem=""$OS" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+
+sed -i '2,10{/source/d}' $MCPSCUSOR/mcbdlib
+sed -i '2,10{/export/d}' $MCPSCUSOR/mcbdlib
+sed -i '2,10{/source/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/export/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+sed -i '2,10{/source/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+sed -i '2,10{/export/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 
 if [ "$SETPATHTOENV" = "y" ]; then
-  sed -i "8i source $HOME/.bashrc" $MCPSCUSOR/mcbdlib
-  sed -i "8i source $HOME/.bashrc" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-  sed -i "8i source $HOME/.bashrc" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+  sed -i "9i source $HOME/.bashrc" $MCPSCUSOR/mcbdlib
+  sed -i "9i source $HOME/.bashrc" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+  sed -i "9i source $HOME/.bashrc" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 else
-  sed -i "8i export PATH=\$PATH:$PGIADDINPATH; export PGI=$PGI" $MCPSCUSOR/mcbdlib
-  sed -i "8i export PATH=\$PATH:$PGIADDINPATH; export PGI=$PGI" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-  sed -i "8i export PATH=\$PATH:$PGIADDINPATH; export PGI=$PGI" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+  sed -i "9i export PATH=\$PATH:$PGIADDINPATH; export PGI=$PGI" $MCPSCUSOR/mcbdlib
+  sed -i "9i export PATH=\$PATH:$PGIADDINPATH; export PGI=$PGI" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+  sed -i "9i export PATH=\$PATH:$PGIADDINPATH; export PGI=$PGI" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 fi
 
 #Based on our test, the compiler option -Mnollvm is also necessary in host code, if not, in centos 7, CUDA10.0 PGICE 19.4, the
 #error"PGF90-F-0000-Internal compiler error. bitcaset with differing size -4" would occur
 if [ `echo "$PGIVER >= 19.4" |bc` -eq 1 ]; then
-  sed -i '2,9{/hostllvm/d}' $MCPSCUSOR/mcbdlib
-  sed -i "9i hostllvm=-Mnollvm" $MCPSCUSOR/mcbdlib
-  sed -i '2,9{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-  sed -i "9i hostllvm=-Mnollvm" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-  sed -i '2,9{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-  sed -i "9i hostllvm=-Mnollvm" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+  sed -i '2,10{/hostllvm/d}' $MCPSCUSOR/mcbdlib
+  sed -i "10i hostllvm=-Mnollvm" $MCPSCUSOR/mcbdlib
+  sed -i '2,10{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+  sed -i "10i hostllvm=-Mnollvm" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+  sed -i '2,10{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+  sed -i "10i hostllvm=-Mnollvm" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 else
-  sed -i '2,9{/hostllvm/d}' $MCPSCUSOR/mcbdlib
-  sed -i "9i hostllvm=\"\"" $MCPSCUSOR/mcbdlib
-  sed -i '2,9{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-  sed -i "9i hostllvm=\"\"" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
-  sed -i '2,9{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
-  sed -i "9i hostllvm=\"\"" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+  sed -i '2,10{/hostllvm/d}' $MCPSCUSOR/mcbdlib
+  sed -i "10i hostllvm=\"\"" $MCPSCUSOR/mcbdlib
+  sed -i '2,10{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+  sed -i "10i hostllvm=\"\"" $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
+  sed -i '2,10{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
+  sed -i "10i hostllvm=\"\"" $MCPSCUSOR/MCLIB/sor/ANALYTOOLS/mcbdtool
 fi
 
 #---- create mcworkspace

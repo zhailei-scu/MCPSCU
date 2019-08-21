@@ -2325,6 +2325,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Start to write---
     write(hFile,FMT="(A)") OKMC_OUTCFG_FORMAT18
 
+    KEYWORD = "&VERSION"
+    write(hFile,FMT="(A,1x,A30)") KEYWORD(1:LENTRIM(KEYWORD)),adjustl(trim(mp_Version))
+
     KEYWORD = "&TIME"
     write(hFile, FMT="(A,1x,A16,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetSimuTimes()
 
@@ -2520,7 +2523,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Puout_Instance_Config_SimBoxArray
 
   !*****************************************************************
-  subroutine Putin_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,cfgFile,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,cfgFile,SURDIFPRE_FREE,SURDIFPRE_INGB,TheVersion)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
@@ -2529,6 +2532,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*256,intent(in)::cfgFile
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
+    character*30::TheVersion
     !---Local Vars--
     integer::hFile
     character*256::STR
@@ -2553,7 +2557,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     select case(KEYWORD(1:LENTRIM(KEYWORD)))
         case(OKMC_OUTCFG_FORMAT18)
-            call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
+            call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB)
         case(MF_OUTCFG_FORMAT18)
             call this%Putin_MF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
         case(SPMF_OUTCFG_FORMAT18)
@@ -2575,12 +2579,13 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
 
   !*************************************************************
-  subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord(this,hFile,SimuRecord,LINE)
+  subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord(this,hFile,SimuRecord,TheVersion,LINE)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     integer,intent(in)::hFile
     CLASS(SimulationRecord)::SimuRecord
+    character*30::TheVersion
     integer,intent(inout)::LINE
     !---Local Vars---
     character*256::STR
@@ -2600,6 +2605,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call UPCASE(KEYWORD)
 
         select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&VERSION")
+                call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                TheVersion = adjustl(trim(STRTMP(1)))
+
             case("&TIME")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
                 call SimuRecord%SetSimuTimes(DRSTR(STRTMP(1)))
@@ -2635,13 +2644,14 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord
 
   !*************************************************************
-  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     character*256,intent(in)::cfgFile
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
+    character*30::TheVersion
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     !---Local Vars---
@@ -2706,7 +2716,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         stop
     end if
 
-    call this%Putin_OKMC_OUTCFG_FORMAT18_SimRecord(hFile,SimuRecord,LINE)
+    call this%Putin_OKMC_OUTCFG_FORMAT18_SimRecord(hFile,SimuRecord,TheVersion,LINE)
 
     DO While(.true.)
         call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)

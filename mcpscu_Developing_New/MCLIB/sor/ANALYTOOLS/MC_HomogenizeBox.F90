@@ -70,6 +70,7 @@ program Main_MC_HomogenizeBox
     character*256::OutFolder
     character*256::pathOut
     integer::hFileOut
+    character*30::TheVersion
     !--Body---
     arg_Num = Command_Argument_Count()
 
@@ -106,7 +107,9 @@ program Main_MC_HomogenizeBox
     !*******Init the simulation boxes*****************
     call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
 
-    call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,ConfigFile,m_FREESURDIFPRE,m_GBSURDIFPRE)
+    call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,ConfigFile,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion)
+
+    write(*,*) "The KMC Configuration version is: ",TheVersion
 
     call HomogenizeBox(Host_Boxes,Host_SimuCtrlParam,Record,hFileOut)
 

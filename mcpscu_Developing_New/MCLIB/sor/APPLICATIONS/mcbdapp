@@ -1,4 +1,5 @@
 #!/bin/bash
+version=Developing_New
 mcpscusor=/home/zhail/Development/public/mcpscu_2019_07_01
 tccpath=/home/zhail/Development/public/tcc-0.9.27/
 mcworkspace=/home/zhail/Development/public/mcworkspace/mcpscu_2019_07_01
@@ -98,17 +99,17 @@ fi
 if [ "$ConfigName" = "Release" ];then 
        # the compling option for CYGWIN
        if [ "$operateSystem" = "CYGWIN" ]; then
-       	  export oflags="-fast -D $operateSystem -D NODEVRAN $hostllvm -Minform=warn -Minfo=all -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability";
+       	  export oflags="-fast -D MCVERSION=$version -D $operateSystem -D NODEVRAN $hostllvm -Minform=warn -Minfo=all -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability";
        # the compling option for LINUX
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-fast -tp sandybridge-64 -D $operateSystem $hostllvm -Minform=warn -Minfo=all  -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability,nollvm";
+       	  export oflags="-fast -tp sandybridge-64 -D MCVERSION=$version -D $operateSystem $hostllvm -Minform=warn -Minfo=all  -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability,nollvm";
        fi        
 else
        # the compling option for CYGWI
        if [ "$operateSystem" = "CYGWIN" ]; then
-       	  export oflags="-g $hostllvm -Mcuda=$cudaVersion,$computerCapability,nodebug -D $operateSystem -D NODEVRAN";
+       	  export oflags="-g $hostllvm -Mcuda=$cudaVersion,$computerCapability,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN";
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-g $hostllvm -Mcuda=$cudaVersion,$computerCapability,nollvm,nodebug -D $operateSystem -D NODEVRAN";
+       	  export oflags="-g $hostllvm -Mcuda=$cudaVersion,$computerCapability,nollvm,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN";
        fi
 fi
 

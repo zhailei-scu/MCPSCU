@@ -11,6 +11,7 @@ module MCLIB_GLOBAL
    USE MCLIB_TYPEDEF_SIMULATIONBOXARRAY
    implicit none
 
+
    character*32::m_AppType = "MIGCOALE_CLUSTER_GPU"     ! the type of application
 
    integer::m_hFILELOG = 0
