@@ -85,10 +85,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         real(kind=KINDDF)::DepthSDINI = 0.D0
 
-        real(kind=KINDDF)::Sphere_Central(3) = 0.D0
-
-        real(kind=KINDDF)::Sphere_Radius = 0.D0
-
         real(kind=KINDDF),dimension(:),allocatable::LayerThick
 
         real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleRate
@@ -240,9 +236,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         this%DepthSDINI = other%DepthSDINI
 
-        this%Sphere_Central = other%Sphere_Central
-        this%Sphere_Radius = other%Sphere_Radius
-
         call DeAllocateArray_Host(this%LayerThick,"LayerThick")
         call AllocateArray_Host(this%LayerThick,size(other%LayerThick),"LayerThick")
         this%LayerThick = other%LayerThick
@@ -295,9 +288,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
         this%DepthINI = 0.D0
 
         this%DepthSDINI = 0.D0
-
-        this%Sphere_Central = 0.D0
-        this%Sphere_Radius = 0.D0
 
         call DeAllocateArray_Host(this%LayerThick,"LayerThick")
 

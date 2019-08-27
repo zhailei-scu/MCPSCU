@@ -8,7 +8,278 @@ module MCLIB_UTILITIES_FORMER
 
   implicit none
 
+  TYPE,public::STRList
+    character*256::TheValue
+    integer::ListCount = 0
+    type(STRList),pointer::Next=>null()
+
+    contains
+    procedure,non_overridable,public,pass::CopySTRListFromOther
+    procedure,non_overridable,public,pass::AppendOne_STRList
+    procedure,non_overridable,public,pass::AppendArray_STRList
+    procedure,non_overridable,public,pass::GetValueBySTRListIndex
+    procedure,non_overridable,public,pass::GetSTRList_Count
+    procedure,non_overridable,public,pass::Clean_STRList
+    Final::CleanSTRList
+  END TYPE
+
+  private::CopySTRListFromOther
+  private::AppendOne_STRList
+  private::AppendArray_STRList
+  private::GetValueBySTRListIndex
+  private::GetSTRList_Count
+  private::Clean_STRList
+  private::CleanSTRList
+
   contains
+
+  !***************************************
+  subroutine CopySTRListFromOther(this,otherOne)
+    implicit none
+    !---Dummy Vars---
+    CLASS(STRList),intent(out),target::this
+    type(STRList),target,intent(in)::otherOne
+    !---Local Vars---
+    type(STRList),pointer::cursorOfOthers=>null()
+    type(STRList),pointer::cursorOfSelf=>null()
+    type(STRList),pointer::cursorOfSelfP=>null()
+    !---Body---
+    cursorOfSelf=>this
+    if(.not. associated(cursorOfSelf)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the STRList first!"
+        pause
+        stop
+    end if
+
+    cursorOfOthers=>otherOne
+    if(.not. associated(cursorOfOthers)) then
+        Nullify(cursorOfSelf)
+        return
+    end if
+
+    call this%Clean_STRList()
+
+    this%TheValue = otherOne%TheValue
+
+    cursorOfOthers=>otherOne%next
+    cursorOfSelfP=>this
+    cursorOfSelf=>this%next
+    DO While(associated(cursorOfOthers))
+        allocate(cursorOfSelf)
+        cursorOfSelf%TheValue = cursorOfOthers%TheValue
+        cursorOfSelfP%next=>cursorOfSelf
+
+        cursorOfOthers=>cursorOfOthers%next
+        cursorOfSelfP=>cursorOfSelfP%next
+        cursorOfSelf=>cursorOfSelf%next
+    END DO
+    this%ListCount = otherOne%GetSTRList_Count()
+
+    Nullify(cursorOfSelfP)
+    Nullify(cursorOfSelf)
+    Nullify(cursorOfOthers)
+    return
+  end subroutine CopySTRListFromOther
+
+  !***************************************
+  subroutine AppendOne_STRList(this,newOne)
+    implicit none
+    !---Dummy Vars---
+    CLASS(STRList),target::this
+    character*(*)::newOne
+    !---Local Vars---
+    type(STRList),pointer::cursor=>null(),cursorP=>null()
+    !---Body---
+    cursorP=>this
+    if(.not. associated(cursorP)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the STRList first!"
+        pause
+        stop
+    end if
+
+    if(this%GetSTRList_Count() .LE. 0) then
+        this%ListCount = 1
+        this%TheValue = newOne
+    else
+        cursor=>this%next
+        cursorP=>this
+
+        DO while(associated(cursor))
+            cursor=>cursor%next
+            cursorP=>cursorP%next
+        END DO
+
+        this%ListCount = this%ListCount + 1
+
+        allocate(cursor)
+        NUllify(cursor%next)
+        cursor%TheValue = newOne
+        cursorP%next=>cursor
+    end if
+
+    Nullify(cursorP)
+    cursorP=>null()
+    Nullify(cursor)
+    cursor=>null()
+    return
+  end subroutine AppendOne_STRList
+
+  !***************************************
+  subroutine AppendArray_STRList(this,TheArray,ArraySize)
+    implicit none
+    !---Dummy Vars---
+    CLASS(STRList),target::this
+    character*256,allocatable::TheArray(:)
+    integer,intent(in)::ArraySize
+    !---Local Vars---
+    integer::I
+    type(STRList),pointer::cursor=>null(),cursorP=>null()
+    !---Body---
+    cursorP=>this
+    if(.not. associated(cursorP)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the STRList first!"
+        pause
+        stop
+    end if
+
+    if(ArraySize  .LE. 0 .or. size(TheArray) .LE. 0) then
+        write(*,*) "MCPSCUWARNING: No array would be appended to STRList"
+        return
+    end if
+
+    if(ArraySize .GT. size(TheArray)) then
+        write(*,*) "MCPSCUERROR: The aimmed size to appended to the STRLIST is greater than the Array size",ArraySize,size(TheArray)
+        pause
+        stop
+    end if
+
+
+    DO I=1,ArraySize
+        call this%AppendOne_STRList(TheArray(I))
+    END DO
+
+    return
+  end subroutine AppendArray_STRList
+
+  !**************************************
+  function GetValueBySTRListIndex(this,ListIndex) result(TheValue)
+    implicit none
+    !---Dummy Vars---
+    CLASS(STRList),target::this
+    integer,intent(in)::ListIndex
+    character*256,intent(out)::TheValue
+    !---Local Vars---
+    integer::tempIndex
+    type(STRList),pointer::cursor=>null()
+    !---Body---
+    cursor=>this
+    if(.not. associated(cursor)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the STRList first!"
+        pause
+        stop
+    end if
+
+    tempIndex = 0
+
+    DO while(associated(cursor))
+
+        tempIndex = tempIndex + 1
+
+        if(tempIndex .eq. ListIndex) then
+            TheValue = cursor%TheValue
+            exit
+        end if
+
+        cursor=>cursor%next
+
+    END DO
+
+    if(ListIndex .ne. tempIndex) then
+        write(*,*) "MCPSCUERROR: Cannot get the Value form STRList by index: ",ListIndex
+        pause
+        stop
+    end if
+
+    Nullify(cursor)
+    cursor=>null()
+    return
+  end function GetValueBySTRListIndex
+
+  !**************************************
+  integer function GetSTRList_Count(this)
+    implicit none
+    !---Dummy Vars---
+    CLASS(STRList),target::this
+    !---Local Vars---
+    type(STRList),pointer::cursor=>null()
+    !---Body---
+    cursor=>this
+    if(.not. associated(cursor)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the STRList first!"
+        pause
+        stop
+    end if
+
+    GetSTRList_Count = this%ListCount
+
+    return
+  end function GetSTRList_Count
+
+  !**************************************
+  subroutine Clean_STRList(this)
+    implicit none
+    !---Dummy Vars---
+    CLASS(STRList),target::this
+    !---Local Vars---
+    type(STRList),pointer::cursor=>null()
+    type(STRList),pointer::next=>null()
+    !---Body---
+    cursor=>this
+
+    if(.not. associated(cursor)) then
+        return
+    end if
+
+    if(cursor%GetSTRList_Count() .LE. 0) then
+        return
+    end if
+
+    cursor=>this%next
+
+    this%TheValue = ""
+
+    DO While(associated(cursor))
+        next=>cursor%next
+        cursor%TheValue = ""
+        deallocate(cursor)
+        Nullify(cursor)
+        cursor=>next
+    END DO
+
+    this%next=>null()
+
+    this%ListCount = 0
+
+    Nullify(cursor)
+    Nullify(next)
+    cursor=>null()
+    next=>null()
+
+    return
+  end subroutine Clean_STRList
+
+  !************************************
+  subroutine CleanSTRList(this)
+    implicit none
+    !---Dummy Vars---
+    type(STRList)::this
+    !---Body---
+
+    call this%Clean_STRList()
+
+    return
+  end subroutine CleanSTRList
+
 
   !************************************************************
   function INQUIREFILE(fileName,parentPath) result(truePath)
@@ -442,6 +713,79 @@ module MCLIB_UTILITIES_FORMER
 !
 !    return
 !  end function CreateDataFolder
+
+  !*****************************************************************
+  function IsAbsolutePath(ThePath) result(TheResult)
+    implicit none
+    !---Dummy Vars---
+    character*(*),intent(in)::ThePath
+    logical::TheResult
+    !---Local Vars---
+    character*256::TempPath
+    logical::exits
+    integer::Length
+    !---Body---
+    TheResult = .false.
+
+    TempPath = adjustl(trim(ThePath))
+
+    Length = LENTRIM(TempPath)
+
+    #ifdef CYGWIN
+    if(Length .GE. 2) then
+        if(resultPath(2:2) .eq. ":") then
+            INQUIRE(FILE=TempPath(1:2),EXIST=exits)
+            if(.not. exits) then
+                write(*,fmt="(A,A,A)") "MCPSCUERROR: The derive :",TempPath(1:1)," is not exit."
+                pause
+                stop
+            end if
+
+            TheResult = .true.
+        end if
+    end if
+    #else
+    if(Length .GE. 1) then
+        if(TempPath(1:1) .eq. '/') then
+            TheResult = .true.
+        end if
+    end if
+    #endif
+
+    return
+  end function IsAbsolutePath
+
+  !****************************************************************
+  subroutine ListFilesInFolder(TheFolder,TheFilesPath)
+    implicit none
+    !---Dummy Vars---
+    character*(*)::TheFolder
+    type(STRList),target::TheFilesPath
+    !---Local Vars---
+    character*256::tempfile
+    integer::hFile
+    character*256::STR
+    integer::LINE
+    !---Body---
+
+    tempfile = adjustl(trim(TheFolder))//FolderSpe//"filelist.temp"
+
+    call system("ls -F "//trim(TheFolder)//" | grep -v '/'"//" > "//trim(tempfile))
+
+    hFile = OpenExistedFile(tempfile)
+
+    Do While(GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+        if(LENTRIM(STR) .GT. 0) then
+
+        end if
+
+    End Do
+
+    return
+  end subroutine
+
+
+
 
   !*****************************************************************
   function CreateDataFolder(distPath) result(resultPath)

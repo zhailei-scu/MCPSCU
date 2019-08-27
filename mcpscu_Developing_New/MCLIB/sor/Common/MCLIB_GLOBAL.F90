@@ -142,11 +142,15 @@ module MCLIB_GLOBAL
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
             outPath = STRTMP(1)
             outPath = adjustl(outPath)
-            if(LENTRIM(adjustl(CtrlParam%InputFilePath)) .GT. 0) then
-                CtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(CtrlParam%InputFilePath))//FolderSpe//adjustl(trim(outPath)))
-            else
+            if(IsAbsolutePath(outPath)) then
                 CtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
-            end if
+            else
+                if(LENTRIM(adjustl(CtrlParam%InputFilePath)) .GT. 0) then
+                    CtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(CtrlParam%InputFilePath))//FolderSpe//adjustl(trim(outPath)))
+                else
+                    CtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
+                end if
+            endif
 
           case("&RESTARTF")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
