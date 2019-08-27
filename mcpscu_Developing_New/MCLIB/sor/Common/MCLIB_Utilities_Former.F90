@@ -766,7 +766,10 @@ module MCLIB_UTILITIES_FORMER
     integer::hFile
     character*256::STR
     integer::LINE
+    character*256::tempPath
     !---Body---
+
+    call TheFilesPath%Clean_STRList()
 
     tempfile = adjustl(trim(TheFolder))//FolderSpe//"filelist.temp"
 
@@ -776,16 +779,15 @@ module MCLIB_UTILITIES_FORMER
 
     Do While(GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
         if(LENTRIM(STR) .GT. 0) then
+            tempPath = INQUIREFILE(adjustl(trim(TheFolder))//FolderSpe//adjustl(trim(STR)))
 
+            call TheFilesPath%AppendOne_STRList(adjustl(trim(tempPath)))
         end if
 
     End Do
 
     return
   end subroutine
-
-
-
 
   !*****************************************************************
   function CreateDataFolder(distPath) result(resultPath)
