@@ -762,7 +762,10 @@ module MCLIB_UTILITIES_FORMER
     character*(*)::TheFolder
     type(STRList),target::TheFilesPath
     !---Local Vars---
+    character*256::tempTheFolder
+    integer::length
     character*256::tempfile
+    character*1000::ShellStr
     integer::hFile
     character*256::STR
     integer::LINE
@@ -771,9 +774,29 @@ module MCLIB_UTILITIES_FORMER
 
     call TheFilesPath%Clean_STRList()
 
-    tempfile = adjustl(trim(TheFolder))//FolderSpe//"filelist.temp"
+    tempTheFolder = adjustl(trim(TheFolder))
 
-    call system("ls -F "//trim(TheFolder)//" | grep -v '/'"//" > "//trim(tempfile))
+    length = LENTRIM(tempTheFolder)
+
+    if(length .LE. 0) then
+        tempfile = "filelist.temp"
+    else if(tempTheFolder(length:length) .eq. achar(92) .or. tempTheFolder(length:length) .eq. achar(47) ) then
+        tempfile = tempTheFolder(1:length-1)//"filelist.temp"
+    else
+        tempfile = tempTheFolder(1:length)//"filelist.temp"
+    end if
+
+    !call system("ls -F "//trim(TheFolder)//" | grep -v '/'"//" > "//trim(tempfile))  ! do not use this way ,this may cause the * in end of filename in cygwin
+
+    ShellStr = ': > '//adjustl(trim(tempfile))//';\n &
+               for filename in `ls '//adjustl(trim(tempTheFolder))//' `\n &
+               do\n &
+               if [ "$(file -b '//adjustl(trim(tempTheFolder))//'$filename)" != "directory" ]; then\n &
+               echo $filename >> '//adjustl(trim(tempfile))//';\n &
+               fi\n &
+               done'
+
+    call system(trim(ShellStr))
 
     hFile = OpenExistedFile(tempfile)
 
@@ -783,7 +806,6 @@ module MCLIB_UTILITIES_FORMER
 
             call TheFilesPath%AppendOne_STRList(adjustl(trim(tempPath)))
         end if
-
     End Do
 
     return
