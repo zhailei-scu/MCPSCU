@@ -72,7 +72,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         integer::ImplantConfigType = -1
 
-        character*256::ImplantCfgFolder = ""
+        type(STRList),pointer::ImplantCfgFileList=>null()
 
         character*20::ImplantCfgFileType = ""
 
@@ -181,7 +181,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         this%ImplantConfigType =other%ImplantConfigType
 
-        this%ImplantCfgFolder = other%ImplantCfgFolder
+        !---The Assignment(=)=> had been override
+        this%ImplantCfgFileList = other%ImplantCfgFileList
 
         this%ImplantCfgFileType = other%ImplantCfgFileType
 
@@ -235,7 +236,9 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         this%ImplantConfigType = -1
 
-        this%ImplantCfgFolder = ""
+        call this%ImplantCfgFileList%Clean_STRList()
+        Nullify(this%ImplantCfgFileList)
+        this%ImplantCfgFileList=>null()
 
         this%ImplantCfgFileType = ""
 
@@ -812,7 +815,12 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         integer::N
         type(MigCoalClusterRecord)::tempRecord
         real(kind=KINDDF)::TotalSampleRate
+        character*256::FolderPath
         integer::LayerNum
+        real(kind=KINDDF),dimension(:),allocatable::LayersThick
+        real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
+        type(ACluster),dimension(:,:),allocatable::ClustersSample
+        type(STRList),pointer::cursor=>null()
         !---Body---
 
         if(.not. ISSTREQUAL(PreKEYWORD,"&EXTFSUBCTL")) then
@@ -904,7 +912,12 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
                         stop
                     end if
 
-                    this%ImplantCfgFolder = INQUIREFILE(STRTEMP(1),Host_SimuCtrlParam%InputFilePath)
+                    FolderPath = INQUIREFILE(STRTEMP(1),Host_SimuCtrlParam%InputFilePath)
+
+                    if(.not. associated(this%ImplantCfgFileList)) then
+                        allocate(this%ImplantCfgFileList)
+                    end if
+                    call ListFilesInFolder(FolderPath,this%ImplantCfgFileList)
 
                 case default
                     write(*,*) "MCPSCUERROR: Illegal flag: ",KEYWORD
@@ -913,21 +926,37 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             end select
         END DO
 
+        cursor=>this%ImplantCfgFileList
         select case(adjustl(trim(this%ImplantCfgFileType)))
-            case(OKMC_DIST_FORMAT18)
-                call this%Putin_OKMC_FORMAT18_Distribution(LayerNum)
-
             case(MF_OUTCFG_FORMAT18)
-                call SimBoxes%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFolder,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_FREESURDIFPRE)
+                DO While(associated(cursor))
+                    call SimBoxes%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,adjustl(trim(cursor%TheValue)),LayersThick,ClustersSampleConcentrate,ClustersSample,tempRecord,m_FREESURDIFPRE)
+                    cursor=>cursor%Next
+                END DO
 
             case(SPMF_OUTCFG_FORMAT18)
-                call SimBoxes%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,this%ImplantCfgFolder,this%LayerThick,this%ClustersSampleRate,this%ClustersSample,tempRecord,m_FREESURDIFPRE,m_GBSURDIFPRE)
+                DO While(associated(cursor))
+                    call SimBoxes%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,adjustl(trim(cursor%TheValue)),LayersThick,ClustersSampleConcentrate,ClustersSample,tempRecord,m_FREESURDIFPRE,m_GBSURDIFPRE)
+                    cursor=>cursor%Next
+                END DO
 
             case(SRIM_DIST)
-                call this%Putin_SRIM2003_OUTCFG_Distribution(SimBoxes,Host_SimuCtrlParam,LayerNum)
+                DO While(associated(cursor))
+                    call this%Putin_SRIM2003_OUTCFG_Distribution(SimBoxes,Host_SimuCtrlParam,adjustl(trim(cursor%TheValue)),LayerNum,LayersThick,ClustersSampleConcentrate,ClustersSample)
+                    cursor=>cursor%Next
+                END DO
 
             case(PANDA_DIST)
-                call this%Putin_PANDA_OUTCFG_Distribution(SimBoxes,Host_SimuCtrlParam)
+                DO While(associated(cursor))
+                    call this%Putin_PANDA_OUTCFG_Distribution(SimBoxes,Host_SimuCtrlParam,adjustl(trim(cursor%TheValue)),LayersThick,ClustersSampleConcentrate,ClustersSample)
+                    cursor=>cursor%Next
+                END DO
+
+            case(OKMC_DIST_FORMAT18)
+                DO While(associated(cursor))
+                    call this%Putin_OKMC_FORMAT18_Distribution(SimBoxes,Host_SimuCtrlParam,adjustl(trim(cursor%TheValue)),LayerNum,LayersThick,ClustersSampleConcentrate,ClustersSample)
+                    cursor=>cursor%Next
+                END DO
 
             case default
                 write(*,*) "MCPSCUERROR: Unknown Implant Configuration file type : ",this%ImplantCfgFileType
@@ -960,11 +989,15 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
     end subroutine ReadImplantSection_SpecialDistFromFile
 
     !*****************************************************************
-    subroutine Putin_PANDA_OUTCFG_Distribution(this,SimBoxes,Host_SimuCtrlParam)
+    subroutine Putin_PANDA_OUTCFG_Distribution(this,SimBoxes,Host_SimuCtrlParam,cfgFile,LayersThick,ClustersSampleConcentrate,ClustersSample)
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes),intent(in)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
+        character*256,intent(in)::cfgFile
+        real(kind=KINDDF),dimension(:),allocatable::LayersThick
+        real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
+        type(ACluster),dimension(:,:),allocatable::ClustersSample
         !---Local Vars---
         integer::hFile
         integer::LINE
@@ -983,7 +1016,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         LINE = 0
 
-        hFile = OpenExistedFile(this%ImplantCfgFolder)
+        hFile = OpenExistedFile(adjustl(trim(cfgFile)))
 
         LayerNum = 0
 
@@ -1008,9 +1041,9 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             stop
         end if
 
-        call AllocateArray_Host(this%LayerThick,LayerNum,"LayersThick")
-        call AllocateArray_Host(this%ClustersSampleRate,LayerNum,1,"ClustersSampleRate")
-        call AllocateArray_Host(this%ClustersSample,LayerNum,1,"ClustersSample")
+        call AllocateArray_Host(LayersThick,LayerNum,"LayersThick")
+        call AllocateArray_Host(ClustersSampleConcentrate,LayerNum,1,"ClustersSampleConcentrate")
+        call AllocateArray_Host(ClustersSample,LayerNum,1,"ClustersSample")
 
         call ImplantIon%Clean_Cluster()
 
@@ -1057,7 +1090,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
         DO Layer = 1,LayerNum
-            this%ClustersSample(Layer,1) = ImplantIon
+            ClustersSample(Layer,1) = ImplantIon
         END DO
 
 
@@ -1083,13 +1116,13 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             if(N .LT. 2) then
                 write(*,*) "MCPSCUERROR: The panda distribution file data cannot be recognized in line: ",LINE
                 write(*,*) STR
-                write(*,*) "At file: ",this%ImplantCfgFolder
+                write(*,*) "At file: ",cfgFile
                 pause
                 stop
             end if
 
-            this%LayerThick(ILayer) = 2*(DRSTR(STRTMP(1))*C_UM2CM - SumOfThick)
-            SumOfThick = SumOfThick + this%LayerThick(ILayer)
+            LayersThick(ILayer) = 2*(DRSTR(STRTMP(1))*C_UM2CM - SumOfThick)
+            SumOfThick = SumOfThick + LayersThick(ILayer)
 
             if(SumOfThick .GT. SimBoxes%BOXSIZE(3)) then
                 write(*,*) "MCPSCUERROR: The PANDA depth distribution is greater than simulation box depth."
@@ -1099,11 +1132,11 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
                 stop
             end if
 
-            this%ClustersSampleRate(ILayer,1) = DRSTR(STRTMP(2))
+            ClustersSampleConcentrate(ILayer,1) = DRSTR(STRTMP(2))
 
-            this%ClustersSample(ILayer,1)%m_Statu = p_ACTIVEFREE_STATU
+            ClustersSample(ILayer,1)%m_Statu = p_ACTIVEFREE_STATU
 
-            this%ClustersSample(ILayer,1)%m_Layer = ILayer
+            ClustersSample(ILayer,1)%m_Layer = ILayer
 
             ILayer =  ILayer + 1
 
@@ -1115,12 +1148,16 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
     end subroutine Putin_PANDA_OUTCFG_Distribution
 
     !******************************************************************
-    subroutine Putin_SRIM2003_OUTCFG_Distribution(this,SimBoxes,Host_SimuCtrlParam,LayerNum)
+    subroutine Putin_SRIM2003_OUTCFG_Distribution(this,SimBoxes,Host_SimuCtrlParam,cfgFile,LayerNum,LayersThick,ClustersSampleConcentrate,ClustersSample)
                 !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes),intent(in)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
+        character*256,intent(in)::cfgFile
         integer,intent(in)::LayerNum
+        real(kind=KINDDF),dimension(:),allocatable::LayersThick
+        real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
+        type(ACluster),dimension(:,:),allocatable::ClustersSample
         !---Local Vars---
         integer::hFile
         integer::LINE
@@ -1140,7 +1177,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         !---Body---
         LINE = 0
 
-        hFile = OpenExistedFile(this%ImplantCfgFolder)
+        hFile = OpenExistedFile(adjustl(trim(cfgFile)))
 
         StoppedNum = 0
 
@@ -1189,7 +1226,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
                 if(N .LT. 4) then
                     write(*,*) "MCPSCUERROR: The SRIM2003 distribution file data cannot be recognized in line: ",LINE
                     write(*,*) STR
-                    write(*,*) "At file: ",this%ImplantCfgFolder
+                    write(*,*) "At file: ",cfgFile
                     pause
                     stop
                 end if
@@ -1230,19 +1267,19 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         END DO
 
-        call AllocateArray_Host(this%LayerThick,LayerNum,"LayersThick")
-        call AllocateArray_Host(this%ClustersSampleRate,LayerNum,1,"ClustersSampleRate")
-        call AllocateArray_Host(this%ClustersSample,LayerNum,1,"ClustersSample")
+        call AllocateArray_Host(LayersThick,LayerNum,"LayersThick")
+        call AllocateArray_Host(ClustersSampleConcentrate,LayerNum,1,"ClustersSampleConcentrate")
+        call AllocateArray_Host(ClustersSample,LayerNum,1,"ClustersSample")
 
         Thickness = (maxval(StoppedPosition(:,1)) - minval(StoppedPosition(:,1)))/LayerNum
 
-        this%LayerThick = Thickness
+        LayersThick = Thickness
 
-        this%ClustersSampleRate = 0
+        ClustersSampleConcentrate = 0
 
         DO IIon = 1,StoppedNum
             ILayer = max(floor(StoppedPosition(IIon,1)/Thickness),1)
-            this%ClustersSampleRate(ILayer,1) = this%ClustersSampleRate(ILayer,1) + 1
+            ClustersSampleConcentrate(ILayer,1) = ClustersSampleConcentrate(ILayer,1) + 1
         END DO
 
         call ImplantIon%Clean_Cluster()
@@ -1289,7 +1326,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
-        this%ClustersSample(:,:) = ImplantIon
+        ClustersSample(:,:) = ImplantIon
 
         call DeAllocateArray_Host(StoppedPosition,"StoppedPosition")
 
@@ -1299,10 +1336,17 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
     end subroutine Putin_SRIM2003_OUTCFG_Distribution
 
     !******************************************************************
-    subroutine Putin_OKMC_FORMAT18_Distribution(this,LayerNum)
+    subroutine Putin_OKMC_FORMAT18_Distribution(this,SimBoxes,Host_SimuCtrlParam,cfgFile,LayerNum,LayersThick,ClustersSampleConcentrate,ClustersSample)
         !---Dummy Vars---
         CLASS(ImplantSection)::this
+        type(SimulationBoxes)::SimBoxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        character*256,intent(in)::cfgFile
         integer,intent(in)::LayerNum
+        real(kind=KINDDF),dimension(:),allocatable::LayersThick
+        real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
+        type(ACluster),dimension(:,:),allocatable::ClustersSample
+        !---Body---
 
     end subroutine Putin_OKMC_FORMAT18_Distribution
 
@@ -1322,30 +1366,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         return
     end subroutine ReadImplantSection_SpecialDistFromExteFunc
 
-    !***************************************************************
-    subroutine PrePareImplantSection(this,SimBoxes,Host_SimuCtrlParam)
-        !---Dummy Vars---
-        CLASS(ImplantSection)::this
-        type(SimulationBoxes)::SimBoxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
-        !---Local Vars---
-        integer::hFile
-        character*256::STR
-        character*32::KEYWORD
-        integer::LINE
-        type(MigCoalClusterRecord)::tempRecord
-        real(kind=KINDDF)::TotalSampleRate
-        !---Body---
-
-
-
-        return
-        100 write(*,*) "MCPSCUERROR: Fail to load the implant distribution at file: ",this%ImplantCfgFolder
-            write(*,*) "At line: ",LINE
-            write(*,*) STR
-            pause
-            stop
-    end subroutine PrePareImplantSection
 
     !***************************************************************
     subroutine ReadImplantClusterSizeDist_Simple(this,hFile,SimBoxes,LINE)

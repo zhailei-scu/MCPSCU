@@ -20,6 +20,7 @@ module MCLIB_UTILITIES_FORMER
     procedure,non_overridable,public,pass::GetValueBySTRListIndex
     procedure,non_overridable,public,pass::GetSTRList_Count
     procedure,non_overridable,public,pass::Clean_STRList
+    Generic::Assignment(=)=>CopySTRListFromOther
     Final::CleanSTRList
   END TYPE
 
