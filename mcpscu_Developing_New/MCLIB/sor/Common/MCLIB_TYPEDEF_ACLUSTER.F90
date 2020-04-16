@@ -53,7 +53,10 @@ module MCLIB_TYPEDEF_ACLUSTER
     END TYPE ACluster
 
     TYPE,PUBLIC::AClusterList
-        type(ACluster)::TheCluster
+        type(ACluster),public::TheCluster
+        real(kind=KINDDF),public::quantififyValue = 0   ! This value is used to record some quantifify value such as counts or concentrate in some application
+
+
         integer,private::ListCount = 0
         type(AClusterList),pointer::next=>null()
 
@@ -380,6 +383,7 @@ module MCLIB_TYPEDEF_ACLUSTER
 
         ! The assignment(=) had been override
         thisCursorP%TheCluster = otherCursorP%TheCluster
+        thisCursorP%quantififyValue = otherCursorP%quantififyValue
 
         this%ListCount = this%ListCount + 1
 
@@ -390,6 +394,7 @@ module MCLIB_TYPEDEF_ACLUSTER
             allocate(thisCursor)
             ! The assignment(=) had been override
             thisCursor%TheCluster = otherCursor%TheCluster
+            thisCursor%quantififyValue = otherCursor%quantififyValue
 
             this%ListCount = this%ListCount + 1
 
@@ -432,10 +437,12 @@ module MCLIB_TYPEDEF_ACLUSTER
         cursor=>this%next
 
         call this%TheCluster%Clean_Cluster()
+        this%quantififyValue = 0.D0
 
         DO While(associated(cursor))
             next=>cursor%next
             call Clean_Cluster(cursor%TheCluster)
+            cursor%quantififyValue = 0.D0
             Nullify(cursor)
             deallocate(cursor)
             cursor=>next

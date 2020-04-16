@@ -931,6 +931,16 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             case(MF_OUTCFG_FORMAT18)
                 DO While(associated(cursor))
                     call SimBoxes%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,adjustl(trim(cursor%TheValue)),LayersThick,ClustersSampleConcentrate,ClustersSample,tempRecord,m_FREESURDIFPRE)
+
+                    TotalSampleRate = sum(ClustersSampleConcentrate)
+                    if(TotalSampleRate .LE. 0) then
+                        write(*,*) "MCPSCUERROR: The total concentrate cannot less equal with 0"
+                        write(*,*) "In file: ",cursor%TheValue
+                        pause
+                        stop
+                    end if
+                    ClustersSampleConcentrate = ClustersSampleConcentrate/TotalSampleRate
+
                     cursor=>cursor%Next
                 END DO
 
