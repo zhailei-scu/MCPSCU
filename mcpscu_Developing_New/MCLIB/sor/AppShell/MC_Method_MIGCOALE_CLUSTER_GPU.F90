@@ -305,10 +305,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheImplantSection,TheMigCoaleStatInfoWrap,Record,TotalSize, NCUT)
 
-                if(Record%GetSimuTimes() .gt. Host_SimuCtrlParam%TermTValue) then
-                    exit
-                end if
-
                 call Record%IncreaseOneRescaleCount()
                 call Host_SimBoxes%PutoutCfg(Host_SimuCtrlParam,Record,RescaleCount=Record%GetRescaleCount())
 
@@ -348,6 +344,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record,Model=0)
                 call PutOut_Instance_Statistic_EachBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+
+                if(Record%GetSimuTimes() .gt. Host_SimuCtrlParam%TermTValue) then
+                    exit
+                end if
 
             END DO
         else
@@ -438,16 +438,15 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                            TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)))
 
 
-
-                if(Record%GetSimuTimes() .GE. Host_SimuCtrlParam%TermTValue) then
-                    exit
-                end if
-
                 !Check if need to duplicate the box
                 if(present(NCUT)) then
                     if(NAct .LE. NCUT) then
                         exit
                     end if
+                end if
+
+                if(Record%GetSimuTimes() .GE. Host_SimuCtrlParam%TermTValue) then
+                    exit
                 end if
 
             END DO

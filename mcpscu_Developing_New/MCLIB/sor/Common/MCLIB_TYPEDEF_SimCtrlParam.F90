@@ -48,6 +48,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      integer::TermTFlag = mp_TermTimeFlag_ByRealTime                    ! = 0 stans for by steps,flag = 1 by time(s)
      real::TermTValue = 3000                                            ! terminate time
 
+     real(kind=KINDDF),dimension(:),allocatable::FocusedTimePoints      ! the focused time points
+
+
      integer::UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep       ! flag = 0 the time step is determined by average distance of nearest cluster
                                                                         ! flag = 1 is by fixed time-step
                                                                         ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute uniform in the box
@@ -257,6 +260,16 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%TermTFlag = otherOne%TermTFlag
     this%TermTValue = otherOne%TermTValue
 
+    !***Focused time points**************
+    if(allocated(this%FocusedTimePoints)) deallocate(this%FocusedTimePoints)
+    if(allocated(otherOne%FocusedTimePoints)) then
+        if(size(otherOne%FocusedTimePoints) .GT. 0) then
+            allocate(this%FocusedTimePoints(size(otherOne%FocusedTimePoints)))
+            this%FocusedTimePoints = otherOne%FocusedTimePoints
+        end if
+    end if
+
+    !******************
     this%UPDATETSTEPSTRATEGY = otherOne%UPDATETSTEPSTRATEGY
     this%FixedTimeStepValue = otherOne%FixedTimeStepValue
     this%EnlageTStepScale = otherOne%EnlageTStepScale
@@ -349,6 +362,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      !***Information about Time
      this%TermTFlag = mp_TermTimeFlag_ByRealTime
      this%TermTValue = 3000
+
+     call DeAllocateOneDimd_Host(this%FocusedTimePoints,"this%FocusedTimePoints")
 
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
      this%FixedTimeStepValue = 1
@@ -503,6 +518,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      !***Information about Time
      this%TermTFlag = mp_TermTimeFlag_ByRealTime
      this%TermTValue = 3000
+
+     !*******Focused time point*****************
+     call DeAllocateOneDimd_Host(this%FocusedTimePoints,"this%FocusedTimePoints")
 
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
      this%FixedTimeStepValue = 1
@@ -1204,6 +1222,36 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
            end if
 
+        case("&FOCUSETIME")
+            call EXTRACT_NUMB(STR,p_MAX_FOCUSEDTIMEPOINTS,N,STRNUMB)
+
+            if(N .GT. 0) then
+                call AllocateOneDimd_Host(this%FocusedTimePoints,N,"FocusedTimePoints")
+            end if
+
+            DO I = 1,N
+                this%FocusedTimePoints(I) = DRSTR(STRNUMB(I))
+
+                if(I .GT. 1) then
+                    if(this%FocusedTimePoints(I) .LE. this%FocusedTimePoints(I-1)) then
+                        write(*,*) "MCPSCU ERROR: You should align the focused time-points from smaller to bigger"
+                        write(*,*) "At control file line: ",LINE
+                        write(*,*) STR
+                        pause
+                        stop
+                    end if
+                end if
+
+                if(this%FocusedTimePoints(I) .GT. this%TermTValue) then
+                    write(*,*) "MCPSCU ERROR: the focused time-point should less than terminate time "
+                    write(*,*) "Chosen focused time point is: ", this%FocusedTimePoints(I)
+                    write(*,*) "The terminate time point is: ",this%TermTValue
+                    pause
+                    stop
+                end if
+            END DO
+
+
         case("&TSTEPSTRATEGY")
            call EXTRACT_NUMB(STR,2,N,STRNUMB)
 
@@ -1535,6 +1583,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer::ISect
     integer::IStatu
     character*256::ConfigContent
+    character*256::CFormat
+    character*256::CNUM
     !---Body---
 
     write(hFile,*) "!****************Control file information***********************"
@@ -1571,6 +1621,16 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
         !***Information about Time
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.4)") "Maxma simulation flag = , the time =",cursor%TermTFlag,cursor%TermTValue
+
+        if(allocated(cursor%FocusedTimePoints)) then
+
+            if(size(cursor%FocusedTimePoints) .GT. 0) then
+                write(CNUM,*) size(cursor%FocusedTimePoints)
+                CFormat = ""
+                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(1PE10.4,2x))"
+                write(hFile,fmt=CFormat(1:LENTRIM(CFormat)))  "The focused time-points are : ", cursor%FocusedTimePoints
+            end if
+        end if
 
         select case(this%UPDATETSTEPSTRATEGY)
             case(mp_SelfAdjustlStep_NearestSep)

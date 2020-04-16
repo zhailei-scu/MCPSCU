@@ -64,6 +64,13 @@ module MCLIB_CONSTANTS
     integer, parameter::p_ATOMS_GROUPS_NUMBER = 4
     #endif
 
+    !***Some pre-define parameters for dynamic groups
+    #ifdef MAXFOCUSETIME
+    integer, parameter::p_MAX_FOCUSEDTIMEPOINTS = MAXFOCUSETIME
+    #else
+    integer, parameter::p_MAX_FOCUSEDTIMEPOINTS = 10
+    #endif
+
     character(len=1),parameter::p_ElementsTypeSpe = "@"
     character(len=1),parameter::p_ElementsNumSpe = "#"
     character(len=1),parameter::p_NumRangeSpe = "-"

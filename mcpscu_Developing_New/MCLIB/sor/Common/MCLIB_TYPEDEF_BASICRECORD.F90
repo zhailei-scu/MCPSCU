@@ -102,6 +102,8 @@ module MCLIB_TYPEDEF_BASICRECORD
         real(kind=KINDDF),private::LastRecordOutConfigTime = 0.D0
         integer,private::OutPutIndex = 0
 
+        logical,private::TriggerFocusedTimePoints = .false.
+
         contains
         procedure,NON_OVERRIDABLE,public,pass::InitSimulationRecord
         procedure,NON_OVERRIDABLE,public,pass::SetSimuSteps=>Set_SimuSteps
@@ -136,6 +138,10 @@ module MCLIB_TYPEDEF_BASICRECORD
         procedure,NON_OVERRIDABLE,public,pass::GetOutPutIndex=>Get_OutPutIndex
         procedure,NON_OVERRIDABLE,public,pass::SetOutPutIndex=>Set_OutPutIndex
         procedure,NON_OVERRIDABLE,public,pass::IncreaseOneOutPutIndex=>Increase_OneOutPutIndex
+
+
+        procedure,NON_OVERRIDABLE,public,pass::TurnOnTriggerFocusedTimePoints=>TurnOn_TriggerFocusedTimePoints
+        procedure,NON_OVERRIDABLE,public,pass::TurnOffTriggerFocusedTimePoints=>TurnOff_TriggerFocusedTimePoints
 
         !---abstract method---
         procedure(DefProc),pass,deferred,private::TheDefProc
@@ -181,6 +187,8 @@ module MCLIB_TYPEDEF_BASICRECORD
     private::Get_OutPutIndex
     private::Set_OutPutIndex
     private::Increase_OneOutPutIndex
+    private::TurnOn_TriggerFocusedTimePoints
+    private::TurnOff_TriggerFocusedTimePoints
 
     contains
 
@@ -504,6 +512,8 @@ module MCLIB_TYPEDEF_BASICRECORD
         this%LastRecordOutConfigTime = 0.D0
         this%OutPutIndex = 0
 
+        this%TriggerFocusedTimePoints = .false.
+
         return
     end subroutine InitSimulationRecord
 
@@ -761,6 +771,27 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine DefProc(this)
             implicit none
             CLASS(SimulationRecord)::this
+    end subroutine
+
+    !******************************************************
+    subroutine TurnOn_TriggerFocusedTimePoints(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord)::this
+
+        this%TriggerFocusedTimePoints = .true.
+        return
+    end subroutine
+
+
+    !*******************************************************
+    subroutine TurnOff_TriggerFocusedTimePoints(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord)::this
+
+        this%TriggerFocusedTimePoints = .false.
+
     end subroutine
 
 end module MCLIB_TYPEDEF_BASICRECORD
