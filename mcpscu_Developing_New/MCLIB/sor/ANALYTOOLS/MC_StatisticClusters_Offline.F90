@@ -860,6 +860,8 @@ module MC_StatisticClusters_Offline
 
             write(hFileOutEachBox, fmt="(130(A30,1x))")           "IBox",                          &
                                                                   "Time(s)",                       &
+                                                                  "ISTEP",                         &
+                                                                  "TStep(s)",                      &
                                                                   CCNum(1:p_NUMBER_OF_STATU),      &
                                                                   CCNum_SIA(1:p_NUMBER_OF_STATU),  &
                                                                   CCNum_Vac(1:p_NUMBER_OF_STATU),  &
@@ -870,6 +872,8 @@ module MC_StatisticClusters_Offline
 
 
             write(hFileOutTotalBox, fmt="(130(A30,1x))")          "Time(s)",                       &
+                                                                  "ISTEP",                         &
+                                                                  "TStep(s)",                      &
                                                                   CCNum(1:p_NUMBER_OF_STATU),      &
                                                                   CCNum_SIA(1:p_NUMBER_OF_STATU),  &
                                                                   CCNum_Vac(1:p_NUMBER_OF_STATU),  &
@@ -976,8 +980,11 @@ module MC_StatisticClusters_Offline
                 end if
             END DO
 
-            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")        IBox,                    &
+            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")               &
+                                                                                                                IBox,                                          &
                                                                                                                 Record%GetSimuTimes(),                         &
+                                                                                                                Record%GetSimuSteps(),                         &
+                                                                                                                Record%GetTimeSteps(),                         &
                                                                                                                 NCCountEachBox(1:p_NUMBER_OF_STATU),           &
                                                                                                                 NCCountEachBox_SIA(1:p_NUMBER_OF_STATU),       &
                                                                                                                 NCCountEachBox_Vac(1:p_NUMBER_OF_STATU),       &
@@ -999,7 +1006,10 @@ module MC_StatisticClusters_Offline
         END DO
 
 
-        write(hFileOutTotalBox,fmt="(1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")  Record%GetSimuTimes(),        &
+        write(hFileOutTotalBox,fmt="(1PE30.8,1x,I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")              &
+                                                                                                            Record%GetSimuTimes(),                  &
+                                                                                                            Record%GetSimuSteps(),                  &
+                                                                                                            Record%GetTimeSteps(),                  &
                                                                                                             NCCount(1:p_NUMBER_OF_STATU),           &
                                                                                                             NCCount_SIA(1:p_NUMBER_OF_STATU),       &
                                                                                                             NCCount_Vac(1:p_NUMBER_OF_STATU),       &

@@ -89,6 +89,7 @@ module MCLIB_TYPEDEF_BASICRECORD
         integer,private::SimulaitonSteps = 0
         integer,private::SimulationPatch = 1
         real(kind=KINDDF),private::SimulationTimes = 0.D0
+        real(kind=KINDDF),private::TimeStep = 0.D0
         integer,private::TimeSections = 1
 
         real(kind=KINDDF),private::LastUpdateStatisTime = 0.D0
@@ -113,6 +114,10 @@ module MCLIB_TYPEDEF_BASICRECORD
         procedure,NON_OVERRIDABLE,public,pass::SetSimuTimes=>Set_SimuTimes
         procedure,NON_OVERRIDABLE,public,pass::GetSimuTimes=>Get_SimuTimes
         procedure,NON_OVERRIDABLE,public,pass::AddSimuTimes=>Add_SimuTimes
+
+
+        procedure,NON_OVERRIDABLE,public,pass::SetTimeSteps=>Set_TimeSteps
+        procedure,NON_OVERRIDABLE,public,pass::GetTimeSteps=>Get_TimeSteps
 
         procedure,NON_OVERRIDABLE,public,pass::SetSimuPatch=>Set_SimuPatch
         procedure,NON_OVERRIDABLE,public,pass::GetSimuPatch=>Get_SimuPatch
@@ -171,6 +176,8 @@ module MCLIB_TYPEDEF_BASICRECORD
     private::Set_SimuTimes
     private::Get_SimuTimes
     private::Add_SimuTimes
+    private::Set_TimeSteps
+    private::Get_TimeSteps
     private::Set_SimuPatch
     private::Get_SimuPatch
     private::Set_TimeSections
@@ -558,6 +565,22 @@ module MCLIB_TYPEDEF_BASICRECORD
             implicit none
             CLASS(SimulationRecord)::this
             Get_SimuTimes = this%SimulationTimes
+    end function
+
+
+    !***************************************************
+    subroutine Set_TimeSteps(this,TimeStep)
+            implicit none
+            CLASS(SimulationRecord)::this
+            real(kind=KINDDF)::TimeStep
+            this%TimeStep = TimeStep
+    end subroutine
+
+    !***************************************************
+    real(kind=KINDDF) function Get_TimeSteps(this)
+            implicit none
+            CLASS(SimulationRecord)::this
+            Get_TimeSteps = this%TimeStep
     end function
 
     !*****************************************************

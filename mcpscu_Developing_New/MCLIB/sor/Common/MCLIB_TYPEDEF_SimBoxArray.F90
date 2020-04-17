@@ -2334,6 +2334,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     KEYWORD = "&ISTEP"
     write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuSteps()
 
+    KEYWORD = "&TSTEP"
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetTimeSteps()
+
     KEYWORD = "&IPATCH"
     write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuPatch()
 
@@ -2616,6 +2619,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case("&ISTEP")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
                 call SimuRecord%SetSimuSteps(ISTR(STRTMP(1)))
+
+            case("&TSTEP")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetTimeSteps(DRSTR(STRTMP(1)))
 
             case("&IPATCH")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
