@@ -48,6 +48,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      integer::TermTFlag = mp_TermTimeFlag_ByRealTime                    ! = 0 stans for by steps,flag = 1 by time(s)
      real::TermTValue = 3000                                            ! terminate time
 
+     integer::NFocusedTimePoint = 0
      real(kind=KINDDF),dimension(:),allocatable::FocusedTimePoints      ! the focused time points
 
 
@@ -261,12 +262,27 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%TermTValue = otherOne%TermTValue
 
     !***Focused time points**************
+    this%NFocusedTimePoint = otherOne%NFocusedTimePoint
+
     if(allocated(this%FocusedTimePoints)) deallocate(this%FocusedTimePoints)
     if(allocated(otherOne%FocusedTimePoints)) then
         if(size(otherOne%FocusedTimePoints) .GT. 0) then
-            allocate(this%FocusedTimePoints(size(otherOne%FocusedTimePoints)))
+
+            if(size(otherOne%FocusedTimePoints) .ne. otherOne%NFocusedTimePoint) then
+                write(*,*) "MCPSCURROR: It is seems like that the dimension of FocusedTimePoints is: ", size(otherOne%FocusedTimePoints)
+                write(*,*) "Bu the NFocusedTimePoint is : ",otherOne%NFocusedTimePoint
+                pause
+                stop
+            end if
+
+            allocate(this%FocusedTimePoints(otherOne%NFocusedTimePoint))
             this%FocusedTimePoints = otherOne%FocusedTimePoints
         end if
+    else if(otherOne%NFocusedTimePoint .GT. 0) then
+        write(*,*) "MCPSCUERROR: have not allocate the FocusedTimePoints, but NFocusedTimePoint greater than 0"
+        write(*,*) otherOne%NFocusedTimePoint
+        pause
+        stop
     end if
 
     !******************
@@ -363,6 +379,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%TermTFlag = mp_TermTimeFlag_ByRealTime
      this%TermTValue = 3000
 
+     this%NFocusedTimePoint = 0
      call DeAllocateOneDimd_Host(this%FocusedTimePoints,"this%FocusedTimePoints")
 
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
@@ -520,6 +537,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%TermTValue = 3000
 
      !*******Focused time point*****************
+     this%NFocusedTimePoint = 0
      call DeAllocateOneDimd_Host(this%FocusedTimePoints,"this%FocusedTimePoints")
 
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
@@ -1229,6 +1247,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 call AllocateOneDimd_Host(this%FocusedTimePoints,N,"FocusedTimePoints")
             end if
 
+            this%NFocusedTimePoint = N
+
             DO I = 1,N
                 this%FocusedTimePoints(I) = DRSTR(STRNUMB(I))
 
@@ -1250,7 +1270,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     stop
                 end if
             END DO
-
 
         case("&TSTEPSTRATEGY")
            call EXTRACT_NUMB(STR,2,N,STRNUMB)
@@ -1621,6 +1640,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
         !***Information about Time
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.4)") "Maxma simulation flag = , the time =",cursor%TermTFlag,cursor%TermTValue
+
+        write(hFile,fmt="('!',A70,'!',2x,I10)") "The focused time-points number is = ",cursor%NFocusedTimePoint
 
         if(allocated(cursor%FocusedTimePoints)) then
 

@@ -142,6 +142,7 @@ module MCLIB_TYPEDEF_BASICRECORD
 
         procedure,NON_OVERRIDABLE,public,pass::TurnOnTriggerFocusedTimePoints=>TurnOn_TriggerFocusedTimePoints
         procedure,NON_OVERRIDABLE,public,pass::TurnOffTriggerFocusedTimePoints=>TurnOff_TriggerFocusedTimePoints
+        procedure,NON_OVERRIDABLE,public,pass::GetStatusTriggerFocusedTimePoints=>Get_StatusTriggerFocusedTimePoints
 
         !---abstract method---
         procedure(DefProc),pass,deferred,private::TheDefProc
@@ -189,6 +190,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     private::Increase_OneOutPutIndex
     private::TurnOn_TriggerFocusedTimePoints
     private::TurnOff_TriggerFocusedTimePoints
+    private::Get_StatusTriggerFocusedTimePoints
 
     contains
 
@@ -793,5 +795,17 @@ module MCLIB_TYPEDEF_BASICRECORD
         this%TriggerFocusedTimePoints = .false.
 
     end subroutine
+
+    !*******************************************************
+    integer function Get_StatusTriggerFocusedTimePoints(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord)::this
+
+        Get_StatusTriggerFocusedTimePoints = this%TriggerFocusedTimePoints
+
+        return
+
+    end function
 
 end module MCLIB_TYPEDEF_BASICRECORD

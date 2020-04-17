@@ -1893,7 +1893,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         OutEachBoxStatistic = Record%WhetherOutSizeDist_EachBox(Host_SimuCtrlParam)
 
 
-        if(OutIntegralBoxStatistic .eq. .true. .or. OutEachBoxStatistic .eq. .true.) then
+        if(OutIntegralBoxStatistic .eq. .true. .or. OutEachBoxStatistic .eq. .true. .or. Record%GetStatusTriggerFocusedTimePoints() .eq. .true.) then
             call GetBoxesMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record)
 
             if(OutIntegralBoxStatistic .eq. .true.) then
@@ -1918,6 +1918,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 else if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalTimeMagnification) then
                     call Record%SetLastOutSizeDistTime_EachBox(Record%GetSimuTimes())
                 end if
+            end if
+
+            if(Record%GetStatusTriggerFocusedTimePoints() .eq. .true.) then
+                call PutOut_Instance_Statistic_IntegralBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record,Model=0)
+                call PutOut_Instance_Statistic_EachBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record)
             end if
 
         end if
@@ -1955,6 +1960,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call Record%SetLastRecordOutConfigTime(Record%GetSimuTimes())
             end if
+
+        else if(Record%GetStatusTriggerFocusedTimePoints() .eq. .true.) then
+                call Dev_Boxes%dm_ClusterInfo_GPU%CopyOutToHost(Host_Boxes%m_ClustersInfo_CPU,NC0,IfCpyNL=.false.)
+
+                call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
         end if
 
     end subroutine

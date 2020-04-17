@@ -32,6 +32,7 @@ module MIGCOALE_TIMECTL
         integer::NCActFree
         integer::NCActGB
         real(kind=KINDDF)::TSTEPFREE,TSTEPGB
+        integer::I
         !---Body---
 
         TSTEPFREE = 1.D32
@@ -113,6 +114,21 @@ module MIGCOALE_TIMECTL
         end select
 
         END ASSOCIATE
+
+
+        !***********Focused TimePoint*********************
+        call Record%TurnOffTriggerFocusedTimePoints()
+
+        DO I = 1,Host_SimuCtrlParam%NFocusedTimePoint
+            if( ((Record%GetSimuTimes() + TSTEP) .GE. Host_SimuCtrlParam%FocusedTimePoints(I)) .AND. &
+                Record%GetSimuTimes() .LT. Host_SimuCtrlParam%FocusedTimePoints(I) ) then
+
+                call Record%TurnOnTriggerFocusedTimePoints()
+
+                TSTEP = Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes()
+                exit
+            end if
+        END DO
 
         return
     end subroutine UpdateTimeStep_MigCoal
