@@ -313,6 +313,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record,Model=0)
                 call PutOut_Instance_Statistic_EachBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
 
+                if(Record%GetSimuTimes() .gt. Host_SimuCtrlParam%TermTValue) then
+                    exit
+                end if
+
                 write(*,*) "Start to rescale box..."
 
                 !dumplicate the simulation boxes
@@ -344,10 +348,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record,Model=0)
                 call PutOut_Instance_Statistic_EachBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
-
-                if(Record%GetSimuTimes() .gt. Host_SimuCtrlParam%TermTValue) then
-                    exit
-                end if
 
             END DO
         else
