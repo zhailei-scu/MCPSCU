@@ -640,21 +640,21 @@ module MCLIB_TYPEDEF_DiffusorPropList
 
             write(hFile,fmt="('!','The diffusor symbol =',A20,2x,  &
                               '!','CoefficentsGenerate way in free matrix=',I1,2x, &
-                              '!','DiffusionCiefficents value in free matrix =',1PE10.4,2x, &
-                              '!','PreFactor in free matrix = ',1PE10.4,2x, &
-                              '!','PreFactor parameter in free matrix = ',1PE10.4,2x, &
-                              '!','ActEnergy in free matrix = ',1PE10.4,2x, &
+                              '!','DiffusionCiefficents value in free matrix =',1PE10.8,2x, &
+                              '!','PreFactor in free matrix = ',1PE10.8,2x, &
+                              '!','PreFactor parameter in free matrix = ',1PE10.8,2x, &
+                              '!','ActEnergy in free matrix = ',1PE10.8,2x, &
                               '!','Diffuse direction way = ',I1,2x, &
-                              '!','Diffuse direction = ',3(1PE10.4,2x), &
+                              '!','Diffuse direction = ',3(1PE10.8,2x), &
                               '!','ECR Generate way in free matrix =',I1,2x, &
-                              '!','ECR Value in free matrix =',1PE10.4, &
+                              '!','ECR Value in free matrix =',1PE10.8, &
                               '!','CoefficentsGenerate way in GB =',I1,2x, &
-                              '!','DiffusionCiefficents value in GB =',1PE10.4,2x, &
-                              '!','PreFactor in GB = ',1PE10.4,2x, &
-                              '!','PreFactor parameter in GB = ',1PE10.4,2x, &
-                              '!','ActEnergy in GB = ',1PE10.4,2x, &
+                              '!','DiffusionCiefficents value in GB =',1PE10.8,2x, &
+                              '!','PreFactor in GB = ',1PE10.8,2x, &
+                              '!','PreFactor parameter in GB = ',1PE10.8,2x, &
+                              '!','ActEnergy in GB = ',1PE10.8,2x, &
                               '!','ECR Generate way in GB =',I1,2x, &
-                              '!','ECR Value in GB =',1PE10.4)")      cursor%Diffusor%symbol, &
+                              '!','ECR Value in GB =',1PE10.8)")      cursor%Diffusor%symbol, &
                                                                       cursor%Diffusor%DiffusorValueType_Free, &
                                                                       cursor%Diffusor%DiffuseCoefficient_Free_Value,  &
                                                                       cursor%Diffusor%PreFactor_Free, &
@@ -695,21 +695,21 @@ module MCLIB_TYPEDEF_DiffusorPropList
 
                     write(hFile,fmt="('! |--','The diffusor symbol =',A20,2x,  &
                                       '!','CoefficentsGenerate way in free matrix =',I1,2x, &
-                                      '!','DiffusionCiefficents value in free matrix =',1PE10.4,2x, &
-                                      '!','PreFactor in free matrix = ',1PE10.4,2x, &
-                                      '!','PreFactor parameter in free matrix = ',1PE10.4,2x, &
-                                      '!','ActEnergy in free matrix = ',1PE10.4,2x, &
+                                      '!','DiffusionCiefficents value in free matrix =',1PE10.8,2x, &
+                                      '!','PreFactor in free matrix = ',1PE10.8,2x, &
+                                      '!','PreFactor parameter in free matrix = ',1PE10.8,2x, &
+                                      '!','ActEnergy in free matrix = ',1PE10.8,2x, &
                                       '!','Diffuse direction way = ',I1,2x, &
-                                      '!','Diffuse direction = ',3(1PE10.4,2x), &
+                                      '!','Diffuse direction = ',3(1PE10.8,2x), &
                                       '!','ECR Generate way in free matrix =',I1,2x, &
-                                      '!','ECR Value in free matrix =',1PE10.4,&
+                                      '!','ECR Value in free matrix =',1PE10.8,&
                                       '!','CoefficentsGenerate way in GB =',I1,2x, &
-                                      '!','DiffusionCiefficents value in GB =',1PE10.4,2x, &
-                                      '!','PreFactor in GB = ',1PE10.4,2x, &
-                                      '!','PreFactor parameter in GB = ',1PE10.4,2x, &
-                                      '!','ActEnergy in GB = ',1PE10.4,2x, &
+                                      '!','DiffusionCiefficents value in GB =',1PE10.8,2x, &
+                                      '!','PreFactor in GB = ',1PE10.8,2x, &
+                                      '!','PreFactor parameter in GB = ',1PE10.8,2x, &
+                                      '!','ActEnergy in GB = ',1PE10.8,2x, &
                                       '!','ECR Generate way in GB =',I1,2x, &
-                                      '!','ECR Value in GB =',1PE10.4)")       symbol,                                  &
+                                      '!','ECR Value in GB =',1PE10.8)")       symbol,                                  &
                                                                                TheValue%DiffusorValueType_Free,         &
                                                                                TheValue%DiffuseCoefficient_Free_Value,  &
                                                                                TheValue%PreFactor_Free,                 &

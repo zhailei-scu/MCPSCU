@@ -488,7 +488,7 @@ module MC_GenerateCascadeBox
 
         DO IC = 1,NSIAClusterEachBox
             Distance = DSQRT(sum((ClustersArraySIA(IC)%POS - CentPosSIA)**2))
-            write(hFileOutSIA,fmt="(3(I14,1x),4(1PE14.6,1x),I14)") IBox,Index_SIAConfig,IC,ClustersArraySIA(IC)%POS,Distance,NAtomEachClusterSIA(IC)
+            write(hFileOutSIA,fmt="(3(I14,1x),4(1PE14.8,1x),I14)") IBox,Index_SIAConfig,IC,ClustersArraySIA(IC)%POS,Distance,NAtomEachClusterSIA(IC)
 
             if(TheMDStatistic%MaxDistanceSIA_ToCent .LE. Distance) then
                 TheMDStatistic%MaxDistanceSIA_ToCent = Distance
@@ -541,7 +541,7 @@ module MC_GenerateCascadeBox
 
         DO IC = 1,NVACClusterEachBox
             Distance = DSQRT(sum((ClustersArrayVAC(IC)%POS - CentPosVAC)**2))
-            write(hFileOutVAC,fmt="(3(I14,1x),4(1PE14.6,1x),I14)") IBox,Index_VACConfig,IC,ClustersArrayVAC(IC)%POS,Distance,NAtomEachClusterVAC(IC)
+            write(hFileOutVAC,fmt="(3(I14,1x),4(1PE14.8,1x),I14)") IBox,Index_VACConfig,IC,ClustersArrayVAC(IC)%POS,Distance,NAtomEachClusterVAC(IC)
 
             if(TheMDStatistic%MaxDistanceVAC_ToCent .LE. Distance) then
                 TheMDStatistic%MaxDistanceVAC_ToCent = Distance
@@ -579,7 +579,7 @@ module MC_GenerateCascadeBox
 
         DO IC = 1,NSIAClusterEachBox
             Distance = DSQRT(sum((ClustersArraySIA(IC)%POS - CentPosMIX)**2))
-            write(hFileOutMIX,fmt="(3(I14,1x),4(1PE14.6,1x),I14)") IBox,Index_SIAConfig,IC,ClustersArraySIA(IC)%POS,Distance,NAtomEachClusterSIA(IC)
+            write(hFileOutMIX,fmt="(3(I14,1x),4(1PE14.8,1x),I14)") IBox,Index_SIAConfig,IC,ClustersArraySIA(IC)%POS,Distance,NAtomEachClusterSIA(IC)
 
             if(TheMDStatistic%MaxDistanceMIX_ToCent .LE. Distance) then
                 TheMDStatistic%MaxDistanceMIX_ToCent = Distance
@@ -614,7 +614,7 @@ module MC_GenerateCascadeBox
 
         DO IC = 1,NVACClusterEachBox
             Distance = DSQRT(sum((ClustersArrayVAC(IC)%POS - CentPosMIX)**2))
-            write(hFileOutMIX,fmt="(3(I14,1x),4(1PE14.6,1x),I14)") IBox,Index_VACConfig,IC,ClustersArrayVAC(IC)%POS,Distance,NAtomEachClusterVAC(IC)
+            write(hFileOutMIX,fmt="(3(I14,1x),4(1PE14.8,1x),I14)") IBox,Index_VACConfig,IC,ClustersArrayVAC(IC)%POS,Distance,NAtomEachClusterVAC(IC)
 
             if(TheMDStatistic%MaxDistanceMIX_ToCent .LE. Distance) then
                 TheMDStatistic%MaxDistanceMIX_ToCent = Distance
@@ -979,21 +979,21 @@ module MC_GenerateCascadeBox
     END DO
 
 
-    write(hFileOutSIA,fmt="(A,1x,1PE14.6)") "&MINDISTANCE_ToCent_SIA",TheMDStatistic%MinDistanceSIA_ToCent
-    write(hFileOutVAC,fmt="(A,1x,1PE14.6)") "&MINDISTANCE_ToCent_VAC",TheMDStatistic%MinDistanceVAC_ToCent
-    write(hFileOutMIX,fmt="(A,1x,1PE14.6)") "&MINDISTANCE_ToCent_MIX",TheMDStatistic%MinDistanceMIX_ToCent
-    write(hFileOutSIA,fmt="(A,1x,1PE14.6)") "&MAXDISTANCE_ToCent_SIA",TheMDStatistic%MaxDistanceSIA_ToCent
-    write(hFileOutVAC,fmt="(A,1x,1PE14.6)") "&MAXDISTANCE_ToCent_VAC",TheMDStatistic%MaxDistanceVAC_ToCent
-    write(hFileOutMIX,fmt="(A,1x,1PE14.6)") "&MAXDISTANCE_ToCent_MIX",TheMDStatistic%MaxDistanceMIX_ToCent
+    write(hFileOutSIA,fmt="(A,1x,1PE14.8)") "&MINDISTANCE_ToCent_SIA",TheMDStatistic%MinDistanceSIA_ToCent
+    write(hFileOutVAC,fmt="(A,1x,1PE14.8)") "&MINDISTANCE_ToCent_VAC",TheMDStatistic%MinDistanceVAC_ToCent
+    write(hFileOutMIX,fmt="(A,1x,1PE14.8)") "&MINDISTANCE_ToCent_MIX",TheMDStatistic%MinDistanceMIX_ToCent
+    write(hFileOutSIA,fmt="(A,1x,1PE14.8)") "&MAXDISTANCE_ToCent_SIA",TheMDStatistic%MaxDistanceSIA_ToCent
+    write(hFileOutVAC,fmt="(A,1x,1PE14.8)") "&MAXDISTANCE_ToCent_VAC",TheMDStatistic%MaxDistanceVAC_ToCent
+    write(hFileOutMIX,fmt="(A,1x,1PE14.8)") "&MAXDISTANCE_ToCent_MIX",TheMDStatistic%MaxDistanceMIX_ToCent
 
-    write(hFileOutSIA,fmt="(A,1x,1PE14.6)") "&MinDistanceSIA_BetweenCluster",TheMDStatistic%MinDistanceSIA_BetweenCluster
-    write(hFileOutVAC,fmt="(A,1x,1PE14.6)") "&MinDistanceVAC_BetweenCluster",TheMDStatistic%MinDistanceVAC_BetweenCluster
-    write(hFileOutMIX,fmt="(A,1x,1PE14.6)") "&MinDistanceMIX_BetweenCluster",TheMDStatistic%MinDistanceMIX_BetweenCluster
-    write(hFileOutSIAToVAC,fmt="(A,1x,1PE14.6)") "&MinDistanceSIAToVAC_BetweenCluster",TheMDStatistic%MinDistanceSIAToVAC_BetweenCluster
-    write(hFileOutSIA,fmt="(A,1x,1PE14.6)") "&MaxDistanceSIA_BetweenCluster",TheMDStatistic%MaxDistanceSIA_BetweenCluster
-    write(hFileOutVAC,fmt="(A,1x,1PE14.6)") "&MaxDistanceVAC_BetweenCluster",TheMDStatistic%MaxDistanceVAC_BetweenCluster
-    write(hFileOutMIX,fmt="(A,1x,1PE14.6)") "&MaxDistanceMIX_BetweenCluster",TheMDStatistic%MaxDistanceMIX_BetweenCluster
-    write(hFileOutSIAToVAC,fmt="(A,1x,1PE14.6)") "&MaxDistanceSIAToVAC_BetweenCluster",TheMDStatistic%MaxDistanceSIAToVAC_BetweenCluster
+    write(hFileOutSIA,fmt="(A,1x,1PE14.8)") "&MinDistanceSIA_BetweenCluster",TheMDStatistic%MinDistanceSIA_BetweenCluster
+    write(hFileOutVAC,fmt="(A,1x,1PE14.8)") "&MinDistanceVAC_BetweenCluster",TheMDStatistic%MinDistanceVAC_BetweenCluster
+    write(hFileOutMIX,fmt="(A,1x,1PE14.8)") "&MinDistanceMIX_BetweenCluster",TheMDStatistic%MinDistanceMIX_BetweenCluster
+    write(hFileOutSIAToVAC,fmt="(A,1x,1PE14.8)") "&MinDistanceSIAToVAC_BetweenCluster",TheMDStatistic%MinDistanceSIAToVAC_BetweenCluster
+    write(hFileOutSIA,fmt="(A,1x,1PE14.8)") "&MaxDistanceSIA_BetweenCluster",TheMDStatistic%MaxDistanceSIA_BetweenCluster
+    write(hFileOutVAC,fmt="(A,1x,1PE14.8)") "&MaxDistanceVAC_BetweenCluster",TheMDStatistic%MaxDistanceVAC_BetweenCluster
+    write(hFileOutMIX,fmt="(A,1x,1PE14.8)") "&MaxDistanceMIX_BetweenCluster",TheMDStatistic%MaxDistanceMIX_BetweenCluster
+    write(hFileOutSIAToVAC,fmt="(A,1x,1PE14.8)") "&MaxDistanceSIAToVAC_BetweenCluster",TheMDStatistic%MaxDistanceSIAToVAC_BetweenCluster
 
 
     write(hFileOutSIA,fmt="(A)") "&DISTANCE"
@@ -1014,7 +1014,7 @@ module MC_GenerateCascadeBox
         TheMDStatistic%BinSIA_ToCenterArray(I) = TheMDStatistic%BinWidthSIA_ToCenter*(I - 0.5D0) + TheMDStatistic%MinDistanceSIA_ToCent
         TheMDStatistic%BinSIA_BetweenClusterArray(I) = TheMDStatistic%BinWidthSIA_BetweenCluster*(I - 0.5D0) + TheMDStatistic%MinDistanceSIA_BetweenCluster
 
-        write(hFileOutSIA,fmt="(4(1PE14.6,1x))") TheMDStatistic%BinSIA_ToCenterArray(I), &
+        write(hFileOutSIA,fmt="(4(1PE14.8,1x))") TheMDStatistic%BinSIA_ToCenterArray(I), &
                                                 TheMDStatistic%ToCent_DistSIA(I),&
                                                 TheMDStatistic%BinSIA_BetweenClusterArray(I),&
                                                 TheMDStatistic%ClusterGap_DistSIA(I)
@@ -1028,7 +1028,7 @@ module MC_GenerateCascadeBox
         TheMDStatistic%BinVAC_ToCenterArray(I) = TheMDStatistic%BinWidthVAC_ToCenter*(I - 0.5D0) + TheMDStatistic%MinDistanceVAC_ToCent
         TheMDStatistic%BinVAC_BetweenClusterArray(I) = TheMDStatistic%BinWidthVAC_BetweenCluster*(I - 0.5D0) + TheMDStatistic%MinDistanceVAC_BetweenCluster
 
-        write(hFileOutVAC,fmt="(4(1PE14.6,1x))") TheMDStatistic%BinVAC_ToCenterArray(I), &
+        write(hFileOutVAC,fmt="(4(1PE14.8,1x))") TheMDStatistic%BinVAC_ToCenterArray(I), &
                                                 TheMDStatistic%ToCent_DistVAC(I),&
                                                 TheMDStatistic%BinVAC_BetweenClusterArray(I),&
                                                 TheMDStatistic%ClusterGap_DistVAC(I)
@@ -1039,7 +1039,7 @@ module MC_GenerateCascadeBox
     DO I = 1,BinNum
         TheMDStatistic%BinSIAToVAC_BetweenClusterArray(I) = TheMDStatistic%BinWidthSIAToVAC_BetweenCluster*(I - 0.5D0) + TheMDStatistic%MinDistanceSIAToVAC_BetweenCluster
 
-        write(hFileOutSIAToVAC,fmt="(2(1PE14.6,1x))") TheMDStatistic%BinSIAToVAC_BetweenClusterArray(I), &
+        write(hFileOutSIAToVAC,fmt="(2(1PE14.8,1x))") TheMDStatistic%BinSIAToVAC_BetweenClusterArray(I), &
                                                      TheMDStatistic%ClusterGap_SIAToVAC(I)
     END DO
 
@@ -1051,7 +1051,7 @@ module MC_GenerateCascadeBox
         TheMDStatistic%BinMIX_ToCenterArray(I) = TheMDStatistic%BinWidthMIX_ToCenter*(I - 0.5D0) + TheMDStatistic%MinDistanceMIX_ToCent
         TheMDStatistic%BinMIX_BetweenClusterArray(I) = TheMDStatistic%BinWidthMIX_BetweenCluster*(I - 0.5D0) + TheMDStatistic%MinDistanceMIX_BetweenCluster
 
-        write(hFileOutMIX,fmt="(4(1PE14.6,1x))") TheMDStatistic%BinMIX_ToCenterArray(I), &
+        write(hFileOutMIX,fmt="(4(1PE14.8,1x))") TheMDStatistic%BinMIX_ToCenterArray(I), &
                                                 TheMDStatistic%ToCent_DistMIX(I),&
                                                 TheMDStatistic%BinMIX_BetweenClusterArray(I), &
                                                 TheMDStatistic%ClusterGap_DistMIX(I)
@@ -1097,21 +1097,21 @@ module MC_GenerateCascadeBox
     TheMDStatistic%NAtomSIA = TheMDStatistic%NAtomSIA/TheMDStatistic%TotalCountSIA_NAtom
     DO IC = TheMDStatistic%MinSIANumEachCluster,TheMDStatistic%MaxSIANumEachCluster
         TheMDStatistic%BinSIA_NAtomArray(IC-TheMDStatistic%MinSIANumEachCluster+1) = IC
-        write(hFileOutSIA,fmt="(I14,1x,1PE14.6,1x)") TheMDStatistic%BinSIA_NAtomArray(IC-TheMDStatistic%MinSIANumEachCluster+1),TheMDStatistic%NAtomSIA(IC-TheMDStatistic%MinSIANumEachCluster+1)
+        write(hFileOutSIA,fmt="(I14,1x,1PE14.8,1x)") TheMDStatistic%BinSIA_NAtomArray(IC-TheMDStatistic%MinSIANumEachCluster+1),TheMDStatistic%NAtomSIA(IC-TheMDStatistic%MinSIANumEachCluster+1)
     END DO
 
     TheMDStatistic%TotalCountVAC_NAtom = sum(TheMDStatistic%NAtomVAC)
     TheMDStatistic%NAtomVAC = TheMDStatistic%NAtomVAC/TheMDStatistic%TotalCountVAC_NAtom
     DO IC = TheMDStatistic%MinVACNumEachCluster,TheMDStatistic%MaxVACNumEachCluster
         TheMDStatistic%BinVAC_NAtomArray(IC-TheMDStatistic%MinVACNumEachCluster+1) = IC
-        write(hFileOutVAC,fmt="(I14,1x,1PE14.6,1x)") TheMDStatistic%BinVAC_NAtomArray(IC-TheMDStatistic%MinVACNumEachCluster+1),TheMDStatistic%NAtomVAC(IC-TheMDStatistic%MinVACNumEachCluster+1)
+        write(hFileOutVAC,fmt="(I14,1x,1PE14.8,1x)") TheMDStatistic%BinVAC_NAtomArray(IC-TheMDStatistic%MinVACNumEachCluster+1),TheMDStatistic%NAtomVAC(IC-TheMDStatistic%MinVACNumEachCluster+1)
     END DO
 
     TheMDStatistic%TotalCountMIX_NAtom = sum(TheMDStatistic%NAtomMIX)
     TheMDStatistic%NAtomMIX = TheMDStatistic%NAtomMIX/TheMDStatistic%TotalCountMIX_NAtom
     DO IC = TheMDStatistic%MinMIXNumEachCluster,TheMDStatistic%MaxMIXNumEachCluster
         TheMDStatistic%BinMIX_NAtomArray(IC-TheMDStatistic%MinMIXNumEachCluster+1) = IC
-        write(hFileOutMIX,fmt="(I14,1x,1PE14.6,1x)") TheMDStatistic%BinMIX_NAtomArray(IC-TheMDStatistic%MinMIXNumEachCluster+1),TheMDStatistic%NAtomMIX(IC-TheMDStatistic%MinMIXNumEachCluster+1)
+        write(hFileOutMIX,fmt="(I14,1x,1PE14.8,1x)") TheMDStatistic%BinMIX_NAtomArray(IC-TheMDStatistic%MinMIXNumEachCluster+1),TheMDStatistic%NAtomMIX(IC-TheMDStatistic%MinMIXNumEachCluster+1)
     END DO
 
 

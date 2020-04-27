@@ -2005,7 +2005,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Concentrate = NCAct/(MultiBox*Host_Boxes%BOXVOLUM)
 
-                write(Record%HSizeStatistic_TotalBox, fmt="(I20,1x,2(1PE20.8,1x),10(I20,1x),17(1PE20.4,1x),8(I20,1x))") Record%GetSimuSteps(),             &
+                write(Record%HSizeStatistic_TotalBox, fmt="(I20,1x,2(1PE20.8,1x),10(I20,1x),17(1PE20.8,1x),8(I20,1x))") Record%GetSimuSteps(),             &
                                                                                                            Record%GetSimuTimes(),                          &
                                                                                                            Record%GetTimeSteps(),                          &
                                                                                                            NCAct,                                          &
@@ -2070,7 +2070,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 RMIN = min(RMIN,TMigStatInfo%RMIN(p_ACTIVEINGB_STATU))
             end if
 
-            write(6, fmt= "(I15,1x,2(1PE15.8,1x),3(I15,1x),I15,1x,130(1PE15.4,1x))")   Record%GetSimuSteps(),                                                                &
+            write(6, fmt= "(I15,1x,2(1PE15.8,1x),3(I15,1x),I15,1x,130(1PE15.8,1x))")   Record%GetSimuSteps(),                                                                &
                                                                                     Record%GetSimuTimes(),                                                                   &
                                                                                     Record%GetTimeSteps(),                                                                   &
                                                                                     TBasicInfo%NC(p_ACTIVEFREE_STATU),                                                       &
@@ -2124,7 +2124,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Concentrate = NCAct/Host_Boxes%BOXVOLUM
 
-                write(Record%HSizeStatistic_EachBox,fmt="(2(I20,1x),2(1PE20.8,1x),10(I20,1x),17(1PE20.4,1x),8(I20,1x))") Record%GetSimuSteps(),               &
+                write(Record%HSizeStatistic_EachBox,fmt="(2(I20,1x),2(1PE20.8,1x),10(I20,1x),17(1PE20.8,1x),8(I20,1x))") Record%GetSimuSteps(),               &
                                                                                                              IBox,                                            &
                                                                                                              Record%GetSimuTimes(),                           &
                                                                                                              Record%GetTimeSteps(),                           &
