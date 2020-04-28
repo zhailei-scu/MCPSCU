@@ -2070,7 +2070,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 RMIN = min(RMIN,TMigStatInfo%RMIN(p_ACTIVEINGB_STATU))
             end if
 
-            write(6, fmt= "(I15,1x,2(1PE15.8,1x),3(I15,1x),I15,1x,130(1PE15.8,1x))")   Record%GetSimuSteps(),                                                                &
+            write(6, fmt= "(I15,1x,2(1PE16.8,1x),3(I15,1x),I15,1x,130(1PE16.8,1x))")   Record%GetSimuSteps(),                                                                &
                                                                                     Record%GetSimuTimes(),                                                                   &
                                                                                     Record%GetTimeSteps(),                                                                   &
                                                                                     TBasicInfo%NC(p_ACTIVEFREE_STATU),                                                       &

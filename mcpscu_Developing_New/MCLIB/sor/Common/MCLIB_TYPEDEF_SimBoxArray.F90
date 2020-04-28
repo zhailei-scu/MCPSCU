@@ -301,8 +301,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Body---
 
     write(hFile,*) "!****************Siumation Boxes file information***********************"
-    write(hFile,fmt="('!',A70,'!',2x,1PE14.8)") "Simulation Box lattice length(cm) =",this%LatticeLength
-    write(hFile,fmt="('!',A70,'!',2x,3(1PE14.8,2x))") "Simulation Box size(cm) =",this%BOXSIZE
+    write(hFile,fmt="('!',A70,'!',2x,1PE16.8)") "Simulation Box lattice length(cm) =",this%LatticeLength
+    write(hFile,fmt="('!',A70,'!',2x,3(1PE16.8,2x))") "Simulation Box size(cm) =",this%BOXSIZE
 
     atomsListCursor=>this%Atoms_list
 
@@ -310,7 +310,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         DO While(associated(atomsListCursor))
             write(hFile,fmt="('!',A30,I10,2x,'!',A30,I10)") "------The atom inner index = ",atomsListCursor%m_Atom%m_ID,&
                                                             "------The number of atoms = ",atomsListCursor%m_AtomsNumber
-            write(hFile,fmt="('!',A30,A10,2x,'!',A30,I10,2(2x,A30,1PE14.8))") "The atom symbol = ",atomsListCursor%m_Atom%m_Symbol, &
+            write(hFile,fmt="('!',A30,A10,2x,'!',A30,I10,2(2x,A30,1PE16.8))") "The atom symbol = ",atomsListCursor%m_Atom%m_Symbol, &
                                                                              "The element index = ",atomsListCursor%m_Atom%m_ElementIndex, &
                                                                              "The element mass = ",atomsListCursor%m_Atom%m_AtomMass, &
                                                                              "The atomic m_Volum(cm^3) = ",atomsListCursor%m_Atom%m_Volum
@@ -320,7 +320,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     write(hFile,fmt="('!',A70,'!',2x,A10)") "Simulation Box Matrix symbol =",this%MatrixAtom%m_Symbol
 
-    write(hFile,fmt="('!',A70,'!',2x,1PE14.8)") "Simulation Box Matrix atom volum(cm^3) =",this%MatrixAtom%m_Volum
+    write(hFile,fmt="('!',A70,'!',2x,1PE16.8)") "Simulation Box Matrix atom volum(cm^3) =",this%MatrixAtom%m_Volum
 
 
     diffusorListCursor=>this%ReadDiffusorProp_List
@@ -329,21 +329,21 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             write(hFile,fmt="('!','The diffusor symbol = ',A20,2x,  &
                               '!','CoefficentsGenerate way in free matrix =',I1,2x, &
-                              '!','DiffusionCiefficents value in free matrix =',1PE14.8,2x, &
-                              '!','PreFactor in free matrix = ',1PE14.8,2x, &
-                              '!','PreFactor parameter in free matrix = ',1PE14.8,2x, &
-                              '!','ActEnergy in free matrix = ',1PE14.8,2x, &
+                              '!','DiffusionCiefficents value in free matrix =',1PE16.8,2x, &
+                              '!','PreFactor in free matrix = ',1PE16.8,2x, &
+                              '!','PreFactor parameter in free matrix = ',1PE16.8,2x, &
+                              '!','ActEnergy in free matrix = ',1PE16.8,2x, &
                               '!','Diffuse direction way = ',I1,2x, &
-                              '!','Diffuse direction = ',3(1PE14.8,2x), &
+                              '!','Diffuse direction = ',3(1PE16.8,2x), &
                               '!','ECR Generate way in free matrix = ',I1,2x, &
-                              '!','ECR Value in free matrix = ',1PE14.8,&
+                              '!','ECR Value in free matrix = ',1PE16.8,&
                               '!','CoefficentsGenerate way in GB =',I1,2x, &
-                              '!','DiffusionCiefficents value in GB =',1PE14.8,2x, &
-                              '!','PreFactor in GB = ',1PE14.8,2x, &
-                              '!','PreFactor parameter in GB = ',1PE14.8,2x, &
-                              '!','ActEnergy in GB = ',1PE14.8,2x, &
+                              '!','DiffusionCiefficents value in GB =',1PE16.8,2x, &
+                              '!','PreFactor in GB = ',1PE16.8,2x, &
+                              '!','PreFactor parameter in GB = ',1PE16.8,2x, &
+                              '!','ActEnergy in GB = ',1PE16.8,2x, &
                               '!','ECR Generate way in GB = ',I1,2x, &
-                              '!','ECR Value in GB = ',1PE14.8)")              diffusorListCursor%Diffusor%symbol, &
+                              '!','ECR Value in GB = ',1PE16.8)")              diffusorListCursor%Diffusor%symbol, &
                                                                                diffusorListCursor%Diffusor%DiffusorValueType_Free, &
                                                                                diffusorListCursor%Diffusor%DiffuseCoefficient_Free_Value,  &
                                                                                diffusorListCursor%Diffusor%PreFactor_Free, &
@@ -2349,14 +2349,14 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(hFile, FMT="(A,1x,A25,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"lattice length(in A):",this%LatticeLength*C_CM2AM
 
     KEYWORD = "&BOXLOW"
-    write(hFile, FMT="(A,1x,8x,A15,2x,1x,3(1PE14.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),                &
+    write(hFile, FMT="(A,1x,8x,A15,2x,1x,3(1PE16.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),                &
                                                            "(in LU):",                                 &
                                                            this%BoxBoundary(1,1)/this%LatticeLength,   &
                                                            this%BoxBoundary(2,1)/this%LatticeLength,   &
                                                            this%BoxBoundary(3,1)/this%LatticeLength
 
     KEYWORD = "&BOXSIZE"
-    write(hFile, FMT="(A,1x,7x,A15,1x,1x,3(1PE14.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),           &
+    write(hFile, FMT="(A,1x,7x,A15,1x,1x,3(1PE16.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),           &
                                                            "(in LU):",                            &
                                                            this%BOXSIZE(1)/this%LatticeLength,    &
                                                            this%BOXSIZE(2)/this%LatticeLength,    &
@@ -2367,7 +2367,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(hFile,FMT="(A,1x,8x,4(A14,1x))")  "!","Seed ID", "x(LU)", "y(LU)", "z(LU)"
     KEYWORD = "&SEEDDATA"
     Do ISeed = 1,this%m_GrainBoundary%GrainNum
-        write(hFile,fmt="(A,1x,I14, 1x, 3(1PE14.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),ISeed,this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3)/this%LatticeLength
+        write(hFile,fmt="(A,1x,I14, 1x, 3(1PE16.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),ISeed,this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3)/this%LatticeLength
     End Do
 
 !    CNUM = ""
@@ -2434,7 +2434,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(hFile,FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),"IBox", "Layer","GBSeed1","GBSeed2","Statu","Record1","Record2","x(LU)","y(LU)","z(LU)",AtomsStr(1:ElementsKind)
 
     CFormat = ""
-    CFormat = "(A,1x,7(I15, 1x),3(1PE15.8, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x))"
+    CFormat = "(A,1x,7(I15, 1x),3(1PE16.8, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x))"
     DO IBox = 1,MultiBox
         ICFROM = this%m_BoxesInfo%SEUsedIndexBox(IBox,1)
         ICTO   = this%m_BoxesInfo%SEUsedIndexBox(IBox,2)

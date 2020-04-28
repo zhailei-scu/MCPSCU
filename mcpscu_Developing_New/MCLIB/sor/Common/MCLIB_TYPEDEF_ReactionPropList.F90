@@ -708,14 +708,14 @@ module MCLIB_TYPEDEF_ReactionPropList
             write(hFile,fmt="('!','The reaction subject symbol =',A30,2x,  &
                               '!','The reaction object symbol =',A30,2x,  &
                               '!','CoefficentsGenerate way =',I1,2x, &
-                              '!','Reaction Coefficents value =',1PE14.8,2x, &
-                              '!','PreFactor = ',1PE14.8,2x, &
-                              '!','ActEnergy = ',1PE14.8,2x, &
+                              '!','Reaction Coefficents value =',1PE16.8,2x, &
+                              '!','PreFactor = ',1PE16.8,2x, &
+                              '!','ActEnergy = ',1PE16.8,2x, &
                               '!','Production type = ',I1,2x, &
                               '!','SubjectElement = ',A10,2x, &
                               '!','ObjectElement = ',A10,2x, &
                               '!','ECR Generate way =',I1,2x, &
-                              '!','ECR Value =',1PE14.8)")                     cursor%Reaction%SubjectSymbol, &
+                              '!','ECR Value =',1PE16.8)")                     cursor%Reaction%SubjectSymbol, &
                                                                                cursor%Reaction%ObjectSymbol, &
                                                                                cursor%Reaction%ReactionCoefficientType, &
                                                                                cursor%Reaction%ReactionCoefficient_Value,  &
@@ -763,14 +763,14 @@ module MCLIB_TYPEDEF_ReactionPropList
                         write(hFile,fmt="('! |--','The subject symbol =',A30,2x,  &
                                           '!','The object symbol =',A30,2x,  &
                                           '!','CoefficentsGenerate way =',I1,2x, &
-                                          '!','Reaction Coefficents value =',1PE14.8,2x, &
-                                          '!','PreFactor = ',1PE14.8,2x, &
-                                          '!','ActEnergy = ',1PE14.8,2x, &
+                                          '!','Reaction Coefficents value =',1PE16.8,2x, &
+                                          '!','PreFactor = ',1PE16.8,2x, &
+                                          '!','ActEnergy = ',1PE16.8,2x, &
                                           '!','Production type = ',I1,2x, &
                                           '!','SubjectElement_Index = ',I10,2x, &
                                           '!','ObjectElement_Index = ',I10,2x, &
                                           '!','ECR Generate way =',I1,2x, &
-                                          '!','ECR Value =',1PE14.8)")         SubjectSymbol,                       &
+                                          '!','ECR Value =',1PE16.8)")         SubjectSymbol,                       &
                                                                                ObjectSymbol,                        &
                                                                                TheValue%ReactionCoefficientType,    &
                                                                                TheValue%ReactionCoefficient_Value,  &
