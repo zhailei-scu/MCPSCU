@@ -1620,7 +1620,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     DO while(associated(cursor))
         write(hFile,fmt="('*******************SubSection #: ',I10)") ISect
 
-        write(hFile,fmt="('!',A70,'!',2x,1PE10.8)") "SYSTEM SIMULATION TEMPERATURE =",cursor%TEMP
+        write(hFile,fmt="('!',A70,'!',2x,1PE14.8)") "SYSTEM SIMULATION TEMPERATURE =",cursor%TEMP
 
         write(hFile,fmt="('!',A70,'!',2x,3I10)") "PERIDIC condition =",cursor%PERIOD
 
@@ -1631,15 +1631,15 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
         write(hFile,fmt="('!',A70,'!',2x,I10)") "The parameter determine the way to update neighbor-List =",cursor%NEIGHBORUPDATESTRATEGY
 
-        write(hFile,fmt="('!',A70,'!',2x,1PE10.8)") "The parameter determine when the neighbore list to be updated =",cursor%NEIGHBORUPDATE
+        write(hFile,fmt="('!',A70,'!',2x,1PE14.8)") "The parameter determine when the neighbore list to be updated =",cursor%NEIGHBORUPDATE
 
-        write(hFile,fmt="('!',A70,'!',2x,1PE10.8)") "The cut-off region expand =",cursor%CUTREGIONEXTEND
+        write(hFile,fmt="('!',A70,'!',2x,1PE14.8)") "The cut-off region expand =",cursor%CUTREGIONEXTEND
 
         !***Information about Implantation******************
         write(hFile,fmt="('!',A70,'!',2x,I10)") "The implantation section index is :", cursor%ImplantSectID
 
         !***Information about Time
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.8)") "Maxma simulation flag = , the time =",cursor%TermTFlag,cursor%TermTValue
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE14.8)") "Maxma simulation flag = , the time =",cursor%TermTFlag,cursor%TermTValue
 
         write(hFile,fmt="('!',A70,'!',2x,I10)") "The focused time-points number is = ",cursor%NFocusedTimePoint
 
@@ -1648,26 +1648,26 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             if(size(cursor%FocusedTimePoints) .GT. 0) then
                 write(CNUM,*) size(cursor%FocusedTimePoints)
                 CFormat = ""
-                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(1PE10.8,2x))"
+                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(1PE14.8,2x))"
                 write(hFile,fmt=CFormat(1:LENTRIM(CFormat)))  "The focused time-points are : ", cursor%FocusedTimePoints
             end if
         end if
 
         select case(this%UPDATETSTEPSTRATEGY)
             case(mp_SelfAdjustlStep_NearestSep)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.8)") "Use Time-update step strategy =, the correspond value =", &
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE14.8)") "Use Time-update step strategy =, the correspond value =", &
                                                                     cursor%UPDATETSTEPSTRATEGY,cursor%EnlageTStepScale
             case(mp_FixedTimeStep)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.8)") "Use Time-update step strategy =, the correspond value =", &
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE14.8)") "Use Time-update step strategy =, the correspond value =", &
                                                                     cursor%UPDATETSTEPSTRATEGY,cursor%FixedTimeStepValue
             case(mp_SelfAdjustlStep_AveSep)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.8)") "Use Time-update step strategy =, the correspond value =", &
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE14.8)") "Use Time-update step strategy =, the correspond value =", &
                                                                     cursor%UPDATETSTEPSTRATEGY,cursor%EnlageTStepScale
         end select
 
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.8)") "The update statistic frequency flag =, the correspond value = ",cursor%TUpdateStatisFlag,cursor%TUpdateStatisValue
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE14.8)") "The update statistic frequency flag =, the correspond value = ",cursor%TUpdateStatisFlag,cursor%TUpdateStatisValue
 
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.8)") "Output instant configuration flag = , the interval =",cursor%OutPutConfFlag,cursor%OutPutConfValue
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE14.8)") "Output instant configuration flag = , the interval =",cursor%OutPutConfFlag,cursor%OutPutConfValue
 
         ConfigContent = ""
 
@@ -1682,12 +1682,12 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
         write(hFile,fmt="('!',A70,'!',2x,L10)") "Whether output configure file before sweep out the menory = ",cursor%OutPutConf_SweepOut
 
-        write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE10.8))") "Output instant size statistic information flag =, the interval for integral box =, the interval for each box =",           &
+        write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE14.8))") "Output instant size statistic information flag =, the interval for integral box =, the interval for each box =",           &
                                                                cursor%OutPutSCFlag,cursor%OutPutSCValue_IntegralBox,cursor%OutPutSCValue_EachBox
 
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.8)") "Output instant function statistic information flag =, the interval =",cursor%OutPutFuncSFlag,cursor%OutPutFuncSValue
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE14.8)") "Output instant function statistic information flag =, the interval =",cursor%OutPutFuncSFlag,cursor%OutPutFuncSValue
 
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE10.8)") "Output instant information for restart flag =,the interval =",cursor%OutPutSwapFlag,cursor%OutPutSwapValue
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE14.8)") "Output instant information for restart flag =,the interval =",cursor%OutPutSwapFlag,cursor%OutPutSwapValue
 
         write(hFile,fmt="('*******************END SubSection #: ',I10)") ISect
 
