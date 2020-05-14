@@ -1,5 +1,5 @@
 module INLET_BATCHIMPLANTATION_GPU
-    use INLET_TYPEDEF_IMPLANTSECTION
+    use MC_TYPEDEF_IMPLANTATIONSECTION
     implicit none
 
     character(len=14),private,parameter::OKMC_CASCADE_FORMAT18 = "&CASCADEOKMC18"
@@ -12,14 +12,19 @@ module INLET_BATCHIMPLANTATION_GPU
         integer::InletClustersNumOneCase = 0
 
 
+    END TYPE
 
+    TYPE,public::CascadeImplantList
+        type(CascadeImplantSection)::TheCascadeImplantSection
 
+        type(CascadeImplantList),pointer::next=>null()
 
-
-
+        integer::ListCount=0
 
     END TYPE
 
+
+    type(CascadeImplantList),target::m_CascadeImplantList
 
     contains
 

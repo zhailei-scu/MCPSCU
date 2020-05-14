@@ -19,8 +19,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
     integer,parameter,private::p_ImplantModelType_Continue = 0      ! the implant cluster number is a line function of evolution time
     integer,parameter,private::p_ImplantModelType_Batch = 1         ! the implant cluster number is a step function of evolution time
 
-
-
     character(len=11),private,parameter::m_IMPFINPUTF = "&IMPFINPUTF"
 
     ! Note: This is DISTOKMC18 different with OKMC_OUTCFG_FORMAT18, the main different is cause that for implant,
@@ -43,32 +41,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
     integer, parameter, private::p_ImplantConfig_SpecialDistFromFile = 1
     integer, parameter, private::p_ImplantConfig_SpecialDistFromExteFunc = 2
 
-    type,public::ImplantInfo_DevPart
-
-        logical::InitFlag = .false.    ! the flag to record if the data structure had been initialization
-
-        real(kind=KINDDF),device,allocatable,dimension(:)::Dev_CompositWeight
-
-        real(kind=KINDDF),device,allocatable,dimension(:,:)::Dev_SUBBOXBOUNDARY
-
-        real(kind=KINDDF),device,dimension(:),allocatable::Dev_LayerThick
-
-        type(ACluster),device,dimension(:,:),allocatable::Dev_ClustersSample
-
-        real(kind=KINDDF),device,dimension(:,:),allocatable::Dev_ClustersSampleRate
-
-        contains
-        procedure,non_overridable,public,pass::CopyImplantInfo_DevPartFromOther
-        procedure,non_overridable,public,pass::Clean=>Clean_ImplantInfo_DevPart
-        Generic::ASSIGNMENT(=)=>CopyImplantInfo_DevPartFromOther
-        Final::CleanImplantInfo_DevPart
-    end type ImplantInfo_DevPart
-
 
     type,public::ImplantSection
-
-        integer::MemoryOccupyFactor = 10
-        integer::ExpandFactor = 10
 
         integer::ImplantConfigType = -1
 
@@ -100,11 +74,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         type(ACluster),dimension(:,:),allocatable::ClustersSample
 
-        type(ImplantInfo_DevPart)::dm_ImplantInfo_DevPart
-
         contains
         procedure,non_overridable,public,pass::Load_ImplantSection
-        procedure,non_overridable,public,pass::InitImplantInfo_DevPart
         procedure,non_overridable,public,pass::ReadImplantSection
         procedure,non_overridable,public,pass::ReadImplantSection_Simple
         procedure,non_overridable,public,pass::ReadImplantClusterSizeDist_Simple
@@ -121,7 +92,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
     end type ImplantSection
 
     type,public::ImplantList
-        type(ImplantSection)::TheImplantSection
+        type(ImplantSection),pointer::p_ImplantSection=>null()
 
         type(ImplantList),pointer::next=>null()
 
@@ -137,11 +108,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         Final::CleanImplantList
     end type
 
-    private::CopyImplantInfo_DevPartFromOther
-    private::Clean_ImplantInfo_DevPart
-    private::CleanImplantInfo_DevPart
     private::Load_ImplantSection
-    private::InitImplantInfo_DevPart
     private::ReadImplantSection
     private::ReadImplantSection_Simple
     private::ReadImplantClusterSizeDist_Simple
@@ -174,10 +141,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         !---Local Vars---
         integer::I
         !---Body---
-
-        this%MemoryOccupyFactor = other%MemoryOccupyFactor
-
-        this%ExpandFactor = other%ExpandFactor
 
         this%ImplantConfigType =other%ImplantConfigType
 
@@ -219,9 +182,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         call AllocateArray_Host(this%ClustersSampleRate,size(other%ClustersSampleRate,dim=1),size(other%ClustersSampleRate,dim=2),"ClustersSampleRate")
         this%ClustersSampleRate = other%ClustersSampleRate
 
-        !---The assignment(=) had been override
-        this%dm_ImplantInfo_DevPart = other%dm_ImplantInfo_DevPart
-
         return
     end subroutine CopyImplantSectionFromOther
 
@@ -231,8 +191,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         !---Body---
-        this%MemoryOccupyFactor = 100
-        this%ExpandFactor = 10
 
         this%ImplantConfigType = -1
 
@@ -266,7 +224,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         call DeAllocateArray_Host(this%ClustersSampleRate,"ClustersSampleRate")
 
-        call this%dm_ImplantInfo_DevPart%Clean()
         return
     end subroutine Clean_ImplantSection
 
@@ -280,69 +237,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         return
     end subroutine CleanImplantSection
-
-    !********************For type ImplantInfo_DevPart**********************
-    subroutine CopyImplantInfo_DevPartFromOther(this,other)
-        implicit none
-        !---Dummy Vars---
-        CLASS(ImplantInfo_DevPart),intent(out)::this
-        TYPE(ImplantInfo_DevPart),intent(in)::other
-        !---Local Vars--
-        integer::err
-        !---Body---
-
-        call DeAllocateArray_GPU(this%Dev_CompositWeight,"Dev_CompositWeight")
-        call AllocateArray_GPU(this%Dev_CompositWeight,p_ATOMS_GROUPS_NUMBER,"Dev_CompositWeight")
-        err = cudaMemcpy(this%Dev_CompositWeight,other%Dev_CompositWeight,size(other%Dev_CompositWeight),cudaMemcpyDeviceToDevice)
-
-        call DeAllocateArray_GPU(this%Dev_SUBBOXBOUNDARY,"Dev_SUBBOXBOUNDARY")
-        call AllocateArray_GPU(this%Dev_SUBBOXBOUNDARY,3,2,"Dev_SUBBOXBOUNDARY")
-        err = cudaMemcpy(this%Dev_SUBBOXBOUNDARY,other%Dev_SUBBOXBOUNDARY,size(other%Dev_SUBBOXBOUNDARY),cudaMemcpyDeviceToDevice)
-
-        call DeAllocateArray_GPU(this%Dev_LayerThick,"Dev_LayerThick")
-        call AllocateArray_GPU(this%Dev_LayerThick,size(other%Dev_LayerThick),"Dev_LayerThick")
-        err = cudaMemcpy(this%Dev_LayerThick,other%Dev_LayerThick,size(other%Dev_LayerThick),cudaMemcpyDeviceToDevice)
-
-        call DeAllocateArray_GPU(this%Dev_ClustersSample,"Dev_ClustersSample")
-        call AllocateArray_GPU(this%Dev_ClustersSample,size(other%Dev_ClustersSample,dim=1),size(other%Dev_ClustersSample,dim=2),"Dev_ClustersSample")
-        call copyClustersDevToDevSync2D(other%Dev_ClustersSample,this%Dev_ClustersSample,size(other%Dev_ClustersSample))
-
-        call DeAllocateArray_GPU(this%Dev_ClustersSampleRate,"Dev_ClustersSampleRate")
-        call AllocateArray_GPU(this%Dev_ClustersSampleRate,size(other%Dev_ClustersSampleRate,dim=1),size(other%Dev_ClustersSampleRate,dim=2),"Dev_ClustersSampleRate")
-        err = cudaMemcpy(this%Dev_ClustersSampleRate,other%Dev_ClustersSampleRate,size(other%Dev_ClustersSampleRate),cudaMemcpyDeviceToDevice)
-
-        return
-    end subroutine
-
-    !**********************************************************************
-    subroutine Clean_ImplantInfo_DevPart(this)
-        implicit none
-        !---Dummy Vars---
-        CLASS(ImplantInfo_DevPart)::this
-        !---Body---
-
-        call DeAllocateArray_GPU(this%Dev_CompositWeight,"Dev_CompositWeight")
-
-        call DeAllocateArray_GPU(this%Dev_SUBBOXBOUNDARY,"Dev_SUBBOXBOUNDARY")
-
-        call DeAllocateArray_GPU(this%Dev_LayerThick,"Dev_LayerThick")
-
-        call DeAllocateArray_GPU(this%Dev_ClustersSample,"Dev_ClustersSample")
-
-        call DeAllocateArray_GPU(this%Dev_ClustersSampleRate,"Dev_ClustersSampleRate")
-
-    end subroutine
-
-    !**********************************************************************
-    subroutine CleanImplantInfo_DevPart(this)
-        implicit none
-        !---Dummy Vars---
-        TYPE(ImplantInfo_DevPart)::this
-        !---Body---
-
-        call this%Clean()
-        return
-    end subroutine
 
     !***************For type ImplantList************************************
     subroutine Init_ImplantList(this,Host_Boxes,Host_SimuCtrlParam)
@@ -474,7 +368,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         implicit none
         !---Dummy Vars---
         CLASS(ImplantList),target::this
-        type(ImplantSection)::TheImplantSection
+        CLASS(ImplantSection),target::TheImplantSection
         !---Local Vars---
         type(ImplantList),pointer::cursor=>null()
         type(ImplantList),pointer::next=>null()
@@ -488,8 +382,10 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         end if
 
         if(this%ListCount .eq. 0) then
-            ! The assignment(=) had been override
-            this%TheImplantSection = TheImplantSection
+            if(.not. associated(this%p_ImplantSection)) then
+                allocate(this%p_ImplantSection)
+            end if
+            this%p_ImplantSection => TheImplantSection
         else
             cursor=>this
             next=>cursor%next
@@ -501,7 +397,10 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
             allocate(next)
             ! The assignment(=) had been override
-            next%TheImplantSection = TheImplantSection
+            if(.not. associated(next%p_ImplantSection)) then
+                allocate(next%p_ImplantSection)
+            end if
+            next%p_ImplantSection => TheImplantSection
             Nullify(next%next)
             cursor%next=>next
         end if
@@ -535,7 +434,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             CountTemp = CountTemp + 1
 
             if(CountTemp .eq. TheIndex) then
-                TheResult=>cursor%TheImplantSection
+                TheResult=>cursor%p_ImplantSection
                 exit
             end if
 
@@ -571,11 +470,17 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         cursor=>this%next
 
-        call this%TheImplantSection%Clean()
+        if(associated(this%p_ImplantSection)) then
+            call this%p_ImplantSection%Clean()
+        end if
 
         Do while(associated(cursor))
             next=>cursor%next
-            call cursor%TheImplantSection%Clean()
+
+            if(associated(cursor%p_ImplantSection)) then
+                call cursor%p_ImplantSection%Clean()
+            end if
+
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next
@@ -660,34 +565,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
                 case("&ENDSUBCTL")
                     exit
 
-                case("&FEXPAND")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: Too few parameters for the implantation expand factor ."
-                        write(*,*) "At Line :", LINE
-                        write(*,*) "You should special by the way: &FEXPAND The expand size factor = "
-                        pause
-                        stop
-                    end if
-                    this%ExpandFactor = ISTR(STRTMP(1))
-
-                case("&FMEMOCCUP")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: Too few parameters for the memory occupy factor."
-                        write(*,*) "At Line :", LINE
-                        write(*,*) "You should special by the way: &FMEMOCCUP TThe memory occupied factor ="
-                        pause
-                        stop
-                    end if
-                    this%MemoryOccupyFactor = ISTR(STRTMP(1))
-
-                    if(this%MemoryOccupyFactor .LE. 1) then
-                        write(*,*) "MCPSCUERROR: The MemoryOccupyFactor cannot less than 1"
-                        pause
-                        stop
-                    end if
-
                 case("&SIZESUBCTL","&DEPTHSUBCTL","&EXTFSUBCTL")
                     call this%ReadImplantSection(hFile,KEYWORD,SimBoxes,Host_SimuCtrlParam,LINE)
 
@@ -707,36 +584,6 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             pause
             stop
     end subroutine
-
-    !****************************************************************
-    subroutine InitImplantInfo_DevPart(this)
-        implicit none
-        !---Dummy Vars---
-        CLASS(ImplantSection)::this
-        !---Body---
-        if(this%dm_ImplantInfo_DevPart%InitFlag .eq. .false.) then
-
-            this%dm_ImplantInfo_DevPart%InitFlag = .true.
-
-            call AllocateArray_GPU(this%dm_ImplantInfo_DevPart%Dev_CompositWeight,size(this%CompositWeight),"Dev_CompositWeight")
-            this%dm_ImplantInfo_DevPart%Dev_CompositWeight = this%CompositWeight
-
-            call AllocateArray_GPU(this%dm_ImplantInfo_DevPart%Dev_SUBBOXBOUNDARY,size(this%SUBBOXBOUNDARY,DIM=1),size(this%SUBBOXBOUNDARY,DIM=2),"Dev_SUBBOXBOUNDARY")
-            this%dm_ImplantInfo_DevPart%Dev_SUBBOXBOUNDARY = this%SUBBOXBOUNDARY
-
-            call AllocateArray_GPU(this%dm_ImplantInfo_DevPart%Dev_LayerThick,size(this%LayerThick),"Dev_LayerThick")
-            this%dm_ImplantInfo_DevPart%Dev_LayerThick = this%LayerThick
-
-            call AllocateArray_GPU(this%dm_ImplantInfo_DevPart%Dev_ClustersSample,size(this%ClustersSample,dim=1),size(this%ClustersSample,dim=2),"Dev_ClustersSample")
-            call copyInClustersSync2D(this%ClustersSample,this%dm_ImplantInfo_DevPart%Dev_ClustersSample,size(this%ClustersSample))
-
-            call AllocateArray_GPU(this%dm_ImplantInfo_DevPart%Dev_ClustersSampleRate,size(this%ClustersSampleRate,dim=1),size(this%ClustersSampleRate,dim=2),"Dev_ClustersSampleRate")
-            this%dm_ImplantInfo_DevPart%Dev_ClustersSampleRate = this%ClustersSampleRate
-
-        end if
-
-        return
-    end subroutine InitImplantInfo_DevPart
 
     !***************************************************************
     subroutine ReadImplantSection(this,hFile,KEYWORD,SimBoxes,Host_SimuCtrlParam,LINE)
