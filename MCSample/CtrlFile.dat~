@@ -36,7 +36,7 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-11                 		     ! flag = 0 stans for by steps,flag = 1 by time(s)
 
-	&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12
+	&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused	
                        
         &TSTEPSTRATEGY  The update time-step strategy = 0, the correspond value = 0.01               ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time

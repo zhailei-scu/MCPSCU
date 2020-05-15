@@ -1,7 +1,7 @@
 &GENERATEWAY                the cascade generate way = 1                  ! (0 by Locally ,center uniform way; 1 by from MD database,locally;2 by from MD database, uniform)
 &NSIAVACPAIRSEACHCASCADE    number of Frankel pairs in each cascade = 23  ! only necessary by cascade generate way 1
 &CASCADENUMBER              number of cascade in each box = 1
-&CASCADESAME                whether each cascade is same in one box  = "YES"   ! "YES" or "No"
+&CASCADESAME                whether each cascade is same in one box  = "NO"   ! "YES" or "NO"
 &INCLUDESIACLUSTER          whether include SIA Clusters = "YES"               ! "YES" or "No"
 &INCLUDEVACCLUSTER          whether include VAC Clusters = "YES"               ! "YES" or "No"
 &MDDATABASEPATH             "/scratch/p1/ZhaiLei/CascadeDataBase/20keV/"
