@@ -12,7 +12,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     use MIGCOALE_STATISTIC_GPU
     use MIGCOALE_STATISTIC_CPU
     use MIGCOALE_TYPEDEF_SIMRECORD
-    use INLET_TYPEDEF_IMPLANTSECTION
+    use MC_TYPEDEF_IMPLANTATIONSECTION
     implicit none
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
