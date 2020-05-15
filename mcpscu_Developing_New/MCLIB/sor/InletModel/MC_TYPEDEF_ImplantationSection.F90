@@ -44,6 +44,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
     type,public::ImplantSection
 
+        integer::ImplantModel = -1
+
         integer::ImplantConfigType = -1
 
         type(STRList),pointer::ImplantCfgFileList=>null()
@@ -142,6 +144,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         integer::I
         !---Body---
 
+        this%ImplantModel = other%ImplantModel
+
         this%ImplantConfigType =other%ImplantConfigType
 
         !---The Assignment(=)=> had been override
@@ -191,6 +195,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         !---Body---
+
+        this%ImplantModel = -1
 
         this%ImplantConfigType = -1
 
