@@ -7,13 +7,30 @@ module INLET_BATCHIMPLANTATION_GPU
     character(len=10),private,parameter::MD_CASCADE = "&CASCADEMD"
     character(len=16),private,parameter::MARLOWER_CASCADE = "&CASCADEMARLOWER"
 
+    integer,parameter,private::p_InsertCountModel_ByConfigNum = 0
+    integer,parameter,private::p_InsertCountModel_ByClusterNum = 1
+
+    #ifdef MAXBATCHINSERTTP
+    integer,parameter,private::p_MAX_BATCHINSERTTIMEPOINTS = MAXBATCHINSERTTP
+    #else
+    integer,parameter,private::p_MAX_BATCHINSERTTIMEPOINTS = 10
+    #endif
 
     TYPE,public,extends(ImplantSection)::BatchImplantSection
-        integer::InletClustersNumOneCase = 0
+        real(kind=KINDDF)::InsertTimeInterval = -1.0
+
+        integer::NInsertTimePoint = 0
+        real(kind=KINDDF),dimension(:),allocatable::InsertTimePoint
+
+        integer::InsertCountModel = p_InsertCountModel_ByConfigNum
+
+        integer::InsertCountOneBatch = 0
 
         contains
 
         procedure,non_overridable,public,pass::LoadOne_ImplantSection
+
+        procedure,non_overridable,public,pass::ReadRateCtrl
 
     END TYPE
 
@@ -25,6 +42,9 @@ module INLET_BATCHIMPLANTATION_GPU
         integer::ListCount=0
 
     END TYPE
+
+    private::LoadOne_ImplantSection
+    private::ReadRateCtrl
 
     contains
 
@@ -56,21 +76,15 @@ module INLET_BATCHIMPLANTATION_GPU
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&ENDSUBCTL")
                     exit
-                case("&TYPE")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: Too few parameters for implantation distribution type."
-                        write(*,*) "At Line :", LINE
-                        write(*,*) "You should special by the way : &TYPE The implantation cluster distribution type =  "
-                        pause
-                        stop
-                    end if
-                    this%ImplantConfigType = ISTR(STRTMP(1))
-                    exit
+
+                case("&IMPCOMMONSUBCTL")
+                    call this%ImplantSection%ReadImplantCommonCtl(hFile,LINE)
+                case("&RATESUBCTL")
+                    call this%ReadRateCtrl(hFile,Host_SimuCtrlParam,LINE)
+
                 case default
-                    write(*,*) "MCPSCUERROR: You must special the implantation distribution type first!"
-                    write(*,*) "By the way: &TYPE The implantation cluster distribution type = "
-                    write(*,*) "However, the words you input is: ",STR
+                    write(*,*) "MCPSCUERROR: Unknown Flag: ",KEYWORD
+                    write(*,*) "At LINE: ",LINE
                     pause
                     stop
             end select
@@ -97,6 +111,123 @@ module INLET_BATCHIMPLANTATION_GPU
                     stop
             end select
         End Do
+
+        return
+
+        100 write(*,*) "MCPSCUERROR : Load implantation configuration file failed !"
+            write(*,*) "At line :",LINE
+            write(*,*) "The program would stop."
+            pause
+            stop
+    end subroutine
+
+
+    !*****************************************************************
+    subroutine ReadRateCtrl(this,hFile,Host_SimuCtrlParam,LINE)
+        implicit none
+        !---Dummy Vars---
+        CLASS(BatchImplantSection)::this
+        integer, intent(in)::hFile
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        integer::LINE
+        !---Local Vars---
+        character*256::STR
+        character*32::KEYWORD
+        character*20::STRTMP(20)
+        integer::N
+        integer::I
+        !---Body---
+        DO while(.true.)
+            call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+            call RemoveComments(STR,"!")
+            STR = adjustl(STR)
+            call GETKEYWORD("&",STR,KEYWORD)
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&ENDSUBCTL")
+                    exit
+
+                case("&TIMEINTERVAL")
+                    call EXTRACT_SUBNUM(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for the insert time interval"
+                        write(*,*) "At Line :", LINE
+                        write(*,*) "You should special by the way: &TIMEINTERVAL The time interval between batches ="
+                        pause
+                        stop
+                    end if
+                    this%InsertTimeInterval = DRSTR(STRTMP(1))
+
+                case("&INSERTTIMEPOINT")
+                    call EXTRACT_SUBNUM(STR,p_MAX_BATCHINSERTTIMEPOINTS,N,STRTMP)
+
+                    if(N .GT. 0) then
+                        call AllocateOneDimd_Host(this%InsertTimePoint,N,"InsertTimePoint")
+                    else
+                        write(*,*) "MCPSCUERROR: Too few parameters are specialized for &INSERTTIMEPOINT"
+                        write(*,*) "At LINE: ",LINE
+                        write(*,*) "You should use &INSERTTIMEPOINT The batch insert time point ="
+                        pause
+                        stop
+                    end if
+
+                    this%NInsertTimePoint = N
+
+                    DO I = 1,N
+                        this%InsertTimePoint(I) = DRSTR(STRTMP(I))
+
+                        if(I .GT. 1) then
+                            if(this%InsertTimePoint(I) .LE. this%InsertTimePoint(I-1)) then
+                                write(*,*) "MCPSCU ERROR: You should align the batch insert time-points from smaller to bigger"
+                                write(*,*) "At control file line: ",LINE
+                                write(*,*) STR
+                                pause
+                                stop
+                            end if
+                        end if
+
+                        if(this%InsertTimePoint(I) .GT. Host_SimuCtrlParam%TermTValue) then
+                            write(*,*) "MCPSCU ERROR: the insert time-point should less than terminate time "
+                            write(*,*) "Chosen insert time point is: ", this%InsertTimePoint(I)
+                            write(*,*) "The terminate time point is: ",Host_SimuCtrlParam%TermTValue
+                            pause
+                            stop
+                        end if
+
+                    END DO
+
+                case("&INSERTCOUNTMODEL")
+                    call EXTRACT_SUBNUM(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for the insert count model"
+                        write(*,*) "At Line :", LINE
+                        write(*,*) "You should special by the way: The count model for each batch ="
+                        pause
+                        stop
+                    end if
+                    this%InsertCountModel = ISTR(STRTMP(1))
+
+                case("&INSERTCOUNT")
+                    call EXTRACT_SUBNUM(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for the insert count for each batch"
+                        write(*,*) "At Line :", LINE
+                        write(*,*) "You should special by the way: &INSERTCOUNT  The count in each batch = "
+                        pause
+                        stop
+                    end if
+                    this%InsertCountOneBatch = ISTR(STRTMP(1))
+
+                case default
+                    write(*,*) "MCPSCUERROR: Unknown Flag: ",KEYWORD
+                    write(*,*) "At LINE: ",LINE
+                    pause
+                    stop
+            end select
+
+        END DO
+
 
         return
 

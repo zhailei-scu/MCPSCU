@@ -150,7 +150,7 @@ module INLET_TYPEDEF_IMPLANTLIST
                     call tempContinueImplantSection%Clean()
 
                     tempContinueImplantSection%ImplantModel = p_ImplantModelType_Continue
-                    call tempContinueImplantSection%Load_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
+                    call tempContinueImplantSection%LoadOne_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
 !
 !                    call m_ContinueImplantList%AppendOneSection(tempContinueImplantSection)
 !
@@ -160,7 +160,7 @@ module INLET_TYPEDEF_IMPLANTLIST
                     call tempContinueImplantSection%Clean()
 
                     tempContinueImplantSection%ImplantModel = p_ImplantModelType_Continue
-                    call tempContinueImplantSection%Load_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
+                    call tempContinueImplantSection%LoadOne_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
 !
 !                    call m_ContinueImplantList%AppendOneSection(tempContinueImplantSection)
 !
@@ -170,7 +170,7 @@ module INLET_TYPEDEF_IMPLANTLIST
                     call tempBatchImplantSection%Clean()
 
                     tempContinueImplantSection%ImplantModel = p_ImplantModelType_Batch
-                    call tempBatchImplantSection%Load_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
+                    call tempBatchImplantSection%LoadOne_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
 !
 !                    call m_BatchImplantList%AppendOneSection(tempBatchImplantSection)
 !

@@ -1245,6 +1245,12 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
             if(N .GT. 0) then
                 call AllocateOneDimd_Host(this%FocusedTimePoints,N,"FocusedTimePoints")
+            else
+                write(*,*) "MCPSCUERROR: Too few parameters are specialized for &FOCUSETIME"
+                write(*,*) "At LINE: ",LINE
+                write(*,*) "You should use &FOCUSETIME The focused time points ="
+                pause
+                stop
             end if
 
             this%NFocusedTimePoint = N

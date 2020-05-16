@@ -36,12 +36,17 @@ module INLET_TYPEDEF_IMPLANTSECTION
     integer, parameter, private::p_ImplantConfig_SpecialDistFromFile = 1
     integer, parameter, private::p_ImplantConfig_SpecialDistFromExteFunc = 2
 
-
     type,abstract,public::ImplantSection
 
         integer::ImplantModel = -1
 
         integer::ImplantConfigType = -1
+
+        logical::WhetherHomogenizeCfg = .false.
+
+        integer::ExpandFactor = 1
+
+        integer::MemoryOccupyFactor = 100
 
         type(STRList),pointer::ImplantCfgFileList=>null()
 
@@ -76,7 +81,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         procedure(Def_LoadOne_ImplantSection),pass,deferred,public::LoadOne_ImplantSection
         procedure(Def_Clean),pass,deferred,public::Clean
 
-        procedure,non_overridable,public,pass::Load_ImplantSection
+        procedure,non_overridable,public,pass::ReadImplantCommonCtl
         procedure,non_overridable,public,pass::ReadImplantSection
         procedure,non_overridable,public,pass::ReadImplantSection_Simple
         procedure,non_overridable,public,pass::ReadImplantClusterSizeDist_Simple
@@ -91,7 +96,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         Generic::ASSIGNMENT(=)=>CopyImplantSectionFromOther
     end type ImplantSection
 
-    private::Load_ImplantSection
+    private::ReadImplantCommonCtl
     private::ReadImplantSection
     private::ReadImplantSection_Simple
     private::ReadImplantClusterSizeDist_Simple
@@ -118,6 +123,12 @@ module INLET_TYPEDEF_IMPLANTSECTION
         this%ImplantModel = other%ImplantModel
 
         this%ImplantConfigType =other%ImplantConfigType
+
+        this%WhetherHomogenizeCfg = other%WhetherHomogenizeCfg
+
+        this%ExpandFactor = other%ExpandFactor
+
+        this%MemoryOccupyFactor = other%MemoryOccupyFactor
 
         !---The Assignment(=)=> had been override
         this%ImplantCfgFileList = other%ImplantCfgFileList
@@ -170,6 +181,12 @@ module INLET_TYPEDEF_IMPLANTSECTION
         this%ImplantModel = -1
 
         this%ImplantConfigType = -1
+
+        this%WhetherHomogenizeCfg = .false.
+
+        this%ExpandFactor = 1
+
+        this%MemoryOccupyFactor = 100
 
         call this%ImplantCfgFileList%Clean_STRList()
         Nullify(this%ImplantCfgFileList)
@@ -228,79 +245,106 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine
 
 
-
-
-    subroutine Load_ImplantSection(this,hFile,SimBoxes,Host_SimuCtrlParam,LINE)
+    !***************************************************************
+    subroutine ReadImplantCommonCtl(this,hFile,LINE)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
-        integer, intent(in)::hFile
-        type(SimulationBoxes)::SimBoxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        integer,intent(in)::hFile
         integer::LINE
         !---Local Vars---
         character*256::STR
         character*32::KEYWORD
         character*20::STRTMP(10)
         integer::N
-        real(kind=KINDDF)::ReflectRatio
         !---Body---
-        Do While(.true.)
+        DO while(.true.)
             call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
             call RemoveComments(STR,"!")
             STR = adjustl(STR)
+
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&ENDSUBCTL")
                     exit
-                case("&TYPE")
+
+                case("&SOURCETYPE")
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
                     if(N .LT. 1) then
                         write(*,*) "MCPSCUERROR: Too few parameters for implantation distribution type."
                         write(*,*) "At Line :", LINE
-                        write(*,*) "You should special by the way : &TYPE The implantation cluster distribution type =  "
+                        write(*,*) "You should special by the way : &SOURCETYPE The implantation cluster distribution type =  "
                         pause
                         stop
                     end if
                     this%ImplantConfigType = ISTR(STRTMP(1))
-                    exit
+
+                case("&UNIFORMTYPE")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for implantation configuration uniform type."
+                        write(*,*) "At Line: ", LINE
+                        write(*,*) "You should special by the way : &UNIFORMTYPE  Whether homogenize the source = "
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))), "YES")) then
+                        this%WhetherHomogenizeCfg = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))), "NO")) then
+                        this%WhetherHomogenizeCfg = .false.
+                    else
+                        write(*,*) "MCPSCUERROR: You should special 'YES' or 'NO' to determine whether homogenize the configure."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                case("&FEXPAND")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for the implantation expand factor ."
+                        write(*,*) "At Line :", LINE
+                        write(*,*) "You should special by the way: &FEXPAND The expand size factor = "
+                        pause
+                        stop
+                    end if
+                    this%ExpandFactor = ISTR(STRTMP(1))
+
+                case("&FMEMOCCUP")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for the memory occupy factor."
+                        write(*,*) "At Line :", LINE
+                        write(*,*) "You should special by the way: &FMEMOCCUP TThe memory occupied factor ="
+                        pause
+                        stop
+                    end if
+                    this%MemoryOccupyFactor = ISTR(STRTMP(1))
+
+                    if(this%MemoryOccupyFactor .LE. 1) then
+                        write(*,*) "MCPSCUERROR: The MemoryOccupyFactor cannot less than 1"
+                        pause
+                        stop
+                    end if
+
                 case default
-                    write(*,*) "MCPSCUERROR: You must special the implantation distribution type first!"
-                    write(*,*) "By the way: &TYPE The implantation cluster distribution type = "
-                    write(*,*) "However, the words you input is: ",STR
+                    write(*,*) "MCPSCUERROR: Unknown keyword: ",KEYWORD(1:LENTRIM(KEYWORD))
+                    write(*,*) "At Line: ",LINE
                     pause
                     stop
             end select
-        End Do
 
-        Do While(.true.)
-            call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
-            call RemoveComments(STR,"!")
-            STR = adjustl(STR)
-            call GETKEYWORD("&",STR,KEYWORD)
-            call UPCASE(KEYWORD)
-
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
-                case("&ENDSUBCTL")
-                    exit
-
-                case("&SIZESUBCTL","&DEPTHSUBCTL","&EXTFSUBCTL")
-                    call this%ReadImplantSection(hFile,KEYWORD,SimBoxes,Host_SimuCtrlParam,LINE)
-
-                case default
-                    write(*,*) "MCPSCUERROR: Unknown Flag: ",KEYWORD
-                    write(*,*) "At LINE: ",LINE
-                    pause
-                    stop
-            end select
-        End Do
+        END DO
 
         return
 
         100 write(*,*) "MCPSCUERROR : Load implantation configuration file failed !"
-            write(*,*) "At line :",LINE
+            write(*,*) "At Line: ",LINE
             write(*,*) "The program would stop."
             pause
             stop

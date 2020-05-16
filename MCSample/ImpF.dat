@@ -5,7 +5,7 @@
   &CONTINUESUBCTL     ! #1
 	 &IMPCOMMONSUBCTL	 
          	&SOURCETYPE The implantation cluster source type = 0 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 1                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
          	&FEXPAND The expand size factor = 100
 
@@ -31,7 +31,7 @@
   &CONTINUESUBCTL   ! #2
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 0 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 1                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
         	&FEXPAND The expand size factor = 100
 
@@ -58,7 +58,7 @@
 
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 1                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
          	&FEXPAND The expand size factor = 100
 
@@ -89,7 +89,7 @@
   &CONTINUESUBCTL ! #4
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 1                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
         	&FEXPAND The expand size factor = 100
 
@@ -120,11 +120,11 @@
   &BATCHSUBCTL     ! #5
 	 &IMPCOMMONSUBCTL
           	&SOURCETYPE The implantation cluster source type = 0 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 1                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
 		&FEXPAND The expand size factor = 1
 
-         	&FMEMOCCUP The memory occupied factor = 1
+         	&FMEMOCCUP The memory occupied factor = 100
 	 &ENDSUBCTL
 	 
 	 &RATESUBCTL
@@ -150,11 +150,11 @@
   &BATCHSUBCTL   ! #6
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 0 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 1                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
 		&FEXPAND The expand size factor = 1
 
-         	&FMEMOCCUP The memory occupied factor = 1
+         	&FMEMOCCUP The memory occupied factor = 100
 	 &ENDSUBCTL
 
 	 &RATESUBCTL
@@ -181,11 +181,11 @@
 
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 1                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
 		&FEXPAND The expand size factor = 1
 
-         	&FMEMOCCUP The memory occupied factor = 1
+         	&FMEMOCCUP The memory occupied factor = 100
 	 &ENDSUBCTL
 
 	 &RATESUBCTL
@@ -217,11 +217,11 @@
 
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 1                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
 		&FEXPAND The expand size factor = 1
 
-        	&FMEMOCCUP The memory occupied factor = 1
+        	&FMEMOCCUP The memory occupied factor = 100
 	 &ENDSUBCTL
 
 	 &RATESUBCTL
@@ -253,11 +253,11 @@
 
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = 0                 ! 0 by not uniform , 1 by uniform
+		&UNIFORMTYPE  Whether homogenize the source = "NO"              ! YES or NO
 	 
          	&FEXPAND The expand size factor = 1
 
-         	&FMEMOCCUP The memory occupied factor = 1
+         	&FMEMOCCUP The memory occupied factor = 100
 	 &ENDSUBCTL
 
 	 &RATESUBCTL
