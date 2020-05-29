@@ -81,6 +81,8 @@ module INLET_BATCHIMPLANTATION_GPU
                     call this%ImplantSection%ReadImplantCommonCtl(hFile,LINE)
                 case("&RATESUBCTL")
                     call this%ReadRateCtrl(hFile,Host_SimuCtrlParam,LINE)
+                case("&BATCHCONFIGSUBCTL")
+                    call
 
                 case default
                     write(*,*) "MCPSCUERROR: Unknown Flag: ",KEYWORD
