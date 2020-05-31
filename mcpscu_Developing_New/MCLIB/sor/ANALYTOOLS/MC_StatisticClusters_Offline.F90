@@ -810,6 +810,10 @@ module MC_StatisticClusters_Offline
         integer::CascadeIndex
         integer::Num_RecombineEachBox
         integer::Num_Recombine
+        integer::Num_ReactBetweenSIAEachBox
+        integer::Num_ReactBetweenVACEachBox
+        integer::Num_ReactBetweenSIA
+        integer::Num_ReactBetweenVAC
         !---Body---
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -868,7 +872,9 @@ module MC_StatisticClusters_Offline
                                                                   CNAVA_SIA(1:p_NUMBER_OF_STATU),  &
                                                                   CNAVA_Vac(1:p_NUMBER_OF_STATU),  &
                                                                   "NUM_IntercascadeReact",         &
-                                                                  "NUM_Recombine"
+                                                                  "NUM_Recombine",                 &
+                                                                  "NUM_ReactBetweenSIA",           &
+                                                                  "NUM_ReactBetweenVAC"
 
 
             write(hFileOutTotalBox, fmt="(130(A30,1x))")          "Time(s)",                       &
@@ -880,7 +886,9 @@ module MC_StatisticClusters_Offline
                                                                   CNAVA_SIA(1:p_NUMBER_OF_STATU),  &
                                                                   CNAVA_Vac(1:p_NUMBER_OF_STATU),  &
                                                                   "NUM_IntercascadeReact",         &
-                                                                  "NUM_Recombine"
+                                                                  "NUM_Recombine",                 &
+                                                                  "NUM_ReactBetweenSIA",           &
+                                                                  "NUM_ReactBetweenVAC"
 
 
             FirstTimeVist = .false.
@@ -900,6 +908,8 @@ module MC_StatisticClusters_Offline
         NCCount_Vac = 0
         NC_InterCascadeReact = 0
         Num_Recombine = 0
+        Num_ReactBetweenSIA = 0
+        Num_ReactBetweenVAC = 0
 
         DO IBox = 1,MultiBox
 
@@ -910,6 +920,8 @@ module MC_StatisticClusters_Offline
             NCCountEachBox_Vac = 0
             NC_InterCascadeReact_EachBox = 0
             Num_RecombineEachBox = 0
+            Num_ReactBetweenSIAEachBox = 0
+            Num_ReactBetweenVACEachBox = 0
 
             ICFROM = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTO = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -958,6 +970,13 @@ module MC_StatisticClusters_Offline
                     if(any(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA .LT. 0)) then
                         Num_RecombineEachBox = Num_RecombineEachBox + 1
                     end if
+
+                    if(NATOMS_SIA .GT. 0) then
+                        Num_ReactBetweenSIAEachBox = Num_ReactBetweenSIAEachBox + 1
+                    else if(NATOMS_Vac .GT. 0) then
+                        Num_ReactBetweenVACEachBox = Num_ReactBetweenVACEachBox + 1
+                    end if
+
                 end if
 
             END DO
@@ -969,6 +988,8 @@ module MC_StatisticClusters_Offline
             NCCount_Vac = NCCount_Vac + NCCountEachBox_Vac
             NC_InterCascadeReact = NC_InterCascadeReact + NC_InterCascadeReact_EachBox
             Num_Recombine = Num_Recombine + Num_RecombineEachBox
+            Num_ReactBetweenSIA = Num_ReactBetweenSIA + Num_ReactBetweenSIAEachBox
+            Num_ReactBetweenVAC = Num_ReactBetweenVAC + Num_ReactBetweenVACEachBox
 
             DO IStatu = 1,p_NUMBER_OF_STATU
                 if(NCCountEachBox_SIA(IStatu) .GT. 0) then
@@ -980,7 +1001,7 @@ module MC_StatisticClusters_Offline
                 end if
             END DO
 
-            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")               &
+            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),4(I30,1x))")             &
                                                                                                                 IBox,                                          &
                                                                                                                 Record%GetSimuTimes(),                         &
                                                                                                                 Record%GetSimuSteps(),                         &
@@ -991,7 +1012,9 @@ module MC_StatisticClusters_Offline
                                                                                                                 NAVAEachBox_SIA(1:p_NUMBER_OF_STATU),          &
                                                                                                                 NAVAEachBox_Vac(1:p_NUMBER_OF_STATU),          &
                                                                                                                 NC_InterCascadeReact_EachBox,                  &
-                                                                                                                Num_RecombineEachBox
+                                                                                                                Num_RecombineEachBox,                          &
+                                                                                                                Num_ReactBetweenSIAEachBox,                    &
+                                                                                                                Num_ReactBetweenVACEachBox
 
         END DO
 
@@ -1006,7 +1029,7 @@ module MC_StatisticClusters_Offline
         END DO
 
 
-        write(hFileOutTotalBox,fmt="(1PE30.8,1x,I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")              &
+        write(hFileOutTotalBox,fmt="(1PE30.8,1x,I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),4(I30,1x))")            &
                                                                                                             Record%GetSimuTimes(),                  &
                                                                                                             Record%GetSimuSteps(),                  &
                                                                                                             Record%GetTimeSteps(),                  &
@@ -1016,7 +1039,9 @@ module MC_StatisticClusters_Offline
                                                                                                             NAVA_SIA(1:p_NUMBER_OF_STATU),          &
                                                                                                             NAVA_Vac(1:p_NUMBER_OF_STATU),          &
                                                                                                             NC_InterCascadeReact,                   &
-                                                                                                            Num_Recombine
+                                                                                                            Num_Recombine,                          &
+                                                                                                            Num_ReactBetweenSIA,                    &
+                                                                                                            Num_ReactBetweenVAC
 
 
         call DeAllocateArray_Host(NCCountEachBox,"NCCountEachBox")
@@ -1101,8 +1126,8 @@ program Main_StatisticClusters_Offline
 
     OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"Statistic/")
 
-    pathOutEachBox = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"EachBox.statistic"
-    pathOutTotalBox = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"TotalBox.statistic"
+    pathOutEachBox = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"EachBox.stat"
+    pathOutTotalBox = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"TotalBox.stat"
 
     hFileOutEachBox = CreateNewFile(pathOutEachBox)
     hFileOutTotalBox = CreateNewFile(pathOutTotalBox)
