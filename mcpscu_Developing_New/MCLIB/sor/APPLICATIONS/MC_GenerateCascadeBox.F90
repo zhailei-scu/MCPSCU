@@ -95,6 +95,8 @@ module MC_GenerateCascadeBox
     integer,parameter::BinNum = 100
 
     integer,parameter::SIAIndex_MD = 1
+    integer,parameter::SIAIndex2_MD = 2
+    integer,parameter::SIAIndex3_MD = 3
     integer,parameter::VACIndex_MD = 4
     integer,parameter::RefSiteIndex_MD = 8
 
@@ -1294,7 +1296,7 @@ module MC_GenerateCascadeBox
 
         end if
 
-        if(AtomType .eq. SIAIndex_MD) then
+        if(AtomType .eq. SIAIndex_MD .or. AtomType .eq. SIAIndex2_MD .or. AtomType .eq. SIAIndex3_MD) then
             if(NClusterEachBox .LE. 0) then
                 write(*,*) "You must speicial the reference site first..."
                 write(*,*) "For file:",fileName
@@ -3386,3 +3388,4 @@ program Main_MC_GenerateCascadeBox
     close(hFile)
 
 end program Main_MC_GenerateCascadeBox
+
