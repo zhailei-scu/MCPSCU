@@ -1,13 +1,13 @@
 #!/bin/bash
-version=2020_04_29
-mcpscusor=/home/zhail/mcpscu_2020_04_29
-tccpath=/home/zhail/tcc-0.9.27/
-mcworkspace=/home/zhail/mcworkspace/mcpscu_2020_04_29
-cudaVersion=8.0
+version=Developing_New
+mcpscusor=/home/zhail/Development/public/mcpscu_2019_07_01
+tccpath=/home/zhail/Development/public/tcc-0.9.27/
+mcworkspace=/home/zhail/Development/public/mcworkspace/mcpscu_2019_07_01
+cudaVersion=cuda8.0
 computerCapability=cc35
 operateSystem=LINUX
-export PATH=$PATH:/opt/pgi/linux86-64/17.4/bin:/opt/pgi/linux86-64/2017/include; export PGI=/opt/pgi
-hostllvm=""
+source $HOME/.bashrc
+hostllvm=-Mnollvm
 
 
 
