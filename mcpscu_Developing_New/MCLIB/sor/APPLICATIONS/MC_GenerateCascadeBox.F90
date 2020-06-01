@@ -3050,6 +3050,21 @@ module MC_GenerateCascadeBox
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(2)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(3)
 
+
+                    DO I = 1,3
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1)) then
+                            write(*,*) "MCPSCUERROR: Opps, the box are too small"
+                            write(*,*) "Cluster: ",IC," have exist the boundary : ", Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I),"  ", Host_Boxes%BOXBOUNDARY(I,1)
+                            pause
+                            stop
+                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                            write(*,*) "MCPSCUERROR: Opps, the box are too small"
+                            write(*,*) "Cluster: ",IC," have exist the boundary : ", Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I),"  ", Host_Boxes%BOXBOUNDARY(I,2)
+                            pause
+                            stop
+                        end if
+                    END DO
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
