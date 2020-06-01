@@ -12,7 +12,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/scratch/110doc01/ZhaiLei/MC_CascadeEvolution/BoxSizeInfo/WithOutDissociate/300K/20KeV/InitLocally_AllTime/Cascade8Box400LU_NBox100_NoDump_New/SampleSetup.dat /scratch/110doc01/ZhaiLei/MC_CascadeEvolution/BoxSizeInfo/WithOutDissociate/300K/20KeV/InitLocally_AllTime/Cascade8Box400LU_NBox100_NoDump_New/CascadeBox/CascadeGenerateCtrlFile.dat" />
+				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat /home/zhail/mcworkspace/MCSample_New/CascadeBox/CascadeGenerateCtrlFile.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
@@ -43,7 +43,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat 2 /home/zhail/mcworkspace/MCSample_New/CascadeBox/MDDataBaseCtrlFile.dat 8" />
+				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat /home/zhail/mcworkspace/MCSample_New/CascadeBox/CascadeGenerateCtrlFile.dat" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />

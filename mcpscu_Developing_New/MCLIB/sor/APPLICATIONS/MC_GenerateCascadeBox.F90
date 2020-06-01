@@ -10,8 +10,9 @@ module MC_GenerateCascadeBox
     implicit none
 
     integer,parameter::CascadeGenWay_ByCentUniform_Locally = 0
-    integer,parameter::CascadeGenWay_ByMDDataBase_Locally = 1
-    integer,parameter::CascadeGenWay_ByMDDataBase_Uniform = 2
+    integer,parameter::CascadeGenWay_ByMDDataBase_Locally_Resample = 1
+    integer,parameter::CascadeGenWay_ByMDDataBase_Uniform_Resample = 2
+    integer,parameter::CascadeGenWay_ByMDDataBase_Locally_Directly = 3
 
     type,public::ClusterAtom
         real(kind=KINDDF)::POS(3)
@@ -1138,6 +1139,258 @@ module MC_GenerateCascadeBox
     stop
   end subroutine CascadeDataBase_ANALYSIS_SIAANDVAC
 
+  !***********************************************************************
+  subroutine CascadeDataBase_DirectlyRead(pathIn,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,ClusterArray,NAtomEachCluster,NSIAClusterEachBoxArray,NVACClusterEachBoxArray)
+    !---This routine only analysis SIA or VAC
+    implicit none
+    !---Dummy Vars---
+    character*256,intent(in)::pathIn
+    integer,intent(in)::Index_StartBox
+    integer,intent(in)::Index_EndBox
+    integer,intent(in)::Index_SIAConfig
+    integer,intent(in)::Index_VACConfig
+    type(ClusterAtom),intent(inout),dimension(:),allocatable::ClusterArray
+    integer,intent(inout),dimension(:),allocatable::NAtomEachCluster
+    integer,intent(inout),dimension(:),allocatable::NSIAClusterEachBoxArray
+    integer,intent(inout),dimension(:),allocatable::NVACClusterEachBoxArray
+    !---Local Vars---
+    character*256::OutFolder
+    character*256::pathOutSIA
+    integer::hFileOutSIA
+    character*256::pathOutVAC
+    integer::hFileOutVAC
+    character*256::pathOutSIAToVAC
+    integer::hFileOutSIAToVAC
+    character*256::pathOutMIX
+    integer::hFileOutMIX
+    integer::IBox
+    character*256::C_IBOX
+    character*256::C_ICFGSIA
+    character*256::C_ICFGVAC
+    character*256::fileName
+    logical::exits
+    integer::RemindZeroNum
+    integer::I
+    character*256::STR
+    integer::LINE
+    character*32::KEYWORD
+    integer::STA
+    integer::N
+    character*32::STRTMP(30)
+    integer::ClusterID
+    integer::NSIAClusterEachBox
+    integer::NVACClusterEachBox
+    type(ClusterAtom),dimension(:),allocatable::ClustersArraySIA
+    integer,dimension(:),allocatable::NAtomEachClusterSIA
+    type(ClusterAtom),dimension(:),allocatable::ClustersArrayVAC
+    integer,dimension(:),allocatable::NAtomEachClusterVAC
+    integer::AtomType
+    real(kind=KINDDF)::CentPosSIA(3)
+    real(kind=KINDDF)::CentPosVAC(3)
+    real(kind=KINDDF)::CentPosMIX(3)
+    real(kind=KINDDF)::Distance
+    integer::IC
+    integer::JC
+    integer::BinID
+    integer::CurrentIBox
+    integer::ICBefore
+    !---Body---
+
+    write(C_ICFGSIA,*) Index_SIAConfig
+    C_ICFGSIA = adjustl(C_ICFGSIA)
+    RemindZeroNum = MaxNumLen - LENTRIM(C_ICFGSIA)
+    DO I = 1,RemindZeroNum
+        C_ICFGSIA = "0"//C_ICFGSIA
+    END DO
+
+    write(C_ICFGVAC,*) Index_VACConfig
+    C_ICFGVAC = adjustl(C_ICFGVAC)
+    RemindZeroNum = MaxNumLen - LENTRIM(C_ICFGVAC)
+    DO I = 1,RemindZeroNum
+        C_ICFGVAC = "0"//C_ICFGVAC
+    END DO
+
+    if(Index_EndBox .GE. Index_StartBox) then
+        if(allocated(NSIAClusterEachBoxArray)) deallocate(NSIAClusterEachBoxArray)
+        allocate(NSIAClusterEachBoxArray(Index_EndBox - Index_StartBox + 1))
+        NSIAClusterEachBoxArray = 0
+
+        if(allocated(NVACClusterEachBoxArray)) deallocate(NVACClusterEachBoxArray)
+        allocate(NVACClusterEachBoxArray(Index_EndBox - Index_StartBox + 1))
+        NVACClusterEachBoxArray = 0
+    else
+        write(*,*) "MCPSCUERROR: The end box index should not less than start box index"
+        write(*,*) "Start: " ,Index_StartBox
+        write(*,*) "End: ",Index_EndBox
+        pause
+        stop
+    end if
+
+    DO IBox = Index_StartBox,Index_EndBox
+        write(C_IBOX,*) IBox
+        C_IBOX = adjustl(C_IBOX)
+        RemindZeroNum = MaxNumLen - LENTRIM(C_IBOX)
+
+        DO I = 1,RemindZeroNum
+            C_IBOX = "0"//C_IBOX
+        END DO
+
+        CentPosMIX = 0.D0
+
+
+        CurrentIBox = IBox - Index_StartBox + 1
+
+        !---SIA---
+        fileName = adjustl(trim(pathIn))//"/SIA/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGSIA))
+        call ReadOnConifg_SIA(fileName,ClustersArraySIA,NAtomEachClusterSIA,NSIAClusterEachBox)
+
+        NSIAClusterEachBoxArray(CurrentIBox) = NSIAClusterEachBox
+
+        CentPosSIA = 0.D0
+        DO IC = 1,NSIAClusterEachBox
+            CentPosSIA = CentPosSIA + ClustersArraySIA(IC)%POS
+            CentPosMIX = CentPosMIX + ClustersArraySIA(IC)%POS
+        END DO
+
+        if(NSIAClusterEachBox .GT. 0) then
+            CentPosSIA = CentPosSIA/NSIAClusterEachBox
+        end if
+
+        if(NSIAClusterEachBox .ne. size(ClustersArraySIA)) then
+            write(*,*) "Opps...."
+            write(*,*) "NSIAClusterEachBox",NSIAClusterEachBox
+            write(*,*) "size(ClustersArraySIA)",size(ClustersArraySIA)
+            pause
+            stop
+        end if
+
+        !---VAC---
+        fileName = adjustl(trim(pathIn))//"/VAC/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGVAC))
+        call ReadOnConifg_VAC(fileName,ClustersArrayVAC,NAtomEachClusterVAC,NVACClusterEachBox)
+
+        NVACClusterEachBoxArray(CurrentIBox) = NVACClusterEachBox
+
+        CentPosVAC = 0.D0
+        DO IC = 1,NVACClusterEachBox
+            CentPosVAC = CentPosVAC + ClustersArrayVAC(IC)%POS
+            CentPosMIX = CentPosMIX + ClustersArrayVAC(IC)%POS
+        END DO
+
+        if(NVACClusterEachBox .GT. 0) then
+            CentPosVAC = CentPosVAC/NVACClusterEachBox
+        end if
+
+        if(NVACClusterEachBox .ne. size(ClustersArrayVAC)) then
+            write(*,*) "Opps...."
+            write(*,*) "NVACClusterEachBox",NVACClusterEachBox
+            write(*,*) "size(ClustersArrayVAC)",size(ClustersArrayVAC)
+            pause
+            stop
+        end if
+
+        !---MIX---
+        if((NSIAClusterEachBox + NVACClusterEachBox) .GT. 0) then
+            CentPosMIX = CentPosMIX/(NSIAClusterEachBox + NVACClusterEachBox)
+        end if
+
+        if(sum(NAtomEachClusterSIA) .ne. sum(NAtomEachClusterVAC)) then
+            write(*,*) "MCPSCUERROR: It is impossible that SIA number not equal with VAC number"
+            write(*,*) sum(NAtomEachClusterSIA),sum(NAtomEachClusterVAC)
+            write(*,*) "For box: ",C_IBOX
+            pause
+            stop
+        end if
+
+    END DO
+
+    if((sum(NSIAClusterEachBoxArray) + sum(NVACClusterEachBoxArray)) .GT. 0) then
+        if(allocated(ClusterArray)) deallocate(ClusterArray)
+        allocate(ClusterArray(sum(NSIAClusterEachBoxArray) + sum(NVACClusterEachBoxArray)))
+
+        if(allocated(NAtomEachCluster)) deallocate(NAtomEachCluster)
+        allocate(NAtomEachCluster(sum(NSIAClusterEachBoxArray) + sum(NVACClusterEachBoxArray)))
+
+        NAtomEachCluster = 0
+    else
+        write(*,*) "MCPSCUERROR: That is impossible not cluster in the database"
+        pause
+        stop
+    end if
+
+    DO IBox = Index_StartBox,Index_EndBox
+        write(C_IBOX,*) IBox
+        C_IBOX = adjustl(C_IBOX)
+        RemindZeroNum = MaxNumLen - LENTRIM(C_IBOX)
+
+        DO I = 1,RemindZeroNum
+            C_IBOX = "0"//C_IBOX
+        END DO
+
+        CurrentIBox = IBox - Index_StartBox + 1
+
+        if(CurrentIBox .GT. 1) then
+            ICBefore = sum(NSIAClusterEachBoxArray(1:CurrentIBox - 1)) + sum(NVACClusterEachBoxArray(1:CurrentIBox - 1))
+        else
+            ICBefore = 0
+        end if
+
+        !---SIA---
+        fileName = adjustl(trim(pathIn))//"/SIA/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGSIA))
+        call ReadOnConifg_SIA(fileName,ClustersArraySIA,NAtomEachClusterSIA,NSIAClusterEachBox)
+
+        if(NSIAClusterEachBox .ne. size(ClustersArraySIA)) then
+            write(*,*) "Opps...."
+            write(*,*) "NSIAClusterEachBox",NSIAClusterEachBox
+            write(*,*) "size(ClustersArraySIA)",size(ClustersArraySIA)
+            pause
+            stop
+        end if
+
+        if(NSIAClusterEachBox .LE. 0) then
+            write(*,*) "MCPSSCUERROR: The SIA number less than 1 in box: ",C_IBOX
+            pause
+            stop
+        end if
+
+        ClusterArray(ICBefore + 1:ICBefore + NSIAClusterEachBox) = ClustersArraySIA
+        NAtomEachCluster(ICBefore + 1:ICBefore + NSIAClusterEachBox) = NAtomEachClusterSIA
+
+        !---VAC---
+        fileName = adjustl(trim(pathIn))//"/VAC/"//"P0000_"//adjustl(trim(C_IBOX))//"."//adjustl(trim(C_ICFGVAC))
+        call ReadOnConifg_VAC(fileName,ClustersArrayVAC,NAtomEachClusterVAC,NVACClusterEachBox)
+
+        if(NVACClusterEachBox .ne. size(ClustersArrayVAC)) then
+            write(*,*) "Opps...."
+            write(*,*) "NVACClusterEachBox",NVACClusterEachBox
+            write(*,*) "size(ClustersArrayVAC)",size(ClustersArrayVAC)
+            pause
+            stop
+        end if
+
+        if(NVACClusterEachBox .LE. 0) then
+            write(*,*) "MCPSSCUERROR: The VAC number less than 1 in box: ",C_IBOX
+            pause
+            stop
+        end if
+
+        ClusterArray(ICBefore + NSIAClusterEachBox + 1:ICBefore + NSIAClusterEachBox + NVACClusterEachBox) = ClustersArrayVAC
+        NAtomEachCluster(ICBefore + NSIAClusterEachBox + 1:ICBefore + NSIAClusterEachBox + NVACClusterEachBox) = NAtomEachClusterVAC
+
+    END DO
+
+    if(allocated(ClustersArraySIA)) deallocate(ClustersArraySIA)
+    if(allocated(NAtomEachClusterSIA)) deallocate(NAtomEachClusterSIA)
+    if(allocated(ClustersArrayVAC)) deallocate(ClustersArrayVAC)
+    if(allocated(NAtomEachClusterVAC)) deallocate(NAtomEachClusterVAC)
+
+    return
+    100 write(*,*) "MCPSCUERROR: Fail to load the configuration file"
+    write(*,*) "At line: ",LINE
+    write(*,*) "STR",STR
+    pause
+    stop
+  end subroutine CascadeDataBase_DirectlyRead
+
   !*************************************************************************
   subroutine ReadOnConifg_SIA(fileName,ClustersArray,NAtomEachCluster,NClusterEachBox)
     !---Dummy Vars---
@@ -1522,25 +1775,26 @@ module MC_GenerateCascadeBox
 
 
 
-  subroutine ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox,TheMDStatistic)
+  subroutine ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox, &
+                                                      MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig)
         !---Dummy Vars---
         integer,intent(in)::hFile
         logical,intent(out)::WhetherIncludeSIA
         logical,intent(out)::WhetherIncludeVAC
         integer,intent(out)::CascadeNum
         logical,intent(out)::WhetherCascadeSameInOneBox
-        type(MDStatistic)::TheMDStatistic
+        character*256,intent(out)::MDDataBasePath
+        integer,intent(out)::Index_StartBox
+        integer,intent(out)::Index_EndBox
+        integer,intent(out)::Index_SIAConfig
+        integer,intent(out)::Index_VACConfig
         !---Local Vars---
         integer::LINE
-        character*256::STR
+        character*1000::STR
         character*30::KEYWORD
         character*200::STRTMP(10)
         integer::N
-        character*256::MDDataBasePath
-        integer::Index_StartBox
-        integer::Index_EndBox
-        integer::Index_SIAConfig
-        integer::Index_VACConfig
+
         logical::Finded
 
         !---Body---
@@ -1921,11 +2175,8 @@ module MC_GenerateCascadeBox
            stop
         end if
 
-
-        call CascadeDataBase_ANALYSIS_SIAANDVAC(MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,TheMDStatistic)
-
         return
-    end subroutine
+    end subroutine ResloveCascadeControlFile_FormMDDataBase
 
 
     !**************************************************************
@@ -2084,7 +2335,7 @@ module MC_GenerateCascadeBox
     end subroutine GenerateClustersSize
 
     !***************************************************************
-    subroutine Generate_Cascade_Locally_FormMDDataBase(hFile)
+    subroutine Generate_Cascade_Locally_FormMDDataBase_Resample(hFile)
         implicit none
         !---Dummy Vars---
         integer,intent(in)::hFile
@@ -2097,6 +2348,11 @@ module MC_GenerateCascadeBox
         logical::WhetherIncludeVAC
         integer::CascadeNum
         logical::WhetherCascadeSameInOneBox
+        character*256::MDDataBasePath
+        integer::Index_StartBox
+        integer::Index_EndBox
+        integer::Index_SIAConfig
+        integer::Index_VACConfig
         type(MDStatistic)::TheMDStatistic
         integer::NSIACluster
         integer,dimension(:),allocatable::NAtomEachSIACluster
@@ -2137,7 +2393,10 @@ module MC_GenerateCascadeBox
         !-----------Body--------------
         WhetherIncludeSIA = .false.
         WhetherIncludeVAC = .false.
-        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox,TheMDStatistic)
+        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox, &
+                                                      MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig)
+
+        call CascadeDataBase_ANALYSIS_SIAANDVAC(MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,TheMDStatistic)
 
         call GenerateClustersSize(TheMDStatistic,NSIACluster,NAtomEachSIACluster,NVACCluster,NAtomEachVACCluster)
 
@@ -2192,9 +2451,9 @@ module MC_GenerateCascadeBox
             DO J = 1,CellNum_OneDim
                 DO K = 1,CellNum_OneDim
                     ICell = ICell + 1
-                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I + 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
-                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J + 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
-                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K + 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
+                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
+                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
                 END DO
             END DO
         END DO
@@ -2517,10 +2776,11 @@ module MC_GenerateCascadeBox
         call TheMDStatistic%Clean_MDStatistic()
 
         return
-    end subroutine Generate_Cascade_Locally_FormMDDataBase
+    end subroutine Generate_Cascade_Locally_FormMDDataBase_Resample
 
     !***************************************************************
-    subroutine Generate_Cascade_Uniform_FormMDDataBase(hFile)
+    subroutine Generate_Cascade_Locally_FormMDDataBase_Directly(hFile)
+        implicit none
         !---Dummy Vars---
         integer,intent(in)::hFile
         !---Local Vars---
@@ -2532,6 +2792,334 @@ module MC_GenerateCascadeBox
         logical::WhetherIncludeVAC
         integer::CascadeNum
         logical::WhetherCascadeSameInOneBox
+        character*256::MDDataBasePath
+        integer::Index_StartBox
+        integer::Index_EndBox
+        integer::Index_SIAConfig
+        integer::Index_VACConfig
+        type(MDStatistic)::TheMDStatistic
+        integer::NSIACluster
+        integer::NVACCluster
+        integer::err
+        real(kind=KINDDF),dimension(:,:),allocatable::Sphere_Central
+        integer::I
+        integer::J
+        integer::K
+        integer::IBox
+        integer::ICase
+        integer::IC
+        integer::JC
+        integer::IIC
+        integer::processid
+        integer::ISEED0,ISEED(2)
+        integer::SIAIndex
+        integer::VacancyIndex
+        integer::CellNum_OneDim
+        integer::CellNum
+        integer::ICell
+        real(kind=KINDDF),dimension(:,:),allocatable::CellCentralPos
+        integer::CheckSIAEachBox
+        integer::CheckVACEachBox
+        type(ClusterAtom),dimension(:),allocatable::Read_ClusterArray
+        integer,dimension(:),allocatable::Read_NAtomEachCluster
+        integer,dimension(:),allocatable::Read_NSIAClusterEachBox
+        integer,dimension(:),allocatable::Read_NVACClusterEachBox
+        integer,dimension(:),allocatable::ClusterNum_EachBox
+        integer::SelectedBoxIndex
+        integer::ICSIAReadFrom
+        integer::ICVACReadFrom
+        !-----------Body--------------
+        WhetherIncludeSIA = .false.
+        WhetherIncludeVAC = .false.
+        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox, &
+                                                      MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig)
+
+        call CascadeDataBase_DirectlyRead(MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,Read_ClusterArray,Read_NAtomEachCluster,Read_NSIAClusterEachBox,Read_NVACClusterEachBox)
+
+        processid = 0
+
+        call AllocateArray_Host(Sphere_Central,CascadeNum,3,"Sphere_Central")
+
+        !*********Create/Open log file********************
+        call OpenLogFile(m_hFILELOG)
+
+        !********Load Global vars from input file**************
+        call Initialize_Global_Variables(Host_SimuCtrlParam,Host_Boxes)
+
+
+        ISEED0 = Host_SimuCtrlParam%RANDSEED(1)
+        call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+        ISEED0 = ISEED0 + processid - 1
+        call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+        call DRAND32_PUTSEED(ISEED)
+
+        call Print_Global_Variables(6,Host_SimuCtrlParam,Host_Boxes)
+
+        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"CascadeBox/")
+
+        Host_SimuCtrlParam%OutFilePath = trim(adjustl(OutFolder))
+
+        call Host_Boxes%m_ClustersInfo_CPU%Clean()
+
+        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
+
+
+        if(Host_SimuCtrlParam%MultiBox .LE. 0) then
+            write(*,*) "MCPSCUERROR: The box number less than 1"
+            pause
+            stop
+        end if
+
+        if(allocated(ClusterNum_EachBox)) deallocate(ClusterNum_EachBox)
+        allocate(ClusterNum_EachBox(Host_SimuCtrlParam%MultiBox))
+        ClusterNum_EachBox = 0
+
+        if(WhetherCascadeSameInOneBox) then
+            DO IBox = 1,Host_SimuCtrlParam%MultiBox
+                SelectedBoxIndex = mod(IBox,Index_EndBox - Index_StartBox + 1)
+
+                if(SelectedBoxIndex .eq. 0) then
+                    SelectedBoxIndex = Index_EndBox - Index_StartBox + 1
+                end if
+
+                if(WhetherIncludeSIA .eq. .true.) then
+                    ClusterNum_EachBox(IBox) = CascadeNum*Read_NSIAClusterEachBox(SelectedBoxIndex)
+                end if
+
+                if(WhetherIncludeVAC .eq. .true.) then
+                    ClusterNum_EachBox(IBox) = ClusterNum_EachBox(IBox) + CascadeNum*Read_NVACClusterEachBox(SelectedBoxIndex)
+                end if
+            END DO
+        else
+            DO IBox = 1,Host_SimuCtrlParam%MultiBox
+                DO ICase = 1,CascadeNum
+                    SelectedBoxIndex = mod((IBox-1)*CascadeNum + ICase,Index_EndBox - Index_StartBox + 1)
+
+                    if(SelectedBoxIndex .eq. 0) then
+                        SelectedBoxIndex = Index_EndBox - Index_StartBox + 1
+                    end if
+
+                    if(WhetherIncludeSIA .eq. .true.) then
+                        ClusterNum_EachBox(IBox) = ClusterNum_EachBox(IBox) + Read_NSIAClusterEachBox(SelectedBoxIndex)
+                    end if
+
+                    if(WhetherIncludeVAC .eq. .true.) then
+                        ClusterNum_EachBox(IBox) = ClusterNum_EachBox(IBox) + Read_NVACClusterEachBox(SelectedBoxIndex)
+                    end if
+
+                END DO
+            END DO
+        end if
+
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,ClusterNum_EachBox)
+
+        SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
+        VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
+
+        !---ReDraw the cells-----
+        CellNum_OneDim = floor(CascadeNum**C_UTH + 0.5D0)
+        CellNum = CellNum_OneDim**3
+
+        call AllocateArray_Host(CellCentralPos,CellNum,3,"CellCentralPos")
+
+        ICell = 0
+        DO I = 1,CellNum_OneDim
+            DO J = 1,CellNum_OneDim
+                DO K = 1,CellNum_OneDim
+                    ICell = ICell + 1
+                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
+                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
+                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                END DO
+            END DO
+        END DO
+        !------------------------
+
+        IC = 0
+        DO IBox = 1,Host_SimuCtrlParam%MultiBox
+
+            CheckSIAEachBox = 0
+            CheckVACEachBox = 0
+
+            DO ICase = 1,CascadeNum
+                Sphere_Central(ICase,:) = CellCentralPos(ICase,:)
+
+                if(WhetherCascadeSameInOneBox) then
+                    SelectedBoxIndex = mod(IBox,Index_EndBox - Index_StartBox + 1)
+                else
+                    SelectedBoxIndex = mod((IBox-1)*CascadeNum + ICase,Index_EndBox - Index_StartBox + 1)
+                end if
+
+                if(SelectedBoxIndex .eq. 0) then
+                    SelectedBoxIndex = Index_EndBox - Index_StartBox + 1
+                end if
+
+                if(SelectedBoxIndex .GT. 1) then
+                    ICSIAReadFrom = sum(Read_NSIAClusterEachBox(1:SelectedBoxIndex - 1)) + sum(Read_NVACClusterEachBox(1:SelectedBoxIndex - 1))
+                    ICVACReadFrom = sum(Read_NSIAClusterEachBox(1:SelectedBoxIndex)) + sum(Read_NVACClusterEachBox(1:SelectedBoxIndex - 1))
+                else
+                    ICSIAReadFrom = 0
+                    ICVACReadFrom = sum(Read_NSIAClusterEachBox(1:1))
+                end if
+
+                if(WhetherIncludeSIA .eq. .true.) then
+                    NSIACluster = Read_NSIAClusterEachBox(SelectedBoxIndex)
+                else
+                    NSIACluster = 0
+                end if
+
+                if(WhetherIncludeVAC .eq. .true.) then
+                    NVACCluster = Read_NVACClusterEachBox(SelectedBoxIndex)
+                else
+                    NVACCluster = 0
+                end if
+
+                DO IIC = 1,NSIACluster
+                    IC = IC + 1
+                    call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = Read_NAtomEachCluster(ICSIAReadFrom + IIC)
+
+                    CheckSIAEachBox = CheckSIAEachBox + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA
+
+                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .LE. 0) then
+                        write(*,*) "Opps...,the SIA cluster size cannot less than 0"
+                        write(*,*) "For cluster: ",IC
+                        write(*,*) Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA
+                        pause
+                        stop
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + Read_ClusterArray(ICSIAReadFrom + IIC)%POS(1)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + Read_ClusterArray(ICSIAReadFrom + IIC)%POS(2)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + Read_ClusterArray(ICSIAReadFrom + IIC)%POS(3)
+
+
+                    DO I = 1,3
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1)) then
+                            write(*,*) "MCPSCUERROR: Opps, the box are too small"
+                            write(*,*) "Cluster: ",IC," have exist the boundary : ", Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I),"  ", Host_Boxes%BOXBOUNDARY(I,1)
+                            pause
+                            stop
+                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                            write(*,*) "MCPSCUERROR: Opps, the box are too small"
+                            write(*,*) "Cluster: ",IC," have exist the boundary : ", Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I),"  ", Host_Boxes%BOXBOUNDARY(I,2)
+                            pause
+                            stop
+                        end if
+                    END DO
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + 1
+                    Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) + 1
+
+                END DO
+
+                DO IIC = 1,NVACCluster
+
+                    IC = IC + 1
+                    call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = Read_NAtomEachCluster(ICVACReadFrom + IIC)
+
+                    CheckVACEachBox = CheckVACEachBox + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA
+
+                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .LE. 0) then
+                        write(*,*) "Opps...,the VAC cluster size cannot less than 0"
+                        write(*,*) "For cluster: ",IC
+                        write(*,*) Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA
+                        pause
+                        stop
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(1)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(2)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(3)
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + 1
+                    Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) + 1
+
+                END DO
+
+            END DO
+
+            if(WhetherIncludeSIA .eq. .true. .and. WhetherIncludeVAC .eq. .true.) then
+                if(CheckSIAEachBox .ne. CheckVACEachBox) then
+                    write(*,*) "MCPSCUERROR: the SIA number is not equal with VAC number"
+                    write(*,*) "SIA: ",CheckSIAEachBox
+                    write(*,*) "VAC: ",CheckVACEachBox
+                    write(*,*) "In box: ",IBox
+                    pause
+                    stop
+                end if
+            end if
+
+        END DO
+
+        call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
+
+        if(allocated(Read_ClusterArray)) deallocate(Read_ClusterArray)
+
+        call DeAllocateArray_Host(CellCentralPos,"CellCentralPos")
+
+        call DeAllocateArray_Host(Sphere_Central,"Sphere_Central")
+
+        call DeAllocateArray_Host(Read_NAtomEachCluster,"Read_NAtomEachCluster")
+
+        call DeAllocateArray_Host(Read_NSIAClusterEachBox,"Read_NSIAClusterEachBox")
+
+        call DeAllocateArray_Host(Read_NVACClusterEachBox,"Read_NVACClusterEachBox")
+
+        call DeAllocateArray_Host(ClusterNum_EachBox,"ClusterNum_EachBox")
+
+        call Host_Boxes%Clean()
+
+        return
+    end subroutine Generate_Cascade_Locally_FormMDDataBase_Directly
+
+    !***************************************************************
+    subroutine Generate_Cascade_Uniform_FormMDDataBase_Resample(hFile)
+        !---Dummy Vars---
+        integer,intent(in)::hFile
+        !---Local Vars---
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoalClusterRecord)::Record
+        character*256::OutFolder
+        logical::WhetherIncludeSIA
+        logical::WhetherIncludeVAC
+        integer::CascadeNum
+        logical::WhetherCascadeSameInOneBox
+        character*256::MDDataBasePath
+        integer::Index_StartBox
+        integer::Index_EndBox
+        integer::Index_SIAConfig
+        integer::Index_VACConfig
         type(MDStatistic)::TheMDStatistic
         integer::NSIACluster
         integer,dimension(:),allocatable::NAtomEachSIACluster
@@ -2561,7 +3149,10 @@ module MC_GenerateCascadeBox
 
         WhetherIncludeSIA = .false.
         WhetherIncludeVAC = .false.
-        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox,TheMDStatistic)
+        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox, &
+                                                      MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig)
+
+        call CascadeDataBase_ANALYSIS_SIAANDVAC(MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,TheMDStatistic)
 
         call GenerateClustersSize(TheMDStatistic,NSIACluster,NAtomEachSIACluster,NVACCluster,NAtomEachVACCluster)
 
@@ -2800,7 +3391,7 @@ module MC_GenerateCascadeBox
         call TheMDStatistic%Clean_MDStatistic()
 
         return
-    end subroutine Generate_Cascade_Uniform_FormMDDataBase
+    end subroutine Generate_Cascade_Uniform_FormMDDataBase_Resample
 
     !*************************************************************
     subroutine ResloveCascadeControlFile_Locally_CentUniform(hFile,WhetherIncludeSIA,WhetherIncludeVAC,ClusterNumOneCase,CascadeNum,WhetherCascadeSameInOneBox)
@@ -2813,7 +3404,7 @@ module MC_GenerateCascadeBox
         logical,intent(out)::WhetherCascadeSameInOneBox
         !---Local Vars---
         integer::LINE
-        character*256::STR
+        character*1000::STR
         character*30::KEYWORD
         character*200::STRTMP(10)
         integer::N
@@ -3157,9 +3748,9 @@ module MC_GenerateCascadeBox
             DO J = 1,CellNum_OneDim
                 DO K = 1,CellNum_OneDim
                     ICell = ICell + 1
-                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I + 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
-                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J + 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
-                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K + 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
+                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
+                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
                 END DO
             END DO
         END DO
@@ -3301,7 +3892,7 @@ program Main_MC_GenerateCascadeBox
     character*256::CascadeControlFile
     integer::hFile
     integer::LINE
-    character*256::STR
+    character*1000::STR
     character*256::STRTMP(10)
     integer::FinededCascadeGenWay
     character*32::KEYWORD
@@ -3368,15 +3959,20 @@ program Main_MC_GenerateCascadeBox
 
             call Generate_Cascade_Locally_CentUniform(hFile)
 
-        case(CascadeGenWay_ByMDDataBase_Locally)
-            write(*,*) "The cascade generate way is by MD database,locally"
+        case(CascadeGenWay_ByMDDataBase_Locally_Resample)
+            write(*,*) "The cascade generate way is by MD database,locally, resample"
 
-            call Generate_Cascade_Locally_FormMDDataBase(hFile)
+            call Generate_Cascade_Locally_FormMDDataBase_Resample(hFile)
 
-        case(CascadeGenWay_ByMDDataBase_Uniform)
-            write(*,*) "The cascade generate way is by MD database, uniform"
+        case(CascadeGenWay_ByMDDataBase_Uniform_Resample)
+            write(*,*) "The cascade generate way is by MD database, uniform, resample"
 
-            call Generate_Cascade_Uniform_FormMDDataBase(hFile)
+            call Generate_Cascade_Uniform_FormMDDataBase_Resample(hFile)
+
+        case(CascadeGenWay_ByMDDataBase_Locally_Directly)
+            write(*,*) "The cascade generate way is by MD database,locally, directly"
+
+            call Generate_Cascade_Locally_FormMDDataBase_Directly(hFile)
 
         case default
             write(*,*) "MCPSCUERROR: Unknown way to generate cascade(0 by uniform way, 1 by from MD database)"

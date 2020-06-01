@@ -1,4 +1,4 @@
-&GENERATEWAY                the cascade generate way = 3                  ! (0 by Locally ,center uniform way; 1 by from MD database,locally resample ;2 by from MD database, uniform resapme; 3 by from MD database,locally not resample)
+&GENERATEWAY                the cascade generate way = 3                  ! (0 by Locally ,center uniform way; 1 by from MD database,locally resample ;2 by from MD database, uniform resapme;; 3 by from MD database,locally not resample ;4 by from MD database, uniform not resapme)
 &NSIAVACPAIRSEACHCASCADE    number of Frankel pairs in each cascade = 23  ! only necessary by cascade generate way 1
 &CASCADENUMBER              number of cascade in each box = 1
 &CASCADESAME                whether each cascade is same in one box  = "YES"   ! "YES" or "No"

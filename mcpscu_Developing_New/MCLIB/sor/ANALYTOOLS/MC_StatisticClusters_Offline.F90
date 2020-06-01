@@ -442,7 +442,7 @@ module MC_StatisticClusters_Offline
         integer,intent(out)::CascadeNum
         !---Local Vars---
         integer::LINE
-        character*256::STR
+        character*1000::STR
         character*30::KEYWORD
         character*200::STRTMP(10)
         integer::N
