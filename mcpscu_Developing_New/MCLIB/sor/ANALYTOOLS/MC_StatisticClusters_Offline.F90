@@ -498,17 +498,15 @@ module MC_StatisticClusters_Offline
 
 
     !*******************************************************************************
-    subroutine StatisticClusters_SIAAndVAC_Ver2019_08_16(CascadeControlFile,Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+    subroutine StatisticClusters_SIAAndVAC_Ver2019_08_16(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
         implicit none
         !---Dummy Vars---
-        character*256,intent(in)::CascadeControlFile
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         CLASS(SimulationRecord)::Record
         integer::hFileOutEachBox
         integer::hFileOutTotalBox
         !---Local Vars---
-        integer::hFile
         integer::MultiBox
         integer::IBox
         integer::IC
@@ -538,17 +536,16 @@ module MC_StatisticClusters_Offline
         integer::VacIndex
         integer::NC_InterCascadeReact
         integer::NC_InterCascadeReact_EachBox
-        integer::CascadeNumEachBox
-        integer::NClusterEachCascade
-        integer::CascadeIndex
         integer::Num_RecombineEachBox
         integer::Num_Recombine
+        integer::I
+        integer::NSIA
+        integer::NVAC
+        integer::Left
+        integer::Right
         !---Body---
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
-
-        hFile = OpenExistedFile(CascadeControlFile)
-        call ResloveCascadeControlFile(hFile,CascadeNumEachBox)
 
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -643,15 +640,6 @@ module MC_StatisticClusters_Offline
             ICFROM = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTO = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
 
-            NClusterEachCascade = (ICTO - ICFROM + 1)/CascadeNumEachBox
-            if(mod(ICTO - ICFROM + 1,CascadeNumEachBox) .ne. 0) then
-                write(*,*) "MCPSCUERROR: It is impossible that the cluster number in cascades is not same in box"
-                write(*,*) ICTO - ICFROM + 1
-                write(*,*) CascadeNumEachBox
-                pause
-                stop
-            end if
-
             DO IC = ICFROM,ICTO
                 IStatu = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu
 
@@ -676,11 +664,25 @@ module MC_StatisticClusters_Offline
 
 
                 if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ABSORBED_STATU) then
-                    CascadeIndex = (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) - 1)/NClusterEachCascade + 1
-                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .GT. CascadeIndex*NClusterEachCascade .or. &
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .LT. (CascadeIndex-1)*NClusterEachCascade) then
-                        NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
-                    end if
+
+                    Left = min(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1),Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
+                    Right = max(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1),Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
+
+                    DO I = Left,Right
+                        if(I .GT. 1) then
+                            NVAC = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1-1)%m_Atoms(VacIndex)%m_NA)
+                        else
+                            NVAC = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1)%m_Atoms(VacIndex)%m_NA)
+                        end if
+
+                        NSIA = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1)%m_Atoms(SIAIndex)%m_NA)
+
+                        if(NVAC .GT. 0 .AND. NSIA .GT. 0) then
+                            NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
+                        end if
+
+                    END DO
+
                 end if
 
                 if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ABSORBED_STATU) then
@@ -758,24 +760,20 @@ module MC_StatisticClusters_Offline
         if(allocated(CCNum_Vac)) deallocate(CCNum_Vac)
         if(allocated(CNAVA_Vac)) deallocate(CNAVA_Vac)
 
-        close(hFile)
-
         return
     end subroutine StatisticClusters_SIAAndVAC_Ver2019_08_16
 
 
     !*******************************************************************************
-    subroutine StatisticClusters_SIAAndVAC_Ver2019_08_20(CascadeControlFile,Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+    subroutine StatisticClusters_SIAAndVAC_Ver2019_08_20(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
         implicit none
         !---Dummy Vars---
-        character*256,intent(in)::CascadeControlFile
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         CLASS(SimulationRecord)::Record
         integer::hFileOutEachBox
         integer::hFileOutTotalBox
         !---Local Vars---
-        integer::hFile
         integer::MultiBox
         integer::IBox
         integer::IC
@@ -805,8 +803,6 @@ module MC_StatisticClusters_Offline
         integer::VacIndex
         integer::NC_InterCascadeReact
         integer::NC_InterCascadeReact_EachBox
-        integer::CascadeNumEachBox
-        integer::NClusterEachCascade
         integer::CascadeIndex
         integer::Num_RecombineEachBox
         integer::Num_Recombine
@@ -816,12 +812,14 @@ module MC_StatisticClusters_Offline
         integer::Num_ReactBetweenVAC
         integer::NBox_NSIA_GT1
         integer::NBox_NVAC_GT1
+        integer::I
+        integer::NSIA
+        integer::NVAC
+        integer::Left
+        integer::Right
         !---Body---
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
-
-        hFile = OpenExistedFile(CascadeControlFile)
-        call ResloveCascadeControlFile(hFile,CascadeNumEachBox)
 
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -933,15 +931,6 @@ module MC_StatisticClusters_Offline
             ICFROM = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTO = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
 
-            NClusterEachCascade = (ICTO - ICFROM + 1)/CascadeNumEachBox
-            if(mod(ICTO - ICFROM + 1,CascadeNumEachBox) .ne. 0) then
-                write(*,*) "MCPSCUERROR: It is impossible that the cluster number in cascades is not same in box"
-                write(*,*) ICTO - ICFROM + 1
-                write(*,*) CascadeNumEachBox
-                pause
-                stop
-            end if
-
             DO IC = ICFROM,ICTO
                 IStatu = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu
 
@@ -966,11 +955,25 @@ module MC_StatisticClusters_Offline
 
 
                 if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ABSORBED_STATU) then
-                    CascadeIndex = (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) - 1)/NClusterEachCascade + 1
-                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .GT. CascadeIndex*NClusterEachCascade .or. &
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .LT. (CascadeIndex-1)*NClusterEachCascade) then
-                        NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
-                    end if
+
+                    Left = min(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1),Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
+                    Right = max(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1),Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
+
+                    DO I = Left,Right
+                        if(I .GT. 1) then
+                            NVAC = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1-1)%m_Atoms(VacIndex)%m_NA)
+                        else
+                            NVAC = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1)%m_Atoms(VacIndex)%m_NA)
+                        end if
+
+                        NSIA = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1)%m_Atoms(SIAIndex)%m_NA)
+
+                        if(NVAC .GT. 0 .AND. NSIA .GT. 0) then
+                            NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
+                        end if
+
+                    END DO
+
                 end if
 
                 if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ABSORBED_STATU) then
@@ -1074,8 +1077,6 @@ module MC_StatisticClusters_Offline
         if(allocated(CCNum_Vac)) deallocate(CCNum_Vac)
         if(allocated(CNAVA_Vac)) deallocate(CNAVA_Vac)
 
-        close(hFile)
-
         return
     end subroutine StatisticClusters_SIAAndVAC_Ver2019_08_20
 
@@ -1094,7 +1095,6 @@ program Main_StatisticClusters_Offline
     integer::arg_Num
     character*256::ARG
     character*256::SampleFile
-    character*256::CascadeControlFile
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(MigCoalClusterRecord)::Record
@@ -1118,8 +1118,8 @@ program Main_StatisticClusters_Offline
     !-----------Body--------------
     arg_Num = Command_Argument_Count()
 
-    if(arg_Num .LT. 2) then
-        write(*,*) "MCPSCUERROR: You must special the sample file, cascade control file"
+    if(arg_Num .LT. 1) then
+        write(*,*) "MCPSCUERROR: You must special the sample file"
         pause
         stop
     end if
@@ -1129,10 +1129,6 @@ program Main_StatisticClusters_Offline
     call Get_Command_Argument(1,ARG)
     Read(ARG,fmt="(A256)") SampleFile
     write(*,*) "The sample file is: ",SampleFile
-
-    call Get_Command_Argument(2,ARG)
-    Read(ARG,fmt="(A256)") CascadeControlFile
-    write(*,*) "The cascade control file is: ",CascadeControlFile
 
     !*********Create/Open log file********************
     call OpenLogFile(m_hFILELOG)
@@ -1194,11 +1190,11 @@ program Main_StatisticClusters_Offline
 
                 select case(adjustl(trim(TheVersion)))
                     case("2019_08_16")
-                        call StatisticClusters_SIAAndVAC_Ver2019_08_16(CascadeControlFile,Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+                        call StatisticClusters_SIAAndVAC_Ver2019_08_16(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
                     case(adjustl(trim(mp_Version)))
-                        call StatisticClusters_SIAAndVAC_Ver2019_08_20(CascadeControlFile,Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+                        call StatisticClusters_SIAAndVAC_Ver2019_08_20(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
                     case default
-                        call StatisticClusters_SIAAndVAC_Ver2019_08_20(CascadeControlFile,Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+                        call StatisticClusters_SIAAndVAC_Ver2019_08_20(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
                 end select
 
                 call Host_Boxes%Clean()
