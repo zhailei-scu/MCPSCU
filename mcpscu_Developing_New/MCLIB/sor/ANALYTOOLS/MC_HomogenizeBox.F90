@@ -37,6 +37,8 @@ module MC_HomogenizeBox
             DO IC = ICFROM,ICTO
                 DO I = 1,3
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + DRAND32()*Host_Boxes%BOXSIZE(I)
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
                 END DO
 
             END DO

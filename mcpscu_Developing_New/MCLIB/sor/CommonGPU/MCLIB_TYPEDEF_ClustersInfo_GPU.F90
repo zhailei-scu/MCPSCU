@@ -19,6 +19,12 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         !---Active Index---
         integer, device, dimension(:), allocatable::dm_ActiveIndex
 
+
+        !---Record Value---
+        integer,device,dimension(:),allocatable::dm_ReactionBetweenSIA
+        integer,device,dimension(:),allocatable::dm_ReactionBetweenVAC
+        integer,device,dimension(:),allocatable::dm_Recombination
+
         !---Record Some status
         integer::NLUpdateCount_Dev = 0
 
@@ -64,6 +70,7 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         END DO
 
         TheCluster%m_POS = 0
+        TheCluster%m_POS_Start = 0
         TheCluster%m_Layer = 1
         TheCluster%m_RAD = 0
         TheCluster%m_Statu = p_Empty
@@ -147,6 +154,11 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         !---Active Index---
         call DeAllocateArray_GPU(this%dm_ActiveIndex,"dm_ActiveIndex")
 
+        !---Record Value---
+        call DeAllocateArray_GPU(this%dm_ReactionBetweenSIA,"dm_ReactionBetweenSIA")
+        call DeAllocateArray_GPU(this%dm_ReactionBetweenVAC,"dm_ReactionBetweenVAC")
+        call DeAllocateArray_GPU(this%dm_Recombination,"dm_Recombination")
+
         call this%SetNLUpdateCount_Dev(0)
 
         return
@@ -183,6 +195,11 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
             !---Active Index---
             call AllocateArray_GPU(this%dm_ActiveIndex,AllocSize,"dm_ActiveIndex")
 
+            !---Record Value---
+            call AllocateArray_GPU(this%dm_ReactionBetweenSIA,AllocSize,"dm_ReactionBetweenSIA")
+            call AllocateArray_GPU(this%dm_ReactionBetweenVAC,AllocSize,"dm_ReactionBetweenVAC")
+            call AllocateArray_GPU(this%dm_Recombination,AllocSize,"dm_Recombination")
+
             call this%SetNLUpdateCount_Dev(0)
 
         end if
@@ -218,6 +235,11 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         !---Active Index---
         call DeAllocateArray_GPU(this%dm_ActiveIndex,"dm_ActiveIndex")
 
+        !---Record Value---
+        call DeAllocateArray_GPU(this%dm_ReactionBetweenSIA,"dm_ReactionBetweenSIA")
+        call DeAllocateArray_GPU(this%dm_ReactionBetweenVAC,"dm_ReactionBetweenVAC")
+        call DeAllocateArray_GPU(this%dm_Recombination,"dm_Recombination")
+
         call this%SetNLUpdateCount_Dev(0)
 
         return
@@ -242,7 +264,10 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
                                                  sizeof(oneClusterInfo_GPU%dm_MergeINDI) + &
                                                  sizeof(oneClusterInfo_GPU%dm_MergeKVOIS) + &
                                                  sizeof(oneClusterInfo_GPU%dm_ActiveStatus) + &
-                                                 sizeof(oneClusterInfo_GPU%dm_ActiveIndex)
+                                                 sizeof(oneClusterInfo_GPU%dm_ActiveIndex) + &
+                                                 sizeof(oneClusterInfo_GPU%dm_ReactionBetweenSIA) + &
+                                                 sizeof(oneClusterInfo_GPU%dm_ReactionBetweenVAC) + &
+                                                 sizeof(oneClusterInfo_GPU%dm_Recombination)
 
 
 

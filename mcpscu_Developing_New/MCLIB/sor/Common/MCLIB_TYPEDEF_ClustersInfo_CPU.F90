@@ -14,6 +14,11 @@ module MCLIB_TYPEDEF_ClustersInfo_CPU
         !---Active Index---
         integer, dimension(:),allocatable::m_ActiveIndex
 
+        !---Reaction Record---
+        integer,dimension(:),allocatable::m_ReactionBetweenSIA
+        integer,dimension(:),allocatable::m_ReactionBetweenVAC
+        integer,dimension(:),allocatable::m_Recombination
+
         contains
 
         procedure,NON_OVERRIDABLE,pass,public::AllocateClustersInfo_CPU=>Allocate_ClustersInfo_CPU
@@ -75,6 +80,11 @@ module MCLIB_TYPEDEF_ClustersInfo_CPU
             !---Active Index---
             call AllocateArray_Host(this%m_ActiveIndex,AllocSize,"m_ActiveIndex")
 
+            !---Reaction Record---
+            call AllocateArray_Host(this%m_ReactionBetweenSIA,AllocSize,"m_ReactionBetweenSIA")
+            call AllocateArray_Host(this%m_ReactionBetweenVAC,AllocSize,"m_ReactionBetweenVAC")
+            call AllocateArray_Host(this%m_Recombination,AllocSize,"m_Recombination")
+
             !---NeighborList-Info in host
             call this%m_list%AllocateNEIGHBOR_LIST(AllocSize,NeighborhoodsNum)
 
@@ -93,6 +103,11 @@ module MCLIB_TYPEDEF_ClustersInfo_CPU
 
         !---NeighborList-Info in Device
         call this%m_list%Release()
+
+        !---Reaction Record---
+        call DeAllocateArray_Host(this%m_ReactionBetweenSIA,"m_ReactionBetweenSIA")
+        call DeAllocateArray_Host(this%m_ReactionBetweenVAC,"m_ReactionBetweenVAC")
+        call DeAllocateArray_Host(this%m_Recombination,"m_Recombination")
 
         !---Active Index---
         call DeAllocateArray_Host(this%m_ActiveIndex,"m_ActiveIndex")
@@ -138,6 +153,25 @@ module MCLIB_TYPEDEF_ClustersInfo_CPU
             stop
         end if
 
+        !---Reaction Record---
+        if(ClustersNum .ne. size(this%m_ReactionBetweenSIA)) then
+            write(*,*) "MCPSCUERROR: The clusters number for clusters array is not same with ReactionBetweenSIA."
+            pause
+            stop
+        end if
+
+        if(ClustersNum .ne. size(this%m_ReactionBetweenVAC)) then
+            write(*,*) "MCPSCUERROR: The clusters number for clusters array is not same with ReactionBetweenVAC."
+            pause
+            stop
+        end if
+
+        if(ClustersNum .ne. size(this%m_Recombination)) then
+            write(*,*) "MCPSCUERROR: The clusters number for clusters array is not same with Recombination."
+            pause
+            stop
+        end if
+
         NeigborNum = NeigborNum_NeighborList
         return
     end subroutine Get_ClustersInfo_ArraySize
@@ -159,6 +193,11 @@ module MCLIB_TYPEDEF_ClustersInfo_CPU
 
         !********For ActiveIndex****************
         call DumplicateArrayi_OneDim(this%m_ActiveIndex,DumplicateNum)
+
+        !*******Reaction Record****************
+        call DumplicateArrayi_OneDim(this%m_ReactionBetweenSIA,DumplicateNum)
+        call DumplicateArrayi_OneDim(this%m_ReactionBetweenVAC,DumplicateNum)
+        call DumplicateArrayi_OneDim(this%m_Recombination,DumplicateNum)
 
         return
     end subroutine Dumplicate_ClustersInfo_CPU
@@ -184,6 +223,11 @@ module MCLIB_TYPEDEF_ClustersInfo_CPU
             Dist_Info%m_list = Source_Info%m_list
 
             Dist_Info%m_ActiveIndex = reshape(SOURCE=[Source_Info%m_ActiveIndex],SHAPE=[SourceClustersNum])
+
+            !---Reaction Record---
+            Dist_Info%m_ReactionBetweenSIA = reshape(SOURCE=[Source_Info%m_ReactionBetweenSIA],SHAPE=[SourceClustersNum])
+            Dist_Info%m_ReactionBetweenVAC = reshape(SOURCE=[Source_Info%m_ReactionBetweenVAC],SHAPE=[SourceClustersNum])
+            Dist_Info%m_Recombination = reshape(SOURCE=[Source_Info%m_Recombination],SHAPE=[SourceClustersNum])
         end if
 
         return

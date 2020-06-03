@@ -1668,6 +1668,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::I
     type(ACluster), dimension(:), allocatable::tempOldClusters
     integer, dimension(:), allocatable::tempOldActiveIndex
+    integer,dimension(:),allocatable::tempOldReactionBetweenSIA
+    integer,dimension(:),allocatable::tempOldReactionBetweenVAC
+    integer,dimension(:),allocatable::tempOldRecombination
     integer::IBox
     integer::OldTotalSize
     integer::NewTotalSize
@@ -1701,9 +1704,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call AllocateArray_Host(tempOldActiveIndex,OldTotalSize,"tempOldActiveIndex")
 
+        call AllocateArray_Host(tempOldReactionBetweenSIA,OldTotalSize,"tempOldReactionBetweenSIA")
+        call AllocateArray_Host(tempOldReactionBetweenVAC,OldTotalSize,"tempOldReactionBetweenVAC")
+        call AllocateArray_Host(tempOldRecombination,OldTotalSize,"tempOldRecombination")
+
         tempOldClusters = this%m_ClustersInfo_CPU%m_Clusters
 
         tempOldActiveIndex = this%m_ClustersInfo_CPU%m_ActiveIndex
+
+        tempOldReactionBetweenSIA = this%m_ClustersInfo_CPU%m_ReactionBetweenSIA
+        tempOldReactionBetweenVAC = this%m_ClustersInfo_CPU%m_ReactionBetweenVAC
+        tempOldRecombination = this%m_ClustersInfo_CPU%m_Recombination
 
         call this%m_ClustersInfo_CPU%Clean()
 
@@ -1746,8 +1757,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             this%m_ClustersInfo_CPU%m_ActiveIndex(ICFromNew:ExpandStartNew-1) = tempOldActiveIndex(ICFrom:ICTo)
 
+            this%m_ClustersInfo_CPU%m_ReactionBetweenSIA(ICFromNew:ExpandStartNew-1) = tempOldReactionBetweenSIA(ICFrom:ICTo)
+            this%m_ClustersInfo_CPU%m_ReactionBetweenVAC(ICFromNew:ExpandStartNew-1) = tempOldReactionBetweenVAC(ICFrom:ICTo)
+            this%m_ClustersInfo_CPU%m_Recombination(ICFromNew:ExpandStartNew-1) = tempOldRecombination(ICFrom:ICTo)
+
             FORALL(I=ExpandStartNew:ICToNew)
                 this%m_ClustersInfo_CPU%m_ActiveIndex(I) = I
+                this%m_ClustersInfo_CPU%m_ReactionBetweenSIA(I) = 0
+                this%m_ClustersInfo_CPU%m_ReactionBetweenVAC(I) = 0
+                this%m_ClustersInfo_CPU%m_Recombination(I) = 0
             END FORALL
 
             this%m_BoxesInfo%SEVirtualIndexBox(IBox,1) = ICFromNew
@@ -1770,10 +1788,19 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call DeAllocateArray_Host(tempOldActiveIndex,"tempOldActiveIndex")
 
+        call DeAllocateArray_Host(tempOldReactionBetweenSIA,"tempOldReactionBetweenSIA")
+        call DeAllocateArray_Host(tempOldReactionBetweenVAC,"tempOldReactionBetweenVAC")
+        call DeAllocateArray_Host(tempOldRecombination,"tempOldRecombination")
+
     else if(NewTotalSize .GT. 0) then
         call this%m_ClustersInfo_CPU%AllocateClustersInfo_CPU(NewTotalSize,NeighborsNum)
 
         this%m_ClustersInfo_CPU%m_ActiveIndex = 0
+
+        this%m_ClustersInfo_CPU%m_ReactionBetweenSIA = 0
+        this%m_ClustersInfo_CPU%m_ReactionBetweenVAC = 0
+        this%m_ClustersInfo_CPU%m_Recombination = 0
+
         UsedNum = 0
         ExpdNum = 0
 
@@ -1821,6 +1848,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::I
     type(ACluster), dimension(:), allocatable::tempOldClusters
     integer, dimension(:), allocatable::tempOldActiveIndex
+    integer,dimension(:),allocatable::tempOldReactionBetweenSIA
+    integer,dimension(:),allocatable::tempOldReactionBetweenVAC
+    integer,dimension(:),allocatable::tempOldRecombination
     integer::IBox
     integer::OldTotalSize
     integer::NewTotalSize
@@ -1854,9 +1884,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call AllocateArray_Host(tempOldActiveIndex,OldTotalSize,"tempOldActiveIndex")
 
+        call AllocateArray_Host(tempOldReactionBetweenSIA,OldTotalSize,"tempOldReactionBetweenSIA")
+        call AllocateArray_Host(tempOldReactionBetweenVAC,OldTotalSize,"tempOldReactionBetweenVAC")
+        call AllocateArray_Host(tempOldRecombination,OldTotalSize,"tempOldRecombination")
+
         tempOldClusters = this%m_ClustersInfo_CPU%m_Clusters
 
         tempOldActiveIndex = this%m_ClustersInfo_CPU%m_ActiveIndex
+
+        tempOldReactionBetweenSIA = this%m_ClustersInfo_CPU%m_ReactionBetweenSIA
+        tempOldReactionBetweenVAC = this%m_ClustersInfo_CPU%m_ReactionBetweenVAC
+        tempOldRecombination = this%m_ClustersInfo_CPU%m_Recombination
 
         call this%m_ClustersInfo_CPU%Clean()
 
@@ -1899,8 +1937,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             this%m_ClustersInfo_CPU%m_ActiveIndex(ICFromNew:ExpandStartNew-1) = tempOldActiveIndex(ICFrom:ICTo)
 
+            this%m_ClustersInfo_CPU%m_ReactionBetweenSIA(ICFromNew:ExpandStartNew-1) = tempOldReactionBetweenSIA(ICFrom:ICTo)
+            this%m_ClustersInfo_CPU%m_ReactionBetweenVAC(ICFromNew:ExpandStartNew-1) = tempOldReactionBetweenVAC(ICFrom:ICTo)
+            this%m_ClustersInfo_CPU%m_Recombination(ICFromNew:ExpandStartNew-1) = tempOldRecombination(ICFrom:ICTo)
+
             FORALL(I=ExpandStartNew:ICToNew)
                 this%m_ClustersInfo_CPU%m_ActiveIndex(I) = I
+                this%m_ClustersInfo_CPU%m_ReactionBetweenSIA(I) = 0
+                this%m_ClustersInfo_CPU%m_ReactionBetweenVAC(I) = 0
+                this%m_ClustersInfo_CPU%m_Recombination(I) = 0
             END FORALL
 
             this%m_BoxesInfo%SEVirtualIndexBox(IBox,1) = ICFromNew
@@ -1923,10 +1968,19 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call DeAllocateArray_Host(tempOldActiveIndex,"tempOldActiveIndex")
 
+        call DeAllocateArray_Host(tempOldReactionBetweenSIA,"tempOldReactionBetweenSIA")
+        call DeAllocateArray_Host(tempOldReactionBetweenVAC,"tempOldReactionBetweenVAC")
+        call DeAllocateArray_Host(tempOldRecombination,"tempOldRecombination")
+
     else if(NewTotalSize .GT. 0) then
         call this%m_ClustersInfo_CPU%AllocateClustersInfo_CPU(NewTotalSize,NeighborsNum)
 
         this%m_ClustersInfo_CPU%m_ActiveIndex = 0
+
+        this%m_ClustersInfo_CPU%m_ReactionBetweenSIA = 0
+        this%m_ClustersInfo_CPU%m_ReactionBetweenVAC = 0
+        this%m_ClustersInfo_CPU%m_Recombination = 0
+
         UsedNum = 0
         ExpdNum = 0
 
@@ -2048,7 +2102,13 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                         temp_ClustersInfo%m_Clusters(IP)%m_POS(2) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) + dble(J)*tempBOXSIZE(2)
                                         temp_ClustersInfo%m_Clusters(IP)%m_POS(3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) + dble(I)*tempBOXSIZE(3)
 
+                                        temp_ClustersInfo%m_Clusters(IP)%m_POS_Start = temp_ClustersInfo%m_Clusters(IP)%m_POS
+
                                         temp_ClustersInfo%m_ActiveIndex(IP) = IP
+
+                                        temp_ClustersInfo%m_ReactionBetweenSIA(IP) =  this%m_ClustersInfo_CPU%m_ReactionBetweenSIA(IC)
+                                        temp_ClustersInfo%m_ReactionBetweenVAC(IP) =  this%m_ClustersInfo_CPU%m_ReactionBetweenVAC(IC)
+                                        temp_ClustersInfo%m_Recombination(IP) =  this%m_ClustersInfo_CPU%m_Recombination(IC)
 
                                         if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) .GT. 0) then
                                             temp_ClustersInfo%m_Clusters(IP)%m_GrainID = IDump*GrainSeedsNum + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID
@@ -2153,6 +2213,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::I
     type(ACluster), dimension(:), allocatable::tempClusters
     integer, dimension(:), allocatable::tempActiveIndex
+    integer, dimension(:), allocatable::tempReactionBetweenSIA
+    integer, dimension(:), allocatable::tempReactionBetweenVAC
+    integer, dimension(:), allocatable::tempRecombination
     integer::IBox
     integer::OldTotalSize
     integer::NewTotalSize
@@ -2182,6 +2245,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call AllocateArray_Host(tempClusters,OldTotalSize,"tempClusters")
 
         call AllocateArray_Host(tempActiveIndex,OldTotalSize,"tempActiveIndex")
+
+        call AllocateArray_Host(tempReactionBetweenSIA,OldTotalSize,"tempReactionBetweenSIA")
+        call AllocateArray_Host(tempReactionBetweenVAC,OldTotalSize,"tempReactionBetweenVAC")
+        call AllocateArray_Host(tempRecombination,OldTotalSize,"tempRecombination")
 
         IP = 1
 
@@ -2223,6 +2290,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                     tempActiveIndex(IP) = IP
 
+                    tempReactionBetweenSIA(IP) = this%m_ClustersInfo_CPU%m_ReactionBetweenSIA(I)
+                    tempReactionBetweenVAC(IP) = this%m_ClustersInfo_CPU%m_ReactionBetweenVAC(I)
+                    tempRecombination(IP) = this%m_ClustersInfo_CPU%m_Recombination(I)
+
                     IP = IP + 1
 
                     this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(TheStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(TheStatu) + 1
@@ -2247,6 +2318,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 tempClusters(IP:IP + NCVirtual - NCUSed - 1) = this%m_ClustersInfo_CPU%m_Clusters(ICTO+1:ICTOVirtual)
                 forall(I=IP:IP + NCVirtual - NCUSed - 1)
                     tempActiveIndex(I) = I
+                    tempReactionBetweenSIA(I) = 0
+                    tempReactionBetweenVAC(I) = 0
+                    tempRecombination(I) = 0
                 end forall
                 IP = IP + ICTOVirtual - ICTo
 
@@ -2285,9 +2359,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         this%m_ClustersInfo_CPU%m_ActiveIndex = tempActiveIndex(1:NewTotalSize)
 
+        this%m_ClustersInfo_CPU%m_ReactionBetweenSIA = tempReactionBetweenSIA(1:NewTotalSize)
+        this%m_ClustersInfo_CPU%m_ReactionBetweenVAC = tempReactionBetweenVAC(1:NewTotalSize)
+        this%m_ClustersInfo_CPU%m_Recombination = tempRecombination(1:NewTotalSize)
+
         call DeAllocateArray_Host(tempClusters,"tempClusters")
 
         call DeAllocateArray_Host(tempActiveIndex,"tempActiveIndex")
+
+        call DeAllocateArray_Host(tempReactionBetweenSIA,"tempReactionBetweenSIA")
+        call DeAllocateArray_Host(tempReactionBetweenVAC,"tempReactionBetweenVAC")
+        call DeAllocateArray_Host(tempRecombination,"tempRecombination")
 
     end if
 
@@ -2991,6 +3073,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = DRSTR(STRTMP(7+I))
         END DO
 
+        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
         DO I = 1,NATomsUsed
             atomsInfo(I) = DRSTR(STRTMP(7+3+I))
         END DO
@@ -3001,6 +3085,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         End Do
 
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)*this%LatticeLength
+
+        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
 
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
 
@@ -3906,6 +3992,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     POS(2) = DRAND32()*this%BOXSIZE(2) + this%BOXBOUNDARY(2,1)
                     POS(3) = DRAND32()*this%BOXSIZE(3) + this%BOXBOUNDARY(3,1)
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
 
                     TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
 
@@ -4029,6 +4116,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         POS(2) = DRAND32()*this%BOXSIZE(2) + this%BOXBOUNDARY(2,1)
                         POS(3) = DRAND32()*LayerThick(ILayer) +  sum(LayerThick(1:ILayer-1)) + this%BOXBOUNDARY(3,1)
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
+
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
 
                         TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
 

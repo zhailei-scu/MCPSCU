@@ -787,6 +787,31 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         FLUSH(Record%HSizeStatistic_TotalBox)
 
+
+        path = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"Record_Reaction_EachBox.rec"
+
+        Record%HRecordReaction_EachBox = CreateNewFile(path)
+        write(Record%HRecordReaction_EachBox, fmt="(130(A20,1x))") "Step",                              &
+                                                                  "IBox",                              &
+                                                                  "Time(s)",                           &
+                                                                  "TStep(s)",                          &
+                                                                  "ReactionBetweenSIA",                &
+                                                                  "ReactionBetweenVAC",                &
+                                                                  "Recombination"
+        FLUSH(Record%HRecordReaction_EachBox)
+
+        path = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"Record_Reaction_TotalBox.rec"
+
+        Record%HRecordReaction_TotalBox = CreateNewFile(path)
+        write(Record%HRecordReaction_TotalBox, fmt="(130(A20,1x))") "Step",                            &
+                                                                  "Time(s)",                           &
+                                                                  "TStep(s)",                          &
+                                                                  "ReactionBetweenSIA",                &
+                                                                  "ReactionBetweenVAC",                &
+                                                                  "Recombination"
+        FLUSH(Record%HRecordReaction_TotalBox)
+
+
         deallocate(CRMin)
         deallocate(CRMax)
         deallocate(CCNum)
@@ -1583,6 +1608,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 POS(3) = DRAND32()*InitBoxCfg%LayerThick(LAY) + Z0
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
                 !Give the cluster an type(layer) ID for the convenience of visualization
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = LAY
 
@@ -1691,6 +1718,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             END DO
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
+
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
             !Give the cluster an type(layer) ID for the convenience of visualization
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = 1
 
@@ -1804,6 +1833,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
                 !Give the cluster an type(layper) ID for the convenience of visualization
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = 1
 
@@ -1908,6 +1939,21 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 else if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalTimeMagnification) then
                     call Record%SetLastOutSizeDistTime_IntegralBox(Record%GetSimuTimes())
                 end if
+
+
+
+                write(Record%HRecordReaction_TotalBox, fmt="(I20,1x,2(1PE20.8,1x),3(I20,1x))") Record%GetSimuSteps(),                                                 &
+                                                                                                           Record%GetSimuTimes(),                                     &
+                                                                                                           Record%GetTimeSteps(),                                     &
+                                                                                                           sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_ReactionBetweenSIA),   &
+                                                                                                           sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_ReactionBetweenVAC),   &
+                                                                                                           sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_Recombination)
+                call flush(Record%HRecordReaction_TotalBox)
+
+
+
+
+
             end if
 
             if(OutEachBoxStatistic .eq. .true.) then

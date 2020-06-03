@@ -19,6 +19,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         integer::HSizeStatistic_EachBox = 0
         real(kind=KINDDF),private::LastOutSizeDistTime_IntegralBox = 0.D0
         real(kind=KINDDF),private::LastOutSizeDistTime_EachBox = 0.D0
+        integer::HRecordReaction_EachBox = 0
+        integer::HRecordReaction_TotalBox = 0
 
         contains
         procedure,NON_OVERRIDABLE,public,pass::InitMigCoalClusterRecord

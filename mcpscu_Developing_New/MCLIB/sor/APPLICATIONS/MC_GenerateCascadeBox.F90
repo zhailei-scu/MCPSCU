@@ -2523,6 +2523,9 @@ module MC_GenerateCascadeBox
                                 end if
                             END DO
 
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
+
                             if(ExitCount .EQ. 3) then
                                 exit
                             end if
@@ -2661,6 +2664,9 @@ module MC_GenerateCascadeBox
                                     ExitCount = ExitCount + 1
                                 end if
                             END DO
+
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
 
                             if(ExitCount .EQ. 3) then
                                 exit
@@ -2996,6 +3002,8 @@ module MC_GenerateCascadeBox
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + Read_ClusterArray(ICSIAReadFrom + IIC)%POS(2)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + Read_ClusterArray(ICSIAReadFrom + IIC)%POS(3)
 
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
 
                     DO I = 1,3
                         if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1)) then
@@ -3049,6 +3057,8 @@ module MC_GenerateCascadeBox
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(1)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(2)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(3)
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
 
 
                     DO I = 1,3
@@ -3244,6 +3254,9 @@ module MC_GenerateCascadeBox
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + Host_Boxes%BOXSIZE(I)*DRAND32()
                         END DO
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
+
                         !---Consider the minimum Gap between SIA clusters
                         GapCondition = 0
                         DO JC = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + (ICase - 1)*(NSIACluster+NVACCluster),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -3323,6 +3336,9 @@ module MC_GenerateCascadeBox
                         DO I = 1,3
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + Host_Boxes%BOXSIZE(I)*DRAND32()
                         END DO
+
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
 
                         !---Consider the minimum Gap between VAC clusters
                         GapCondition = 0
@@ -3806,6 +3822,9 @@ module MC_GenerateCascadeBox
                             end if
                         END DO
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
+
                         if(ExitCount .EQ. 3) then
                             exit
                         end if
@@ -3859,6 +3878,9 @@ module MC_GenerateCascadeBox
                         if(ExitCount .EQ. 3) then
                             exit
                         end if
+
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
 
                     END DO
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)

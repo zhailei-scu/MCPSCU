@@ -2154,6 +2154,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             POS(3) = DRAND32()*this%LayerThick(ILayer) + sum(this%LayerThick(1:ILayer-1)) + Host_Boxes%BOXBOUNDARY(3,1)
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
                             if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. 0.D0) then
                                 write(*,*) "MCPSCUERROR: the implant position had been occupied in memory",IC
                                 pause
@@ -2423,6 +2425,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         POS(3) = DRAND32()*this%LayerThick(ILayer) + sum(this%LayerThick(1:ILayer-1)) + Host_Boxes%BOXBOUNDARY(3,1)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
                         TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
@@ -2553,6 +2557,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             END DO
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
+
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
             !Give the cluster an type(layer) ID for the convenience of visualization
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = 1
 
@@ -2695,6 +2701,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 end if
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS = POS
+
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS_Start = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
 
                 !Give the cluster an type(layper) ID for the convenience of visualization
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = 1
@@ -3006,6 +3014,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         POS(3) = Dev_RandArray_SpaceDist(cid + TotalAllocateNC*3)*Dev_LayerThick(ILayer) + sum(Dev_LayerThick(1:ILayer-1),dim=1) + dm_BOXBOUNDARY(3,1)
                         Dev_Clusters(ICTRUE)%m_POS = POS
 
+                        Dev_Clusters(ICTRUE)%m_POS_Start = Dev_Clusters(ICTRUE)%m_POS
+
                         !Give the cluster an type(layer) ID for the convenience of visualization
                         Dev_Clusters(ICTRUE)%m_Layer = ILayer
 
@@ -3212,6 +3222,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             !Initialize the position of clusters
             Dev_Clusters(ICTRUE)%m_POS = POS
 
+            Dev_Clusters(ICTRUE)%m_POS_Start = Dev_Clusters(ICTRUE)%m_POS
+
             !Give the cluster an type(layer) ID for the convenience of visualization
             Dev_Clusters(ICTRUE)%m_Layer = 1
 
@@ -3412,6 +3424,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             POS(3) = Dev_RandArray_SpaceDist(cid + TotalAllocateNC*2)*dm_BOXSIZE(3) + dm_BOXBOUNDARY(3,1)
             !Initialize the position of clusters
             Dev_Clusters(ICTRUE)%m_POS = POS
+
+            Dev_Clusters(ICTRUE)%m_POS_Start = Dev_Clusters(ICTRUE)%m_POS
 
             !Give the cluster an type(layer) ID for the convenience of visualization
             Dev_Clusters(ICTRUE)%m_Layer = 1
@@ -3622,6 +3636,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         POS(2) = Dev_RandArray_SpaceDist(cid + TotalAllocateNC*2)*dm_BOXSIZE(2)+dm_BOXBOUNDARY(2,1)
                         POS(3) = Dev_RandArray_SpaceDist(cid + TotalAllocateNC*3)*Dev_LayerThick(ILayer) + sum(Dev_LayerThick(1:ILayer-1),dim=1) + dm_BOXBOUNDARY(3,1)
                         Dev_Clusters(ICTRUE)%m_POS = POS
+
+                        Dev_Clusters(ICTRUE)%m_POS_Start = Dev_Clusters(ICTRUE)%m_POS
 
                         !Give the cluster an type(layer) ID for the convenience of visualization
                         Dev_Clusters(ICTRUE)%m_Layer = ILayer

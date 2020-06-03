@@ -35,6 +35,7 @@ module MCLIB_TYPEDEF_ACLUSTER
     TYPE,PUBLIC::ACluster
          type(Single_AtomsSet),dimension(p_ATOMS_GROUPS_NUMBER)::m_Atoms
          real(kind=KINDDF),dimension(3)::m_POS PREASSIGN 0.D0
+         real(kind=KINDDF),dimension(3)::m_POS_Start PREASSIGN 0.D0
          integer::m_Layer PREASSIGN 1
          real(kind=KINDDF)::m_RAD PREASSIGN 0
          integer::m_Statu PREASSIGN p_Empty
@@ -119,6 +120,8 @@ module MCLIB_TYPEDEF_ACLUSTER
 
         this%m_POS = other%m_POS
 
+        this%m_POS_Start = other%m_POS_Start
+
         this%m_RAD = other%m_RAD
 
         this%m_Layer = other%m_Layer
@@ -151,6 +154,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         END DO
 
         this%m_POS = 0
+        this%m_POS_Start = 0
         this%m_Layer = 1
         this%m_RAD = 0
         this%m_Statu = p_Empty

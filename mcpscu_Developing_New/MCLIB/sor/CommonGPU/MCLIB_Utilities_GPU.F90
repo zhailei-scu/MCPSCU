@@ -76,6 +76,8 @@ module MCLIB_Utilities_GPU
 
         Dist%m_POS = Source%m_POS
 
+        Dist%m_POS_Start = Source%m_POS_Start
+
         Dist%m_RAD = Source%m_RAD
 
         Dist%m_Layer = Source%m_Layer
