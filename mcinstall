@@ -9,7 +9,7 @@ TINYCCPATH=$PWD/tcc-0.9.27/
 
 
 #------------------------------
-VER=Developing_NoReaction
+VER=Branch_NoReaction_1
 FULLNAME=mcpscu_$VER 
 tar -xvf $FULLNAME.tar.bz2
 
