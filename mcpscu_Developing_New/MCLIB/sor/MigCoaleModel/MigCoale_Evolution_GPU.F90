@@ -421,39 +421,34 @@ module MIGCOALE_EVOLUTION_GPU
                                                        Dev_ClusterInfo_GPU%dm_MergeINDI,            &
                                                        Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
                                                        Dev_ClusterInfo_GPU%dm_KVOIS,                &
-                                                       Dev_ClusterInfo_GPU%dm_INDI,                 &
-                                                       Dev_ClusterInfo_GPU%dm_ReactionBetweenSIA,   &
-                                                       Dev_ClusterInfo_GPU%dm_ReactionBetweenVAC,   &
-                                                       Dev_ClusterInfo_GPU%dm_Recombination,        &
-                                                       m_SIA_Index_W,                               &
-                                                       m_VAC_Index_W)
+                                                       Dev_ClusterInfo_GPU%dm_INDI)
 
 
         ! We evolute the bubble merge in GPU
         !---Pre-Direction
-!        call MergePre_Kernel<<<blocks,threads>>>(BlockNumEachBox,                               &
-!                                                 Dev_ClusterInfo_GPU%dm_Clusters,               &
-!                                                 Dev_Boxes%dm_SEUsedIndexBox,                   &
-!                                                 Dev_DiffusorMap%Dev_TypesEntities,             &
-!                                                 Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,   &
-!                                                 Dev_ReactionsMap%Dev_RecordsEntities,          &
-!                                                 Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
-!                                                 Dev_Rand%dm_RandArray_Reaction,                &
-!                                                 Dev_ClusterInfo_GPU%dm_MergeINDI,              &
-!                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
-!                                                 Dev_ClusterInfo_GPU%dm_ActiveStatus)
-!        !---Back Direction
-!        call MergeBack_Kernel<<<blocks,threads>>>(BlockNumEachBox,                              &
-!                                                 Dev_ClusterInfo_GPU%dm_Clusters,               &
-!                                                 Dev_Boxes%dm_SEUsedIndexBox,                   &
-!                                                 Dev_DiffusorMap%Dev_TypesEntities,             &
-!                                                 Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,   &
-!                                                 Dev_ReactionsMap%Dev_RecordsEntities,          &
-!                                                 Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
-!                                                 Dev_Rand%dm_RandArray_Reaction,                &
-!                                                 Dev_ClusterInfo_GPU%dm_MergeINDI,              &
-!                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
-!                                                 Dev_ClusterInfo_GPU%dm_ActiveStatus)
+        call MergePre_Kernel<<<blocks,threads>>>(BlockNumEachBox,                               &
+                                                 Dev_ClusterInfo_GPU%dm_Clusters,               &
+                                                 Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                 Dev_DiffusorMap%Dev_TypesEntities,             &
+                                                 Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,   &
+                                                 Dev_ReactionsMap%Dev_RecordsEntities,          &
+                                                 Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
+                                                 Dev_Rand%dm_RandArray_Reaction,                &
+                                                 Dev_ClusterInfo_GPU%dm_MergeINDI,              &
+                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
+                                                 Dev_ClusterInfo_GPU%dm_ActiveStatus)
+        !---Back Direction
+        call MergeBack_Kernel<<<blocks,threads>>>(BlockNumEachBox,                              &
+                                                 Dev_ClusterInfo_GPU%dm_Clusters,               &
+                                                 Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                 Dev_DiffusorMap%Dev_TypesEntities,             &
+                                                 Dev_DiffusorMap%Dev_SingleAtomsDivideArrays,   &
+                                                 Dev_ReactionsMap%Dev_RecordsEntities,          &
+                                                 Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
+                                                 Dev_Rand%dm_RandArray_Reaction,                &
+                                                 Dev_ClusterInfo_GPU%dm_MergeINDI,              &
+                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
+                                                 Dev_ClusterInfo_GPU%dm_ActiveStatus)
 
     END ASSOCIATE
 
@@ -461,8 +456,7 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine MergeClusters
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,  &
-                                                     ReactionBetweenSIA,ReactionBetweenVAC,Recombination,SIA_Index_W,VAC_Index_W)
+  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -472,11 +466,6 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::MergeTable_INDI(:,:)
     integer,device::Neighbor_KVOIS(:)
     integer,device::Neighbor_INDI(:,:)
-    integer,device::ReactionBetweenSIA(:)
-    integer,device::ReactionBetweenVAC(:)
-    integer,device::Recombination(:)
-    integer,value::SIA_Index_W
-    integer,value::VAC_Index_W
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -559,22 +548,6 @@ module MIGCOALE_EVOLUTION_GPU
                 if(DIST .GT. RR ) then
                     cycle
                 end if
-
-                if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
-                    ReactionBetweenSIA(IC) = ReactionBetweenSIA(IC) + 1
-                    Dev_Clusters(IC)%m_POS = Dev_Clusters(IC)%m_POS_Start
-                    Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
-                else if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
-                    Recombination(IC) = Recombination(IC) + 1
-                    Dev_Clusters(IC)%m_POS = Dev_Clusters(IC)%m_POS_Start
-                else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
-                    Recombination(IC) = Recombination(IC) + 1
-                    Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
-                else
-                    ReactionBetweenVAC(IC) = ReactionBetweenVAC(IC) + 1
-                end if
-
-                exit
 
                 NN = NN + 1
 

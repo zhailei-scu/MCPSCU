@@ -82,8 +82,11 @@ module MCLIB_TYPEDEF_ClustersInfo_CPU
 
             !---Reaction Record---
             call AllocateArray_Host(this%m_ReactionBetweenSIA,AllocSize,"m_ReactionBetweenSIA")
+            this%m_ReactionBetweenSIA = 0
             call AllocateArray_Host(this%m_ReactionBetweenVAC,AllocSize,"m_ReactionBetweenVAC")
+            this%m_ReactionBetweenVAC = 0
             call AllocateArray_Host(this%m_Recombination,AllocSize,"m_Recombination")
+            this%m_Recombination = 0
 
             !---NeighborList-Info in host
             call this%m_list%AllocateNEIGHBOR_LIST(AllocSize,NeighborhoodsNum)
