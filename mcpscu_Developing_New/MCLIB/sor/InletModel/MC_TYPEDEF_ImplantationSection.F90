@@ -1098,6 +1098,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
+        ImplantIon%m_Statu_Start = p_ACTIVEFREE_STATU
 
         DO Layer = 1,LayerNum
             ClustersSample(Layer,1) = ImplantIon
@@ -1145,6 +1146,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             ClustersSampleConcentrate(ILayer,1) = DRSTR(STRTMP(2))
 
             ClustersSample(ILayer,1)%m_Statu = p_ACTIVEFREE_STATU
+            ClustersSample(ILayer,1)%m_Statu_Start = p_ACTIVEFREE_STATU
 
             ClustersSample(ILayer,1)%m_Layer = ILayer
 
@@ -1335,6 +1337,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
+        ImplantIon%m_Statu_Start = p_ACTIVEFREE_STATU
 
         ClustersSample(:,:) = ImplantIon
 

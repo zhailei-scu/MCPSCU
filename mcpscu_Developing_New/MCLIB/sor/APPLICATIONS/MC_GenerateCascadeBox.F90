@@ -2485,6 +2485,7 @@ module MC_GenerateCascadeBox
                     end if
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
 
                     DO While(.true.)
@@ -2628,6 +2629,7 @@ module MC_GenerateCascadeBox
                     end if
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                     DO While(.true.)
 
@@ -2997,6 +2999,7 @@ module MC_GenerateCascadeBox
                     end if
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + Read_ClusterArray(ICSIAReadFrom + IIC)%POS(1)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + Read_ClusterArray(ICSIAReadFrom + IIC)%POS(2)
@@ -3053,6 +3056,7 @@ module MC_GenerateCascadeBox
                     end if
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = Sphere_Central(ICase,1) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(1)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(2)
@@ -3246,7 +3250,7 @@ module MC_GenerateCascadeBox
                     end if
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
-
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                     DO While(.true.)
 
@@ -3330,6 +3334,7 @@ module MC_GenerateCascadeBox
                     end if
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                     DO While(.true.)
 
@@ -3798,6 +3803,8 @@ module MC_GenerateCascadeBox
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
+
                     DO While(.true.)
                         ExitCount = 0
 
@@ -3851,6 +3858,8 @@ module MC_GenerateCascadeBox
                     call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
+
                     DO While(.true.)
                         ExitCount = 0
 

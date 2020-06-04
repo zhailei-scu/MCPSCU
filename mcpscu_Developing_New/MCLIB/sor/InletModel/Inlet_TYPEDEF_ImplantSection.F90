@@ -1114,6 +1114,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
+        ImplantIon%m_Statu_Start = p_ACTIVEFREE_STATU
 
         DO Layer = 1,LayerNum
             this%ClustersSample(Layer,1) = ImplantIon
@@ -1161,6 +1162,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             this%ClustersSampleRate(ILayer,1) = DRSTR(STRTMP(2))
 
             this%ClustersSample(ILayer,1)%m_Statu = p_ACTIVEFREE_STATU
+            this%ClustersSample(ILayer,1)%m_Statu_Start = p_ACTIVEFREE_STATU
 
             this%ClustersSample(ILayer,1)%m_Layer = ILayer
 
@@ -1347,6 +1349,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
+        ImplantIon%m_Statu_Start = p_ACTIVEFREE_STATU
 
         this%ClustersSample(:,:) = ImplantIon
 
@@ -2148,6 +2151,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ILayer
 
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = this%ClustersSample(ILayer,IGroup)%m_Statu
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = this%ClustersSample(ILayer,IGroup)%m_Statu_Start
 
                             POS(1) = DRAND32()*Host_Boxes%BOXSIZE(1) + Host_Boxes%BOXBOUNDARY(1,1)
                             POS(2) = DRAND32()*Host_Boxes%BOXSIZE(2) + Host_Boxes%BOXBOUNDARY(2,1)
@@ -2417,6 +2421,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         END DO
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ILayer
 
@@ -2572,6 +2577,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
             TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
@@ -2710,6 +2716,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                 !*** Initialize the size of the clusters
                 NAtoms = RGAUSS0_WithCut(this%NAINI, this%NASDINI,this%NACUT(1),this%NACUT(2))
@@ -3034,6 +3041,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         Dev_Clusters(ICTRUE)%m_GrainID(1) = GrainBelongsTo_Dev(Nseeds,Dev_GrainSeeds,POS)
 
                         Dev_Clusters(ICTRUE)%m_Statu = p_ACTIVEFREE_STATU
+                        Dev_Clusters(ICTRUE)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                         call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
@@ -3242,6 +3250,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             Dev_Clusters(ICTRUE)%m_GrainID(1) = GrainBelongsTo_Dev(Nseeds,Dev_GrainSeeds,POS)
 
             Dev_Clusters(ICTRUE)%m_Statu = p_ACTIVEFREE_STATU
+            Dev_Clusters(ICTRUE)%m_Statu_Start = p_ACTIVEFREE_STATU
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
@@ -3445,6 +3454,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             Dev_Clusters(ICTRUE)%m_GrainID(1) = GrainBelongsTo_Dev(Nseeds,Dev_GrainSeeds,POS)
 
             Dev_Clusters(ICTRUE)%m_Statu = p_ACTIVEFREE_STATU
+            Dev_Clusters(ICTRUE)%m_Statu_Start = p_ACTIVEFREE_STATU
 
             call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 
@@ -3643,6 +3653,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         Dev_Clusters(ICTRUE)%m_Layer = ILayer
 
                         Dev_Clusters(ICTRUE)%m_Statu = Dev_ClustersSample(ILayer,IGroup)%m_Statu
+                        Dev_Clusters(ICTRUE)%m_Statu_Start = Dev_ClustersSample(ILayer,IGroup)%m_Statu_Start
 
                         call Dev_GetValueFromDiffusorsMap(Dev_Clusters(ICTRUE),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
 

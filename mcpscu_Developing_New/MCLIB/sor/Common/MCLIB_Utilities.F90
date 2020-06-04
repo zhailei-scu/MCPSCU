@@ -1204,6 +1204,7 @@ module MCLIB_UTILITIES
             zero_Cluster%m_POS = 0
             zero_Cluster%m_POS_Start = 0
             zero_Cluster%m_Statu = p_Empty
+            zero_Cluster%m_Statu_Start = p_Empty
             zero_Cluster%m_Layer = 1
             zero_Cluster%m_RAD = 0
             zero_Cluster%m_DiffCoeff = 0.D0

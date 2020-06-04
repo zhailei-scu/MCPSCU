@@ -1621,6 +1621,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                 TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
@@ -1730,6 +1731,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
             TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
 
@@ -1841,6 +1843,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = p_ACTIVEFREE_STATU
 
                 !*** Initialize the size of the clusters
                 NAtoms = RGAUSS0_WithCut(InitBoxCfg%NAINI, InitBoxCfg%NASDINI,InitBoxCfg%NACUT(1),InitBoxCfg%NACUT(2))

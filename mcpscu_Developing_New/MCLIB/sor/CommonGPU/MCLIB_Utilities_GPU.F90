@@ -83,6 +83,7 @@ module MCLIB_Utilities_GPU
         Dist%m_Layer = Source%m_Layer
 
         Dist%m_Statu = Source%m_Statu
+        Dist%m_Statu_Start = Source%m_Statu_Start
 
         Dist%m_GrainID = Source%m_GrainID
 

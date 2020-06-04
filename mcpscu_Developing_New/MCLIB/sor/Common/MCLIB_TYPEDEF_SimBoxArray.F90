@@ -3065,6 +3065,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         IStatu = ISTR(STRTMP(5))
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = IStatu
+        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = IStatu
 
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ISTR(STRTMP(6))
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = ISTR(STRTMP(7))
@@ -3458,6 +3459,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         ClustersSample(1,NClustersGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         ClustersSample(1,NClustersGroup)%m_Statu = p_ACTIVEFREE_STATU  ! the GB and interface would not be considered in MF , they would be considered SPMF
+        ClustersSample(1,NClustersGroup)%m_Statu_Start = p_ACTIVEFREE_STATU
 
         ClustersSample(1,NClustersGroup)%m_Layer = 1
 
@@ -3810,6 +3812,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call ClustersSample(ILayer,IGroup)%Clean_Cluster()
 
         ClustersSample(ILayer,IGroup)%m_Statu = ISTR(STRTMP(NATomsUsed + 1))
+        ClustersSample(ILayer,IGroup)%m_Statu_Start = ISTR(STRTMP(NATomsUsed + 1))
 
         ClustersSample(ILayer,IGroup)%m_GrainID(1) = ISTR(STRTMP(NATomsUsed + 2))
 
@@ -3987,6 +3990,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ClustersSample(ILayer,IGroup)%m_Layer
 
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = ClustersSample(ILayer,IGroup)%m_Statu
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = ClustersSample(ILayer,IGroup)%m_Statu_Start
 
                     POS(1) = DRAND32()*this%BOXSIZE(1) + this%BOXBOUNDARY(1,1)
                     POS(2) = DRAND32()*this%BOXSIZE(2) + this%BOXBOUNDARY(2,1)
@@ -4111,6 +4115,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ClustersSample(ILayer,IGroup)%m_Layer
 
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = ClustersSample(ILayer,IGroup)%m_Statu
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu_Start = ClustersSample(ILayer,IGroup)%m_Statu_Start
 
                         POS(1) = DRAND32()*this%BOXSIZE(1) + this%BOXBOUNDARY(1,1)
                         POS(2) = DRAND32()*this%BOXSIZE(2) + this%BOXBOUNDARY(2,1)

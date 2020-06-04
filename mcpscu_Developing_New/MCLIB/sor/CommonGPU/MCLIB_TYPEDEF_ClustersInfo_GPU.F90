@@ -74,6 +74,7 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         TheCluster%m_Layer = 1
         TheCluster%m_RAD = 0
         TheCluster%m_Statu = p_Empty
+        TheCluster%m_Statu_Start = p_Empty
         TheCluster%m_GrainID(2) = 0
         TheCluster%m_DiffCoeff = 0.D0
         TheCluster%m_DiffuseDirection = 0.D0

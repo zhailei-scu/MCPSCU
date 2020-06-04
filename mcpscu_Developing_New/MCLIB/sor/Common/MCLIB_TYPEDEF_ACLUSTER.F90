@@ -39,6 +39,7 @@ module MCLIB_TYPEDEF_ACLUSTER
          integer::m_Layer PREASSIGN 1
          real(kind=KINDDF)::m_RAD PREASSIGN 0
          integer::m_Statu PREASSIGN p_Empty
+         integer::m_Statu_Start PREASSIGN p_Empty
          integer,dimension(2)::m_GrainID PREASSIGN 0
          real(kind=KINDDF)::m_DiffCoeff PREASSIGN 0.D0
          real(kind=KINDDF),dimension(3)::m_DiffuseDirection PREASSIGN 0.D0
@@ -127,6 +128,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         this%m_Layer = other%m_Layer
 
         this%m_Statu = other%m_Statu
+        this%m_Statu_Start = other%m_Statu_Start
 
         this%m_GrainID = other%m_GrainID
 
@@ -158,6 +160,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         this%m_Layer = 1
         this%m_RAD = 0
         this%m_Statu = p_Empty
+        this%m_Statu_Start = p_Empty
         this%m_GrainID(2) = 0
         this%m_DiffCoeff = 0.D0
         this%m_DiffuseDirection = 0.D0
