@@ -649,16 +649,16 @@ module MIGCOALE_EVOLUTION_GPU
 
            if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
                 ReactionBetweenSIA(IC) = ReactionBetweenSIA(IC) + 1
-                Dev_Clusters(IC)%m_POS = Dev_Clusters(IC)%m_POS_Start
-                Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
+                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
             else if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
                 Recombination(IC) = Recombination(IC) + 1
-                Dev_Clusters(IC)%m_POS = Dev_Clusters(IC)%m_POS_Start
+                Dev_Clusters(IC)%m_POS = -1*Dev_Clusters(IC)%m_POS_Start
             else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
                 Recombination(IC) = Recombination(IC) + 1
-                Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
+                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
             else
                 ReactionBetweenVAC(IC) = ReactionBetweenVAC(IC) + 1
+                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
             end if
 
             exit
