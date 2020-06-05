@@ -201,6 +201,10 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
             call AllocateArray_GPU(this%dm_ReactionBetweenVAC,AllocSize,"dm_ReactionBetweenVAC")
             call AllocateArray_GPU(this%dm_Recombination,AllocSize,"dm_Recombination")
 
+            this%dm_ReactionBetweenSIA = 0
+            this%dm_ReactionBetweenVAC = 0
+            this%dm_Recombination = 0
+
             call this%SetNLUpdateCount_Dev(0)
 
         end if
