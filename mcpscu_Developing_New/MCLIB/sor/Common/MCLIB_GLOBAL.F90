@@ -32,7 +32,7 @@ module MCLIB_GLOBAL
     integer::fileUnit,length,ISTAT
     integer::LINE
     character*32::KEYWORD
-    character*256::ctlFile,boxFile,initFile,impFile,outPath,restartFile
+    character*256::ctlFile,boxFile,initFile,impFile,biasFile,outPath,restartFile
     character*256::STRTMP(5)
     integer::N
     !---Body---

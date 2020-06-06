@@ -18,6 +18,16 @@ module MIGCOALE_ADDONDATA_HOST
                                                              ! 8*PI*SURFE/(3*KB*TEMP)
     logical::m_DumplicateBox = .true.
 
+    integer,parameter,public::p_ResetStrategy_Origin = 0
+    integer,parameter,public::p_ResetStrategy_AllNegativeOrigin = 1
+    integer,parameter,public::p_ResetStrategy_OneDimNegativeOrigin = 2
+    integer,parameter,public::p_ResetStrategy_Uniform = 3
+
+
+    !********For SinkBias*********************************
+    integer::m_ResetStrategy = p_ResetStrategy_OneDimNegativeOrigin
+
+
     contains
 
     subroutine resolveAddOnData(Host_Boxes,Host_SimuCtrlParam)
@@ -50,6 +60,37 @@ module MIGCOALE_ADDONDATA_HOST
             m_DumplicateBox = .false.
         else
             m_DumplicateBox = .true.
+        end if
+
+
+        KEYWORD = "&RESETSTRATEGY"
+        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
+        call RemoveComments(STR,"!")
+        call EXTRACT_NUMB(STR,1,N,STRTEMP)
+        if(N .LT. 1) then
+            write(*,*) "MCPSCUERROR: Too few parameters for position reset strategy after reaction: ",LINE
+            write(*,*) STR
+            write(*,*) "You should special: &RESETSTRATEGY The position reset strategy after reaction is  = "
+            pause
+            stop
+        end if
+        if(ISTR(STRTEMP(1)) .eq. p_ResetStrategy_Origin) then
+            m_ResetStrategy = p_ResetStrategy_Origin
+        else if(ISTR(STRTEMP(1)) .eq. p_ResetStrategy_AllNegativeOrigin) then
+            m_ResetStrategy = p_ResetStrategy_AllNegativeOrigin
+        else if(ISTR(STRTEMP(1)) .eq. p_ResetStrategy_OneDimNegativeOrigin) then
+            m_ResetStrategy = p_ResetStrategy_OneDimNegativeOrigin
+        else if(ISTR(STRTEMP(1)) .eq. p_ResetStrategy_Uniform) then
+            m_ResetStrategy = p_ResetStrategy_Uniform
+        else
+            write(*,*) "The Reset strategy can only be set as : "
+            write(*,*) "0 by reset to origin position"
+            write(*,*) "1 by reset all dimensions to negative of origin position"
+            write(*,*) "2 by reset one dimension to negative of origin position"
+            write(*,*) "3 by reset to a random position in box"
+            write(*,*) "However, what you set is : ",STR
+            pause
+            stop
         end if
 
         KEYWORD = "&SURDIF"

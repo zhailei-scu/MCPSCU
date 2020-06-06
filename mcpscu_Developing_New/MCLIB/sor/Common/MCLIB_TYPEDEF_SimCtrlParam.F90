@@ -980,7 +980,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     100 return 1
   end subroutine Load_Ctrl_Temperature
 
-  !*****************************************
+  !*****************************************Host_SimuCtrlParam
   subroutine Load_Ctrl_Boundary(this,hFile,*)
     implicit none
     !---Dummy Vars---

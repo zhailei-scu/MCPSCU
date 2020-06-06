@@ -1,6 +1,6 @@
 &CTLF
   &COMMSUBCTL
-    &BOX box in one test = 800 , total num = 800 , independent = 1
+    &BOX box in one test = 8000 , total num = 8000 , independent = 1
     &RANDSEED random number seed = 8845, 63879542
   &ENDSUBCTL
 
@@ -57,6 +57,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -113,6 +117,11 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -170,6 +179,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -226,6 +239,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -282,6 +299,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -338,6 +359,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -394,6 +419,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -450,6 +479,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -506,6 +539,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -562,6 +599,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -618,6 +659,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -674,6 +719,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA
@@ -730,6 +779,10 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RESETSTRATEGY The position reset strategy after reaction is  = 2     !  0 by reset to origin position
+									      !  1 by reset all dimensions to negative of origin position
+									      !  2 by reset one dimension to negative of origin position
+									      !  3 by reset to a random position in box
     &ENDSUBCTL
 
     &MODELDATA

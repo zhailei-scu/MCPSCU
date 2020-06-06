@@ -424,19 +424,88 @@ module MIGCOALE_EVOLUTION_GPU
                                                        Dev_ClusterInfo_GPU%dm_INDI)
 
 
+        select case(m_ResetStrategy)
+            case(p_ResetStrategy_Origin)
+               call MergePre_Kernel_RestAllToOrigin<<<blocks,threads>>>(BlockNumEachBox,                               &
+                                                                        Dev_ClusterInfo_GPU%dm_Clusters,               &
+                                                                        Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                        Dev_ReactionsMap%Dev_RecordsEntities,          &
+                                                                        Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
+                                                                        Dev_Rand%dm_RandArray_Reaction,                &
+                                                                        Dev_ClusterInfo_GPU%dm_MergeINDI,              &
+                                                                        Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
+                                                                        Dev_ClusterInfo_GPU%dm_ActiveStatus,           &
+                                                                        Dev_ClusterInfo_GPU%dm_ReactionBetweenSIA,     &
+                                                                        Dev_ClusterInfo_GPU%dm_ReactionBetweenVAC,     &
+                                                                        Dev_ClusterInfo_GPU%dm_Recombination,          &
+                                                                        m_SIA_Index_W,                                 &
+                                                                        m_VAC_Index_W)
+            case(p_ResetStrategy_AllNegativeOrigin)
+                call MergePre_Kernel_RestAllToNegativePosition<<<blocks,threads>>>(BlockNumEachBox,                    &
+                                                                        Dev_ClusterInfo_GPU%dm_Clusters,               &
+                                                                        Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                        Dev_ReactionsMap%Dev_RecordsEntities,          &
+                                                                        Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
+                                                                        Dev_Rand%dm_RandArray_Reaction,                &
+                                                                        Dev_ClusterInfo_GPU%dm_MergeINDI,              &
+                                                                        Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
+                                                                        Dev_ClusterInfo_GPU%dm_ActiveStatus,           &
+                                                                        Dev_ClusterInfo_GPU%dm_ReactionBetweenSIA,     &
+                                                                        Dev_ClusterInfo_GPU%dm_ReactionBetweenVAC,     &
+                                                                        Dev_ClusterInfo_GPU%dm_Recombination,          &
+                                                                        m_SIA_Index_W,                                 &
+                                                                        m_VAC_Index_W)
+            case(p_ResetStrategy_OneDimNegativeOrigin)
+                call MergePre_Kernel_RestOneDimToNegativePosition<<<blocks,threads>>>(BlockNumEachBox,                 &
+                                                                        Dev_ClusterInfo_GPU%dm_Clusters,               &
+                                                                        Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                        Dev_ReactionsMap%Dev_RecordsEntities,          &
+                                                                        Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
+                                                                        Dev_Rand%dm_RandArray_Reaction,                &
+                                                                        Dev_ClusterInfo_GPU%dm_MergeINDI,              &
+                                                                        Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
+                                                                        Dev_ClusterInfo_GPU%dm_ActiveStatus,           &
+                                                                        Dev_ClusterInfo_GPU%dm_ReactionBetweenSIA,     &
+                                                                        Dev_ClusterInfo_GPU%dm_ReactionBetweenVAC,     &
+                                                                        Dev_ClusterInfo_GPU%dm_Recombination,          &
+                                                                        m_SIA_Index_W,                                 &
+                                                                        m_VAC_Index_W)
+            case(p_ResetStrategy_Uniform)
+                call MergePre_Kernel_RestToRandomPosition<<<blocks,threads>>>(BlockNumEachBox,                         &
+                                                                        TotalNC,                                       &
+                                                                        Dev_ClusterInfo_GPU%dm_Clusters,               &
+                                                                        Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                        Dev_ReactionsMap%Dev_RecordsEntities,          &
+                                                                        Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
+                                                                        Dev_Rand%dm_RandArray_Reaction,                &
+                                                                        Dev_ClusterInfo_GPU%dm_MergeINDI,              &
+                                                                        Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
+                                                                        Dev_ClusterInfo_GPU%dm_ActiveStatus,           &
+                                                                        Dev_ClusterInfo_GPU%dm_ReactionBetweenSIA,     &
+                                                                        Dev_ClusterInfo_GPU%dm_ReactionBetweenVAC,     &
+                                                                        Dev_ClusterInfo_GPU%dm_Recombination,          &
+                                                                        m_SIA_Index_W,                                 &
+                                                                        m_VAC_Index_W,                                 &
+                                                                        Dev_Rand%dm_RandArray_Walk)
+            case default
+                write(*,*) "MCPSCUERROR : Unknown position reset strategy:, ",m_ResetStrategy
+                pause
+                stop
+        end select
+
         ! We evolute the bubble merge in GPU
         !---Pre-Direction
-        call MergePre_Kernel<<<blocks,threads>>>(BlockNumEachBox,                               &
-                                                 Dev_ClusterInfo_GPU%dm_Clusters,               &
-                                                 Dev_Boxes%dm_SEUsedIndexBox,                   &
-                                                 Dev_ClusterInfo_GPU%dm_MergeINDI,              &
-                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
-                                                 Dev_ClusterInfo_GPU%dm_ActiveStatus,           &
-                                                 Dev_ClusterInfo_GPU%dm_ReactionBetweenSIA,     &
-                                                 Dev_ClusterInfo_GPU%dm_ReactionBetweenVAC,     &
-                                                 Dev_ClusterInfo_GPU%dm_Recombination,          &
-                                                 m_SIA_Index_W,                                 &
-                                                 m_VAC_Index_W)
+!        call MergePre_Kernel<<<blocks,threads>>>(BlockNumEachBox,                               &
+!                                                 Dev_ClusterInfo_GPU%dm_Clusters,               &
+!                                                 Dev_Boxes%dm_SEUsedIndexBox,                   &
+!                                                 Dev_ClusterInfo_GPU%dm_MergeINDI,              &
+!                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
+!                                                 Dev_ClusterInfo_GPU%dm_ActiveStatus,           &
+!                                                 Dev_ClusterInfo_GPU%dm_ReactionBetweenSIA,     &
+!                                                 Dev_ClusterInfo_GPU%dm_ReactionBetweenVAC,     &
+!                                                 Dev_ClusterInfo_GPU%dm_Recombination,          &
+!                                                 m_SIA_Index_W,                                 &
+!                                                 m_VAC_Index_W)
 !        !---Back Direction
 !        call MergeBack_Kernel<<<blocks,threads>>>(BlockNumEachBox,                              &
 !                                                 Dev_ClusterInfo_GPU%dm_Clusters,               &
@@ -566,21 +635,22 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine Merge_PreJudge_Kernel
 
   !************************************************************************
-  attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu, &
-                                                ReactionBetweenSIA,ReactionBetweenVAC,Recombination,SIA_Index_W,VAC_Index_W)
+  attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays, &
+                                                Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
+                                                Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
+    type(DiffusorTypeEntity),device::Dev_DiffuTypesEntities(:)
+    integer,device::Dev_DiffuSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
+    integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
     integer,device::Dev_ActiveStatu(:)
-    integer,device::ReactionBetweenSIA(:)
-    integer,device::ReactionBetweenVAC(:)
-    integer,device::Recombination(:)
-    integer,value::SIA_Index_W
-    integer,value::VAC_Index_W
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -589,8 +659,14 @@ module MIGCOALE_EVOLUTION_GPU
     integer::JC
     integer::I,K,S,NewNA
     integer::N_Merge
+    real::PosA_X,PosA_Y,PosA_Z,PosB_X,PosB_Y,PosB_Z
+    real::Sep_X,Sep_Y,Sep_Z
+    integer::tempNA,tempNB
     integer::SubjectStatu
     integer::ObjectStatu
+    type(DiffusorValue)::TheDiffusorValue
+    type(ReactionValue)::TheReactionValue
+    real(kind=KINDDF)::ReactionProp
     integer::SubjectElementIndex
     integer::ObjectElementIndex
     integer::SubjectNANum
@@ -643,33 +719,188 @@ module MIGCOALE_EVOLUTION_GPU
 
           !---Step 3:Do something
 
-          !Dev_Clusters(JC)%m_RAD = 0.D0
-!          Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
-!          Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+          PosA_X = Dev_Clusters(IC)%m_POS(1)
+          PosA_Y = Dev_Clusters(IC)%m_POS(2)
+          PosA_Z = Dev_Clusters(IC)%m_POS(3)
 
-           if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
-                ReactionBetweenSIA(IC) = ReactionBetweenSIA(IC) + 1
-                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
-            else if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
-                Recombination(IC) = Recombination(IC) + 1
-                Dev_Clusters(IC)%m_POS = -1*Dev_Clusters(IC)%m_POS_Start
-            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
-                Recombination(IC) = Recombination(IC) + 1
-                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
-            else
-                ReactionBetweenVAC(IC) = ReactionBetweenVAC(IC) + 1
-                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
+          PosB_X = Dev_Clusters(JC)%m_POS(1)
+          PosB_Y = Dev_Clusters(JC)%m_POS(2)
+          PosB_Z = Dev_Clusters(JC)%m_POS(3)
+
+          Sep_X = PosA_X - PosB_X
+          Sep_Y = PosA_Y - PosB_Y
+          Sep_Z = PosA_Z - PosB_Z
+
+
+          if(ABS(Sep_X).GT.dm_HBOXSIZE(1) .AND. dm_PERIOD(1)) then
+             PosB_X = PosB_X + SIGN(dm_BOXSIZE(1),Sep_X)
+          end if
+
+          if(ABS(Sep_Y).GT.dm_HBOXSIZE(2) .AND. dm_PERIOD(2)) then
+             PosB_Y = PosB_Y + SIGN(dm_BOXSIZE(2),Sep_Y)
+          end if
+
+          if(ABS(Sep_Z).GT.dm_HBOXSIZE(3) .AND. dm_PERIOD(3)) then
+             PosB_Z = PosB_Z + SIGN(dm_BOXSIZE(3),Sep_Z)
+          end if
+
+          tempNA = sum(Dev_Clusters(IC)%m_Atoms(:)%m_NA,dim=1)
+          tempNB = sum(Dev_Clusters(JC)%m_Atoms(:)%m_NA,dim=1)
+
+          NewNA = tempNA + tempNB
+
+          PosA_X = (PosA_X*tempNA + PosB_X*tempNB)/NewNA
+          PosA_Y = (PosA_Y*tempNA + PosB_Y*tempNB)/NewNA
+          PosA_Z = (PosA_Z*tempNA + PosB_Z*tempNB)/NewNA
+
+          if(PosA_X .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+             PosA_X = PosA_X - dm_BOXSIZE(1)
+          else if(PosA_X .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+             PosA_X = PosA_X + dm_BOXSIZE(1)
+          end if
+
+          if(PosA_Y .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+             PosA_Y = PosA_Y - dm_BOXSIZE(2)
+          else if(PosA_Y .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+             PosA_Y = PosA_Y + dm_BOXSIZE(2)
+          end if
+
+          if(PosA_Z .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+             PosA_Z = PosA_Z - dm_BOXSIZE(3)
+          else if(PosA_Z .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+             PosA_Z = PosA_Z + dm_BOXSIZE(3)
+          end if
+
+          Dev_Clusters(IC)%m_POS(1) =  PosA_X
+          Dev_Clusters(IC)%m_POS(2) =  PosA_Y
+          Dev_Clusters(IC)%m_POS(3) =  PosA_Z
+
+          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
+
+          ReactionProp = 0.D0
+          select case(TheReactionValue%ReactionCoefficientType)
+            case(p_ReactionCoefficient_ByValue)
+                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
+            case(p_ReactionCoefficient_ByArrhenius)
+                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+          end select
+
+          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
+          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+
+            select case(TheReactionValue%ProductionType)
+                case(p_ProductionType_BySimplePlus)
+                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                case(p_ProductionType_BySubtract)
+
+                    SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
+                    ObjectElementIndex = TheReactionValue%ElemetIndex_Object
+
+                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                    SubjectNANum = Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+                    ObjectNANum  = Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
+
+                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
+
+                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
+
+                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
+
+                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
+
+                    if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
+                        SubjectStatu = p_ANNIHILATE_STATU
+                        Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
+                        Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
+                        Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
+                    end if
+
+            end select
+
+            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
+
+            if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
+
+                select case(TheDiffusorValue%ECRValueType_Free)
+                    case(p_ECR_ByValue)
+                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                    case default
+                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
+                                                                           ATOMS,                                                   &
+                                                                           dm_TKB,                                                  &
+                                                                           dm_LatticeLength)
+                end select
+
+                select case(TheDiffusorValue%DiffusorValueType_Free)
+                    case(p_DiffuseCoefficient_ByValue)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                    case(p_DiffuseCoefficient_ByArrhenius)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                    case(p_DiffuseCoefficient_ByBCluster)
+                        ! Here we adopt a model that D=D0*(1/R)**Gama
+                        Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+                    case(p_DiffuseCoefficient_BySIACluster)
+                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                    case(p_DiffuseCoefficient_ByVcCluster)
+                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                end select
+
+                Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
+            else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+                select case(TheDiffusorValue%ECRValueType_InGB)
+                    case(p_ECR_ByValue)
+                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                    case default
+                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
+                                                                           ATOMS,                                                   &
+                                                                           dm_TKB,                                                  &
+                                                                           dm_LatticeLength)
+                end select
+
+                select case(TheDiffusorValue%DiffusorValueType_InGB)
+                    case(p_DiffuseCoefficient_ByValue)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                    case(p_DiffuseCoefficient_ByArrhenius)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                    case(p_DiffuseCoefficient_ByBCluster)
+                        ! Here we adopt a model that D=D0*(1/R)**Gama
+                        Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+
+                    case(p_DiffuseCoefficient_BySIACluster)
+                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                    case(p_DiffuseCoefficient_ByVcCluster)
+                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                end select
             end if
 
-            exit
+            if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
+                if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
+                    SubjectStatu = p_EXP_DESTROY_STATU
+                endif
+            end if
 
+            !Dev_Clusters(JC)%m_RAD = 0.D0
+            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+          end if
 
           !---Step 4:Release self
-!          Dev_Clusters(IC)%m_Statu = SubjectStatu
-!
-!          S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+          Dev_Clusters(IC)%m_Statu = SubjectStatu
 
-          exit
+          S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
 
         end if
       END DO
@@ -952,6 +1183,573 @@ module MIGCOALE_EVOLUTION_GPU
 
     return
   end subroutine MergeBack_Kernel
+
+
+  !************************************************************************
+  attributes(global) subroutine MergePre_Kernel_RestAllToOrigin(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox, &
+                                                                Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
+                                                                Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu,                                     &
+                                                                ReactionBetweenSIA,ReactionBetweenVAC,Recombination,SIA_Index_W,VAC_Index_W)
+    implicit none
+    !---Dummy Vars---
+    integer,value::BlockNumEachBox
+    type(Acluster),device::Dev_Clusters(:)
+    integer,device::Dev_SEUsedIndexBox(:,:)
+    type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
+    integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
+    integer,device::Dev_MergeINDI(:,:)
+    integer,device::Dev_MergeKVOIS(:)
+    integer,device::Dev_ActiveStatu(:)
+    integer,device::ReactionBetweenSIA(:)
+    integer,device::ReactionBetweenVAC(:)
+    integer,device::Recombination(:)
+    integer,value::SIA_Index_W
+    integer,value::VAC_Index_W
+    !---Local Vars---
+    integer::tid,bid,bid0,cid
+    integer::IC
+    integer::IBox
+    integer::scid,ecid
+    integer::JC
+    integer::I,K,S
+    integer::N_Merge
+    integer::SubjectStatu
+    integer::ObjectStatu
+    type(ReactionValue)::TheReactionValue
+    real(kind=KINDDF)::ReactionProp
+    !---Body---
+
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
+    cid = (bid -1)*p_BLOCKSIZE + tid
+
+    IBox = (bid - 1)/BlockNumEachBox + 1
+
+    bid0 = (IBox - 1)*BlockNumEachBox
+
+    scid = Dev_SEUsedIndexBox(IBox,1)
+
+    ecid = Dev_SEUsedIndexBox(IBox,2)
+
+    IC = scid + (cid - bid0*p_BlockSize -1)
+
+    if(IC .LE. ecid) then
+
+      SubjectStatu = Dev_ActiveStatu(IC)
+
+      N_Merge = Dev_MergeKVOIS(IC)
+
+      DO I=1,N_Merge
+        !---Note, in each cycle, the SubjectStatu may be changed, so it is necessary to judge the SubjectStatu here
+        if(SubjectStatu .eq. p_ACTIVEFREE_STATU .or. SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+          JC = Dev_MergeINDI(IC,I)
+
+          ObjectStatu = Dev_ActiveStatu(JC)
+
+          if(IC .GT. JC .or. (ObjectStatu .ne. p_ACTIVEFREE_STATU .AND. ObjectStatu .ne. p_ACTIVEINGB_STATU)) then    ! to ensure pre-direction merge
+            cycle
+          end if
+
+          !---Step 1: Self check and lock
+          if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
+            return
+          end if
+
+          !--Step 2: Object check and lock
+          if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
+            S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+            cycle
+          end if
+
+          !---Step 3:Do something
+          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
+
+          ReactionProp = 0.D0
+          select case(TheReactionValue%ReactionCoefficientType)
+            case(p_ReactionCoefficient_ByValue)
+                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
+            case(p_ReactionCoefficient_ByArrhenius)
+                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+          end select
+
+          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
+          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+
+            if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
+                ReactionBetweenSIA(IC) = ReactionBetweenSIA(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
+
+            else if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
+                Recombination(IC) = Recombination(IC) + 1
+
+                Dev_Clusters(IC)%m_POS = Dev_Clusters(IC)%m_POS_Start
+
+            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
+                Recombination(IC) = Recombination(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
+
+            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
+                ReactionBetweenVAC(IC) = ReactionBetweenVAC(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
+            end if
+
+            exit
+
+            !Dev_Clusters(JC)%m_RAD = 0.D0
+            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+          end if
+
+          !---Step 4:Release self
+!          Dev_Clusters(IC)%m_Statu = SubjectStatu
+!
+!          S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+
+        end if
+      END DO
+    end if
+
+    return
+  end subroutine MergePre_Kernel_RestAllToOrigin
+
+  !************************************************************************
+  attributes(global) subroutine MergePre_Kernel_RestAllToNegativePosition(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,                                  &
+                                                                          Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
+                                                                          Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu,                                     &
+                                                                          ReactionBetweenSIA,ReactionBetweenVAC,Recombination,SIA_Index_W,VAC_Index_W)
+    implicit none
+    !---Dummy Vars---
+    integer,value::BlockNumEachBox
+    type(Acluster),device::Dev_Clusters(:)
+    integer,device::Dev_SEUsedIndexBox(:,:)
+    type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
+    integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
+    integer,device::Dev_MergeINDI(:,:)
+    integer,device::Dev_MergeKVOIS(:)
+    integer,device::Dev_ActiveStatu(:)
+    integer,device::ReactionBetweenSIA(:)
+    integer,device::ReactionBetweenVAC(:)
+    integer,device::Recombination(:)
+    integer,value::SIA_Index_W
+    integer,value::VAC_Index_W
+    !---Local Vars---
+    integer::tid,bid,bid0,cid
+    integer::IC
+    integer::IBox
+    integer::scid,ecid
+    integer::JC
+    integer::I,K,S
+    integer::N_Merge
+    integer::SubjectStatu
+    integer::ObjectStatu
+    type(ReactionValue)::TheReactionValue
+    real(kind=KINDDF)::ReactionProp
+    !---Body---
+
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
+    cid = (bid -1)*p_BLOCKSIZE + tid
+
+    IBox = (bid - 1)/BlockNumEachBox + 1
+
+    bid0 = (IBox - 1)*BlockNumEachBox
+
+    scid = Dev_SEUsedIndexBox(IBox,1)
+
+    ecid = Dev_SEUsedIndexBox(IBox,2)
+
+    IC = scid + (cid - bid0*p_BlockSize -1)
+
+    if(IC .LE. ecid) then
+
+      SubjectStatu = Dev_ActiveStatu(IC)
+
+      N_Merge = Dev_MergeKVOIS(IC)
+
+      DO I=1,N_Merge
+        !---Note, in each cycle, the SubjectStatu may be changed, so it is necessary to judge the SubjectStatu here
+        if(SubjectStatu .eq. p_ACTIVEFREE_STATU .or. SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+          JC = Dev_MergeINDI(IC,I)
+
+          ObjectStatu = Dev_ActiveStatu(JC)
+
+          if(IC .GT. JC .or. (ObjectStatu .ne. p_ACTIVEFREE_STATU .AND. ObjectStatu .ne. p_ACTIVEINGB_STATU)) then    ! to ensure pre-direction merge
+            cycle
+          end if
+
+          !---Step 1: Self check and lock
+          if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
+            return
+          end if
+
+          !--Step 2: Object check and lock
+          if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
+            S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+            cycle
+          end if
+
+          !---Step 3:Do something
+          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
+
+          ReactionProp = 0.D0
+          select case(TheReactionValue%ReactionCoefficientType)
+            case(p_ReactionCoefficient_ByValue)
+                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
+            case(p_ReactionCoefficient_ByArrhenius)
+                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+          end select
+
+          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
+          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+
+            if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
+                ReactionBetweenSIA(IC) = ReactionBetweenSIA(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
+
+            else if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
+                Recombination(IC) = Recombination(IC) + 1
+
+                Dev_Clusters(IC)%m_POS = -1*Dev_Clusters(IC)%m_POS_Start
+
+            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
+                Recombination(IC) = Recombination(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
+
+            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
+                ReactionBetweenVAC(IC) = ReactionBetweenVAC(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = -1*Dev_Clusters(JC)%m_POS_Start
+            end if
+
+            exit
+
+            !Dev_Clusters(JC)%m_RAD = 0.D0
+            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+          end if
+
+          !---Step 4:Release self
+!          Dev_Clusters(IC)%m_Statu = SubjectStatu
+!
+!          S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+
+        end if
+      END DO
+    end if
+
+    return
+  end subroutine MergePre_Kernel_RestAllToNegativePosition
+
+  !************************************************************************
+  attributes(global) subroutine MergePre_Kernel_RestOneDimToNegativePosition(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,                                  &
+                                                                             Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
+                                                                             Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu,                                     &
+                                                                             ReactionBetweenSIA,ReactionBetweenVAC,Recombination,SIA_Index_W,VAC_Index_W)
+    implicit none
+    !---Dummy Vars---
+    integer,value::BlockNumEachBox
+    type(Acluster),device::Dev_Clusters(:)
+    integer,device::Dev_SEUsedIndexBox(:,:)
+    type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
+    integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
+    integer,device::Dev_MergeINDI(:,:)
+    integer,device::Dev_MergeKVOIS(:)
+    integer,device::Dev_ActiveStatu(:)
+    integer,device::ReactionBetweenSIA(:)
+    integer,device::ReactionBetweenVAC(:)
+    integer,device::Recombination(:)
+    integer,value::SIA_Index_W
+    integer,value::VAC_Index_W
+    !---Local Vars---
+    integer::tid,bid,bid0,cid
+    integer::IC
+    integer::IBox
+    integer::scid,ecid
+    integer::JC
+    integer::I,K,S
+    integer::N_Merge
+    integer::SubjectStatu
+    integer::ObjectStatu
+    type(ReactionValue)::TheReactionValue
+    real(kind=KINDDF)::ReactionProp
+    !---Body---
+
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
+    cid = (bid -1)*p_BLOCKSIZE + tid
+
+    IBox = (bid - 1)/BlockNumEachBox + 1
+
+    bid0 = (IBox - 1)*BlockNumEachBox
+
+    scid = Dev_SEUsedIndexBox(IBox,1)
+
+    ecid = Dev_SEUsedIndexBox(IBox,2)
+
+    IC = scid + (cid - bid0*p_BlockSize -1)
+
+    if(IC .LE. ecid) then
+
+      SubjectStatu = Dev_ActiveStatu(IC)
+
+      N_Merge = Dev_MergeKVOIS(IC)
+
+      DO I=1,N_Merge
+        !---Note, in each cycle, the SubjectStatu may be changed, so it is necessary to judge the SubjectStatu here
+        if(SubjectStatu .eq. p_ACTIVEFREE_STATU .or. SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+          JC = Dev_MergeINDI(IC,I)
+
+          ObjectStatu = Dev_ActiveStatu(JC)
+
+          if(IC .GT. JC .or. (ObjectStatu .ne. p_ACTIVEFREE_STATU .AND. ObjectStatu .ne. p_ACTIVEINGB_STATU)) then    ! to ensure pre-direction merge
+            cycle
+          end if
+
+          !---Step 1: Self check and lock
+          if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
+            return
+          end if
+
+          !--Step 2: Object check and lock
+          if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
+            S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+            cycle
+          end if
+
+          !---Step 3:Do something
+          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
+
+          ReactionProp = 0.D0
+          select case(TheReactionValue%ReactionCoefficientType)
+            case(p_ReactionCoefficient_ByValue)
+                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
+            case(p_ReactionCoefficient_ByArrhenius)
+                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+          end select
+
+          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
+          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+
+            if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
+                ReactionBetweenSIA(IC) = ReactionBetweenSIA(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
+                if(Dev_RandArran_Reaction(JC) .LE. 1.D0/3.D0) then
+                    Dev_Clusters(JC)%m_POS(1) = -1*Dev_Clusters(JC)%m_POS_Start(1)
+                else if(Dev_RandArran_Reaction(JC) .LE. 2.D0/3.D0) then
+                    Dev_Clusters(JC)%m_POS(2) = -1*Dev_Clusters(JC)%m_POS_Start(2)
+                else
+                    Dev_Clusters(JC)%m_POS(3) = -1*Dev_Clusters(JC)%m_POS_Start(3)
+                end if
+
+            else if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
+                Recombination(IC) = Recombination(IC) + 1
+
+                Dev_Clusters(IC)%m_POS = Dev_Clusters(IC)%m_POS_Start
+                if(Dev_RandArran_Reaction(IC) .LE. 1.D0/3.D0) then
+                    Dev_Clusters(IC)%m_POS(1) = -1*Dev_Clusters(IC)%m_POS_Start(1)
+                else if(Dev_RandArran_Reaction(IC) .LE. 2.D0/3.D0) then
+                    Dev_Clusters(IC)%m_POS(2) = -1*Dev_Clusters(IC)%m_POS_Start(2)
+                else
+                    Dev_Clusters(IC)%m_POS(3) = -1*Dev_Clusters(IC)%m_POS_Start(3)
+                end if
+
+            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
+                Recombination(IC) = Recombination(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
+                if(Dev_RandArran_Reaction(JC) .LE. 1.D0/3.D0) then
+                    Dev_Clusters(JC)%m_POS(1) = -1*Dev_Clusters(JC)%m_POS_Start(1)
+                else if(Dev_RandArran_Reaction(JC) .LE. 2.D0/3.D0) then
+                    Dev_Clusters(JC)%m_POS(2) = -1*Dev_Clusters(JC)%m_POS_Start(2)
+                else
+                    Dev_Clusters(JC)%m_POS(3) = -1*Dev_Clusters(JC)%m_POS_Start(3)
+                end if
+
+            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
+                ReactionBetweenVAC(IC) = ReactionBetweenVAC(IC) + 1
+
+                Dev_Clusters(JC)%m_POS = Dev_Clusters(JC)%m_POS_Start
+                if(Dev_RandArran_Reaction(JC) .LE. 1.D0/3.D0) then
+                    Dev_Clusters(JC)%m_POS(1) = -1*Dev_Clusters(JC)%m_POS_Start(1)
+                else if(Dev_RandArran_Reaction(JC) .LE. 2.D0/3.D0) then
+                    Dev_Clusters(JC)%m_POS(2) = -1*Dev_Clusters(JC)%m_POS_Start(2)
+                else
+                    Dev_Clusters(JC)%m_POS(3) = -1*Dev_Clusters(JC)%m_POS_Start(3)
+                end if
+            end if
+
+            exit
+
+            !Dev_Clusters(JC)%m_RAD = 0.D0
+            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+          end if
+
+          !---Step 4:Release self
+!          Dev_Clusters(IC)%m_Statu = SubjectStatu
+!
+!          S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+
+        end if
+      END DO
+    end if
+
+    return
+  end subroutine MergePre_Kernel_RestOneDimToNegativePosition
+
+  !************************************************************************
+  attributes(global) subroutine MergePre_Kernel_RestToRandomPosition(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
+                                                                     Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
+                                                                     Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu,                                     &
+                                                                     ReactionBetweenSIA,ReactionBetweenVAC,Recombination,SIA_Index_W,VAC_Index_W,Dev_RandArray_Position)
+    implicit none
+    !---Dummy Vars---
+    integer,value::BlockNumEachBox
+    integer,value::TotalNC
+    type(Acluster),device::Dev_Clusters(:)
+    integer,device::Dev_SEUsedIndexBox(:,:)
+    type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
+    integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
+    integer,device::Dev_MergeINDI(:,:)
+    integer,device::Dev_MergeKVOIS(:)
+    integer,device::Dev_ActiveStatu(:)
+    integer,device::ReactionBetweenSIA(:)
+    integer,device::ReactionBetweenVAC(:)
+    integer,device::Recombination(:)
+    integer,value::SIA_Index_W
+    integer,value::VAC_Index_W
+    real(kind=KINDDF),device::Dev_RandArray_Position(:)
+    !---Local Vars---
+    integer::tid,bid,bid0,cid
+    integer::IC
+    integer::IBox
+    integer::scid,ecid
+    integer::JC
+    integer::I,K,S
+    integer::N_Merge
+    integer::SubjectStatu
+    integer::ObjectStatu
+    type(ReactionValue)::TheReactionValue
+    real(kind=KINDDF)::ReactionProp
+    !---Body---
+
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
+    cid = (bid -1)*p_BLOCKSIZE + tid
+
+    IBox = (bid - 1)/BlockNumEachBox + 1
+
+    bid0 = (IBox - 1)*BlockNumEachBox
+
+    scid = Dev_SEUsedIndexBox(IBox,1)
+
+    ecid = Dev_SEUsedIndexBox(IBox,2)
+
+    IC = scid + (cid - bid0*p_BlockSize -1)
+
+    if(IC .LE. ecid) then
+
+      SubjectStatu = Dev_ActiveStatu(IC)
+
+      N_Merge = Dev_MergeKVOIS(IC)
+
+      DO I=1,N_Merge
+        !---Note, in each cycle, the SubjectStatu may be changed, so it is necessary to judge the SubjectStatu here
+        if(SubjectStatu .eq. p_ACTIVEFREE_STATU .or. SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+
+          JC = Dev_MergeINDI(IC,I)
+
+          ObjectStatu = Dev_ActiveStatu(JC)
+
+          if(IC .GT. JC .or. (ObjectStatu .ne. p_ACTIVEFREE_STATU .AND. ObjectStatu .ne. p_ACTIVEINGB_STATU)) then    ! to ensure pre-direction merge
+            cycle
+          end if
+
+          !---Step 1: Self check and lock
+          if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
+            return
+          end if
+
+          !--Step 2: Object check and lock
+          if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
+            S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+            cycle
+          end if
+
+          !---Step 3:Do something
+          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
+
+          ReactionProp = 0.D0
+          select case(TheReactionValue%ReactionCoefficientType)
+            case(p_ReactionCoefficient_ByValue)
+                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
+            case(p_ReactionCoefficient_ByArrhenius)
+                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+          end select
+
+          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
+          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+
+            if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
+                ReactionBetweenSIA(IC) = ReactionBetweenSIA(IC) + 1
+
+                Dev_Clusters(JC)%m_POS(1) =  dm_BOXBOUNDARY(1,1) + Dev_RandArray_Position(JC)*dm_BoxSize(1)
+                Dev_Clusters(JC)%m_POS(2) =  dm_BOXBOUNDARY(2,1) + Dev_RandArray_Position(JC + TotalNC)*dm_BoxSize(2)
+                Dev_Clusters(JC)%m_POS(3) =  dm_BOXBOUNDARY(3,1) + Dev_RandArray_Position(JC + 2*TotalNC)*dm_BoxSize(3)
+
+            else if(Dev_Clusters(IC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
+                Recombination(IC) = Recombination(IC) + 1
+
+                Dev_Clusters(IC)%m_POS(1) =  dm_BOXBOUNDARY(1,1) + Dev_RandArray_Position(IC)*dm_BoxSize(1)
+                Dev_Clusters(IC)%m_POS(2) =  dm_BOXBOUNDARY(2,1) + Dev_RandArray_Position(IC + TotalNC)*dm_BoxSize(2)
+                Dev_Clusters(IC)%m_POS(3) =  dm_BOXBOUNDARY(3,1) + Dev_RandArray_Position(IC + 2*TotalNC)*dm_BoxSize(3)
+
+            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(SIA_Index_W)%m_NA .GT. 0) then
+                Recombination(IC) = Recombination(IC) + 1
+
+                Dev_Clusters(JC)%m_POS(1) =  dm_BOXBOUNDARY(1,1) + Dev_RandArray_Position(JC)*dm_BoxSize(1)
+                Dev_Clusters(JC)%m_POS(2) =  dm_BOXBOUNDARY(2,1) + Dev_RandArray_Position(JC + TotalNC)*dm_BoxSize(2)
+                Dev_Clusters(JC)%m_POS(3) =  dm_BOXBOUNDARY(3,1) + Dev_RandArray_Position(JC + 2*TotalNC)*dm_BoxSize(3)
+
+            else if(Dev_Clusters(IC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0 .AND. Dev_Clusters(JC)%m_Atoms(VAC_Index_W)%m_NA .GT. 0) then
+                ReactionBetweenVAC(IC) = ReactionBetweenVAC(IC) + 1
+
+                Dev_Clusters(JC)%m_POS(1) =  dm_BOXBOUNDARY(1,1) + Dev_RandArray_Position(JC)*dm_BoxSize(1)
+                Dev_Clusters(JC)%m_POS(2) =  dm_BOXBOUNDARY(2,1) + Dev_RandArray_Position(JC + TotalNC)*dm_BoxSize(2)
+                Dev_Clusters(JC)%m_POS(3) =  dm_BOXBOUNDARY(3,1) + Dev_RandArray_Position(JC + 2*TotalNC)*dm_BoxSize(3)
+            end if
+
+            exit
+
+            !Dev_Clusters(JC)%m_RAD = 0.D0
+            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+          end if
+
+          !---Step 4:Release self
+!          Dev_Clusters(IC)%m_Statu = SubjectStatu
+!
+!          S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+
+        end if
+      END DO
+    end if
+
+    return
+  end subroutine MergePre_Kernel_RestToRandomPosition
 
   !********************************************************
   attributes(global) subroutine RestStatu(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_ActiveStatu)
