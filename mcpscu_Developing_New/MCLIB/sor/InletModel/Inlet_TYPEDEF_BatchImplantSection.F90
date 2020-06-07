@@ -10,6 +10,9 @@ module INLET_BATCHIMPLANTATION_GPU
     integer,parameter,private::p_InsertCountModel_ByConfigNum = 0
     integer,parameter,private::p_InsertCountModel_ByClusterNum = 1
 
+    integer,parameter,private::p_InsertConfig_ByAlphaBeta = 0
+    integer,parameter,private::p_InsertConfig_Random = 1
+
     #ifdef MAXBATCHINSERTTP
     integer,parameter,private::p_MAX_BATCHINSERTTIMEPOINTS = MAXBATCHINSERTTP
     #else
@@ -26,11 +29,19 @@ module INLET_BATCHIMPLANTATION_GPU
 
         integer::InsertCountOneBatch = 0
 
+        character*256::ConfigFolder = ""
+        character*256,dimension(:),allocatable::ConfigFiles
+
+        logical::WhetherReadToMemory = .false.
+
+        integer::InsetSequence = p_InsertConfig_ByAlphaBeta
+
         contains
 
         procedure,non_overridable,public,pass::LoadOne_ImplantSection
 
         procedure,non_overridable,public,pass::ReadRateCtrl
+        procedure,non_overridable,public,pass::ReadBatchConfigCtrl
 
     END TYPE
 
@@ -45,6 +56,7 @@ module INLET_BATCHIMPLANTATION_GPU
 
     private::LoadOne_ImplantSection
     private::ReadRateCtrl
+    private::ReadBatchConfigCtrl
 
     contains
 
@@ -82,7 +94,7 @@ module INLET_BATCHIMPLANTATION_GPU
                 case("&RATESUBCTL")
                     call this%ReadRateCtrl(hFile,Host_SimuCtrlParam,LINE)
                 case("&BATCHCONFIGSUBCTL")
-                    call
+                    call this%ReadBatchConfigCtrl(hFile,Host_SimuCtrlParam,LINE)
 
                 case default
                     write(*,*) "MCPSCUERROR: Unknown Flag: ",KEYWORD
@@ -240,5 +252,108 @@ module INLET_BATCHIMPLANTATION_GPU
             stop
     end subroutine
 
+
+    !******************************************************************
+    subroutine ReadBatchConfigCtrl(this,hFile,Host_SimuCtrlParam,LINE)
+        implicit none
+        !---Dummy Vars---
+        CLASS(BatchImplantSection)::this
+        integer, intent(in)::hFile
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        integer::LINE
+        !----Dummy Vars---
+        character*256::STR
+        character*32::KEYWORD
+        character*20::STRTMP(20)
+        integer::N
+        integer::I
+        character*256::ConfigPath
+        !---Body---
+
+
+        Do while(.true.)
+            call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+            call RemoveComments(STR,"!")
+            STR = adjustl(STR)
+            call GETKEYWORD("&",STR,KEYWORD)
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&FOLDER")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for  batch input configuration folder setting"
+                        write(*,*) "At Line: ",LINE
+                        write(*,*) STR
+                        write(*,*) "You should special &FOLDER The candiacate batches configurations folder = "
+                        pause
+                        stop
+                    end if
+
+                    ConfigPath = STRTMP(1)
+                    ConfigPath = adjustl(ConfigPath)
+                    if(IsAbsolutePath(ConfigPath)) then
+                        this%ConfigFolder = adjustl(trim(ConfigPath))
+                    else
+                        if(LENTRIM(adjustl(Host_SimuCtrlParam%InputFilePath)) .GT. 0) then
+                            this%ConfigFolder = adjustl(trim(Host_SimuCtrlParam%InputFilePath))//FolderSpe//adjustl(trim(ConfigPath))
+                        else
+                            this%ConfigFolder = adjustl(trim(ConfigPath))
+                        end if
+                    endif
+
+                    if(.not. associated(this%ImplantCfgFileList)) then
+                        allocate(this%ImplantCfgFileList)
+                    end if
+                    call ListFilesInFolder(this%ConfigFolder,this%ImplantCfgFileList)
+
+                case("&READTOMEMORY")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for  batch input configuration whether read to memory"
+                        write(*,*) "At Line: ",LINE
+                        write(*,*) STR
+                        write(*,*) "You should special &READTOMEMORY Whether store all configurations to memory ="
+                        pause
+                        stop
+                    end if
+
+                    call UPCASE(STRTMP(1))
+                    STRTMP(1) = adjustl(STRTMP(1))
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        this%WhetherReadToMemory = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        this%WhetherReadToMemory = .false.
+                    else
+                        write(*,*) "MCPSCUERROR: You can only special YES or NO for Whether store all configurations to memory"
+                        write(*,*) "However, what you used is: ",STR
+                        pause
+                        stop
+                    end if
+
+                case("&SELECTSEQUENCE")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for  batch input configuration read sequence"
+                        write(*,*) "At Line: ",LINE
+                        write(*,*) STR
+                        write(*,*) "You should special &SELECTSEQUENCE select sequence is by = "
+                        pause
+                        stop
+                    end if
+
+                    this%InsetSequence = ISTR(STRTMP(1))
+            end select
+
+        End Do
+
+        return
+
+        100 write(*,*) "MCPSCUERROR : Load implantation configuration file failed !"
+            write(*,*) "At line :",LINE
+            write(*,*) "The program would stop."
+            pause
+            stop
+    end subroutine ReadBatchConfigCtrl
 
 end module INLET_BATCHIMPLANTATION_GPU
