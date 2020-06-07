@@ -936,9 +936,9 @@ module MCLIB_TYPEDEF_ReactionPropList
         cursor=>null()
 
         if(NoReactionCount .eq. NCount) then
-            TheResult = .false.
-        else
             TheResult = .true.
+        else
+            TheResult = .false.
         end if
 
         return
