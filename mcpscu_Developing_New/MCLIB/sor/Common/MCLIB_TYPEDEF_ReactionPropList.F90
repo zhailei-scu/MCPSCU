@@ -899,11 +899,16 @@ module MCLIB_TYPEDEF_ReactionPropList
         !---Local Vars---
         type(ReadReactionPropList),pointer::cursor=>null()
         real(kind=KINDDF)::TheValue
+        integer::NoReactionCount
+        integer::NCount
         !---Body---
 
         TheResult = .false.
 
         cursor=>this
+
+        NCount = 0
+        NoReactionCount = 0
 
         DO While(associated(cursor))
 
@@ -919,17 +924,22 @@ module MCLIB_TYPEDEF_ReactionPropList
             end select
 
             if(TheValue .LE. 0.D0) then
-                TheResult = .true.
-            else
-                TheResult = .false.
+                NoReactionCount = NoReactionCount + 1
             end if
+
+            NCount = NCount + 1
 
             cursor=>cursor%next
 
         END DO
 
-
         cursor=>null()
+
+        if(NoReactionCount .eq. NCount) then
+            TheResult = .false.
+        else
+            TheResult = .true.
+        end if
 
         return
     end function

@@ -11,7 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/scratch/110doc01/ZhaiLei/MC_CascadeEvolution/BoxSizeInfo/WithOutDissociate/300K/20KeV/InitLocally_AllTime/Cascade8Box400LU_NBox100_NoDump_New/SampleSetup.dat CascadeBox/CascadeGenerateCtrlFile.dat" />
+				<Option parameters="~/mcworkspace/TestTSTEP_Cascade1Box548LU_NBox8000_NoDump_NoSample_TSTEP0D1LU_FromNDATS2EF8_ResetOneDimToPositivePos_SIAAndSIA/SampleSetup.dat 0 1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
