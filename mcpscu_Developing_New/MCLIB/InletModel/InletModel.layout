@@ -2,6 +2,11 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Release" />
+	<File name="../sor/InletModel/Inlet_BatchImplantation_GPU.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="310" topLine="0" />
+		</Cursor>
+	</File>
 	<File name="../sor/InletModel/Inlet_TYPEDEF_ImplantSection.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="65501" topLine="0" />
@@ -15,11 +20,6 @@
 	<File name="../sor/InletModel/MC_TYPEDEF_ImplantationSection.F90" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="0" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="../sor/InletModel/Inlet_BatchImplantation_GPU.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="310" topLine="0" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

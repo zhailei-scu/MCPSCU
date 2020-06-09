@@ -130,7 +130,7 @@ module MCLIB_UTILITIES_FORMER
     implicit none
     !---Dummy Vars---
     CLASS(STRList),target::this
-    character*256,allocatable::TheArray(:)
+    character*1000,allocatable::TheArray(:)
     integer,intent(in)::ArraySize
     !---Local Vars---
     integer::I
@@ -168,7 +168,7 @@ module MCLIB_UTILITIES_FORMER
     !---Dummy Vars---
     CLASS(STRList),target::this
     integer,intent(in)::ListIndex
-    character*256,intent(out)::TheValue
+    character*1000,intent(out)::TheValue
     !---Local Vars---
     integer::tempIndex
     type(STRList),pointer::cursor=>null()

@@ -13,6 +13,9 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
         integer,private::rescaleCount = 0
 
+        logical,private::InsertOneBatchInNextStep = .false.
+        integer,private::InsetedBatchNum = 0
+
         integer,private::SweepOutCount = 0
 
         integer::HSizeStatistic_TotalBox = 0
@@ -28,6 +31,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,non_overridable,public,pass::SetLastUpdateAveSepTime=>Set_LastUpdateAveSepTime
         procedure,non_overridable,public,pass::IncreaseOneRescaleCount=>Increase_OneRescaleCount
         procedure,non_overridable,public,pass::GetRescaleCount=>Get_RescaleCount
+        procedure,non_overridable,public,pass::SetTrue_InsertOneBatchInNextStep
+        procedure,non_overridable,public,pass::SetFalse_InsertOneBatchInNextStep
+        procedure,non_overridable,public,pass::GetStatu_InsertOneBatchInNextStep
+        procedure,non_overridable,public,pass::InCrease_OneInsertBatchNum
+        procedure,non_overridable,public,pass::Get_InsertBatchNum
         procedure,non_overridable,public,pass::IncreaseOneSweepOutCount=>Increase_OneSweepOutCount
         procedure,non_overridable,public,pass::GetSweepOutCount=>Get_SweepOutCount
         procedure,NON_OVERRIDABLE,public,pass::AddImplantedEntitiesNum=>Add_ImplantedEntitiesNum
@@ -55,6 +63,12 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::Get_LastUpdateAveSepTime
     private::Increase_OneRescaleCount
     private::Get_RescaleCount
+    private::SetTrue_InsertOneBatchInNextStep
+    private::SetFalse_InsertOneBatchInNextStep
+    private::GetStatu_InsertOneBatchInNextStep
+    private::InCrease_OneInsertBatchNum
+    private::Get_InsertBatchNum
+
     private::Increase_OneSweepOutCount
     private::Get_SweepOutCount
     private::Add_ImplantedEntitiesNum
@@ -369,6 +383,53 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         this%SweepOutCount = this%SweepOutCount + 1
         return
     end subroutine Increase_OneSweepOutCount
+
+
+    !*************************************************************
+    subroutine SetTrue_InsertOneBatchInNextStep(this)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+
+        this%InsertOneBatchInNextStep = .true.
+    end subroutine
+
+    !*************************************************************
+    subroutine SetFalse_InsertOneBatchInNextStep(this)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+
+        this%InsertOneBatchInNextStep = .false.
+    end subroutine
+
+    !*************************************************************
+    function GetStatu_InsertOneBatchInNextStep(this) result(TheResult)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+        logical::TheResult
+
+
+        TheResult = this%InsertOneBatchInNextStep
+        return
+    end function GetStatu_InsertOneBatchInNextStep
+
+    !*************************************************************
+    subroutine InCrease_OneInsertBatchNum(this)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+
+        this%InsetedBatchNum = this%InsetedBatchNum + 1
+        return
+    end subroutine
+
+    !*************************************************************
+    function Get_InsertBatchNum(this) result(TheResult)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+        integer::TheResult
+
+        TheResult = this%InsetedBatchNum
+        return
+    end function
 
     !**************************************************************
     function Get_SweepOutCount(this) result(SweepOutCount)
