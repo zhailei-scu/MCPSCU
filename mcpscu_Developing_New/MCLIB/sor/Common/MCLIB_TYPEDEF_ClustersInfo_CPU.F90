@@ -19,7 +19,7 @@ module MCLIB_TYPEDEF_ClustersInfo_CPU
         procedure,NON_OVERRIDABLE,pass,public::AllocateClustersInfo_CPU=>Allocate_ClustersInfo_CPU
         procedure,NON_OVERRIDABLE,pass,public::GetClustersInfo_ArraySize=>Get_ClustersInfo_ArraySize
         procedure,NON_OVERRIDABLE,pass,public::DumplicateClustersInfo_CPU=>Dumplicate_ClustersInfo_CPU
-        procedure,NON_OVERRIDABLE,pass,private::Copy_ClustersInfo_CPU
+        procedure,NON_OVERRIDABLE,pass,public::Copy_ClustersInfo_CPU
         procedure,NON_OVERRIDABLE,nopass,public::GetMemoryConsuming_OneClusterInfo_CPU=>Get_MemoryConsuming_OneClusterInfo_CPU
         procedure,NON_OVERRIDABLE,pass,public::Clean=>Clean_ClustersInfo_CPU
         !---overload some operator---

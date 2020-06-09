@@ -12,7 +12,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     use MIGCOALE_STATISTIC_GPU
     use MIGCOALE_STATISTIC_CPU
     use MIGCOALE_TYPEDEF_SIMRECORD
-    use MC_TYPEDEF_IMPLANTATIONSECTION
+    use INLET_TYPEDEF_IMPLANTLIST
     implicit none
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
@@ -472,8 +472,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
 
-        if(TheImplantSection%ImplantFlux .GT. 0.D0) then
-            call TheImplantSection%ImplantClusters_FastStrategy(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP)
+        if(TheImplantSection%InsertCountOneBatch .GT. 0.D0) then
+            call TheImplantSection%Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,m_FREESURDIFPRE,m_GBSURDIFPRE)
         end if
 
         call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)

@@ -4,19 +4,12 @@ module INLET_TYPEDEF_IMPLANTLIST
     use INLET_CONTINUEIMPLANTATION_GPU
     implicit none
 
-    integer,parameter,private::p_ImplantModelType_Continue = 0      ! the implant cluster number is a line function of evolution time
-    integer,parameter,private::p_ImplantModelType_Batch = 1         ! the implant cluster number is a step function of evolution time
-
-
-    type(ContinueImplantList),private,target::m_ContinueImplantList
-    type(BatchImplantList),private,target::m_BatchImplantList
-
 
     character(len=11),private,parameter::m_IMPFINPUTF = "&IMPFINPUTF"
 
 
     type,public::ImplantList
-        CLASS(ImplantSection),pointer::p_ImplantSection=>null()
+        type(ImplantSection)::TheImplantSection
 
         type(ImplantList),pointer::next=>null()
 
@@ -68,7 +61,7 @@ module INLET_TYPEDEF_IMPLANTLIST
         type(SimulationCtrlParam),target::Host_SimuCtrlParam
         !---Local Vars---
         type(SimulationCtrlParam),pointer::PSimuCtrlParamCursor=>Null()
-        CLASS(ImplantSection),pointer::PImplantSection=>null()
+        type(ImplantSection),pointer::PImplantSection=>null()
         integer::ICount
         !---Body---
         PSimuCtrlParamCursor=>Host_SimuCtrlParam
@@ -82,6 +75,14 @@ module INLET_TYPEDEF_IMPLANTLIST
 
                 if(.not. associated(PImplantSection)) then
                     write(*,*) "MCPSCUERROR: The implantation section is not special :",PSimuCtrlParamCursor%ImplantSectID
+                    write(*,*) "For the simulation section :",ICount
+                    pause
+                    stop
+                end if
+
+                if(PImplantSection%InsertCountOneBatch .GT. 0.D0 .AND. PSimuCtrlParamCursor%NEIGHBORUPDATESTRATEGY .eq. mp_NEIGHBORUPDATEBYNCREMIND) then
+                    write(*,*) "MCPSCUERROR: You cannot use the neighbor-list update strategy by clusters number remind percent when the implantation"
+                    write(*,*) "flux exist."
                     write(*,*) "For the simulation section :",ICount
                     pause
                     stop
@@ -103,8 +104,7 @@ module INLET_TYPEDEF_IMPLANTLIST
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Local Vars---
-        type(ContinueImplantSection)::tempContinueImplantSection
-        type(BatchImplantSection)::tempBatchImplantSection
+        type(ImplantSection)::tempImplantSection
         character*256::truePath
         character*256::STR
         character*32::KEYWORD
@@ -147,35 +147,10 @@ module INLET_TYPEDEF_IMPLANTLIST
                 case("&ENDIMPFINPUTF")
                     exit
                 case("&GROUPSUBCTL")
-                    call tempContinueImplantSection%Clean()
+                    call tempImplantSection%Clean_ImplantSection()
+                    call tempImplantSection%LoadOne_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
 
-                    tempContinueImplantSection%ImplantModel = p_ImplantModelType_Continue
-                    call tempContinueImplantSection%LoadOne_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
-!
-!                    call m_ContinueImplantList%AppendOneSection(tempContinueImplantSection)
-!
-!                    call this%AppendOneSection(m_ContinueImplantList%GetP_LastSection())
-!
-                case("&CONTINUESUBCTL")
-                    call tempContinueImplantSection%Clean()
-
-                    tempContinueImplantSection%ImplantModel = p_ImplantModelType_Continue
-                    call tempContinueImplantSection%LoadOne_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
-!
-!                    call m_ContinueImplantList%AppendOneSection(tempContinueImplantSection)
-!
-!                    call this%AppendOneSection(m_ContinueImplantList%GetP_LastSection())
-!
-                case("&BATCHSUBCTL")
-                    call tempBatchImplantSection%Clean()
-
-                    tempContinueImplantSection%ImplantModel = p_ImplantModelType_Batch
-                    call tempBatchImplantSection%LoadOne_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
-!
-!                    call m_BatchImplantList%AppendOneSection(tempBatchImplantSection)
-!
-!                    call this%AppendOneSection(m_BatchImplantList%GetP_LastSection())
-
+                    call this%AppendOneSection(tempImplantSection)
                 case default
                     write(*,*) "MCPSCUERROR: Unknown flag: ",KEYWORD
                     write(*,*) "At Line: ",LINE
@@ -198,7 +173,7 @@ module INLET_TYPEDEF_IMPLANTLIST
         implicit none
         !---Dummy Vars---
         CLASS(ImplantList),target::this
-        CLASS(ImplantSection),pointer::TheImplantSection
+        type(ImplantSection)::TheImplantSection
         !---Local Vars---
         type(ImplantList),pointer::cursor=>null()
         type(ImplantList),pointer::next=>null()
@@ -212,7 +187,8 @@ module INLET_TYPEDEF_IMPLANTLIST
         end if
 
         if(this%ListCount .eq. 0) then
-            this%p_ImplantSection => TheImplantSection
+            ! The assignment(=) had been override
+            this%TheImplantSection = TheImplantSection
         else
             cursor=>this
             next=>cursor%next
@@ -224,7 +200,7 @@ module INLET_TYPEDEF_IMPLANTLIST
 
             allocate(next)
             ! The assignment(=) had been override
-            next%p_ImplantSection => TheImplantSection
+            next%TheImplantSection = TheImplantSection
             Nullify(next%next)
             cursor%next=>next
         end if
@@ -240,7 +216,7 @@ module INLET_TYPEDEF_IMPLANTLIST
         !---Dummy Vars---
         CLASS(ImplantList),target::this
         integer,intent(in)::TheIndex
-        CLASS(ImplantSection),intent(out),pointer::TheResult
+        type(ImplantSection),intent(out),pointer::TheResult
         !---Local Vars---
         type(ImplantList),pointer::cursor=>null()
         integer::CountTemp
@@ -258,7 +234,7 @@ module INLET_TYPEDEF_IMPLANTLIST
             CountTemp = CountTemp + 1
 
             if(CountTemp .eq. TheIndex) then
-                TheResult=>cursor%p_ImplantSection
+                TheResult=>cursor%TheImplantSection
                 exit
             end if
 
@@ -294,17 +270,11 @@ module INLET_TYPEDEF_IMPLANTLIST
 
         cursor=>this%next
 
-        if(associated(this%p_ImplantSection)) then
-            call this%p_ImplantSection%Clean()
-        end if
+        call this%TheImplantSection%Clean_ImplantSection()
 
         Do while(associated(cursor))
             next=>cursor%next
-
-            if(associated(cursor%p_ImplantSection)) then
-                call cursor%p_ImplantSection%Clean()
-            end if
-
+            call cursor%TheImplantSection%Clean_ImplantSection()
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next

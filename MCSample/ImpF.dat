@@ -1,9 +1,8 @@
 &IMPFINPUTF
 
-  &BATCHSUBCTL   ! #1
+  &GROUPSUBCTL   ! #1
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 0 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
 		&FEXPAND The expand size factor = 1
 
@@ -30,11 +29,10 @@
          &ENDSUBCTL
   &ENDSUBCTL
 
-  &BATCHSUBCTL ! #2
+  &GROUPSUBCTL  ! #2
 
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
 		&FEXPAND The expand size factor = 1
 
@@ -50,9 +48,10 @@
 	 &ENDSUBCTL
         
          &EXTFSUBCTL
-	    &DISTFILETYPE The distribution file type = "DISTOKMC18" , Layer number = 100                      ! or "DISTOKMC18","BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+	    &DISTFILETYPE The distribution file type = "DISTPANDA" , Implant ion = "He"                       ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+													      ! "CFGOKMC18", "CFGSRIM" , "CFGMARLOWER" , "CFGMD"
 								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
-													      ! if the DISTSRIM or DISTOKMC18 is speicaled, you should also give layers number you want
+													      ! if the DISTSRIM speicaled, you should also give layers number you want
 
 	    !&DISTFILETYPE The distribution file type = "DISTSRIM" , Implant ion = "He" , Layer number = 100 
 
@@ -60,51 +59,15 @@
 
 	    !&DISTFILETYPE The distribution file type = "BOXSPMF18"	
 	
-            &DISTFILE The distribution file path = "PANDA/HeW100ev100nm.dat"
+            &FOLDER The candiacate batches configurations folder = "PANDA/"
+	    &SELECTSEQUENCE select sequence is by = 0			!  0 stands by file name alphabetical order , 1 stands by random choosen configure file
          &ENDSUBCTL
   &ENDSUBCTL
 
-  &BATCHSUBCTL ! #3
+  &GROUPSUBCTL  ! #3
 
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
-
-		&FEXPAND The expand size factor = 1
-
-         	&FMEMOCCUP The memory occupied factor = 100
-	 &ENDSUBCTL
-
-	 &RATESUBCTL
-	   	&TIMEINTERVAL The time interval between batches = 2.0D-7       	! if batches model is selected, you must special the time interval
-	 	!&INSERTTIMEPOINT The batch insert time point = 2.0D-7 , 2.0D-6 , 2.0D-5 , 2.0D-4 , 2.0D-3
-
-	 	&INSERTCOUNTMODEL The count model for each batch = 1           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
-	 	&INSERTCOUNT  The count in each batch = 10	       	       	! the count in each batch
-	 &ENDSUBCTL
-        
-         &EXTFSUBCTL
-	    &DISTFILETYPE The distribution file type = "DISTPANDA" , Implant ion = "He"                       ! or "DISTOKMC18","BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
-								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
-													      ! if the DISTSRIM or DISTOKMC18 is speicaled, you should also give layers number you want
-
-	    !&DISTFILETYPE The distribution file type = "DISTSRIM" , Implant ion = "He" , Layer number = 100 
-
-	    !&DISTFILETYPE The distribution file type = "DISTOKMC18" , Layer number = 100
-
-	    !&DISTFILETYPE The distribution file type = "BOXMF18"
-
-	    !&DISTFILETYPE The distribution file type = "BOXSPMF18"	
-	
-            &DISTFILE The distribution file path = "PANDA/HeW100ev100nm.dat"
-         &ENDSUBCTL
-  &ENDSUBCTL
-
-  &BATCHSUBCTL ! #4
-
-	 &IMPCOMMONSUBCTL
-         	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = "YES"             ! YES or NO
 
 		&FEXPAND The expand size factor = 1
 
@@ -120,12 +83,12 @@
 	 &ENDSUBCTL
         
          &EXTFSUBCTL
-            &DISTFILETYPE The distribution file type = "DISTSRIM" , Implant ion = "He" , Layer number = 100   ! or "DISTOKMC18","BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+            &DISTFILETYPE The distribution file type = "DISTSRIM" , Implant ion = "He" , Layer number = 100   ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+													      ! "CFGOKMC18", "CFGSRIM" , "CFGMARLOWER" , "CFGMD"
 								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
-													      ! if the DISTSRIM or DISTOKMC18 is speicaled, you should also give layers number you want
+													      ! if the DISTSRIM is speicaled, you should also give layers number you want
 
 
-	    !&DISTFILETYPE The distribution file type = "DISTOKMC18" , Layer number = 100
 
 	    !&DISTFILETYPE The distribution file type = "BOXMF18"
 
@@ -136,11 +99,10 @@
          &ENDSUBCTL
   &ENDSUBCTL
 
-  &BATCHSUBCTL ! #5
+  &GROUPSUBCTL  ! #4
 
 	 &IMPCOMMONSUBCTL
          	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
-		&UNIFORMTYPE  Whether homogenize the source = "NO"              ! YES or NO
 
 		&FEXPAND The expand size factor = 1
 
@@ -151,17 +113,16 @@
 	   	&TIMEINTERVAL The time interval between batches = 2.0D-7       	! if batches model is selected, you must special the time interval
 	 	!&INSERTTIMEPOINT The batch insert time point = 2.0D-7 , 2.0D-6 , 2.0D-5 , 2.0D-4 , 2.0D-3
 
-	 	&INSERTCOUNTMODEL The count model for each batch = 1           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
+	 	&INSERTCOUNTMODEL The count model for each batch = 0           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
 	 	&INSERTCOUNT  The count in each batch = 10	       	       	! the count in each batch
 	 &ENDSUBCTL
         
          &EXTFSUBCTL
-            &DISTFILETYPE The distribution file type = "DISTOKMC18"                                           ! or "DISTOKMC18","BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+            &DISTFILETYPE The distribution file type = "CFGOKMC18"                                            ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+													      ! "CFGOKMC18", "CFGSRIM" , "CFGMARLOWER" , "CFGMD"
 								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
-													      ! if the DISTSRIM or DISTOKMC18 is speicaled, you should also give layers number you want
+													      ! if the DISTSRIM is speicaled, you should also give layers number you want
 
-
-	    !&DISTFILETYPE The distribution file type = "DISTOKMC18" , Layer number = 100
 
 	    !&DISTFILETYPE The distribution file type = "BOXMF18"
 

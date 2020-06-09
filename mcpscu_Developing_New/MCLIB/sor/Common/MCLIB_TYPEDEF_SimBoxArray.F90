@@ -84,10 +84,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     procedure,non_overridable,public,pass::PutoutCfg=>Puout_Instance_Config_SimBoxArray
     procedure,non_overridable,public,pass::PutinCfg=>Putin_Instance_Config_SimBoxArray
     procedure,non_overridable,public,pass::Putin_OKMC_OUTCFG_FORMAT18_SimRecord
-    procedure,non_overridable,private,pass::Putin_OKMC_OUTCFG_FORMAT18
-    procedure,non_overridable,private,pass::Putin_MF_OUTCFG_FORMAT18
+    procedure,non_overridable,public,pass::Putin_OKMC_OUTCFG_FORMAT18
+    procedure,non_overridable,public,pass::Putin_MF_OUTCFG_FORMAT18
     procedure,non_overridable,public,pass::Putin_MF_OUTCFG_FORMAT18_Distribution
-    procedure,non_overridable,private,pass::Putin_SPMF_OUTCFG_FORMAT18
+    procedure,non_overridable,public,pass::Putin_SPMF_OUTCFG_FORMAT18
     procedure,non_overridable,public,pass::Putin_SPMF_OUTCFG_FORMAT18_Distribution
     procedure,non_overridable,private,pass::DoPutin_FromDistribution
     procedure,NON_OVERRIDABLE,pass,private::ExpandClustersInfor_CPU_EqualNum=>Expand_ClustersInfor_CPU_EqualNum

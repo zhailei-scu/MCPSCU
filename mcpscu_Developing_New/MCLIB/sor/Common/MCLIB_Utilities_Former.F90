@@ -9,7 +9,7 @@ module MCLIB_UTILITIES_FORMER
   implicit none
 
   TYPE,public::STRList
-    character*256::TheValue
+    character*1000::TheValue
     integer::ListCount = 0
     type(STRList),pointer::Next=>null()
 
@@ -168,7 +168,7 @@ module MCLIB_UTILITIES_FORMER
     !---Dummy Vars---
     CLASS(STRList),target::this
     integer,intent(in)::ListIndex
-    character*256,intent(out)::TheValue
+    character*1000,intent(out)::TheValue
     !---Local Vars---
     integer::tempIndex
     type(STRList),pointer::cursor=>null()

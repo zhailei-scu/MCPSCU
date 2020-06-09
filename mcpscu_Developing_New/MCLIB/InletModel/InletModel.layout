@@ -2,9 +2,14 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Release" />
-	<File name="../sor/InletModel/Inlet_TYPEDEF_ImplantSection.F90" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/InletModel/Inlet_TYPEDEF_BatchImplantSection.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="19954" topLine="504" />
+			<Cursor1 position="1125" topLine="12" />
+		</Cursor>
+	</File>
+	<File name="../sor/InletModel/Inlet_TYPEDEF_ImplantList.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6207" topLine="155" />
 		</Cursor>
 	</File>
 	<File name="../sor/InletModel/MC_TYPEDEF_ImplantationSection.F90" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -17,14 +22,9 @@
 			<Cursor1 position="248" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="../sor/InletModel/Inlet_TYPEDEF_ImplantList.F90" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/InletModel/Inlet_TYPEDEF_ImplantSection.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="6207" topLine="155" />
-		</Cursor>
-	</File>
-	<File name="../sor/InletModel/Inlet_TYPEDEF_BatchImplantSection.F90" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1125" topLine="12" />
+			<Cursor1 position="19954" topLine="504" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>
