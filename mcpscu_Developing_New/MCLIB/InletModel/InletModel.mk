@@ -51,7 +51,7 @@ $(tgt)$(Segment)Inlet_TYPEDEF_ImplantSection.o : $(sor)$(Segment)Inlet_TYPEDEF_I
 $(tgt)$(Segment)MC_TYPEDEF_ImplantationSection.o : $(sor)$(Segment)MC_TYPEDEF_ImplantationSection.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)Inlet_ContinueImplantation_GPU.o : $(sor)$(Segment)Inlet_TYPEDEF_ImplantList.F90 \
+$(tgt)$(Segment)Inlet_TYPEDEF_ImplantList.o : $(sor)$(Segment)Inlet_TYPEDEF_ImplantList.F90 \
 						   $(tgt)$(Segment)Inlet_TYPEDEF_ImplantSection.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
