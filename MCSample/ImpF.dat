@@ -110,8 +110,8 @@
 	 &ENDSUBCTL
 
 	 &RATESUBCTL
-	   	&TIMEINTERVAL The time interval between batches = 2.0D-7       	! if batches model is selected, you must special the time interval
-	 	!&INSERTTIMEPOINT The batch insert time point = 2.0D-7 , 2.0D-6 , 2.0D-5 , 2.0D-4 , 2.0D-3
+	   	!&TIMEINTERVAL The time interval between batches = 2.0D-11       ! if batches model is selected, you must special the time interval
+	 	&INSERTTIMEPOINT The batch insert time point = 2.0D-11 , 4.0D-11 , 6.0D-11
 
 	 	&INSERTCOUNTMODEL The count model for each batch = 0           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
 	 	&INSERTCOUNT  The count in each batch = 10	       	       	! the count in each batch
@@ -128,7 +128,7 @@
 
 	    !&DISTFILETYPE The distribution file type = "BOXSPMF18"	
 	
-            &FOLDER The candiacate batches configurations folder = "CascadeBox/"
+            &FOLDER The candiacate batches configurations folder = "BatchBox/"
 	    &SELECTSEQUENCE select sequence is by = 0			!  0 stands by file name alphabetical order , 1 stands by random choosen configure file
          &ENDSUBCTL
   &ENDSUBCTL

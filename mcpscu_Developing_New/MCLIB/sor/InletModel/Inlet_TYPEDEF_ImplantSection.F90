@@ -185,6 +185,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         if(allocated(other%InsertTimePoint)) then
             if(size(other%InsertTimePoint) .GT. 0) then
                 call AllocateArray_Host(this%InsertTimePoint,size(other%InsertTimePoint),"this%InsertTimePoint")
+
+                this%InsertTimePoint = other%InsertTimePoint
             end if
         end if
 
@@ -425,14 +427,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 pause
                                 stop
                             end if
-                        end if
-
-                        if(this%InsertTimePoint(I) .GT. Host_SimuCtrlParam%TermTValue) then
-                            write(*,*) "MCPSCU ERROR: the insert time-point should less than terminate time "
-                            write(*,*) "Chosen insert time point is: ", this%InsertTimePoint(I)
-                            write(*,*) "The terminate time point is: ",Host_SimuCtrlParam%TermTValue
-                            pause
-                            stop
                         end if
 
                     END DO
@@ -1632,7 +1626,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 end select
 
                 cfgFile = this%ImplantCfgFileList%GetValueBySTRListIndex(ISelected)
-                call Host_Boxes%PutinCfg(Host_SimuCtrlParam,tempRecord,cfgFile,SURDIFPRE_FREE,SURDIFPRE_INGB,TheVersion)
+                call Host_Boxes%PutinCfg(Host_SimuCtrlParam,tempRecord,cfgFile,SURDIFPRE_FREE,SURDIFPRE_INGB,TheVersion,AsInitial=.false.)
 
             END DO
 
@@ -1704,18 +1698,20 @@ module INLET_TYPEDEF_IMPLANTSECTION
         !---Body---
 
         if(this%NInsertTimePoint .GT. 0) then
-            DO I = 1,this%NInsertTimePoint
+            call Record%SetFalse_InsertOneBatchInNextStep()
+            DO I = Record%Get_InsertBatchNum()+1,this%NInsertTimePoint
                 if(this%InsertTimePoint(I) .GE. Record%GetSimuTimes() .AND. this%InsertTimePoint(I) .LE. (Record%GetSimuTimes() + TSTEP) ) then
                     TSTEP = this%InsertTimePoint(I) - Record%GetSimuTimes()
                     call Record%SetTrue_InsertOneBatchInNextStep()
+                    exit
                 else
                     call Record%SetFalse_InsertOneBatchInNextStep()
                 end if
 
             END DO
         else
-            if((Record%GetSimuTimes() + TSTEP)/this%InsertTimeInterval .GT. Record%Get_InsertBatchNum()) then
-                TSTEP = Record%Get_InsertBatchNum()*this%InsertTimeInterval - Record%GetSimuTimes()
+            if(floor((Record%GetSimuTimes() + TSTEP)/this%InsertTimeInterval) .GT. Record%Get_InsertBatchNum()) then
+                TSTEP = (Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - Record%GetSimuTimes()
                 call Record%SetTrue_InsertOneBatchInNextStep()
             else
                 call Record%SetFalse_InsertOneBatchInNextStep()

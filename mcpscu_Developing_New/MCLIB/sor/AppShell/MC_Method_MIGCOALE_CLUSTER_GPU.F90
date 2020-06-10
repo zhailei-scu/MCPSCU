@@ -1503,7 +1503,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         character*30::TheVersion
         !---Body---
 
-        call SimBoxes%PutinCfg(Host_SimuCtrlParam,Record,InitBoxCfg%InitCfgFileName,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion)
+        call SimBoxes%PutinCfg(Host_SimuCtrlParam,Record,InitBoxCfg%InitCfgFileName,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
         write(*,*) "The KMC Configuration version is: ",TheVersion
 
         return

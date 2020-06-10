@@ -107,7 +107,7 @@ program Main_MC_HomogenizeBox
     !*******Init the simulation boxes*****************
     call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
 
-    call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,ConfigFile,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion)
+    call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,ConfigFile,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 
     write(*,*) "The KMC Configuration version is: ",TheVersion
 

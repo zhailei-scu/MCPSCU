@@ -2526,7 +2526,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Puout_Instance_Config_SimBoxArray
 
   !*****************************************************************
-  subroutine Putin_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,cfgFile,SURDIFPRE_FREE,SURDIFPRE_INGB,TheVersion)
+  subroutine Putin_Instance_Config_SimBoxArray(this,Host_SimuCtrlParam,SimuRecord,cfgFile,SURDIFPRE_FREE,SURDIFPRE_INGB,TheVersion,AsInitial)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
@@ -2536,6 +2536,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     character*30::TheVersion
+    logical,intent(in)::AsInitial
     !---Local Vars--
     integer::hFile
     character*1000::STR
@@ -2560,13 +2561,14 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     select case(KEYWORD(1:LENTRIM(KEYWORD)))
         case(OKMC_OUTCFG_FORMAT18)
-            call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB)
+            call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
         case(MF_OUTCFG_FORMAT18)
-            call this%Putin_MF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
+            call this%Putin_MF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
         case(SPMF_OUTCFG_FORMAT18)
-            call this%Putin_SPMF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
+            call this%Putin_SPMF_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
         case default
             write(*,*) "MCPSCUERROR: You must special the box file format at the beginning of the file."
+            write(*,*) KEYWORD
             pause
             stop
     end select
@@ -2651,7 +2653,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord
 
   !*************************************************************
-  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
@@ -2661,6 +2663,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*30::TheVersion
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
+    logical,intent(in)::AsInitial
     !---Local Vars---
     integer::hFile
     integer::LINE
@@ -3069,8 +3072,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) + 1
         this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) + 1
 
-        this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(IStatu) + 1
-        this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(IStatu) + 1
+        if(AsInitial .eq. .true.) then
+            this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(IStatu) + 1
+            this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(IStatu) + 1
+        end if
 
     END DO
 
@@ -3096,7 +3101,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_OKMC_OUTCFG_FORMAT18
 
   !*************************************************************
-  subroutine Putin_MF_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_MF_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -3106,6 +3111,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
+    logical,intent(in)::AsInitial
     !---Local Vars---
     real(kind=KINDDF),dimension(:),allocatable::LayerThick
     real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
@@ -3114,7 +3120,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call this%Putin_MF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFile,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,SURDIFPRE_FREE)
 
-    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
 
     call DeAllocateArray_Host(LayerThick,"LayerThick")
     call DeAllocateArray_Host(ClustersSampleConcentrate,"ClustersSampleConcentrate")
@@ -3388,7 +3394,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_MF_OUTCFG_FORMAT18_Distribution
 
   !*************************************************************
-  subroutine Putin_SPMF_OUTCFG_FORMAT18(this,cfgFileName,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine Putin_SPMF_OUTCFG_FORMAT18(this,cfgFileName,Host_SimuCtrlParam,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -3398,6 +3404,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
+    logical,intent(in)::AsInitial
     !---Local Vars---
     real(kind=KINDDF),dimension(:),allocatable::LayerThick
     real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
@@ -3406,7 +3413,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call this%Putin_SPMF_OUTCFG_FORMAT18_Distribution(Host_SimuCtrlParam,cfgFileName,LayerThick,ClustersSampleConcentrate,ClustersSample,SimuRecord,SURDIFPRE_FREE,SURDIFPRE_INGB)
 
-    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    call this%DoPutin_FromDistribution(Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
 
     call DeAllocateArray_Host(LayerThick,"LayerThick")
     call DeAllocateArray_Host(ClustersSampleConcentrate,"ClustersSampleConcentrate")
@@ -3825,7 +3832,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_SPMF_OUTCFG_FORMAT18_Distribution
 
   !*************************************************************
-  subroutine DoPutin_FromDistribution(this,Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB)
+  subroutine DoPutin_FromDistribution(this,Host_SimuCtrlParam,LayerThick,ClustersSampleConcentrate,ClustersSample,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
     use RAND32_MODULE
     implicit none
     !---Dummy Vars---
@@ -3836,6 +3843,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(ACluster),dimension(:,:),intent(in),allocatable::ClustersSample
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
+    logical,intent(in)::AsInitial
     !---Local Vars---
     integer::MultiBox
     integer::IBox
@@ -4133,8 +4141,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + NCEachBox
         this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + NCEachBox
 
-        this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) + NCEachBox
-        this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) + NCEachBox
+        if(AsInitial .eq. .true.) then
+            this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) + NCEachBox
+            this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) + NCEachBox
+        end if
     END DO
 
     return

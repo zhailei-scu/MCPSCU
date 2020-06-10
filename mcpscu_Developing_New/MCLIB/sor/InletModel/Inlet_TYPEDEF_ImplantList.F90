@@ -137,8 +137,6 @@ module INLET_TYPEDEF_IMPLANTLIST
 
             STR = adjustl(STR)
 
-            write(*,*) STR
-
             call GETKEYWORD("&",STR,KEYWORD)
 
             call UPCASE(KEYWORD)
