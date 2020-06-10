@@ -435,68 +435,6 @@ module MC_StatisticClusters_Offline
         return
     end subroutine StatisticClusters_ReactionBetweenGroups
 
-    !**************************************************************
-    subroutine ResloveCascadeControlFile(hFile,CascadeNum)
-        !---Dummy Vars---
-        integer,intent(in)::hFile
-        integer,intent(out)::CascadeNum
-        !---Local Vars---
-        integer::LINE
-        character*1000::STR
-        character*30::KEYWORD
-        character*200::STRTMP(10)
-        integer::N
-        logical::Finded
-
-        !---Body---
-        LINE = 0
-
-        Finded = .false.
-        rewind(hFile)
-        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
-            LINE = LINE + 1
-            STR = adjustl(STR)
-            call RemoveComments(STR,"!")
-
-            if(LENTRIM(STR) .LE. 0) then
-                cycle
-            end if
-
-            call GETKEYWORD("&",STR,KEYWORD)
-
-            call UPCASE(KEYWORD)
-
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
-                case("&CASCADENUMBER")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special the cascade number in one box."
-                        pause
-                        stop
-                    end if
-                    CascadeNum = ISTR(STRTMP(1))
-
-                    if(CascadeNum .LE. 0) then
-                        write(*,*) "MCPSCUERROR: The cascade number in one box cannot less than 0"
-                        pause
-                        stop
-                    end if
-
-                    Finded = .true.
-            end select
-        END DO
-
-        if(Finded .eq. .false.) then
-           write(*,*) "MCPSCUERROR: You must special the cascade number in one box."
-           pause
-           stop
-        end if
-
-
-        return
-    end subroutine
-
-
     !*******************************************************************************
     subroutine StatisticClusters_SIAAndVAC_Ver2019_08_16(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
         implicit none

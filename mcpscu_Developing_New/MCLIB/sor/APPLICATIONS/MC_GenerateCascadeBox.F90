@@ -14,6 +14,10 @@ module MC_GenerateCascadeBox
     integer,parameter::CascadeGenWay_ByMDDataBase_Uniform_Resample = 2
     integer,parameter::CascadeGenWay_ByMDDataBase_Locally_Directly = 3
 
+    integer,parameter::CascadePosModel_ByVolumeAverage = 0
+    integer,parameter::CascadePosModel_ByUserSpeicaled = 1
+    integer,parameter::CascadePosModel_ByRandom = 2
+
     type,public::ClusterAtom
         real(kind=KINDDF)::POS(3)
     end type
@@ -1775,13 +1779,15 @@ module MC_GenerateCascadeBox
 
 
 
-  subroutine ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox, &
+  subroutine ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,CascadePosModel,CascadePos,WhetherCascadeSameInOneBox, &
                                                       MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig)
         !---Dummy Vars---
         integer,intent(in)::hFile
         logical,intent(out)::WhetherIncludeSIA
         logical,intent(out)::WhetherIncludeVAC
         integer,intent(out)::CascadeNum
+        integer,intent(out)::CascadePosModel
+        real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
         logical,intent(out)::WhetherCascadeSameInOneBox
         character*(*),intent(out)::MDDataBasePath
         integer,intent(out)::Index_StartBox
@@ -1793,8 +1799,9 @@ module MC_GenerateCascadeBox
         character*1000::STR
         character*30::KEYWORD
         character*200::STRTMP(10)
+        character*20,dimension(:),allocatable::STRTMPCascadePos
         integer::N
-
+        integer::ICase
         logical::Finded
 
         !---Body---
@@ -1839,6 +1846,107 @@ module MC_GenerateCascadeBox
            write(*,*) "MCPSCUERROR: You must special the cascade number in one box."
            pause
            stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&CASCADECENTERPOSMODEL")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the cascade center position model."
+                        pause
+                        stop
+                    end if
+                    CascadePosModel = ISTR(STRTMP(1))
+
+                    if(CascadePosModel .eq. CascadePosModel_ByVolumeAverage) then
+                        write(*,*) "The cascade center position mode is by volume average "
+                    else if(CascadePosModel .eq. CascadePosModel_ByUserSpeicaled) then
+                        write(*,*) "The cascade center position mode is by user special position"
+                    else if(CascadePosModel .eq. CascadePosModel_ByRandom) then
+                            write(*,*) "The cascade center position mode is by random position"
+                    else
+                        write(*,*) "MCPSCUERROR: Unknown cascade center position model"
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the cascade center position model."
+           pause
+           stop
+        end if
+
+
+        if(CascadePosModel .eq. CascadePosModel_ByUserSpeicaled) then
+
+            Finded = .false.
+            rewind(hFile)
+            Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+                LINE = LINE + 1
+                STR = adjustl(STR)
+                call RemoveComments(STR,"!")
+
+                if(LENTRIM(STR) .LE. 0) then
+                    cycle
+                end if
+
+                call GETKEYWORD("&",STR,KEYWORD)
+
+                call UPCASE(KEYWORD)
+
+                select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                    case("&CASCADECENTERPOS")
+
+                        allocate(STRTMPCascadePos(3*CascadeNum))
+                        STRTMPCascadePos = ""
+
+                        allocate(CascadePos(CascadeNum,3))
+
+                        call EXTRACT_NUMB(STR,3*CascadeNum,N,STRTMPCascadePos)
+                        if(N .LT. 3*CascadeNum) then
+                            write(*,*) "MCPSCUERROR: You must special the number cascade center position each with cascade number."
+                            pause
+                            stop
+                        end if
+
+
+                        DO ICase = 1,CascadeNum
+                            CascadePos(ICase,1) = DRSTR(STRTMPCascadePos((ICase - 1)*3 + 1))
+                            CascadePos(ICase,2) = DRSTR(STRTMPCascadePos((ICase - 1)*3 + 2))
+                            CascadePos(ICase,3) = DRSTR(STRTMPCascadePos((ICase - 1)*3 + 3))
+                        END DO
+
+                        Finded = .true.
+
+                        if(allocated(STRTMPCascadePos)) deallocate(STRTMPCascadePos)
+                end select
+            END DO
+
+            if(Finded .eq. .false.) then
+                write(*,*) "MCPSCUERROR: You must special the cascade center position."
+                pause
+                stop
+            end if
         end if
 
 
@@ -2390,10 +2498,12 @@ module MC_GenerateCascadeBox
         integer::GapCondition
         integer::CheckSIAEachBox
         integer::CheckVACEachBox
+        integer::CascadePosModel
+        real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
         !-----------Body--------------
         WhetherIncludeSIA = .false.
         WhetherIncludeVAC = .false.
-        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox, &
+        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,CascadePosModel,CascadePos,WhetherCascadeSameInOneBox, &
                                                       MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig)
 
         call CascadeDataBase_ANALYSIS_SIAANDVAC(MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,TheMDStatistic)
@@ -2440,23 +2550,52 @@ module MC_GenerateCascadeBox
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
 
-        !---ReDraw the cells-----
-        CellNum_OneDim = floor(CascadeNum**C_UTH + 0.5D0)
-        CellNum = CellNum_OneDim**3
+        select case(CascadePosModel)
+            case(CascadePosModel_ByVolumeAverage)
+                !---ReDraw the cells-----
+                CellNum_OneDim = floor(CascadeNum**C_UTH + 0.5D0)
+                CellNum = CellNum_OneDim**3
 
-        call AllocateArray_Host(CellCentralPos,CellNum,3,"CellCentralPos")
+                call AllocateArray_Host(CellCentralPos,CellNum,3,"CellCentralPos")
 
-        ICell = 0
-        DO I = 1,CellNum_OneDim
-            DO J = 1,CellNum_OneDim
-                DO K = 1,CellNum_OneDim
-                    ICell = ICell + 1
-                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
-                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
-                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                ICell = 0
+                    DO I = 1,CellNum_OneDim
+                        DO J = 1,CellNum_OneDim
+                            DO K = 1,CellNum_OneDim
+                                ICell = ICell + 1
+                                CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
+                                CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
+                                CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                            END DO
+                        END DO
+                    END DO
+
+            case(CascadePosModel_ByUserSpeicaled)
+                !---ReDraw the cells-----
+                call AllocateArray_Host(CellCentralPos,CascadeNum,3,"CellCentralPos")
+
+                DO I = 1,3
+                    CellCentralPos(:,I) = CascadePos(:,I)*Host_Boxes%BOXSIZE(I) +  Host_Boxes%BOXBOUNDARY(I,1)
                 END DO
-            END DO
-        END DO
+
+            case(CascadePosModel_ByRandom)
+                !---ReDraw the cells-----
+                call AllocateArray_Host(CellCentralPos,CascadeNum,3,"CellCentralPos")
+
+                DO ICase = 1,CascadeNum
+                    DO I = 1,3
+                        CellCentralPos(ICase,1) = Host_Boxes%BOXBOUNDARY(1,1) + Host_Boxes%BOXSIZE(1)*DRAND32()
+                        CellCentralPos(ICase,2) = Host_Boxes%BOXBOUNDARY(2,1) + Host_Boxes%BOXSIZE(2)*DRAND32()
+                        CellCentralPos(ICase,3) = Host_Boxes%BOXBOUNDARY(3,1) + Host_Boxes%BOXSIZE(3)*DRAND32()
+                    END DO
+                END DO
+
+            case default
+                write(*,*) "MCPSCUERROR: Unknown cascade position model"
+                write(*,*) CascadePosModel
+                pause
+                stop
+        end select
         !------------------------
 
         IC = 0
@@ -2771,6 +2910,8 @@ module MC_GenerateCascadeBox
 
         call DeAllocateArray_Host(NAtomEachVACCluster,"NAtomEachVACCluster")
 
+        call DeAllocateArray_Host(CascadePos,"CascadePos")
+
         call Host_Boxes%Clean()
 
         call TheMDStatistic%Clean_MDStatistic()
@@ -2828,10 +2969,12 @@ module MC_GenerateCascadeBox
         integer::SelectedBoxIndex
         integer::ICSIAReadFrom
         integer::ICVACReadFrom
+        integer::CascadePosModel
+        real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
         !-----------Body--------------
         WhetherIncludeSIA = .false.
         WhetherIncludeVAC = .false.
-        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox, &
+        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,CascadePosModel,CascadePos,WhetherCascadeSameInOneBox, &
                                                       MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig)
 
         call CascadeDataBase_DirectlyRead(MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,Read_ClusterArray,Read_NAtomEachCluster,Read_NSIAClusterEachBox,Read_NVACClusterEachBox)
@@ -2916,23 +3059,52 @@ module MC_GenerateCascadeBox
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
 
-        !---ReDraw the cells-----
-        CellNum_OneDim = floor(CascadeNum**C_UTH + 0.5D0)
-        CellNum = CellNum_OneDim**3
+        select case(CascadePosModel)
+            case(CascadePosModel_ByVolumeAverage)
+                !---ReDraw the cells-----
+                CellNum_OneDim = floor(CascadeNum**C_UTH + 0.5D0)
+                CellNum = CellNum_OneDim**3
 
-        call AllocateArray_Host(CellCentralPos,CellNum,3,"CellCentralPos")
+                call AllocateArray_Host(CellCentralPos,CellNum,3,"CellCentralPos")
 
-        ICell = 0
-        DO I = 1,CellNum_OneDim
-            DO J = 1,CellNum_OneDim
-                DO K = 1,CellNum_OneDim
-                    ICell = ICell + 1
-                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
-                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
-                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                ICell = 0
+                    DO I = 1,CellNum_OneDim
+                        DO J = 1,CellNum_OneDim
+                            DO K = 1,CellNum_OneDim
+                                ICell = ICell + 1
+                                CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
+                                CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
+                                CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                            END DO
+                        END DO
+                    END DO
+
+            case(CascadePosModel_ByUserSpeicaled)
+                !---ReDraw the cells-----
+                call AllocateArray_Host(CellCentralPos,CascadeNum,3,"CellCentralPos")
+
+                DO I = 1,3
+                    CellCentralPos(:,I) = CascadePos(:,I)*Host_Boxes%BOXSIZE(I) +  Host_Boxes%BOXBOUNDARY(I,1)
                 END DO
-            END DO
-        END DO
+
+            case(CascadePosModel_ByRandom)
+                !---ReDraw the cells-----
+                call AllocateArray_Host(CellCentralPos,CascadeNum,3,"CellCentralPos")
+
+                DO ICase = 1,CascadeNum
+                    DO I = 1,3
+                        CellCentralPos(ICase,1) = Host_Boxes%BOXBOUNDARY(1,1) + Host_Boxes%BOXSIZE(1)*DRAND32()
+                        CellCentralPos(ICase,2) = Host_Boxes%BOXBOUNDARY(2,1) + Host_Boxes%BOXSIZE(2)*DRAND32()
+                        CellCentralPos(ICase,3) = Host_Boxes%BOXBOUNDARY(3,1) + Host_Boxes%BOXSIZE(3)*DRAND32()
+                    END DO
+                END DO
+
+            case default
+                write(*,*) "MCPSCUERROR: Unknown cascade position model"
+                write(*,*) CascadePosModel
+                pause
+                stop
+        end select
         !------------------------
 
         IC = 0
@@ -2998,16 +3170,28 @@ module MC_GenerateCascadeBox
 
 
                     DO I = 1,3
-                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1)) then
-                            write(*,*) "MCPSCUERROR: Opps, the box are too small"
-                            write(*,*) "Cluster: ",IC," have exist the boundary : ", Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I),"  ", Host_Boxes%BOXBOUNDARY(I,1)
+                        if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXBOUNDARY(I,1)) .GT. 2*Host_Boxes%BOXSIZE(I)) then
+                            write(*,*) "Opps, the box is too small : "
+                            write(*,*) "The cluster position is : ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
+                            write(*,*) "The box size is : ",Host_Boxes%BOXSIZE(I)
+                            write(*,*) "The box boundary is : ",Host_Boxes%BOXBOUNDARY(I,1), "  ", Host_Boxes%BOXBOUNDARY(I,2)
                             pause
                             stop
-                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
-                            write(*,*) "MCPSCUERROR: Opps, the box are too small"
-                            write(*,*) "Cluster: ",IC," have exist the boundary : ", Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I),"  ", Host_Boxes%BOXBOUNDARY(I,2)
+                        end if
+
+                        if((Host_Boxes%BOXBOUNDARY(I,2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)) .GT. 2*Host_Boxes%BOXSIZE(I)) then
+                            write(*,*) "Opps, the box is too small : "
+                            write(*,*) "The cluster position is : ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
+                            write(*,*) "The box size is : ",Host_Boxes%BOXSIZE(I)
+                            write(*,*) "The box boundary is : ",Host_Boxes%BOXBOUNDARY(I,1), "  ", Host_Boxes%BOXBOUNDARY(I,2)
                             pause
                             stop
+                        end if
+
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
+                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXSIZE(I)
                         end if
                     END DO
 
@@ -3050,18 +3234,31 @@ module MC_GenerateCascadeBox
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = Sphere_Central(ICase,2) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(2)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + Read_ClusterArray(ICVACReadFrom + IIC)%POS(3)
 
-
                     DO I = 1,3
-                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1)) then
-                            write(*,*) "MCPSCUERROR: Opps, the box are too small"
-                            write(*,*) "Cluster: ",IC," have exist the boundary : ", Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I),"  ", Host_Boxes%BOXBOUNDARY(I,1)
+
+                        if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXBOUNDARY(I,1)) .GT. 2*Host_Boxes%BOXSIZE(I)) then
+                            write(*,*) "Opps, the box is too small : "
+                            write(*,*) "The cluster position is : ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
+                            write(*,*) "The box size is : ",Host_Boxes%BOXSIZE(I)
+                            write(*,*) "The box boundary is : ",Host_Boxes%BOXBOUNDARY(I,1), "  ", Host_Boxes%BOXBOUNDARY(I,2)
                             pause
                             stop
-                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
-                            write(*,*) "MCPSCUERROR: Opps, the box are too small"
-                            write(*,*) "Cluster: ",IC," have exist the boundary : ", Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I),"  ", Host_Boxes%BOXBOUNDARY(I,2)
+                        end if
+
+                        if((Host_Boxes%BOXBOUNDARY(I,2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)) .GT. 2*Host_Boxes%BOXSIZE(I)) then
+                            write(*,*) "Opps, the box is too small : "
+                            write(*,*) "The cluster position is : ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
+                            write(*,*) "The box size is : ",Host_Boxes%BOXSIZE(I)
+                            write(*,*) "The box boundary is : ",Host_Boxes%BOXBOUNDARY(I,1), "  ", Host_Boxes%BOXBOUNDARY(I,2)
                             pause
                             stop
+                        end if
+
+
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
+                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXSIZE(I)
                         end if
                     END DO
 
@@ -3112,6 +3309,8 @@ module MC_GenerateCascadeBox
 
         call DeAllocateArray_Host(ClusterNum_EachBox,"ClusterNum_EachBox")
 
+        call DeAllocateArray_Host(CascadePos,"CascadePos")
+
         call Host_Boxes%Clean()
 
         return
@@ -3160,11 +3359,13 @@ module MC_GenerateCascadeBox
         integer::TheBin
         integer::CheckSIAEachBox
         integer::CheckVACEachBox
+        integer::CascadePosModel
+        real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
         !-----------Body--------------
 
         WhetherIncludeSIA = .false.
         WhetherIncludeVAC = .false.
-        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,WhetherCascadeSameInOneBox, &
+        call ResloveCascadeControlFile_FormMDDataBase(hFile,WhetherIncludeSIA,WhetherIncludeVAC,CascadeNum,CascadePosModel,CascadePos,WhetherCascadeSameInOneBox, &
                                                       MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig)
 
         call CascadeDataBase_ANALYSIS_SIAANDVAC(MDDataBasePath,Index_StartBox,Index_EndBox,Index_SIAConfig,Index_VACConfig,TheMDStatistic)
@@ -3401,6 +3602,8 @@ module MC_GenerateCascadeBox
 
         call DeAllocateArray_Host(NAtomEachVACCluster,"NAtomEachVACCluster")
 
+        call DeAllocateArray_Host(CascadePos,"CascadePos")
+
         call Host_Boxes%Clean()
 
         call TheMDStatistic%Clean_MDStatistic()
@@ -3409,20 +3612,24 @@ module MC_GenerateCascadeBox
     end subroutine Generate_Cascade_Uniform_FormMDDataBase_Resample
 
     !*************************************************************
-    subroutine ResloveCascadeControlFile_Locally_CentUniform(hFile,WhetherIncludeSIA,WhetherIncludeVAC,ClusterNumOneCase,CascadeNum,WhetherCascadeSameInOneBox)
+    subroutine ResloveCascadeControlFile_Locally_CentUniform(hFile,WhetherIncludeSIA,WhetherIncludeVAC,ClusterNumOneCase,CascadeNum,CascadePosModel,CascadePos,WhetherCascadeSameInOneBox)
         !---Dummy Vars---
         integer,intent(in)::hFile
         integer,intent(out)::ClusterNumOneCase
         logical,intent(out)::WhetherIncludeSIA
         logical,intent(out)::WhetherIncludeVAC
         integer,intent(out)::CascadeNum
+        integer,intent(out)::CascadePosModel
+        real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
         logical,intent(out)::WhetherCascadeSameInOneBox
         !---Local Vars---
         integer::LINE
         character*1000::STR
         character*30::KEYWORD
         character*200::STRTMP(10)
+        character*20,dimension(:),allocatable::STRTMPCascadePos
         integer::N
+        integer::ICase
         logical::Finded
         !---Body---
 
@@ -3467,6 +3674,107 @@ module MC_GenerateCascadeBox
            write(*,*) "MCPSCUERROR: You must special the frankel pairs in one box."
            pause
            stop
+        end if
+
+
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&CASCADECENTERPOSMODEL")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the cascade center position model."
+                        pause
+                        stop
+                    end if
+                    CascadePosModel = ISTR(STRTMP(1))
+
+                    if(CascadePosModel .eq. CascadePosModel_ByVolumeAverage) then
+                        write(*,*) "The cascade center position mode is by volume average "
+                    else if(CascadePosModel .eq. CascadePosModel_ByUserSpeicaled) then
+                        write(*,*) "The cascade center position mode is by user special position"
+                    else if(CascadePosModel .eq. CascadePosModel_ByRandom) then
+                            write(*,*) "The cascade center position mode is by random position"
+                    else
+                        write(*,*) "MCPSCUERROR: Unknown cascade center position model"
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the cascade center position model."
+           pause
+           stop
+        end if
+
+
+        if(CascadePosModel .eq. CascadePosModel_ByUserSpeicaled) then
+
+            Finded = .false.
+            rewind(hFile)
+            Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+                LINE = LINE + 1
+                STR = adjustl(STR)
+                call RemoveComments(STR,"!")
+
+                if(LENTRIM(STR) .LE. 0) then
+                    cycle
+                end if
+
+                call GETKEYWORD("&",STR,KEYWORD)
+
+                call UPCASE(KEYWORD)
+
+                select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                    case("&CASCADECENTERPOS")
+
+                        allocate(STRTMPCascadePos(3*CascadeNum))
+                        STRTMPCascadePos = ""
+
+                        allocate(CascadePos(CascadeNum,3))
+
+                        call EXTRACT_NUMB(STR,3*CascadeNum,N,STRTMPCascadePos)
+                        if(N .LT. 3*CascadeNum) then
+                            write(*,*) "MCPSCUERROR: You must special the number cascade center position each with cascade number."
+                            pause
+                            stop
+                        end if
+
+
+                        DO ICase = 1,CascadeNum
+                            CascadePos(ICase,1) = DRSTR(STRTMPCascadePos((ICase - 1)*3 + 1))
+                            CascadePos(ICase,2) = DRSTR(STRTMPCascadePos((ICase - 1)*3 + 2))
+                            CascadePos(ICase,3) = DRSTR(STRTMPCascadePos((ICase - 1)*3 + 3))
+                        END DO
+
+                        Finded = .true.
+
+                        if(allocated(STRTMPCascadePos)) deallocate(STRTMPCascadePos)
+                end select
+            END DO
+
+            if(Finded .eq. .false.) then
+                write(*,*) "MCPSCUERROR: You must special the cascade center position."
+                pause
+                stop
+            end if
         end if
 
 
@@ -3700,9 +4008,11 @@ module MC_GenerateCascadeBox
         integer::CellNum
         integer::ICell
         real(kind=KINDDF),dimension(:,:),allocatable::CellCentralPos
+        integer::CascadePosModel
+        real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
         !-----------Body--------------
 
-        call ResloveCascadeControlFile_Locally_CentUniform(hFile,WhetherIncludeSIA,WhetherIncludeVAC,ClusterNumOneCase,CascadeNum,WhetherCascadeSameInOneBox)
+        call ResloveCascadeControlFile_Locally_CentUniform(hFile,WhetherIncludeSIA,WhetherIncludeVAC,ClusterNumOneCase,CascadeNum,CascadePosModel,CascadePos,WhetherCascadeSameInOneBox)
 
         if(WhetherIncludeSIA .eq. .false.) then
             NSIACluster = 0
@@ -3752,23 +4062,51 @@ module MC_GenerateCascadeBox
         Sphere_Radius = 80*Host_Boxes%LatticeLength
 
 
-        !---ReDraw the cells-----
-        CellNum_OneDim = floor(CascadeNum**C_UTH + 0.5D0)
-        CellNum = CellNum_OneDim**3
+        select case(CascadePosModel)
+            case(CascadePosModel_ByVolumeAverage)
+                !---ReDraw the cells-----
+                CellNum_OneDim = floor(CascadeNum**C_UTH + 0.5D0)
+                CellNum = CellNum_OneDim**3
 
-        call AllocateArray_Host(CellCentralPos,CellNum,3,"CellCentralPos")
+                call AllocateArray_Host(CellCentralPos,CellNum,3,"CellCentralPos")
 
-        ICell = 0
-        DO I = 1,CellNum_OneDim
-            DO J = 1,CellNum_OneDim
-                DO K = 1,CellNum_OneDim
-                    ICell = ICell + 1
-                    CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
-                    CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
-                    CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                ICell = 0
+                    DO I = 1,CellNum_OneDim
+                        DO J = 1,CellNum_OneDim
+                            DO K = 1,CellNum_OneDim
+                                ICell = ICell + 1
+                                CellCentralPos(ICell,1) = Host_Boxes%BOXBOUNDARY(1,1) + (I - 0.5D0)*Host_Boxes%BOXSIZE(1)/CellNum_OneDim
+                                CellCentralPos(ICell,2) = Host_Boxes%BOXBOUNDARY(2,1) + (J - 0.5D0)*Host_Boxes%BOXSIZE(2)/CellNum_OneDim
+                                CellCentralPos(ICell,3) = Host_Boxes%BOXBOUNDARY(3,1) + (K - 0.5D0)*Host_Boxes%BOXSIZE(3)/CellNum_OneDim
+                            END DO
+                        END DO
+                    END DO
+
+            case(CascadePosModel_ByUserSpeicaled)
+                !---ReDraw the cells-----
+                call AllocateArray_Host(CellCentralPos,CascadeNum,3,"CellCentralPos")
+                DO I = 1,3
+                    CellCentralPos(:,I) = CascadePos(:,I)*Host_Boxes%BOXSIZE(I) +  Host_Boxes%BOXBOUNDARY(I,1)
                 END DO
-            END DO
-        END DO
+
+            case(CascadePosModel_ByRandom)
+                !---ReDraw the cells-----
+                call AllocateArray_Host(CellCentralPos,CascadeNum,3,"CellCentralPos")
+
+                DO ICase = 1,CascadeNum
+                    DO I = 1,3
+                        CellCentralPos(ICase,1) = Host_Boxes%BOXBOUNDARY(1,1) + Host_Boxes%BOXSIZE(1)*DRAND32()
+                        CellCentralPos(ICase,2) = Host_Boxes%BOXBOUNDARY(2,1) + Host_Boxes%BOXSIZE(2)*DRAND32()
+                        CellCentralPos(ICase,3) = Host_Boxes%BOXBOUNDARY(3,1) + Host_Boxes%BOXSIZE(3)*DRAND32()
+                    END DO
+                END DO
+
+            case default
+                write(*,*) "MCPSCUERROR: Unknown cascade position model"
+                write(*,*) CascadePosModel
+                pause
+                stop
+        end select
         !------------------------
 
         IC = 0

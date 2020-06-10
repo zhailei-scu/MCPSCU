@@ -49,9 +49,9 @@
         
          &EXTFSUBCTL
 	    &DISTFILETYPE The distribution file type = "DISTPANDA" , Implant ion = "He"                       ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
-													      ! "CFGOKMC18", "CFGSRIM" , "CFGMARLOWER" , "CFGMD"
+													      ! "BATCHCONFIG"
 								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
-													      ! if the DISTSRIM speicaled, you should also give layers number you want
+													      ! if the DISTSRIM is speicaled, you should also give layers number you want
 
 	    !&DISTFILETYPE The distribution file type = "DISTSRIM" , Implant ion = "He" , Layer number = 100 
 
@@ -84,7 +84,7 @@
         
          &EXTFSUBCTL
             &DISTFILETYPE The distribution file type = "DISTSRIM" , Implant ion = "He" , Layer number = 100   ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
-													      ! "CFGOKMC18", "CFGSRIM" , "CFGMARLOWER" , "CFGMD"
+													      ! "BATCHCONFIG"
 								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
 													      ! if the DISTSRIM is speicaled, you should also give layers number you want
 
