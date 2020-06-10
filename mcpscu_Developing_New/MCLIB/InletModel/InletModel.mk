@@ -32,9 +32,8 @@ libname  := libMC_$(objname).$(LIB_EXT)
 
 #######################################################          
 nlist    :=  Inlet_TYPEDEF_ImplantSection    	\
-             MC_TYPEDEF_ImplantationSection	\
-	     Inlet_BatchImplantation_GPU	\
-	     Inlet_ContinueImplantation_GPU
+	     Inlet_TYPEDEF_ImplantList		\
+             MC_TYPEDEF_ImplantationSection
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
 modules  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).mod)
@@ -52,11 +51,7 @@ $(tgt)$(Segment)Inlet_TYPEDEF_ImplantSection.o : $(sor)$(Segment)Inlet_TYPEDEF_I
 $(tgt)$(Segment)MC_TYPEDEF_ImplantationSection.o : $(sor)$(Segment)MC_TYPEDEF_ImplantationSection.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)Inlet_BatchImplantation_GPU.o : $(sor)$(Segment)Inlet_BatchImplantation_GPU.F90 \
-						  $(tgt)$(Segment)Inlet_TYPEDEF_ImplantSection.o
-	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
-
-$(tgt)$(Segment)Inlet_ContinueImplantation_GPU.o : $(sor)$(Segment)Inlet_ContinueImplantation_GPU.F90 \
+$(tgt)$(Segment)Inlet_ContinueImplantation_GPU.o : $(sor)$(Segment)Inlet_TYPEDEF_ImplantList.F90 \
 						   $(tgt)$(Segment)Inlet_TYPEDEF_ImplantSection.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
