@@ -118,8 +118,8 @@
 	 &ENDSUBCTL
         
          &EXTFSUBCTL
-            &DISTFILETYPE The distribution file type = "CFGOKMC18"                                            ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
-													      ! "CFGOKMC18", "CFGSRIM" , "CFGMARLOWER" , "CFGMD"
+            &DISTFILETYPE The distribution file type = "BATCHCONFIG"                                          ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+													      ! "BATCHCONFIG"
 								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
 													      ! if the DISTSRIM is speicaled, you should also give layers number you want
 

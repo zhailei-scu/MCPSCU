@@ -24,7 +24,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     character(len=9),private,parameter::SRIM_DIST = "&DISTSRIM"
     character(len=10),private,parameter::PANDA_DIST = "&DISTPANDA"
 
-    character(len=10),parameter::BATCHCONFIG = "&BATCHCONFIG"
+    character(len=12),parameter::BATCHCONFIG = "&BATCHCONFIG"
 
     integer,private,parameter::p_Implant_Hunger = 0
     integer,private,parameter::p_Implant_MemSaving = 1
@@ -198,6 +198,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         !---The Assignment(=)=> had been override
         if(associated(other%ImplantCfgFileList)) then
+            allocate(this%ImplantCfgFileList)
             this%ImplantCfgFileList = other%ImplantCfgFileList
         end if
 
@@ -847,9 +848,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     end if
 
                 case(PANDA_DIST)
-
-                    write(*,*) "adjustl(trim(cursor%TheValue)) ",adjustl(trim(cursor%TheValue))
-
                     call this%Putin_PANDA_OUTCFG_Distribution(SimBoxes,Host_SimuCtrlParam,adjustl(trim(cursor%TheValue)),this%LayerThick,this%ClustersSampleRate,this%ClustersSample)
                     TotalSampleRate = sum(this%ClustersSampleRate)
                     if(TotalSampleRate .LE. 0) then
