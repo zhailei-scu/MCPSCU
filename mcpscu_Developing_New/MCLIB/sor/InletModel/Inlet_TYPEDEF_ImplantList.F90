@@ -1,7 +1,5 @@
 module INLET_TYPEDEF_IMPLANTLIST
     use INLET_TYPEDEF_IMPLANTSECTION
-    use INLET_BATCHIMPLANTATION_GPU
-    use INLET_CONTINUEIMPLANTATION_GPU
     implicit none
 
 
@@ -105,8 +103,8 @@ module INLET_TYPEDEF_IMPLANTLIST
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Local Vars---
         type(ImplantSection)::tempImplantSection
-        character*256::truePath
-        character*256::STR
+        character*1000::truePath
+        character*1000::STR
         character*32::KEYWORD
         integer::hFile
         integer::LINE

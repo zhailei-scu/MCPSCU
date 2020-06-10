@@ -61,14 +61,14 @@ program Main_MC_HomogenizeBox
     use MCLIB_UTILITIES
     !---Local Vars
     integer::arg_Num
-    character*256::SampleFile
-    character*256::ConfigFile
-    character*256::ARG
+    character*1000::SampleFile
+    character*1000::ConfigFile
+    character*1000::ARG
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(MigCoalClusterRecord)::Record
-    character*256::OutFolder
-    character*256::pathOut
+    character*1000::OutFolder
+    character*1000::pathOut
     integer::hFileOut
     character*30::TheVersion
     !--Body---

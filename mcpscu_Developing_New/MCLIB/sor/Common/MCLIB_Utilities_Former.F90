@@ -9,7 +9,7 @@ module MCLIB_UTILITIES_FORMER
   implicit none
 
   TYPE,public::STRList
-    character*256::TheValue
+    character*1000::TheValue
     integer::ListCount = 0
     type(STRList),pointer::Next=>null()
 
@@ -288,7 +288,7 @@ module MCLIB_UTILITIES_FORMER
     !---Dummy Vars---
     character*(*),intent(in)::fileName
     character*(*),intent(in),optional::parentPath
-    character*256::truePath
+    character*1000::truePath
     !---Local Vars---
     logical::exits
     !---Body---
@@ -327,10 +327,10 @@ module MCLIB_UTILITIES_FORMER
     character*(*), intent(in)::FILTER
     logical,intent(out)::ExitFile
     !---Local Vars---
-    character*256::TSTR
+    character*1000::TSTR
     character(len=1)::FC(5)=''
     integer::I, IP, IC, LS
-    character*256::FMessage
+    character*1000::FMessage
     integer::stat
     !---Body---
     ExitFile = .false.
@@ -380,7 +380,7 @@ module MCLIB_UTILITIES_FORMER
     character*(*)::STR
     character*(*), intent(in)::FILTER
     !---Local Vars---
-    character*256::FC
+    character*1000::FC
     integer::I
     integer::LS
     integer::FilterLen
@@ -483,10 +483,10 @@ module MCLIB_UTILITIES_FORMER
     implicit none
     !---Dummy Vars---
     character*(*), intent(in)::FileLongName
-    character*256::FilePath
-    character*256::FileShortName
+    character*(*)::FilePath
+    character*(*)::FileShortName
     !---Local Vars---
-    character*256::tempLongName
+    character*1000::tempLongName
     integer::I,IFind,Length
     character*2::CharacterSet1
     character*2::CharacterSet2
@@ -557,7 +557,7 @@ module MCLIB_UTILITIES_FORMER
     integer,intent(out)::fileUnit
     !---Local Vars---
     integer::ISTAT
-    character*256::openInfo
+    character*1000::openInfo
     !---Body---
     call AvailableIOUnit(fileUnit)
 
@@ -587,7 +587,7 @@ module MCLIB_UTILITIES_FORMER
     integer,intent(out)::fileUnit
     !---Local Vars---
     integer::ISTAT
-    character*256::openInfo
+    character*1000::openInfo
     !---Body---
     call AvailableIOUnit(fileUnit)
 
@@ -617,7 +617,7 @@ module MCLIB_UTILITIES_FORMER
     integer,intent(out)::fileUnit
     !---Local Vars---
     integer::ISTAT
-    character*256::openInfo
+    character*1000::openInfo
     logical::exits
     !---Body---
     exits = .false.
@@ -651,13 +651,13 @@ module MCLIB_UTILITIES_FORMER
 !    !---Dummy Vars---
 !    character*(*)::distPath
 !    character*(*)::parentPath
-!    character*256::resultPath
+!    character*1000::resultPath
 !    !---Local Vars---
-!    character*256::truePath
+!    character*1000::truePath
 !    logical::exits
 !    character(len=64),dimension(20)::seperatedStrsArray
 !    integer::segNumber
-!    character*256::resolvedParentPath
+!    character*1000::resolvedParentPath
 !    integer::I
 !    logical::AbsolutePath
 !    !---Body---
@@ -722,7 +722,7 @@ module MCLIB_UTILITIES_FORMER
     character*(*),intent(in)::ThePath
     logical::TheResult
     !---Local Vars---
-    character*256::TempPath
+    character*1000::TempPath
     logical::exits
     integer::Length
     !---Body---
@@ -763,14 +763,14 @@ module MCLIB_UTILITIES_FORMER
     character*(*)::TheFolder
     type(STRList),target::TheFilesPath
     !---Local Vars---
-    character*256::tempTheFolder
+    character*1000::tempTheFolder
     integer::length
-    character*256::tempfile
+    character*1000::tempfile
     character*1000::ShellStr
     integer::hFile
-    character*256::STR
+    character*1000::STR
     integer::LINE
-    character*256::tempPath
+    character*1000::tempPath
     !---Body---
 
     call TheFilesPath%Clean_STRList()
@@ -799,9 +799,9 @@ module MCLIB_UTILITIES_FORMER
 
     call system(trim(ShellStr))
 
-    hFile = OpenExistedFile(tempfile)
+    hFile = OpenExistedFile(adjustl(trim(tempfile)))
 
-    Do While(GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+    Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
         if(LENTRIM(STR) .GT. 0) then
             tempPath = INQUIREFILE(adjustl(trim(TheFolder))//FolderSpe//adjustl(trim(STR)))
 
@@ -817,7 +817,7 @@ module MCLIB_UTILITIES_FORMER
     implicit none
     !---Dummy Vars---
     character*(*),intent(in)::distPath
-    character*256::resultPath
+    character*1000::resultPath
     !---Local Vars---
     logical::exits
     integer::Length

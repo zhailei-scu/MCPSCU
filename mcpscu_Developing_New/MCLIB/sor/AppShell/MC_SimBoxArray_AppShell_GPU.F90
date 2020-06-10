@@ -25,18 +25,18 @@ module MC_SimBoxArray_AppShell_GPU
             end subroutine INICONFIGPROC
         end interface
         !---Local Vars---
-        character*256::ARG
-        character*256::filePath
+        character*1000::ARG
+        character*1000::filePath
         integer::err
         integer::arg_Num
         integer::start_Index_Dev = 0
         integer::num_use_Device = 1
         integer::ISEED0,ISEED(2)
 
-        character(len=256)::ExePath
-        character(len=256)::path
-        character(len=256)::ExeName
-        character(len=256)::ExePrefixName
+        character(len=1000)::ExePath
+        character(len=1000)::path
+        character(len=1000)::ExeName
+        character(len=1000)::ExePrefixName
         logical::exits
         integer::ISTAT
         integer::TestLoops

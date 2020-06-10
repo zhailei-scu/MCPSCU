@@ -30,7 +30,7 @@ module MC_StatisticClusters_Offline
         character*28,dimension(:),allocatable::CCNum_GTNAtom
         character*28,dimension(:),allocatable::CNAVA
         character*28,dimension(:),allocatable::CNAVA_GTNAtom
-        character*256::CNUM_GT
+        character*1000::CNUM_GT
         real(kind=KINDDF),dimension(:),allocatable::NAVAEachBox
         real(kind=KINDDF),dimension(:),allocatable::NAVAEachBox_GTNAtom
         real(kind=KINDDF)::NAVA(p_NUMBER_OF_STATU)
@@ -1093,19 +1093,19 @@ program Main_StatisticClusters_Offline
     use MCLIB_UTILITIES
     implicit none
     integer::arg_Num
-    character*256::ARG
-    character*256::SampleFile
+    character*1000::ARG
+    character*1000::SampleFile
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(MigCoalClusterRecord)::Record
-    character*256::pathIn
-    character*256::OutFolder
-    character*256::pathOut
-    character*256::C_JOB
-    character*256::C_TIMESECTION
-    character*256::C_ICFG
-    character*256::pathOutEachBox
-    character*256::pathOutTotalBox
+    character*1000::pathIn
+    character*1000::OutFolder
+    character*1000::pathOut
+    character*1000::C_JOB
+    character*1000::C_TIMESECTION
+    character*1000::C_ICFG
+    character*1000::pathOutEachBox
+    character*1000::pathOutTotalBox
     integer::hFileOutEachBox
     integer::hFileOutTotalBox
     integer::err

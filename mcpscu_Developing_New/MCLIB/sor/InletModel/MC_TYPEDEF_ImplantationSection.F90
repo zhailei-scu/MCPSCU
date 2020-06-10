@@ -406,8 +406,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Local Vars---
         type(ImplantSection)::tempImplantSection
-        character*256::truePath
-        character*256::STR
+        character*1000::truePath
+        character*1000::STR
         character*32::KEYWORD
         integer::hFile
         integer::LINE
@@ -613,7 +613,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*20::STRTMP(10)
         integer::N
@@ -809,13 +809,13 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
-        character*256::STRTEMP(1)
+        character*1000::STRTEMP(1)
         integer::N
         type(MigCoalClusterRecord)::tempRecord
         real(kind=KINDDF)::TotalSampleRate
-        character*256::FolderPath
+        character*1000::FolderPath
         integer::LayerNum
         real(kind=KINDDF),dimension(:),allocatable::LayersThick
         real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
@@ -1004,7 +1004,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes),intent(in)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        character*256,intent(in)::cfgFile
+        character*(*),intent(in)::cfgFile
         real(kind=KINDDF),dimension(:),allocatable::LayersThick
         real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
         type(ACluster),dimension(:,:),allocatable::ClustersSample
@@ -1012,7 +1012,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         integer::hFile
         integer::LINE
         integer::N
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(20)
         integer::IElement
@@ -1163,7 +1163,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes),intent(in)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        character*256,intent(in)::cfgFile
+        character*(*),intent(in)::cfgFile
         integer,intent(in)::LayerNum
         real(kind=KINDDF),dimension(:),allocatable::LayersThick
         real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
@@ -1172,7 +1172,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         integer::hFile
         integer::LINE
         integer::N
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(20)
         integer::IElement
@@ -1351,7 +1351,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        character*256,intent(in)::cfgFile
+        character*(*),intent(in)::cfgFile
         integer,intent(in)::LayerNum
         real(kind=KINDDF),dimension(:),allocatable::LayersThick
         real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
@@ -1496,7 +1496,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         type(SimulationBoxes)::Host_SimBoxes
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(10)
         integer::N

@@ -166,7 +166,7 @@ module MODEL_ECR_CPU
         type(AtomsList)::TheAtomsList
         !---Local Vars---
         integer::LINE
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*20::STRTEMP(10)
         integer::N

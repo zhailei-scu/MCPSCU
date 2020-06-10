@@ -46,7 +46,7 @@ module MCLIB_TYPEDEF_GEOMETRY
         real(kind=KINDDF)::GVolumINI = 0.D0
         real(kind=KINDDF)::GVolumSD = 0.D0
         !---Init by external file----
-        character*256::GBCfgFileName = ''
+        character*1000::GBCfgFileName = ''
         !---Init by external function---
 
         !---Seeds---
@@ -433,8 +433,8 @@ module MCLIB_TYPEDEF_GEOMETRY
         CLASS(GrainBoundary)::this
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Local Vars---
-        character*256::FilePath
-        character*256::STR
+        character*1000::FilePath
+        character*1000::STR
         integer::LINE
         integer::hFile
         integer::ISeed

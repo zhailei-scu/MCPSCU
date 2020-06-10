@@ -260,10 +260,10 @@ module MCLIB_TimeProfile
   subroutine InitOutPutTimeProfile(Ctlfilename)
     implicit none
     !---Dummy Vars---
-    character*256,intent(in)::Ctlfilename
+    character*1000,intent(in)::Ctlfilename
     !---Local Vars---
     logical::opened
-    character*256::outfilename_TimeProfile
+    character*1000::outfilename_TimeProfile
     !---Body---
     !---Define the file that output the size statistic information
     outfilename_TimeProfile = Ctlfilename(1:LEN_TRIM(Ctlfilename))//"_Functions.profile"

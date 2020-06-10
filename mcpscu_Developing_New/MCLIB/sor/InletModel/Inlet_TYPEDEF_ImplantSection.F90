@@ -197,7 +197,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
         this%InsetSequence = other%InsetSequence
 
         !---The Assignment(=)=> had been override
-        this%ImplantCfgFileList = other%ImplantCfgFileList
+        if(associated(other%ImplantCfgFileList)) then
+            this%ImplantCfgFileList = other%ImplantCfgFileList
+        end if
 
         this%ImplantCfgFileType = other%ImplantCfgFileType
 
@@ -317,7 +319,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*20::STRTMP(10)
         integer::N
@@ -368,7 +370,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*20::STRTMP(20)
         integer::N
@@ -483,7 +485,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer,intent(in)::hFile
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*20::STRTMP(10)
         integer::N
@@ -628,13 +630,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
-        character*256::STRTEMP(10)
+        character*1000::STRTEMP(10)
         integer::N
         type(MigCoalClusterRecord)::tempRecord
         real(kind=KINDDF)::TotalSampleRate
-        character*256::ConfigPath
+        character*1000::ConfigPath
         integer::LayerNum
         type(STRList),pointer::cursor=>null()
         !---Body---
@@ -845,6 +847,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     end if
 
                 case(PANDA_DIST)
+
+                    write(*,*) "adjustl(trim(cursor%TheValue)) ",adjustl(trim(cursor%TheValue))
+
                     call this%Putin_PANDA_OUTCFG_Distribution(SimBoxes,Host_SimuCtrlParam,adjustl(trim(cursor%TheValue)),this%LayerThick,this%ClustersSampleRate,this%ClustersSample)
                     TotalSampleRate = sum(this%ClustersSampleRate)
                     if(TotalSampleRate .LE. 0) then
@@ -906,7 +911,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes),intent(in)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        character*256,intent(in)::cfgFile
+        character*(*),intent(in)::cfgFile
         real(kind=KINDDF),dimension(:),allocatable::LayersThick
         real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
         type(ACluster),dimension(:,:),allocatable::ClustersSample
@@ -914,7 +919,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::hFile
         integer::LINE
         integer::N
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(20)
         integer::IElement
@@ -928,7 +933,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         LINE = 0
 
-        hFile = OpenExistedFile(adjustl(trim(cfgFile)))
+        hFile = OpenExistedFile(cfgFile(1:LENTRIM(cfgFile)))
 
         LayerNum = 0
 
@@ -1065,7 +1070,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes),intent(in)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        character*256,intent(in)::cfgFile
+        character*(*),intent(in)::cfgFile
         integer,intent(in)::LayerNum
         real(kind=KINDDF),dimension(:),allocatable::LayersThick
         real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
@@ -1074,7 +1079,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::hFile
         integer::LINE
         integer::N
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(20)
         integer::IElement
@@ -1253,7 +1258,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        character*256,intent(in)::cfgFile
+        character*(*),intent(in)::cfgFile
         integer,intent(in)::LayerNum
         real(kind=KINDDF),dimension(:),allocatable::LayersThick
         real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
@@ -1398,7 +1403,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationBoxes)::Host_SimBoxes
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(10)
         integer::N

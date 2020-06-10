@@ -30,7 +30,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -88,7 +88,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -145,7 +145,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -201,7 +201,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -257,7 +257,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -313,7 +313,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -369,7 +369,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -425,7 +425,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -481,7 +481,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -537,7 +537,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -593,7 +593,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -649,7 +649,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL
@@ -705,7 +705,7 @@
     &ENDSUBCTL
 
     &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 2
+        &IMPLANTID The used implantation group in current time section = 4
     &ENDSUBCTL
     
     &TIMESUBCTL

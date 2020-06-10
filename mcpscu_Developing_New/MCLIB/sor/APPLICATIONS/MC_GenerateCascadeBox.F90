@@ -353,31 +353,31 @@ module MC_GenerateCascadeBox
     !---This routine only analysis SIA or VAC
     implicit none
     !---Dummy Vars---
-    character*256,intent(in)::pathIn
+    character*(*),intent(in)::pathIn
     integer,intent(in)::Index_StartBox
     integer,intent(in)::Index_EndBox
     integer,intent(in)::Index_SIAConfig
     integer,intent(in)::Index_VACConfig
     type(MDStatistic)::TheMDStatistic
     !---Local Vars---
-    character*256::OutFolder
-    character*256::pathOutSIA
+    character*1000::OutFolder
+    character*1000::pathOutSIA
     integer::hFileOutSIA
-    character*256::pathOutVAC
+    character*1000::pathOutVAC
     integer::hFileOutVAC
-    character*256::pathOutSIAToVAC
+    character*1000::pathOutSIAToVAC
     integer::hFileOutSIAToVAC
-    character*256::pathOutMIX
+    character*1000::pathOutMIX
     integer::hFileOutMIX
     integer::IBox
-    character*256::C_IBOX
-    character*256::C_ICFGSIA
-    character*256::C_ICFGVAC
-    character*256::fileName
+    character*1000::C_IBOX
+    character*1000::C_ICFGSIA
+    character*1000::C_ICFGVAC
+    character*1000::fileName
     logical::exits
     integer::RemindZeroNum
     integer::I
-    character*256::STR
+    character*1000::STR
     integer::LINE
     character*32::KEYWORD
     integer::STA
@@ -1144,7 +1144,7 @@ module MC_GenerateCascadeBox
     !---This routine only analysis SIA or VAC
     implicit none
     !---Dummy Vars---
-    character*256,intent(in)::pathIn
+    character*(*),intent(in)::pathIn
     integer,intent(in)::Index_StartBox
     integer,intent(in)::Index_EndBox
     integer,intent(in)::Index_SIAConfig
@@ -1154,24 +1154,24 @@ module MC_GenerateCascadeBox
     integer,intent(inout),dimension(:),allocatable::NSIAClusterEachBoxArray
     integer,intent(inout),dimension(:),allocatable::NVACClusterEachBoxArray
     !---Local Vars---
-    character*256::OutFolder
-    character*256::pathOutSIA
+    character*1000::OutFolder
+    character*1000::pathOutSIA
     integer::hFileOutSIA
-    character*256::pathOutVAC
+    character*1000::pathOutVAC
     integer::hFileOutVAC
-    character*256::pathOutSIAToVAC
+    character*1000::pathOutSIAToVAC
     integer::hFileOutSIAToVAC
-    character*256::pathOutMIX
+    character*1000::pathOutMIX
     integer::hFileOutMIX
     integer::IBox
-    character*256::C_IBOX
-    character*256::C_ICFGSIA
-    character*256::C_ICFGVAC
-    character*256::fileName
+    character*1000::C_IBOX
+    character*1000::C_ICFGSIA
+    character*1000::C_ICFGVAC
+    character*1000::fileName
     logical::exits
     integer::RemindZeroNum
     integer::I
-    character*256::STR
+    character*1000::STR
     integer::LINE
     character*32::KEYWORD
     integer::STA
@@ -1394,13 +1394,13 @@ module MC_GenerateCascadeBox
   !*************************************************************************
   subroutine ReadOnConifg_SIA(fileName,ClustersArray,NAtomEachCluster,NClusterEachBox)
     !---Dummy Vars---
-    character*256,intent(in)::fileName
+    character*(*),intent(in)::fileName
     type(ClusterAtom),dimension(:),allocatable::ClustersArray
     integer,dimension(:),allocatable::NAtomEachCluster
     integer::NClusterEachBox
     !---Local Vars---
     integer::hFile
-    character*256::STR
+    character*1000::STR
     integer::LINE
     character*32::KEYWORD
     integer::STA
@@ -1605,13 +1605,13 @@ module MC_GenerateCascadeBox
   !*************************************************************************
   subroutine ReadOnConifg_VAC(fileName,ClustersArray,NAtomEachCluster,NClusterEachBox)
     !---Dummy Vars---
-    character*256,intent(in)::fileName
+    character*(*),intent(in)::fileName
     type(ClusterAtom),dimension(:),allocatable::ClustersArray
     integer,dimension(:),allocatable::NAtomEachCluster
     integer::NClusterEachBox
     !---Local Vars---
     integer::hFile
-    character*256::STR
+    character*1000::STR
     integer::LINE
     character*32::KEYWORD
     integer::STA
@@ -1783,7 +1783,7 @@ module MC_GenerateCascadeBox
         logical,intent(out)::WhetherIncludeVAC
         integer,intent(out)::CascadeNum
         logical,intent(out)::WhetherCascadeSameInOneBox
-        character*256,intent(out)::MDDataBasePath
+        character*(*),intent(out)::MDDataBasePath
         integer,intent(out)::Index_StartBox
         integer,intent(out)::Index_EndBox
         integer,intent(out)::Index_SIAConfig
@@ -2343,12 +2343,12 @@ module MC_GenerateCascadeBox
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
-        character*256::OutFolder
+        character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
         integer::CascadeNum
         logical::WhetherCascadeSameInOneBox
-        character*256::MDDataBasePath
+        character*1000::MDDataBasePath
         integer::Index_StartBox
         integer::Index_EndBox
         integer::Index_SIAConfig
@@ -2787,12 +2787,12 @@ module MC_GenerateCascadeBox
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
-        character*256::OutFolder
+        character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
         integer::CascadeNum
         logical::WhetherCascadeSameInOneBox
-        character*256::MDDataBasePath
+        character*1000::MDDataBasePath
         integer::Index_StartBox
         integer::Index_EndBox
         integer::Index_SIAConfig
@@ -3125,12 +3125,12 @@ module MC_GenerateCascadeBox
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
-        character*256::OutFolder
+        character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
         integer::CascadeNum
         logical::WhetherCascadeSameInOneBox
-        character*256::MDDataBasePath
+        character*1000::MDDataBasePath
         integer::Index_StartBox
         integer::Index_EndBox
         integer::Index_SIAConfig
@@ -3669,7 +3669,7 @@ module MC_GenerateCascadeBox
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(MigCoalClusterRecord)::Record
-        character*256::OutFolder
+        character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
         integer::NSIACluster
@@ -3900,15 +3900,15 @@ program Main_MC_GenerateCascadeBox
     implicit none
     integer::arg_Num
     integer::CascadeGenWay
-    character*256::ARG
-    character*256::SampleFile
+    character*1000::ARG
+    character*1000::SampleFile
     integer::CascadeNum
     integer::NClusterEachCascade
-    character*256::CascadeControlFile
+    character*1000::CascadeControlFile
     integer::hFile
     integer::LINE
     character*1000::STR
-    character*256::STRTMP(10)
+    character*1000::STRTMP(10)
     integer::FinededCascadeGenWay
     character*32::KEYWORD
     integer::N

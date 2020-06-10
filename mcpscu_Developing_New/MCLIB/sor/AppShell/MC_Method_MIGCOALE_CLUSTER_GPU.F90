@@ -28,7 +28,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         integer,dimension(:),allocatable::NClusters
 
-        character*256::InitCfgFileName = ""
+        character*1000::InitCfgFileName = ""
 
         character*10::Elemets(p_ATOMS_GROUPS_NUMBER) = ""
 
@@ -695,7 +695,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
         !---Local Vars---
-        character*256::path
+        character*1000::path
         character*18,dimension(:),allocatable::CRMin
         character*18,dimension(:),allocatable::CRMax
         character*18,dimension(:),allocatable::CCNum
@@ -811,7 +811,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Local Vars---
         logical::existed
         integer::hFile
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(10)
         integer::LINE
@@ -885,9 +885,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Local Vars---
         type(InitBoxSimCfgList),pointer::cursor=>null()
         integer::hFile
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
-        character*256::fileName
+        character*1000::fileName
         integer::LINE
         integer::RecordNum
         character*30::TheVersion
@@ -954,7 +954,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::LINE
         !---Local Vars---
         type(InitBoxSimCfg)::tempInitBoxSimCfg
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(10)
         integer::N
@@ -1021,7 +1021,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(InitBoxSimCfg)::InitBoxCfg
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(10)
         integer::N
@@ -1101,7 +1101,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(InitBoxSimCfg)::InitBoxCfg
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*200::STRTMP(10)
         integer::N
@@ -1169,7 +1169,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(InitBoxSimCfg)::InitBoxCfg
         integer::LINE
         !---Local Vars---
-        character*512::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(10)
         integer::N
@@ -1278,7 +1278,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(InitBoxSimCfg)::InitBoxCfg
         integer::LINE
         !---Local Vars---
-        character*256::STR
+        character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(10)
         integer::N

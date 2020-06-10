@@ -240,7 +240,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
 
     integer::LINE
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     !---Body---
 
@@ -400,7 +400,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::LINE
     integer::I
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
     real(kind=KINDDF)::BOXSIZE(3)
@@ -482,7 +482,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
     !---Body---
@@ -523,7 +523,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationBoxes)::this
     integer,intent(in)::hBoxFile
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
     type(ATOM)::tempAtom
@@ -636,7 +636,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationBoxes)::this
     integer,intent(in)::hBoxFile
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     integer::LINE
     !---Body---
@@ -676,7 +676,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationBoxes)::this
     integer,intent(in)::hBoxFile
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     integer::LINE
     character*32::STRNUMB(10)
@@ -749,7 +749,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer,intent(in)::hBoxFile
     !---Local Vars---
     character*32::KEYWORD
-    character*256::STR
+    character*1000::STR
     integer::LINE
     character*32::STRNUMB(10)
     type(ReadedDiffusorValue)::newDiffusor
@@ -1070,7 +1070,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationBoxes)::this
     integer,intent(in)::hBoxFile
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character(kind=c_char,len=10000)::scriptStr
     integer::LINE
@@ -1107,7 +1107,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationBoxes)::this
     integer,intent(in)::hBoxFile
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     integer::LINE
     character*32::STRNUMB(10)
@@ -1161,7 +1161,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer,intent(in)::hBoxFile
     !---Local Vars---
     character*32::KEYWORD
-    character*256::STR
+    character*1000::STR
     integer::LINE
     character*32::STRNUMB(10)
     type(ReadReactionPair)::newReactionPair
@@ -1307,7 +1307,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationBoxes)::this
     integer,intent(in)::hBoxFile
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character(kind=c_char,len=10000)::scriptStr
     integer::LINE
@@ -1346,7 +1346,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRTEMP(10)
     !---Body---
@@ -1395,7 +1395,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRTEMP(10)
     !---Body---
@@ -1448,7 +1448,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRTEMP(10)
     !---Body---
@@ -1523,7 +1523,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRTEMP(10)
     !---Body---
@@ -1598,7 +1598,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*10::STRTMP(10)
     !---Body---
@@ -2312,8 +2312,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::ILayer
     integer::LayerNum
     character*32::KEYWORD
-    character*256::CFormat
-    character*256::CNUM
+    character*1000::CFormat
+    character*1000::CNUM
     character*15::AtomsStr(p_ATOMS_GROUPS_NUMBER)
     integer::tempLen
     integer::ElementsKind
@@ -2477,10 +2477,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer, optional::RescaleCount
     integer, optional::SweepOutCount
     !---Local Vars---
-    character*256::c_ITIME
-    character*256::C_TIMESECTION
-    character*256::C_JOB
-    character*256::path
+    character*1000::c_ITIME
+    character*1000::C_TIMESECTION
+    character*1000::C_JOB
+    character*1000::path
     integer::hFile
     !---Body---
 
@@ -2532,13 +2532,13 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     Class(SimulationRecord)::SimuRecord
-    character*256,intent(in)::cfgFile
+    character*(*),intent(in)::cfgFile
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     character*30::TheVersion
     !---Local Vars--
     integer::hFile
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     integer::LINE
     !---Body---
@@ -2591,7 +2591,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*30::TheVersion
     integer,intent(inout)::LINE
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRTMP(20)
     integer::N
@@ -2655,7 +2655,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
-    character*256,intent(in)::cfgFile
+    character*(*),intent(in)::cfgFile
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
     character*30::TheVersion
@@ -2664,17 +2664,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
     integer::hFile
     integer::LINE
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     integer::K
     integer::IBox
     integer::IBoxTemp
-    character*256::CFormat
-    character*256::CNUM
+    character*1000::CFormat
+    character*1000::CNUM
     integer,dimension(:),allocatable::atomsInfo
     integer,dimension(:),allocatable::ExpandSizeArray
     integer,dimension(:),allocatable::NCEachBox
-    character*256::CEmpty
+    character*1000::CEmpty
     integer::state
     integer::ISeed
     integer::ISeedTemp
@@ -3101,7 +3101,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
-    character*256,intent(in)::cfgFile
+    character*(*),intent(in)::cfgFile
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
@@ -3130,7 +3130,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    character*256,intent(in)::cfgFile
+    character*(*),intent(in)::cfgFile
     real(kind=KINDDF),dimension(:),allocatable::LayersThick
     real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),allocatable::ClustersSample
@@ -3140,7 +3140,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::hFile
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRTMP(20)
     integer::IElement
@@ -3393,7 +3393,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
-    character*256,intent(in)::cfgFileName
+    character*(*),intent(in)::cfgFileName
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     CLASS(SimulationRecord)::SimuRecord
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
@@ -3422,7 +3422,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    character*256,intent(in)::cfgFile
+    character*(*),intent(in)::cfgFile
     real(kind=KINDDF),dimension(:),allocatable::LayersThick
     real(kind=KINDDF),dimension(:,:),allocatable::ClustersSampleConcentrate
     type(ACluster),dimension(:,:),allocatable::ClustersSample
@@ -3433,7 +3433,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::hFile
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRTMP(20)
     integer::IElement

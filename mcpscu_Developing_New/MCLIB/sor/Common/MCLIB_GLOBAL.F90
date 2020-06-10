@@ -27,13 +27,13 @@ module MCLIB_GLOBAL
     type(SimulationCtrlParam)::CtrlParam
     type(SimulationBoxes)::SimBoxes
     !---Local Vars---
-    character*256::sampleFilePath,STR
-    character*256::shortFileName
+    character*1000::sampleFilePath,STR
+    character*1000::shortFileName
     integer::fileUnit,length,ISTAT
     integer::LINE
     character*32::KEYWORD
-    character*256::ctlFile,boxFile,initFile,impFile,outPath,restartFile
-    character*256::STRTMP(5)
+    character*1000::ctlFile,boxFile,initFile,impFile,outPath,restartFile
+    character*1000::STRTMP(5)
     integer::N
     !---Body---
     call CtrlParam%DefaultValue_CtrlParam()
@@ -195,13 +195,13 @@ module MCLIB_GLOBAL
     !---Dummy Vars---
     integer,intent(inout)::hFILELOG
     !---Local Vars---
-    character(len=256)::ARG
-    character(len=256)::ExePath
-    character(len=256)::SampleFilePath
-    character(len=256)::path
-    character(len=256)::ExeName
-    character(len=256)::ExePrefixName
-    character(len=256)::fileName
+    character(len=1000)::ARG
+    character(len=1000)::ExePath
+    character(len=1000)::SampleFilePath
+    character(len=1000)::path
+    character(len=1000)::ExeName
+    character(len=1000)::ExePrefixName
+    character(len=1000)::fileName
     integer::length
     integer::ISTAT
     logical::exits

@@ -20,8 +20,8 @@ module MC_SimBoxArray_ToolShell
             end subroutine INICONFIGPROC
         end interface
         !---Local Vars---
-!        character*256::ARG
-!        character*256::filePath
+!        character*1000::ARG
+!        character*1000::filePath
 !        integer::err
 !        integer::arg_Num
 !        integer::start_Index_Dev = 0

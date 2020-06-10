@@ -5,8 +5,8 @@
        character*(*),intent(in)::ObjectStr
        logical,intent(out)::theResult
        !---Local Vars---
-       character(len=256)::tempSubjectStr
-       character(len=256)::tempObjectStr
+       character(len=1000)::tempSubjectStr
+       character(len=1000)::tempObjectStr
        character,dimension(:),allocatable::tempSubjectStrAllo
        character,dimension(:),allocatable::tempObjectStrAllo
        integer::SubjectStrlength

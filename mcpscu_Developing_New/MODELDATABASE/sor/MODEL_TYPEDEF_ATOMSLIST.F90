@@ -227,7 +227,7 @@ module MODEL_TYPEDEF_ATOMSLIST
         !---Local Vars---
         type(AtomsList),pointer::cursor=>null()
         integer::tempIndex
-        character*256::tempSymbol
+        character*1000::tempSymbol
         !---Body---
         TheIndex = 0
 

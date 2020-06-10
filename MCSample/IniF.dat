@@ -85,7 +85,7 @@
 
   &GROUPSUBCTL
          &TYPE The atomical initial type = 1 ! 0 by simple inner way, 1 by from external file, 2 by function
-         &INITFILE The init file path = "SubEvolution/Config_Job1_Section2_13.dat"
+         &INITFILE The init file path = "CascadeBox/Cascade1Box200LU_NBox800.dat"
   &ENDSUBCTL
 
 &ENDINITINPUTF

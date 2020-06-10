@@ -13,12 +13,12 @@
   !--- interface to the external routine -------------------
       type::Statementlist
            integer                     ::line = 0
-           character(len=256)          ::this = ""
+           character(len=1000)          ::this = ""
            type(StatementList), pointer::next=>null()
       end type StatementList
 
       type InputStatements
-           character(len=256)          ::filename = ""    !--- the filename, which provides where the inputs are loaded from
+           character(len=1000)          ::filename = ""    !--- the filename, which provides where the inputs are loaded from
            character(len=64)           ::stag=""          !    the Tag, which used to distingush the modules that will use the input
            type(StatementList), pointer::stat=>null()
       end type InputStatements
@@ -86,7 +86,7 @@
      type(StatementList),             pointer ::To
      character*(*), intent(in),       optional::EndKWD
      !----
-     character*256::tSTR
+     character*1000::tSTR
      character*64 ::tWord
 
      !----
@@ -209,7 +209,7 @@
      type(StatementList),pointer, optional::SPtr
      !----
      character*64::tWord
-     character*256::tSTR
+     character*1000::tSTR
 
               if(.not. associated(Statements)) then
                  LINE = 0
@@ -332,7 +332,7 @@
      type(StatementList),pointer::SPtr
      !----
      character*64::tWord
-     character*256::tSTR
+     character*1000::tSTR
 
               SPtr=>null()
               if(.not. associated(Statements)) then
@@ -402,7 +402,7 @@
      type(StatementList),pointer::Statements
      !----
      character*64::tWord
-     character*256::tSTR
+     character*1000::tSTR
 
               if(.not. associated(Statements)) then
                  res = .false.
@@ -463,7 +463,7 @@
      type(InputStatements)::Inputs
      !---- local variables
      integer::LINE, hFile
-     character*256::STR
+     character*1000::STR
 
 
               Inputs%filename = fname
@@ -593,7 +593,7 @@
 
      !----
      character*64::tWord
-     character*256::tSTR
+     character*1000::tSTR
 
               res = HasKeyword_StatementList(keyword, Inputs%stat)
               return

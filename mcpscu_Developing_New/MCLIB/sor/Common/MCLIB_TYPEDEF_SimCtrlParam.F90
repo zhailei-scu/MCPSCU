@@ -83,12 +83,12 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      type(Statementlist),pointer::ModelData=>null()
 
      !***File path and name restore*****
-     character*256::InputFilePath = ""
-     character*256::InputFileshortName = ""
-     character*256::IniConfig = ""
-     character*256::ImpFile = ""
-     character*256::OutFilePath = ""
-     character*256::RestartCfg = ""
+     character*1000::InputFilePath = ""
+     character*1000::InputFileshortName = ""
+     character*1000::IniConfig = ""
+     character*1000::ImpFile = ""
+     character*1000::OutFilePath = ""
+     character*1000::RestartCfg = ""
 
      !*********Parameters for analysis processes*************
      integer::STARTJOB = -1
@@ -607,7 +607,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer, intent(in)::hFile
     !---Local Vars---
     integer::LINE
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     type(SimulationCtrlParam),pointer::cursor=>null()
     type(SimulationCtrlParam)::tempCtrlParam
@@ -710,8 +710,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     CLASS(SimulationCtrlParam)::this
     integer, intent(in)::hFile
     !---Local Vars---
-    character*256::STR
-    character*256::KEYWORD
+    character*1000::STR
+    character*1000::KEYWORD
     character*32::STRNUMB(10)
     integer::N
     integer::I
@@ -787,8 +787,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     CLASS(SimulationCtrlParam)::this
     integer, intent(in)::hFile
     !---Local Vars---
-    character*256::STR
-    character*256::KEYWORD
+    character*1000::STR
+    character*1000::KEYWORD
     character*32::STRNUMB(10)
     integer::N
     integer::I
@@ -885,7 +885,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     CLASS(SimulationCtrlParam)::this
     integer, intent(in)::hFile
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     integer::LINE
     character*32::KEYWORD
     !---Body---
@@ -935,7 +935,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
 
@@ -989,7 +989,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
     !---Body---
@@ -1037,7 +1037,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
 
@@ -1148,7 +1148,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     CLASS(SimulationCtrlParam)::this
     integer, intent(in)::hFile
     !---Local Vars---
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*20::SUBNUM(10)
     integer::LINE
@@ -1194,7 +1194,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(20)
     integer::I
@@ -1535,7 +1535,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     !---Body---
     DO While(.true.)
@@ -1568,7 +1568,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !---Local Vars---
     integer::LINE
     integer::N
-    character*256::STR
+    character*1000::STR
     character*32::KEYWORD
     !---Body---
     DO While(.true.)
@@ -1601,9 +1601,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     type(SimulationCtrlParam),pointer::cursor=>null()
     integer::ISect
     integer::IStatu
-    character*256::ConfigContent
-    character*256::CFormat
-    character*256::CNUM
+    character*1000::ConfigContent
+    character*1000::CFormat
+    character*1000::CNUM
     !---Body---
 
     write(hFile,*) "!****************Control file information***********************"
