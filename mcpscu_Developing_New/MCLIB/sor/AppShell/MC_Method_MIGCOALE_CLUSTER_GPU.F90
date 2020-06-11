@@ -1939,7 +1939,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                                                                       Record%GetSimuTimes(),                  &
                                                                                       Record%GetTimeSteps(),                  &
                                                                                       m_ROriginRegion,                        &
-                                                                                      DSQRT(6*Record%GetTimeSteps()*TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax), &
+                                                                                      DSQRT(6*Record%GetTimeSteps()*TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU)), &
                                                                                       sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_NCToPD),  &
                                                                                       sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_NCOutPD)
 
