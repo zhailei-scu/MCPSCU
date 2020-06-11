@@ -19,8 +19,8 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         !---Active Index---
         integer, device, dimension(:), allocatable::dm_ActiveIndex
 
-        integer,device,dimension(:),allocatable::dm_NCToPD
-        integer,device,dimension(:),allocatable::dm_NCOutPD
+        real(kind=KINDDF),device,dimension(:),allocatable::dm_NCToPD
+        real(kind=KINDDF),device,dimension(:),allocatable::dm_NCOutPD
 
         !---Record Some status
         integer::NLUpdateCount_Dev = 0

@@ -1935,7 +1935,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end if
 
 
-                write(Record%HSPDMA_TotalBox, fmt="(I20,1x,4(1PE20.8,1x),2(I20,1x))") Record%GetSimuSteps(),             &
+                write(Record%HSPDMA_TotalBox, fmt="(I20,1x,6(1PE20.8,1x))") Record%GetSimuSteps(),             &
                                                                                       Record%GetSimuTimes(),                  &
                                                                                       Record%GetTimeSteps(),                  &
                                                                                       m_ROriginRegion,                        &

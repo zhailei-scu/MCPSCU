@@ -118,8 +118,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF),value::TSTEP
     real(kind=KINDDF),value::MaxDiffCoeff
     real(kind=KINDDF),value::ROriginRegion
-    integer,device::NCToPD(:)
-    integer,device::NCOutPD(:)
+    real(kind=KINDDF),device::NCToPD(:)
+    real(kind=KINDDF),device::NCOutPD(:)
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -175,6 +175,8 @@ module MIGCOALE_EVOLUTION_GPU
 
         if((POS(1)*POS(1) + POS(2)*POS(2) + POS(3)*POS(3)) .LE. (ROriginRegion + RSPD)*(ROriginRegion + RSPD) ) then
             WithinPDBefore = .true.
+        else
+            WithinPDBefore = .false.
         end if
 
         !The average displacement:by using the Einstein Relation
