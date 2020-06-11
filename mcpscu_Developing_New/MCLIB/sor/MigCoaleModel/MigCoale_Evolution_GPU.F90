@@ -12,7 +12,7 @@ module MIGCOALE_EVOLUTION_GPU
   contains
 
   !********************************************************
-  subroutine WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+  subroutine WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP,MaxDiffCoeff,ROriginRegion)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
@@ -20,6 +20,8 @@ module MIGCOALE_EVOLUTION_GPU
     type(SimulationBoxes_GPU)::Dev_Boxes
     type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
     real(kind=KINDDF)::TSTEP
+    real(kind=KINDDF),intent(in)::MaxDiffCoeff
+    real(kind=KINDDF),intent(in)::ROriginRegion
     !---Local Vars---
     integer::MULTIBOX
     integer::IBox
@@ -86,7 +88,11 @@ module MIGCOALE_EVOLUTION_GPU
                                                     Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
                                                     Dev_DiffusorMap%Dev_TypesEntities,           &
                                                     Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
-                                                    TSTEP)
+                                                    TSTEP,                                       &
+                                                    MaxDiffCoeff,                                &
+                                                    ROriginRegion,                               &
+                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_NCToPD,      &
+                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_NCOutPD)
 
     END ASSOCIATE
 
@@ -95,7 +101,8 @@ module MIGCOALE_EVOLUTION_GPU
 
   !********************************************************
   attributes(global) subroutine WalkOneStep_Kernel(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
-                                                   Dev_RandArray,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP)
+                                                   Dev_RandArray,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP, &
+                                                   MaxDiffCoeff,ROriginRegion,NCToPD,NCOutPD)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -109,6 +116,10 @@ module MIGCOALE_EVOLUTION_GPU
     type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
     integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     real(kind=KINDDF),value::TSTEP
+    real(kind=KINDDF),value::MaxDiffCoeff
+    real(kind=KINDDF),value::ROriginRegion
+    integer,device::NCToPD(:)
+    integer,device::NCOutPD(:)
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -129,6 +140,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::VectorLen
     integer::RandomSign
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+    logical::WithinPDBefore
+    real(kind=KINDDF)::RSPD
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -157,6 +170,12 @@ module MIGCOALE_EVOLUTION_GPU
         ! on the size of the cluster
 
         POS = Dev_Clusters(IC)%m_POS
+
+        RSPD = DSQRT(6.D0*MaxDiffCoeff*TSTEP)
+
+        if((POS(1)*POS(1) + POS(2)*POS(2) + POS(3)*POS(3)) .LE. (ROriginRegion + RSPD)*(ROriginRegion + RSPD) ) then
+            WithinPDBefore = .true.
+        end if
 
         !The average displacement:by using the Einstein Relation
         RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
@@ -248,6 +267,17 @@ module MIGCOALE_EVOLUTION_GPU
         end if
 
         Dev_Clusters(IC)%m_POS = tempPos
+
+
+        if((tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3)) .LE. (ROriginRegion + RSPD)*(ROriginRegion + RSPD) ) then
+            if(WithinPDBefore .eq. .false.) then
+                NCToPD(IC) = NCToPD(IC) + 1
+            end if
+        else
+            if(WithinPDBefore .eq. .true.) then
+                NCOutPD(IC) = NCOutPD(IC) + 1
+            end if
+        end if
 
         ! if the new position is out of the box, the cluster is destroyed
         if(dm_PERIOD(3) .eq. 0) then

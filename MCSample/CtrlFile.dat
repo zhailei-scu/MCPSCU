@@ -57,6 +57,7 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -113,6 +114,7 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -170,6 +172,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -226,6 +230,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -282,6 +288,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -338,6 +346,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -394,6 +404,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -450,6 +462,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -506,6 +520,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -562,6 +578,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -618,6 +636,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -674,6 +694,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA
@@ -730,6 +752,8 @@
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
+
+	&RSPDM  the origin region radius is 100 ! in LU
     &ENDSUBCTL
 
     &MODELDATA

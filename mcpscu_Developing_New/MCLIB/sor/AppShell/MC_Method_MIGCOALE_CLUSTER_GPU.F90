@@ -476,7 +476,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             call TheImplantSection%Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,m_FREESURDIFPRE,m_GBSURDIFPRE)
         end if
 
-        call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+        call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP, &
+                        TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU) , &
+                        m_ROriginRegion)
 
         if(Host_SimuCtrlParam%FreeDiffusion .ne. .true.) then
             call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
@@ -485,6 +487,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         call Record%IncreaseOneSimuStep()
 
         call Record%AddSimuTimes(TSTEP)
+
+        call Record%SetTimeSteps(TSTEP)
 
         return
     end subroutine For_One_Step
@@ -786,6 +790,27 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
 
         FLUSH(Record%HSizeStatistic_TotalBox)
+
+
+        path = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"SPDAM_TotalBox.dat"
+
+        Record%HSPDMA_TotalBox = CreateNewFile(path)
+
+        write(Record%HSPDMA_TotalBox, fmt="(130(A20,1x))")          "Step",                              &
+                                                                    "Time(s)",                           &
+                                                                    "TStep(s)",                          &
+                                                                    "ROriginRegion",                     &
+                                                                    "RSPDAM",                            &
+                                                                    "NCTo",                              &
+                                                                    "NCOut"
+
+
+
+        FLUSH(Record%HSPDMA_TotalBox)
+
+
+
+
 
         deallocate(CRMin)
         deallocate(CRMax)
@@ -1908,6 +1933,18 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 else if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalTimeMagnification) then
                     call Record%SetLastOutSizeDistTime_IntegralBox(Record%GetSimuTimes())
                 end if
+
+
+                write(Record%HSPDMA_TotalBox, fmt="(I20,1x,4(1PE20.8,1x),2(I20,1x))") Record%GetSimuSteps(),             &
+                                                                                      Record%GetSimuTimes(),                  &
+                                                                                      Record%GetTimeSteps(),                  &
+                                                                                      m_ROriginRegion,                        &
+                                                                                      DSQRT(6*Record%GetTimeSteps()*TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax), &
+                                                                                      sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_NCToPD),  &
+                                                                                      sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_NCOutPD)
+
+                call flush(Record%HSPDMA_TotalBox)
+
             end if
 
             if(OutEachBoxStatistic .eq. .true.) then

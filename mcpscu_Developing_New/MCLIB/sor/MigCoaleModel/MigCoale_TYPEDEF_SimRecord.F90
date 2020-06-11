@@ -23,6 +23,9 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         real(kind=KINDDF),private::LastOutSizeDistTime_IntegralBox = 0.D0
         real(kind=KINDDF),private::LastOutSizeDistTime_EachBox = 0.D0
 
+
+        integer::HSPDMA_TotalBox = 0
+
         contains
         procedure,NON_OVERRIDABLE,public,pass::InitMigCoalClusterRecord
         procedure,non_overridable,public,pass::SetStartImplantTime=>Set_StartImplantTime

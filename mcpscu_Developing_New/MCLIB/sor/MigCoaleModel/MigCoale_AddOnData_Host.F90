@@ -18,6 +18,8 @@ module MIGCOALE_ADDONDATA_HOST
                                                              ! 8*PI*SURFE/(3*KB*TEMP)
     logical::m_DumplicateBox = .true.
 
+    real(kind=KINDDF)::m_ROriginRegion = 0.D0
+
     contains
 
     subroutine resolveAddOnData(Host_Boxes,Host_SimuCtrlParam)
@@ -51,6 +53,19 @@ module MIGCOALE_ADDONDATA_HOST
         else
             m_DumplicateBox = .true.
         end if
+
+        KEYWORD = "&RSPDM "
+        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
+        call RemoveComments(STR,"!")
+        call EXTRACT_NUMB(STR,1,N,STRTEMP)
+        if(N .LT. 1) then
+            write(*,*) "MCPSCUERROR: Too few parameters for RSPDM  at line : ",LINE
+            write(*,*) STR
+            write(*,*) "You should special: &&RSPDM   the origin region radius is  "
+            pause
+            stop
+        end if
+        m_ROriginRegion = DRSTR(STRTEMP(1))*Host_Boxes%LatticeLength
 
         KEYWORD = "&SURDIF"
         call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
