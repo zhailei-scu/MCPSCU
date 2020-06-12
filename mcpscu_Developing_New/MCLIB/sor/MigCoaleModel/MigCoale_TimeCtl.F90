@@ -128,6 +128,8 @@ module MIGCOALE_TIMECTL
         END ASSOCIATE
 
 
+
+
         !***********Focused TimePoint*********************
         call Record%TurnOffTriggerFocusedTimePoints()
 
