@@ -20,6 +20,9 @@ module MIGCOALE_ADDONDATA_HOST
 
     real(kind=KINDDF)::m_ROriginRegion = 0.D0
 
+
+    real(kind=KINDDF)::m_OccupiedTimeSteps = 0.D0
+
     contains
 
     subroutine resolveAddOnData(Host_Boxes,Host_SimuCtrlParam)

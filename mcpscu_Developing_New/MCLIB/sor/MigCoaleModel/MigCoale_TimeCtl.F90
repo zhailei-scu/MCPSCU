@@ -71,6 +71,7 @@ module MIGCOALE_TIMECTL
 
                 if(sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion) .GT. 0) then
                     TSTEP = 2.76D-13
+                    m_OccupiedTimeSteps = m_OccupiedTimeSteps + 1.D0
                 end if
 
             case(mp_SelfAdjustlStep_AveSep)
@@ -110,6 +111,7 @@ module MIGCOALE_TIMECTL
 
                 if(sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion) .GT. 0) then
                     TSTEP = 2.76D-13
+                    m_OccupiedTimeSteps = m_OccupiedTimeSteps + 1.D0
                 end if
 
             case(mp_FixedTimeStep)
@@ -117,6 +119,7 @@ module MIGCOALE_TIMECTL
 
                 if(sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion) .GT. 0) then
                     TSTEP = 2.76D-13
+                    m_OccupiedTimeSteps = m_OccupiedTimeSteps + 1.D0
                 end if
 
             case default

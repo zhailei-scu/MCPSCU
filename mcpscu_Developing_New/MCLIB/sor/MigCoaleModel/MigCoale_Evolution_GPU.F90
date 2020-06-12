@@ -118,6 +118,7 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF),value::MaxDiffCoeff
     real(kind=KINDDF),value::ROriginRegion
     integer,device::WithInRegion(:)
+    integer,value::SIAIndex
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -265,7 +266,10 @@ module MIGCOALE_EVOLUTION_GPU
 
 
         if((tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3)) .LE. (ROriginRegion + RSPD)*(ROriginRegion + RSPD) ) then
-            WithInRegion(IC) = 1
+
+            if(Dev_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
+                WithInRegion(IC) = 1
+            end if
         end if
 
         ! if the new position is out of the box, the cluster is destroyed
