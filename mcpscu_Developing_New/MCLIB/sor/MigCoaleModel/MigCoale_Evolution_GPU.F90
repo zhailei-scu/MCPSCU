@@ -91,7 +91,10 @@ module MIGCOALE_EVOLUTION_GPU
                                                     TSTEP,                                       &
                                                     MaxDiffCoeff,                                &
                                                     ROriginRegion,                               &
-                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion)
+                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion,&
+                                                    m_SIA_Index_W,                               &
+                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_NCToPD,      &
+                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_NCOutPD)
 
     END ASSOCIATE
 
@@ -101,7 +104,7 @@ module MIGCOALE_EVOLUTION_GPU
   !********************************************************
   attributes(global) subroutine WalkOneStep_Kernel(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
                                                    Dev_RandArray,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP, &
-                                                   MaxDiffCoeff,ROriginRegion,WithInRegion)
+                                                   MaxDiffCoeff,ROriginRegion,WithInRegion,SIAIndex,NCToPD,NCOutPD)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -119,6 +122,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF),value::ROriginRegion
     integer,device::WithInRegion(:)
     integer,value::SIAIndex
+    real(kind=KINDDF),device::NCToPD(:)
+    real(kind=KINDDF),device::NCOutPD(:)
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -140,6 +145,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::RandomSign
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     real(kind=KINDDF)::RSPD
+    logical::WithinPDBefore
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -175,6 +181,13 @@ module MIGCOALE_EVOLUTION_GPU
 
         !The average displacement:by using the Einstein Relation
         RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
+
+
+        if((POS(1)*POS(1) + POS(2)*POS(2) + POS(3)*POS(3)) .LE. (ROriginRegion + RSPD)*(ROriginRegion + RSPD) ) then
+            WithinPDBefore = .true.
+        else
+            WithinPDBefore = .false.
+        end if
 
 
         VectorLen = Dev_Clusters(IC)%m_DiffuseDirection(1)*Dev_Clusters(IC)%m_DiffuseDirection(1) + &
@@ -267,10 +280,25 @@ module MIGCOALE_EVOLUTION_GPU
 
         if((tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3)) .LE. (ROriginRegion + RSPD)*(ROriginRegion + RSPD) ) then
 
+        end if
+
+
+        if((tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3)) .LE. (ROriginRegion + RSPD)*(ROriginRegion + RSPD) ) then
+            if(WithinPDBefore .eq. .false.) then
+                NCToPD(IC) = NCToPD(IC) + 1
+            end if
+
             if(Dev_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
                 WithInRegion(IC) = 1
             end if
+        else
+            if(WithinPDBefore .eq. .true.) then
+                NCOutPD(IC) = NCOutPD(IC) + 1
+            end if
         end if
+
+
+
 
         ! if the new position is out of the box, the cluster is destroyed
         if(dm_PERIOD(3) .eq. 0) then
