@@ -803,8 +803,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                                                     "RSPDAM",                            &
                                                                     "NCTo",                              &
                                                                     "NCOut",                             &
-                                                                    "NStepsOcuppied"
-
+                                                                    "NStepsOcuppied",                    &
+                                                                    "NCOcuppied"
 
 
         FLUSH(Record%HSPDMA_TotalBox)
@@ -1936,14 +1936,15 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end if
 
 
-                write(Record%HSPDMA_TotalBox, fmt="(I20,1x,7(1PE20.8,1x))") Record%GetSimuSteps(),             &
+                write(Record%HSPDMA_TotalBox, fmt="(I20,1x,7(1PE20.8,1x),I20,1x)") Record%GetSimuSteps(),             &
                                                                                       Record%GetSimuTimes(),                  &
                                                                                       Record%GetTimeSteps(),                  &
                                                                                       m_ROriginRegion,                        &
                                                                                       DSQRT(6*Record%GetTimeSteps()*TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU)), &
                                                                                       sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_NCToPD),  &
                                                                                       sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_NCOutPD), &
-                                                                                      m_OccupiedTimeSteps
+                                                                                      m_OccupiedTimeSteps,                          &
+                                                                                      sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion)
 
                 call flush(Record%HSPDMA_TotalBox)
 
