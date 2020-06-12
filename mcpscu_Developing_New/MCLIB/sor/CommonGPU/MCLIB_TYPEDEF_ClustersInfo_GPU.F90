@@ -22,6 +22,8 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         real(kind=KINDDF),device,dimension(:),allocatable::dm_NCToPD
         real(kind=KINDDF),device,dimension(:),allocatable::dm_NCOutPD
 
+        integer,device,dimension(:),allocatable::dm_WithInRegion
+
         !---Record Some status
         integer::NLUpdateCount_Dev = 0
 
@@ -147,6 +149,8 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         call DeAllocateArray_GPU(this%dm_NCToPD,"dm_NCToPD")
         call DeAllocateArray_GPU(this%dm_NCOutPD,"dm_NCOutPD")
 
+        call DeAllocateArray_GPU(this%dm_WithInRegion,"dm_WithInRegion")
+
         !---Active status---
         call DeAllocateArray_GPU(this%dm_ActiveStatus,"dm_ActiveStatus")
 
@@ -189,6 +193,10 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
             this%dm_NCToPD = 0
             this%dm_NCOutPD = 0
 
+
+            call AllocateArray_GPU(this%dm_WithInRegion,AllocSize,"dm_WithInRegion")
+            this%dm_WithInRegion = 0
+
             !---Active status---
             call AllocateArray_GPU(this%dm_ActiveStatus,AllocSize,"dm_ActiveStatus")
 
@@ -227,6 +235,8 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         call DeAllocateArray_GPU(this%dm_NCToPD,"dm_NCToPD")
         call DeAllocateArray_GPU(this%dm_NCOutPD,"dm_NCOutPD")
 
+        call DeAllocateArray_GPU(this%dm_WithInRegion,"dm_WithInRegion")
+
         !---Active status---
         call DeAllocateArray_GPU(this%dm_ActiveStatus,"dm_ActiveStatus")
 
@@ -257,9 +267,10 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
                                                  sizeof(oneClusterInfo_GPU%dm_MergeINDI) + &
                                                  sizeof(oneClusterInfo_GPU%dm_MergeKVOIS) + &
                                                  sizeof(oneClusterInfo_GPU%dm_ActiveStatus) + &
-                                                 sizeof(oneClusterInfo_GPU%dm_ActiveIndex + &
+                                                 sizeof(oneClusterInfo_GPU%dm_ActiveIndex) + &
                                                  sizeof(oneClusterInfo_GPU%dm_NCToPD) + &
-                                                 sizeof(oneClusterInfo_GPU%dm_NCOutPD))
+                                                 sizeof(oneClusterInfo_GPU%dm_NCOutPD) + &
+                                                 sizeof(oneClusterInfo_GPU%dm_WithInRegion)
 
 
 

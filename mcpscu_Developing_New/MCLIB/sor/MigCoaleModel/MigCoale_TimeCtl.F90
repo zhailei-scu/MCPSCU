@@ -69,6 +69,10 @@ module MIGCOALE_TIMECTL
                     TSTEP = p_ZeroNCStep
                 end if
 
+                if(sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion) .GT. 0) then
+                    TSTEP = 2.76D-13
+                end if
+
             case(mp_SelfAdjustlStep_AveSep)
                 if(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .LE. 0.D0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU) .LE. 0.D0) then
                     TSTEP = p_ZeroNCStep
@@ -104,8 +108,16 @@ module MIGCOALE_TIMECTL
                     TSTEP = p_ZeroNCStep
                 end if
 
+                if(sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion) .GT. 0) then
+                    TSTEP = 2.76D-13
+                end if
+
             case(mp_FixedTimeStep)
                 TSTEP = Host_SimuCtrlParam%FixedTimeStepValue
+
+                if(sum(Dev_Boxes%dm_ClusterInfo_GPU%dm_WithInRegion) .GT. 0) then
+                    TSTEP = 2.76D-13
+                end if
 
             case default
                 write(*,*) "MCPSCUERROR: Unknown strategy to update time step :",Host_SimuCtrlParam%UPDATETSTEPSTRATEGY
