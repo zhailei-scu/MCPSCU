@@ -421,7 +421,8 @@ module MIGCOALE_EVOLUTION_GPU
                                                        Dev_ClusterInfo_GPU%dm_MergeINDI,            &
                                                        Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
                                                        Dev_ClusterInfo_GPU%dm_KVOIS,                &
-                                                       Dev_ClusterInfo_GPU%dm_INDI)
+                                                       Dev_ClusterInfo_GPU%dm_INDI,                 &
+                                                       Dev_ClusterInfo_GPU%dm_MinTSteps)
 
 
         ! We evolute the bubble merge in GPU
@@ -456,7 +457,7 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine MergeClusters
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI)
+  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -466,6 +467,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::MergeTable_INDI(:,:)
     integer,device::Neighbor_KVOIS(:)
     integer,device::Neighbor_INDI(:,:)
+    real(kind=KINDDF),device::MinTSteps(:)
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -476,6 +478,11 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDSF)::RADA,RADB,DIST,RR
     integer::N_Neighbor,NewNA
     integer::I,J,JC,NN
+    real(kind=KINDDF)::DIST2
+    real(kind=KINDDF)::MinT
+    real(kind=KINDDF)::tTemp
+    real(kind=KINDDF)::DiffA
+    real(kind=KINDDF)::DiffB
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -491,8 +498,13 @@ module MIGCOALE_EVOLUTION_GPU
 
     IC = scid + (cid - bid0*p_BlockSize -1)
 
+
+    MinT = 1.D32
+
     if(IC .LE. ecid) then
         MergeTable_KVOIS(IC) = 0
+
+        MinTSteps(IC) = 1.D32
 
         if(Dev_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. Dev_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             Pos_X = Dev_Clusters(IC)%m_POS(1)
@@ -500,6 +512,8 @@ module MIGCOALE_EVOLUTION_GPU
             Pos_Z = Dev_Clusters(IC)%m_POS(3)
 
             RADA = Dev_Clusters(IC)%m_RAD
+
+            DiffA = Dev_Clusters(IC)%m_DiffCoeff
 
             N_Neighbor = Neighbor_KVOIS(IC)
 
@@ -540,11 +554,18 @@ module MIGCOALE_EVOLUTION_GPU
 
                 RR = RADA+RADB
 
-                if(Sep_X.GT.RR .or. Sep_Y.GT.RR .or. Sep_Z.GT.RR) then
-                    cycle
-                end if
+                DiffB = Dev_Clusters(JC)%m_DiffCoeff
 
                 DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                DIST2 = min(Dist - RR,0.E0)
+
+                tTemp = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))
+
+                if(tTemp .LE. MinT ) then
+                    MinT = tTemp
+                end if
+
                 if(DIST .GT. RR ) then
                     cycle
                 end if
@@ -556,6 +577,8 @@ module MIGCOALE_EVOLUTION_GPU
             END DO
 
             MergeTable_KVOIS(IC) = NN
+
+            MinTSteps(IC) = MinT
 
        end if
 

@@ -57,6 +57,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                         ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute uniform in the box
      real::FixedTimeStepValue = 1                                       ! Fixed step time length for mp_FixedTimeStep strategy
      real::EnlageTStepScale = 0.01                                      ! adjustl time-step enlarge-scale mp_SelfAdjustlStep_NearestSep strategy and mp_SelfAdjustlStep_AveSep
+     real::LowerLimit = 3.68D-13                                        ! The lower limit of NDDR algorithm
 
      integer::TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps   ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s)
      real::TUpdateStatisValue = 10                                      ! the time interval to update statistic
@@ -385,6 +386,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
      this%FixedTimeStepValue = 1
      this%EnlageTStepScale = 0.01
+     this%LowerLimit = 3.68D-13
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -543,6 +545,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
      this%FixedTimeStepValue = 1
      this%EnlageTStepScale = 0.01
+     this%LowerLimit = 3.68D-13
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -1307,6 +1310,15 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         pause
                         stop
                     end if
+
+                case(mp_SelfAdjustlStep_NNDR)
+                    this%LowerLimit = DRSTR(STRNUMB(2))
+                    if(this%LowerLimit .LT. 0) then
+                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimit
+                        pause
+                        stop
+                    end if
+
                 case default
                     write(*,*) "MCPSCU ERROR: The TSTEPSTRATEGY flag cannot is not defined.",this%UPDATETSTEPSTRATEGY
                     pause
@@ -1663,6 +1675,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             case(mp_SelfAdjustlStep_AveSep)
                 write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
                                                                     cursor%UPDATETSTEPSTRATEGY,cursor%EnlageTStepScale
+
+            case(mp_SelfAdjustlStep_NNDR)
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
+                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimit
         end select
 
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "The update statistic frequency flag =, the correspond value = ",cursor%TUpdateStatisFlag,cursor%TUpdateStatisValue
