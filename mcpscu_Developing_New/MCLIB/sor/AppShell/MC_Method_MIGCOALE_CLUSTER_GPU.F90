@@ -486,6 +486,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call Record%AddSimuTimes(TSTEP)
 
+        call Record%SetTimeSteps(TSTEP)
+
         return
     end subroutine For_One_Step
 

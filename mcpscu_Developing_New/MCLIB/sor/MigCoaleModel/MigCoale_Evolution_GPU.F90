@@ -558,7 +558,7 @@ module MIGCOALE_EVOLUTION_GPU
 
                 DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
 
-                DIST2 = min(Dist - RR,0.E0)
+                DIST2 = max(Dist - RR,0.E0)
 
                 tTemp = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))
 

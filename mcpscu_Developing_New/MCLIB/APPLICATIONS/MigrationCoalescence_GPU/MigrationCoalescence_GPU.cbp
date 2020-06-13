@@ -41,7 +41,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/APPLICATIONS/Release/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/Development/Developing_New/MCSample/SampleSetup.dat 0 1" />
+				<Option parameters="/scratch/110doc01/ZhaiLei/MC_CascadeEvolution/MultiBatch/300K/50KeV/InitLocally_AllTime/NNDR/Cascade1Box5000LU_NBox800_NNDR_From2EF6/SampleSetup.dat 3 1" />
 				<Compiler>
 					<Add option="-fast" />
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
