@@ -38,10 +38,11 @@
 
 	&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused	
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -96,10 +97,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-10				     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -154,10 +156,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-9					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -211,10 +214,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-8					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -268,10 +272,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-7					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -325,10 +330,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-6					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -382,10 +388,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-5					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -439,10 +446,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-4					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -496,10 +504,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-3					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -553,10 +562,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-2					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -610,10 +620,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-1					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -667,10 +678,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D0					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
@@ -724,10 +736,11 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D1					     ! flag = 0 stans for by steps,flag = 1 by time(s)
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 4, the correspond value = 3.68D-13              ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
 												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											             ! flag = 4 the time step is determined by NNDR algorithm S4 stragegy, the corresponded value is the lower limit
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
