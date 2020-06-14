@@ -1319,6 +1319,14 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
+                case(mp_SelfAdjustlStep_NNDR_S4)
+                    this%LowerLimit = DRSTR(STRNUMB(2))
+                    if(this%LowerLimit .LT. 0) then
+                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimit
+                        pause
+                        stop
+                    end if
+
                 case default
                     write(*,*) "MCPSCU ERROR: The TSTEPSTRATEGY flag cannot is not defined.",this%UPDATETSTEPSTRATEGY
                     pause
@@ -1677,6 +1685,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                     cursor%UPDATETSTEPSTRATEGY,cursor%EnlageTStepScale
 
             case(mp_SelfAdjustlStep_NNDR)
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
+                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimit
+
+            case(mp_SelfAdjustlStep_NNDR_S4)
                 write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
                                                                     cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimit
         end select

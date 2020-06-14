@@ -415,15 +415,26 @@ module MIGCOALE_EVOLUTION_GPU
 
         err = curandGenerateUniformDouble(Dev_Rand%m_ranGen_ClustersReaction,Dev_Rand%dm_RandArray_Reaction,TotalNC) !Async in multiple streams
 
-        call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
-                                                       Dev_ClusterInfo_GPU%dm_Clusters,             &
-                                                       Dev_Boxes%dm_SEUsedIndexBox,                 &
-                                                       Dev_ClusterInfo_GPU%dm_MergeINDI,            &
-                                                       Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
-                                                       Dev_ClusterInfo_GPU%dm_KVOIS,                &
-                                                       Dev_ClusterInfo_GPU%dm_INDI,                 &
-                                                       Dev_ClusterInfo_GPU%dm_MinTSteps)
-
+        if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .ne. mp_SelfAdjustlStep_NNDR_S4) then
+            call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
+                                                           Dev_ClusterInfo_GPU%dm_Clusters,             &
+                                                           Dev_Boxes%dm_SEUsedIndexBox,                 &
+                                                           Dev_ClusterInfo_GPU%dm_MergeINDI,            &
+                                                           Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
+                                                           Dev_ClusterInfo_GPU%dm_KVOIS,                &
+                                                           Dev_ClusterInfo_GPU%dm_INDI,                 &
+                                                           Dev_ClusterInfo_GPU%dm_MinTSteps)
+        else
+            call Merge_PreJudge_Kernel_S4<<<blocks,threads>>>(BlockNumEachBox,                             &
+                                                              Dev_ClusterInfo_GPU%dm_Clusters,             &
+                                                              Dev_Boxes%dm_SEUsedIndexBox,                 &
+                                                              Dev_ClusterInfo_GPU%dm_MergeINDI,            &
+                                                              Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
+                                                              Dev_ClusterInfo_GPU%dm_KVOIS,                &
+                                                              Dev_ClusterInfo_GPU%dm_INDI,                 &
+                                                              Dev_ClusterInfo_GPU%dm_MinTSteps,            &
+                                                              Host_SimuCtrlParam%LowerLimit)
+        end if
 
         ! We evolute the bubble merge in GPU
         !---Pre-Direction
@@ -585,6 +596,138 @@ module MIGCOALE_EVOLUTION_GPU
     end if
 
   end subroutine Merge_PreJudge_Kernel
+
+  !********************************************************
+  attributes(global) subroutine Merge_PreJudge_Kernel_S4(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,LowerLimit)
+    implicit none
+    !---Dummy Vars---
+    integer,value::BlockNumEachBox
+    type(Acluster),device::Dev_Clusters(:)
+    integer,device::Dev_SEUsedIndexBox(:,:)
+    integer,device::MergeTable_KVOIS(:)
+    integer,device::MergeTable_INDI(:,:)
+    integer,device::Neighbor_KVOIS(:)
+    integer,device::Neighbor_INDI(:,:)
+    real(kind=KINDDF),device::MinTSteps(:)
+    real,value::LowerLimit
+    !---Local Vars---
+    integer::tid,bid,bid0,cid
+    integer::IC
+    integer::IBox
+    integer::scid,ecid
+    real(kind=KINDSF)::Pos_X,Pos_Y,Pos_Z
+    real(kind=KINDSF)::Sep_X,Sep_Y,Sep_Z
+    real(kind=KINDSF)::RADA,RADB,DIST,RR
+    integer::N_Neighbor,NewNA
+    integer::I,J,JC,NN
+    real(kind=KINDDF)::DIST2
+    real(kind=KINDDF)::MinT
+    real(kind=KINDDF)::tTemp
+    real(kind=KINDDF)::DiffA
+    real(kind=KINDDF)::DiffB
+    !---Body---
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
+    cid = (bid -1)*p_BLOCKSIZE + tid
+
+    IBox = (bid - 1)/BlockNumEachBox + 1
+
+    bid0 = (IBox - 1)*BlockNumEachBox
+
+    scid = Dev_SEUsedIndexBox(IBox,1)
+
+    ecid = Dev_SEUsedIndexBox(IBox,2)
+
+    IC = scid + (cid - bid0*p_BlockSize -1)
+
+
+    MinT = 1.D32
+
+    if(IC .LE. ecid) then
+        MergeTable_KVOIS(IC) = 0
+
+        MinTSteps(IC) = 1.D32
+
+        if(Dev_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. Dev_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+            Pos_X = Dev_Clusters(IC)%m_POS(1)
+            Pos_Y = Dev_Clusters(IC)%m_POS(2)
+            Pos_Z = Dev_Clusters(IC)%m_POS(3)
+
+            RADA = Dev_Clusters(IC)%m_RAD
+
+            DiffA = Dev_Clusters(IC)%m_DiffCoeff
+
+            N_Neighbor = Neighbor_KVOIS(IC)
+
+            NN = 0
+            !scan the neighbor clusters
+            DO J=1, N_Neighbor
+                JC = Neighbor_INDI(IC,J)
+
+                if(JC .GT. ecid) then
+                    cycle
+                end if
+
+                if((Dev_Clusters(JC)%m_Statu .ne. p_ACTIVEFREE_STATU .AND. Dev_Clusters(JC)%m_Statu .ne. p_ACTIVEINGB_STATU) .or. IC .eq. JC) then
+                    cycle
+                end if
+
+                Sep_X = Pos_X - Dev_Clusters(JC)%m_POS(1)
+                Sep_Y = Pos_Y - Dev_Clusters(JC)%m_POS(2)
+                Sep_Z = Pos_Z - Dev_Clusters(JC)%m_POS(3)
+
+                if(ABS(Sep_X) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1)) then
+                    Sep_X = Sep_X - SIGN(dm_BOXSIZE(1),Sep_X)
+                end if
+
+                if(ABS(Sep_Y) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2)) then
+                    Sep_Y = Sep_Y - SIGN(dm_BOXSIZE(2),Sep_Y)
+                end if
+
+                if(ABS(Sep_Z) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3)) then
+                    Sep_Z = Sep_Z - SIGN(dm_BOXSIZE(3),Sep_Z)
+                end if
+
+                Sep_X = ABS(Sep_X)
+                Sep_Y = ABS(Sep_Y)
+                Sep_Z = ABS(Sep_Z)
+
+                RADB = Dev_Clusters(JC)%m_RAD
+
+                RR = RADA+RADB
+
+                DiffB = Dev_Clusters(JC)%m_DiffCoeff
+
+                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                DIST2 = max(Dist - RR,0.E0)
+
+                tTemp = DIST2*LowerLimit*(1.D0/6.D0)/(DiffA + DiffB)
+
+                if(tTemp .LE. MinT ) then
+                    MinT = tTemp
+                end if
+
+                if(DIST .GT. RR ) then
+                    cycle
+                end if
+
+                NN = NN + 1
+
+                MergeTable_INDI(IC,NN) = JC
+
+            END DO
+
+            MergeTable_KVOIS(IC) = NN
+
+            MinTSteps(IC) = MinT
+
+       end if
+
+    end if
+
+  end subroutine Merge_PreJudge_Kernel_S4
+
 
   !************************************************************************
   attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays, &
