@@ -291,6 +291,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%UPDATETSTEPSTRATEGY = otherOne%UPDATETSTEPSTRATEGY
     this%FixedTimeStepValue = otherOne%FixedTimeStepValue
     this%EnlageTStepScale = otherOne%EnlageTStepScale
+    this%LowerLimitTime = otherOne%LowerLimitTime
+    this%LowerLimitLength = otherOne%LowerLimitLength
 
     this%TUpdateStatisFlag = otherOne%TUpdateStatisFlag
     this%TUpdateStatisValue = otherOne%TUpdateStatisValue
