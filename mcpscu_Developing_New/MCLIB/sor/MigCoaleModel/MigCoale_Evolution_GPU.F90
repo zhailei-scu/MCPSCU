@@ -433,7 +433,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                               Dev_ClusterInfo_GPU%dm_KVOIS,                &
                                                               Dev_ClusterInfo_GPU%dm_INDI,                 &
                                                               Dev_ClusterInfo_GPU%dm_MinTSteps,            &
-                                                              Host_SimuCtrlParam%LowerLimit)
+                                                              Host_SimuCtrlParam%LowerLimitLength)
         end if
 
         ! We evolute the bubble merge in GPU
@@ -598,7 +598,7 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine Merge_PreJudge_Kernel
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel_S4(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,LowerLimit)
+  attributes(global) subroutine Merge_PreJudge_Kernel_S4(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,LowerLimitLength)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -609,7 +609,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::Neighbor_KVOIS(:)
     integer,device::Neighbor_INDI(:,:)
     real(kind=KINDDF),device::MinTSteps(:)
-    real,value::LowerLimit
+    real,value::LowerLimitLength
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -702,7 +702,7 @@ module MIGCOALE_EVOLUTION_GPU
 
                 DIST2 = max(Dist - RR,0.E0)
 
-                tTemp = DIST2*LowerLimit*(1.D0/6.D0)/(DiffA + DiffB)
+                tTemp = DIST2*LowerLimitLength*(1.D0/6.D0)/(DiffA + DiffB)
 
                 if(tTemp .LE. MinT ) then
                     MinT = tTemp

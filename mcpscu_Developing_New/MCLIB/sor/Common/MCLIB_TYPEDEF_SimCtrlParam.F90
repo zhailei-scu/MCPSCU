@@ -57,7 +57,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                         ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute uniform in the box
      real::FixedTimeStepValue = 1                                       ! Fixed step time length for mp_FixedTimeStep strategy
      real::EnlageTStepScale = 0.01                                      ! adjustl time-step enlarge-scale mp_SelfAdjustlStep_NearestSep strategy and mp_SelfAdjustlStep_AveSep
-     real::LowerLimit = 3.68D-13                                        ! The lower limit of NDDR algorithm
+     real::LowerLimitTime = 3.68D-13                                    ! The lower limit time of NDDR algorithm
+     real::LowerLimitLength = 2.74D-8                                   ! The lower limit length of NDDR_S4 algorithm
 
      integer::TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps   ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s)
      real::TUpdateStatisValue = 10                                      ! the time interval to update statistic
@@ -386,7 +387,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
      this%FixedTimeStepValue = 1
      this%EnlageTStepScale = 0.01
-     this%LowerLimit = 3.68D-13
+     this%LowerLimitTime = 3.68D-13
+     this%LowerLimitLength = 2.74D-8
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -545,7 +547,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
      this%FixedTimeStepValue = 1
      this%EnlageTStepScale = 0.01
-     this%LowerLimit = 3.68D-13
+     this%LowerLimitTime = 3.68D-13
+     this%LowerLimitLength = 2.74D-8
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -1275,20 +1278,32 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             END DO
 
         case("&TSTEPSTRATEGY")
-           call EXTRACT_NUMB(STR,2,N,STRNUMB)
+           call EXTRACT_NUMB(STR,1,N,STRNUMB)
 
-           if(N .LT. 2) then
+           if(N .LT. 1) then
              write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
              write(*,*) "At control file line: ",LINE
-             write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the correspond value = '."
+             write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the corresponded value one = , the corresponded value two = '."
              pause
              stop
-           else
-             this%UPDATETSTEPSTRATEGY = ISTR(STRNUMB(1))
+           end if
 
-             select case(this%UPDATETSTEPSTRATEGY)
+           this%UPDATETSTEPSTRATEGY = ISTR(STRNUMB(1))
+
+           select case(this%UPDATETSTEPSTRATEGY)
                 case(mp_SelfAdjustlStep_NearestSep)
+                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
+
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
+                        write(*,*) "At control file line: ",LINE
+                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the enlarge enlarge time Step scale =  '."
+                        pause
+                        stop
+                    end if
+
                     this%EnlageTStepScale = DRSTR(STRNUMB(2))
+
                     if(this%EnlageTStepScale .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The time-step-enlarge-value cannot less than 0.",this%EnlageTStepScale
                         pause
@@ -1296,7 +1311,18 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     end if
 
                 case(mp_FixedTimeStep)
+                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
+
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
+                        write(*,*) "At control file line: ",LINE
+                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the fixed time step value =  '."
+                        pause
+                        stop
+                    end if
+
                     this%FixedTimeStepValue = DRSTR(STRNUMB(2))
+
                     if(this%FixedTimeStepValue .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The fixed time-step-value cannot less than 0.",this%FixedTimeStepValue
                         pause
@@ -1304,6 +1330,16 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     end if
 
                 case(mp_SelfAdjustlStep_AveSep)
+                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
+
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
+                        write(*,*) "At control file line: ",LINE
+                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the enlarge enlarge time Step scale =  '."
+                        pause
+                        stop
+                    end if
+
                     this%EnlageTStepScale = DRSTR(STRNUMB(2))
                     if(this%EnlageTStepScale .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The time-step-enlarge-value cannot less than 0.",this%EnlageTStepScale
@@ -1312,17 +1348,44 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     end if
 
                 case(mp_SelfAdjustlStep_NNDR)
-                    this%LowerLimit = DRSTR(STRNUMB(2))
-                    if(this%LowerLimit .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimit
+                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
+
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
+                        write(*,*) "At control file line: ",LINE
+                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the low limit time  =  '."
+                        pause
+                        stop
+                    end if
+
+                    this%LowerLimitTime = DRSTR(STRNUMB(2))
+                    if(this%LowerLimitTime .LT. 0) then
+                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
                         pause
                         stop
                     end if
 
                 case(mp_SelfAdjustlStep_NNDR_S4)
-                    this%LowerLimit = DRSTR(STRNUMB(2))
-                    if(this%LowerLimit .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimit
+                    call EXTRACT_NUMB(STR,3,N,STRNUMB)
+
+                    if(N .LT. 3) then
+                        write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
+                        write(*,*) "At control file line: ",LINE
+                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the low limit time  =  , the low limit length  = '."
+                        pause
+                        stop
+                    end if
+
+                    this%LowerLimitTime = DRSTR(STRNUMB(2))
+                    if(this%LowerLimitTime .LT. 0) then
+                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
+                        pause
+                        stop
+                    end if
+
+                    this%LowerLimitLength = DRSTR(STRNUMB(3))
+                    if(this%LowerLimitLength .LT. 0) then
+                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitLength
                         pause
                         stop
                     end if
@@ -1331,8 +1394,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     write(*,*) "MCPSCU ERROR: The TSTEPSTRATEGY flag cannot is not defined.",this%UPDATETSTEPSTRATEGY
                     pause
                     stop
-             end select
-           end if
+            end select
 
         case("&UPDATESTATISTIC")
            call EXTRACT_NUMB(STR,2,N,STRNUMB)
@@ -1686,11 +1748,11 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
             case(mp_SelfAdjustlStep_NNDR)
                 write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimit
+                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimitTime
 
             case(mp_SelfAdjustlStep_NNDR_S4)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimit
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = ", &
+                                                                              cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimitTime,cursor%LowerLimitLength
         end select
 
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "The update statistic frequency flag =, the correspond value = ",cursor%TUpdateStatisFlag,cursor%TUpdateStatisValue
