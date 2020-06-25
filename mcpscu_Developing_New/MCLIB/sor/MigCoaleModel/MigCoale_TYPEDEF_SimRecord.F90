@@ -23,6 +23,22 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         real(kind=KINDDF),private::LastOutSizeDistTime_IntegralBox = 0.D0
         real(kind=KINDDF),private::LastOutSizeDistTime_EachBox = 0.D0
 
+        integer,public::RandSeed_OutDevWalk(2) = 0
+
+        integer,public::RandSeed_InnerDevWalk(2) = 0
+
+        integer,public::RandSeed_Reaction(2) = 0
+
+        integer,public::RandSeed_SpaceDist_Implant_Layer(2) = 0
+
+        integer,public::RandSeed_SpaceDist_Implant_X(2) = 0
+
+        integer,public::RandSeed_SpaceDist_Implant_Y(2) = 0
+
+        integer,public::RandSeed_SpaceDist_Implant_Z(2) = 0
+
+        integer,public::RandSeed_SizeDist_Implant(2) = 0
+
         contains
         procedure,NON_OVERRIDABLE,public,pass::InitMigCoalClusterRecord
         procedure,non_overridable,public,pass::SetStartImplantTime=>Set_StartImplantTime
@@ -143,6 +159,22 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         this%LastRecordImplantNum = 0
 
         this%NCUT = 0
+
+        this%RandSeed_OutDevWalk = 0
+
+        this%RandSeed_InnerDevWalk = 0
+
+        this%RandSeed_Reaction = 0
+
+        this%RandSeed_SpaceDist_Implant_Layer = 0
+
+        this%RandSeed_SpaceDist_Implant_X = 0
+
+        this%RandSeed_SpaceDist_Implant_Y = 0
+
+        this%RandSeed_SpaceDist_Implant_Z = 0
+
+        this%RandSeed_SizeDist_Implant = 0
 
         return
     end subroutine InitMigCoalClusterRecord

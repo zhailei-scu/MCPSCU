@@ -44,6 +44,7 @@ module MCLIB_CONSTANTS
     integer,parameter::mp_SelfAdjustlStep_AveSep = 2       ! the time step is determined by volume average distance and suppose the clusters distribute uniform in the box
     integer,parameter::mp_SelfAdjustlStep_NNDR = 3         ! the time step is determined by the NNDR algorithm
     integer,parameter::mp_SelfAdjustlStep_NNDR_S4 = 4      ! the time step is determined by the NNDR algorithm S4
+    integer,parameter::mp_SelfAdjustlStep_NNDR_LastPassage = 5      ! the time step is determined by the NNDR algorithm LastPassage
 
     integer,parameter::mp_UpdateStatisFlag_ByIntervalSteps = 0
     integer,parameter::mp_UpdateStatisFlag_ByIntervalRealTime = 1

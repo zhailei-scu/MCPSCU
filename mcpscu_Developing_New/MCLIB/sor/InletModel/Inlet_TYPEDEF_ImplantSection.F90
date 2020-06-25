@@ -1616,7 +1616,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     end if
 
                 case(p_InsertConfig_Random)
-                    ISelected = nint(DRAND32()*this%ImplantCfgFileList%GetSTRList_Count()) + 1
+                    ISelected = int(DRAND32()*this%ImplantCfgFileList%GetSTRList_Count()) + 1
                     ISelected = min(ISelected,this%ImplantCfgFileList%GetSTRList_Count())
 
                 case default

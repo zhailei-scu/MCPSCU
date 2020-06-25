@@ -10,6 +10,7 @@
       integer,      parameter::KINDSF   = 4
       integer,      parameter::KINDINT  = 4
       integer,      parameter::KINDINT2 = 2
+      integer,      parameter::KINDINT8 = 8
       !--- numbers
       real(KINDDF), parameter::C_ZERO    = 0.D0
       real(KINDDF), parameter::C_UTH     = 0.33333333333333D0

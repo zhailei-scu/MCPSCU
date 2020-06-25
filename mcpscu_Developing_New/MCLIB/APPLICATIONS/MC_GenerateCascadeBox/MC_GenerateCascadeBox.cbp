@@ -46,7 +46,7 @@
 				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat /home/zhail/mcworkspace/MCSample_New/CascadeBox/CascadeGenerateCtrlFile.dat" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
+					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35,nollvm" />
 					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release" />
 				</Compiler>
 				<Linker>

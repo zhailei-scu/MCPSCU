@@ -113,6 +113,9 @@ module MIGCOALE_TIMECTL
             case(mp_SelfAdjustlStep_NNDR_S4)
                 TSTEP = max(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps),dble(Host_SimuCtrlParam%LowerLimitTime))
 
+            case(mp_SelfAdjustlStep_NNDR_LastPassage)
+                TSTEP = max(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps),dble(Host_SimuCtrlParam%LowerLimitTime))
+
             case default
                 write(*,*) "MCPSCUERROR: Unknown strategy to update time step :",Host_SimuCtrlParam%UPDATETSTEPSTRATEGY
                 pause
@@ -236,6 +239,9 @@ module MIGCOALE_TIMECTL
                 TheVerifyTime = max(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps),dble(Host_SimuCtrlParam%LowerLimitTime))
 
             case(mp_SelfAdjustlStep_NNDR_S4)
+                TheVerifyTime = max(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps),dble(Host_SimuCtrlParam%LowerLimitTime))
+
+            case(mp_SelfAdjustlStep_NNDR_LastPassage)
                 TheVerifyTime = max(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps),dble(Host_SimuCtrlParam%LowerLimitTime))
 
             case default
