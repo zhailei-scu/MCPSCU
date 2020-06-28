@@ -95,7 +95,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                                     Dev_DiffusorMap%Dev_TypesEntities,           &
                                                                     Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
                                                                     TSTEP,                                       &
-                                                                    Host_SimuCtrlParam%LowerLimitLength,         &
+                                                                    Host_SimuCtrlParam%LowerLimitTime,           &
                                                                     Host_SimuCtrlParam%LastPassageFactor)
         else
             call WalkOneStep_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
@@ -387,7 +387,7 @@ module MIGCOALE_EVOLUTION_GPU
 
   !********************************************************
   attributes(global) subroutine WalkOneStep_Kernel_LastPassage(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
-                                                   Dev_RandArray,DevRandRecord,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP,LowerLimitLength,LastPassageFactor)
+                                                   Dev_RandArray,DevRandRecord,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP,LowerLimitTime,LastPassageFactor)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -402,7 +402,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
     integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     real(kind=KINDDF),value::TSTEP
-    real,value::LowerLimitLength
+    real,value::LowerLimitTime
     integer,value::LastPassageFactor
     !---Local Vars---
     integer::tid,bid,bid0,cid
@@ -429,6 +429,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::NJump
     integer::IJump
     real(kind=KINDDF)::JumpRemind
+    real(kind=KINDDF)::LowerLimitLength
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -461,11 +462,13 @@ module MIGCOALE_EVOLUTION_GPU
         !The average displacement:by using the Einstein Relation
         RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
 
+        LowerLimitLength = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*LowerLimitTime)
+
         VectorLen = Dev_Clusters(IC)%m_DiffuseDirection(1)*Dev_Clusters(IC)%m_DiffuseDirection(1) + &
                     Dev_Clusters(IC)%m_DiffuseDirection(2)*Dev_Clusters(IC)%m_DiffuseDirection(2) + &
                     Dev_Clusters(IC)%m_DiffuseDirection(3)*Dev_Clusters(IC)%m_DiffuseDirection(3)
 
-        JumpHead = RR - LowerLimitLength*LastPassageFactor
+        JumpHead = TSTEP - LowerLimitTime*LastPassageFactor
 
         tempPos = 0.D0
 
@@ -480,15 +483,15 @@ module MIGCOALE_EVOLUTION_GPU
 
                 ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
 
-                movePos(1) = JumpHead*movePos(1)/ArrowLen
-                movePos(2) = JumpHead*movePos(2)/ArrowLen
-                movePos(3) = JumpHead*movePos(3)/ArrowLen
+                movePos(1) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(1)/ArrowLen
+                movePos(2) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(2)/ArrowLen
+                movePos(3) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(3)/ArrowLen
             else
                 RandomSign = 1
                 if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
                     RandomSign = -1
                 end if
-                movePos = RandomSign*JumpHead*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+                movePos = RandomSign*DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
             end if
 
             tempPos = tempPos + movePos
@@ -497,7 +500,7 @@ module MIGCOALE_EVOLUTION_GPU
 
         JumpHead = max(JumpHead,0.D0)
 
-        NJump = min(int(RR/LowerLimitLength),LastPassageFactor)
+        NJump = min(int(TSTEP/LowerLimitTime),LastPassageFactor)
 
         DO IJump = 1,NJump
 
@@ -524,7 +527,7 @@ module MIGCOALE_EVOLUTION_GPU
             tempPos = tempPos + movePos
         END DO
 
-        JumpRemind = RR - JumpHead - NJump*LowerLimitLength
+        JumpRemind = TSTEP - JumpHead - NJump*LowerLimitTime
 
         if(JumpRemind .GT. 0.D0) then
 
@@ -537,15 +540,15 @@ module MIGCOALE_EVOLUTION_GPU
 
                 ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
 
-                movePos(1) = JumpRemind*movePos(1)/ArrowLen
-                movePos(2) = JumpRemind*movePos(2)/ArrowLen
-                movePos(3) = JumpRemind*movePos(3)/ArrowLen
+                movePos(1) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(1)/ArrowLen
+                movePos(2) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(2)/ArrowLen
+                movePos(3) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(3)/ArrowLen
             else
                 RandomSign = 1
                 if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
                     RandomSign = -1
                 end if
-                movePos = RandomSign*JumpRemind*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+                movePos = RandomSign*DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
             end if
 
             tempPos = tempPos + movePos
