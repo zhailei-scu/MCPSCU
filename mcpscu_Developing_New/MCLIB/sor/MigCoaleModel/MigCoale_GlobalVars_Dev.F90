@@ -163,7 +163,7 @@ module MIGCOALE_GLOBALVARS_DEV
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
         call GetSeed_RAND32SEEDLIB(ISEED_Curand,SEED(1),SEED(2))
-        call InitialDevRandRecordArray(this%dm_DevRandRecord,TotalUsedNC,SEED(1),Record%GetSimuSteps()*4*Host_SimuCtrlParam%LastPassageFactor)
+        call InitialDevRandRecordArray(this%dm_DevRandRecord,TotalUsedNC,SEED(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
         Record%RandSeed_InnerDevWalk = SEED
 
         return

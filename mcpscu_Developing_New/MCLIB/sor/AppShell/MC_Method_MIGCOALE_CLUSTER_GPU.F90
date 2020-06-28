@@ -335,7 +335,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end if
 
                 if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_DevRandRecord)) then
-                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*4*Host_SimuCtrlParam%LastPassageFactor)
+                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
                 end if
 
                 if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_RandArray_Reaction)) then

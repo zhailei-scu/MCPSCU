@@ -75,7 +75,7 @@ module MIGCOALE_EVOLUTION_GPU
         end if
 
         if(TotalNC .GT. size(Dev_Rand%dm_DevRandRecord)) then
-            call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*4*Host_SimuCtrlParam%LastPassageFactor)
+            call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
         end if
 
 
@@ -471,6 +471,8 @@ module MIGCOALE_EVOLUTION_GPU
 
         if(JumpHead .GT. 0.D0) then
 
+            movePos = 0.D0
+
             if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
                 movePos(1) =  curand_uniform(DevRandRecord(IC))-0.5D0
                 movePos(2) =  curand_uniform(DevRandRecord(IC))-0.5D0
@@ -493,9 +495,13 @@ module MIGCOALE_EVOLUTION_GPU
 
         end if
 
+        JumpHead = max(JumpHead,0.D0)
+
         NJump = min(int(RR/LowerLimitLength),LastPassageFactor)
 
         DO IJump = 1,NJump
+
+            movePos = 0.D0
 
             if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
                 movePos(1) =  curand_uniform(DevRandRecord(IC))-0.5D0
@@ -521,10 +527,13 @@ module MIGCOALE_EVOLUTION_GPU
         JumpRemind = RR - JumpHead - NJump*LowerLimitLength
 
         if(JumpRemind .GT. 0.D0) then
+
+            movePos = 0.D0
+
             if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
-                movePos(1) =  Dev_RandArray(IC)-0.5D0
-                movePos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
-                movePos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
+                movePos(1) =  curand_uniform(DevRandRecord(IC))-0.5D0
+                movePos(2) =  curand_uniform(DevRandRecord(IC))-0.5D0
+                movePos(3) =  curand_uniform(DevRandRecord(IC))-0.5D0
 
                 ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
 
@@ -533,7 +542,7 @@ module MIGCOALE_EVOLUTION_GPU
                 movePos(3) = JumpRemind*movePos(3)/ArrowLen
             else
                 RandomSign = 1
-                if(Dev_RandArray(IC) .GT. 0.5D0) then
+                if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
                     RandomSign = -1
                 end if
                 movePos = RandomSign*JumpRemind*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
