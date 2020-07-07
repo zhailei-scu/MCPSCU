@@ -120,6 +120,10 @@ module MIGCOALE_TIMECTL
                 TSTEP = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/dble(Host_SimuCtrlParam%LowerLimitTime))*dble(Host_SimuCtrlParam%LowerLimitTime)
                 TSTEP = max(TSTEP,dble(Host_SimuCtrlParam%LowerLimitTime))
 
+            case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
+                TSTEP = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/dble(Host_SimuCtrlParam%LowerLimitTime))*dble(Host_SimuCtrlParam%LowerLimitTime)
+                TSTEP = max(TSTEP,dble(Host_SimuCtrlParam%LowerLimitTime))
+
             case default
                 write(*,*) "MCPSCUERROR: Unknown strategy to update time step :",Host_SimuCtrlParam%UPDATETSTEPSTRATEGY
                 pause
@@ -247,6 +251,14 @@ module MIGCOALE_TIMECTL
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage)
                 TheVerifyTime = max(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps),dble(Host_SimuCtrlParam%LowerLimitTime))
+
+            case(mp_SelfAdjustlStep_NNDR_Integer)
+                TheVerifyTime = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/dble(Host_SimuCtrlParam%LowerLimitTime))*dble(Host_SimuCtrlParam%LowerLimitTime)
+                TheVerifyTime = max(TheVerifyTime,dble(Host_SimuCtrlParam%LowerLimitTime))
+
+            case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
+                TheVerifyTime = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/dble(Host_SimuCtrlParam%LowerLimitTime))*dble(Host_SimuCtrlParam%LowerLimitTime)
+                TheVerifyTime = max(TheVerifyTime,dble(Host_SimuCtrlParam%LowerLimitTime))
 
             case default
                 write(*,*) "MCPSCUERROR: Unknown strategy to update time step :",Host_SimuCtrlParam%UPDATETSTEPSTRATEGY

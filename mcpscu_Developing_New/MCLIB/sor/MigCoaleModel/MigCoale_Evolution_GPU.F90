@@ -82,7 +82,8 @@ module MIGCOALE_EVOLUTION_GPU
         err = curandGenerateUniformDouble(Dev_Rand%m_ranGen_ClustersRandomWalk,Dev_Rand%dm_RandArray_Walk,TotalNC*3) !Async in multiple streams
 
 
-        if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage) then
+        if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage .or.  &
+           Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
             call WalkOneStep_Kernel_LastPassage<<<blocks,threads>>>(BlockNumEachBox,                             &
                                                                     TotalNC,                                     &
                                                                     Dev_ClusterInfo_GPU%dm_Clusters,             &
