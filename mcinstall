@@ -103,7 +103,7 @@ if [ "$OS" = "LINUX" ]; then
   PGIADDINPATH="$PGI/linux86-64/$L.$R/bin":"$PGI/linux86-64/20$L/include";
 fi
 
-if [ "$OS" = "LINUX" ]; then
+if [ "$OS" = "CYGWIN" ]; then
   PGIADDINPATH="$PGI/win64/$L.$R/bin":"$PGI/win64/20$L/include";
 fi
 
