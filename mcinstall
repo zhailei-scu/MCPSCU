@@ -9,7 +9,7 @@ TINYCCPATH=$PWD/tcc-0.9.27/
 
 
 #------------------------------
-VER=2020_06_10
+VER=Developing_New
 FULLNAME=mcpscu_$VER 
 tar -xvf $FULLNAME.tar.bz2
 
