@@ -1371,81 +1371,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                case(mp_SelfAdjustlStep_NNDR_S4)
-                    call EXTRACT_NUMB(STR,3,N,STRNUMB)
-
-                    if(N .LT. 3) then
-                        write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
-                        write(*,*) "At control file line: ",LINE
-                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the low limit time  =  , the low limit length  = '."
-                        pause
-                        stop
-                    end if
-
-                    this%LowerLimitTime = DRSTR(STRNUMB(2))
-                    if(this%LowerLimitTime .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
-                        pause
-                        stop
-                    end if
-
-                    this%LowerLimitLength = DRSTR(STRNUMB(3))
-                    if(this%LowerLimitLength .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitLength
-                        pause
-                        stop
-                    end if
-
-                case(mp_SelfAdjustlStep_NNDR_LastPassage)
-                    call EXTRACT_NUMB(STR,4,N,STRNUMB)
-
-                    if(N .LT. 4) then
-                        write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
-                        write(*,*) "At control file line: ",LINE
-                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the low limit time  =  , the  LowerLimit Length = , the last passage factor = '."
-                        pause
-                        stop
-                    end if
-
-                    this%LowerLimitTime = DRSTR(STRNUMB(2))
-                    if(this%LowerLimitTime .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
-                        pause
-                        stop
-                    end if
-
-                    this%LowerLimitLength = DRSTR(STRNUMB(3))
-                    if(this%LowerLimitLength .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitLength
-                        pause
-                        stop
-                    end if
-
-                    this%LastPassageFactor = ISTR(STRNUMB(4))
-                    if(this%LastPassageFactor .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The last passage factor cannot less than 0.",this%LastPassageFactor
-                        pause
-                        stop
-                    end if
-
-                case(mp_SelfAdjustlStep_NNDR_Integer)
-                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
-
-                    if(N .LT. 2) then
-                        write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
-                        write(*,*) "At control file line: ",LINE
-                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the low limit time  = '."
-                        pause
-                        stop
-                    end if
-
-                    this%LowerLimitTime = DRSTR(STRNUMB(2))
-                    if(this%LowerLimitTime .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
-                        pause
-                        stop
-                    end if
-
                 case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
                     call EXTRACT_NUMB(STR,4,N,STRNUMB)
 
@@ -1835,17 +1760,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                     cursor%UPDATETSTEPSTRATEGY,cursor%EnlageTStepScale
 
             case(mp_SelfAdjustlStep_NNDR)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimitTime
-
-            case(mp_SelfAdjustlStep_NNDR_S4)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = ", &
-                                                                              cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimitTime,cursor%LowerLimitLength
-
-            case(mp_SelfAdjustlStep_NNDR_LastPassage)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,1PE16.8,2x,I10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = . the corresponded value three = ", &
-                                                                              cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimitTime,cursor%LowerLimitLength,cursor%LastPassageFactor
-            case(mp_SelfAdjustlStep_NNDR_Integer)
                 write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
                                                                     cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimitTime
 
