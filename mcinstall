@@ -28,7 +28,7 @@ fi
 if [ "$CUDAV" != "" ]; then
   CUDAVERSION='cuda'$CUDAV
 else
-  CUDAVERSION=8.0
+  CUDAVERSION=cuda8.0
 fi
 if [ "$CUDAC" != "" ]; then
   L=${CUDAC%.*}
@@ -68,26 +68,45 @@ fi
 
 #---- set the PGI compiler vars ---
 if [ "$PGI" = "" ]; then
-  PGI=/opt/pgi
+  if [ "$OS" = "LINUX" ]; then
+    PGI=/opt/pgi
+  fi
+  
+  if [ "$OS" = "CYGWIN" ]; then
+	PGI=/c/PROGRA~1/PGI/
+  fi
 fi
-if [ "$PGIVER" = "" ]; then
-  PGIVER=17.4
-fi
-echo 'The default PGI path is' $PGI 'the default pgi version is ' $PGIVER
-echo -n 'Reset the PGI path and pgi version (y/n)?'
+echo 'The default PGI path is' $PGI
+echo -n 'Reset the PGI path(y/n)?'
 read Y
 if [ "$Y" = "y" ]; then
-  echo -n 'Please input the path for PGI (for instance /opt/pgi/): '
+  echo -n 'Please input the path for PGI (for instance /opt/pgi/ or C:PROGRA~1): '
   read -e PGI
-  echo -n 'Please input the PGI version (for instance 19.4 not the 2019.4): '
-  read -e PGIVER
 fi
 PGI=$PGI
 export PGI      #or use export PGI=$PGI
 
+if [ "$PGIVER" = "" ]; then
+  PGIVER=17.4
+fi
+echo 'the default pgi version is ' $PGIVER
+echo -n 'Reset the PGI version (y/n)?'
+read Y
+if [ "$Y" = "y" ]; then
+  echo -n 'Please input the PGI version (for instance 19.4 not the 2019.4): '
+  read -e PGIVER
+fi
+
 L=${PGIVER%.*}
 R=${PGIVER#*.}
-PGIADDINPATH="$PGI/linux86-64/$L.$R/bin":"$PGI/linux86-64/20$L/include";
+if [ "$OS" = "LINUX" ]; then
+  PGIADDINPATH="$PGI/linux86-64/$L.$R/bin":"$PGI/linux86-64/20$L/include";
+fi
+
+if [ "$OS" = "CYGWIN" ]; then
+  PGIADDINPATH="$PGI/win64/$L.$R/bin":"$PGI/win64/20$L/include";
+fi
+
 PATH=$PGIADDINPATH:$PATH;
 export PATH=$PATH
 echo 'The current PGI path is' $PGI ', the pgi version is ' $PGIVER
@@ -107,6 +126,9 @@ MCPSCUINST=$PWD
 MCPSCUSOR=$MCPSCUINST/$FULLNAME
 MCWORKSPACE=$MCPSCUINST/mcworkspace/$FULLNAME
 mkdir -p $MCWORKSPACE
+
+
+echo $MCPSCUSOR/mcbdlib
 
 sed -i '2,10{/version=/d}' $MCPSCUSOR/mcbdlib
 sed -i "2i version=""$VER" $MCPSCUSOR/mcbdlib
@@ -176,7 +198,7 @@ fi
 
 #Based on our test, the compiler option -Mnollvm is also necessary in host code, if not, in centos 7, CUDA10.0 PGICE 19.4, the
 #error"PGF90-F-0000-Internal compiler error. bitcaset with differing size -4" would occur
-if [ `echo "$PGIVER >= 19.4" |bc` -eq 1 ]; then
+if [ `echo "$PGIVER >= 19.0" |bc` -eq 1 ]; then
   sed -i '2,10{/hostllvm/d}' $MCPSCUSOR/mcbdlib
   sed -i "10i hostllvm=-Mnollvm" $MCPSCUSOR/mcbdlib
   sed -i '2,10{/hostllvm/d}' $MCPSCUSOR/MCLIB/sor/APPLICATIONS/mcbdapp
