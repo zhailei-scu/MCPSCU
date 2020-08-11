@@ -12,13 +12,14 @@ module MIGCOALE_EVOLUTION_GPU
   contains
 
   !********************************************************
-  subroutine WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+  subroutine WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
     type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+    type(MigCoalClusterRecord)::Record
     real(kind=KINDDF)::TSTEP
     !---Local Vars---
     integer::MULTIBOX
@@ -73,20 +74,43 @@ module MIGCOALE_EVOLUTION_GPU
             call Dev_Rand%ReSizeWalkRandNum(TotalNC)
         end if
 
+        if(TotalNC .GT. size(Dev_Rand%dm_DevRandRecord)) then
+            call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
+        end if
+
 
         err = curandGenerateUniformDouble(Dev_Rand%m_ranGen_ClustersRandomWalk,Dev_Rand%dm_RandArray_Walk,TotalNC*3) !Async in multiple streams
 
-        call WalkOneStep_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
-                                                    TotalNC,                                     &
-                                                    Dev_ClusterInfo_GPU%dm_Clusters,             &
-                                                    Dev_Boxes%dm_SEUsedIndexBox,                 &
-                                                    Dev_Rand%dm_RandArray_Walk,                  &
-                                                    Dev_ClusterInfo_GPU%dm_ActiveStatus,         &
-                                                    Host_Boxes%m_GrainBoundary%GrainNum,         &
-                                                    Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
-                                                    Dev_DiffusorMap%Dev_TypesEntities,           &
-                                                    Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
-                                                    TSTEP)
+
+        if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage .or.  &
+           Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
+            call WalkOneStep_Kernel_LastPassage<<<blocks,threads>>>(BlockNumEachBox,                             &
+                                                                    TotalNC,                                     &
+                                                                    Dev_ClusterInfo_GPU%dm_Clusters,             &
+                                                                    Dev_Boxes%dm_SEUsedIndexBox,                 &
+                                                                    Dev_Rand%dm_RandArray_Walk,                  &
+                                                                    Dev_Rand%dm_DevRandRecord,                   &
+                                                                    Dev_ClusterInfo_GPU%dm_ActiveStatus,         &
+                                                                    Host_Boxes%m_GrainBoundary%GrainNum,         &
+                                                                    Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
+                                                                    Dev_DiffusorMap%Dev_TypesEntities,           &
+                                                                    Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
+                                                                    TSTEP,                                       &
+                                                                    Host_SimuCtrlParam%LowerLimitTime,           &
+                                                                    Host_SimuCtrlParam%LastPassageFactor)
+        else
+            call WalkOneStep_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
+                                                        TotalNC,                                     &
+                                                        Dev_ClusterInfo_GPU%dm_Clusters,             &
+                                                        Dev_Boxes%dm_SEUsedIndexBox,                 &
+                                                        Dev_Rand%dm_RandArray_Walk,                  &
+                                                        Dev_ClusterInfo_GPU%dm_ActiveStatus,         &
+                                                        Host_Boxes%m_GrainBoundary%GrainNum,         &
+                                                        Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
+                                                        Dev_DiffusorMap%Dev_TypesEntities,           &
+                                                        Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
+                                                        TSTEP)
+        end if
 
     END ASSOCIATE
 
@@ -363,6 +387,353 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine WalkOneStep_Kernel
 
   !********************************************************
+  attributes(global) subroutine WalkOneStep_Kernel_LastPassage(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
+                                                   Dev_RandArray,DevRandRecord,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP,LowerLimitTime,LastPassageFactor)
+    implicit none
+    !---Dummy Vars---
+    integer,value::BlockNumEachBox
+    integer,value::TotalNC
+    type(Acluster),device::Dev_Clusters(:)
+    integer,device::Dev_SEUsedIndexBox(:,:)
+    real(kind=KINDDF),device::Dev_RandArray(:)
+    type(curandStateXORWOW),device::DevRandRecord(:)
+    integer,device::Dev_ActiveStatu(:)
+    integer,value::NSeeds
+    type(GrainSeed),device::Dev_GrainSeeds(:)
+    type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
+    integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
+    real(kind=KINDDF),value::TSTEP
+    real,value::LowerLimitTime
+    integer,value::LastPassageFactor
+    !---Local Vars---
+    integer::tid,bid,bid0,cid
+    integer::IC
+    integer::IBox
+    integer::scid,ecid
+    real(kind=KINDDF)::tempPos(3)
+    real(kind=KINDDF)::movePos(3)
+    real(kind=KINDDF)::crossPos(3)
+    real(kind=KINDDF)::normVector(3)
+    real(kind=KINDDF)::ArrowLen
+    real(kind=KINDDF)::RR
+    real(kind=KINDDF)::POS(3)
+    real(kind=KINDSF)::SEP(3)
+    real(kind=KINDDF)::Seed1Pos(3)
+    real(kind=KINDDF)::Seed2Pos(3)
+    integer::SeedID
+    integer::Statu
+    type(DiffusorValue)::TheDiffusorValue
+    real(kind=KINDDF)::VectorLen
+    integer::RandomSign
+    integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+    real(kind=KINDDF)::JumpHead
+    integer::NJump
+    integer::IJump
+    real(kind=KINDDF)::JumpRemind
+    real(kind=KINDDF)::LowerLimitLength
+    !---Body---
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
+    cid = (bid -1)*p_BLOCKSIZE + tid
+
+    IBox = (bid - 1)/BlockNumEachBox + 1
+
+    bid0 = (IBox - 1)*BlockNumEachBox
+
+    scid = Dev_SEUsedIndexBox(IBox,1)
+
+    ecid = Dev_SEUsedIndexBox(IBox,2)
+
+    IC = scid + (cid - bid0*p_BlockSize -1)
+
+    if(IC .LE. ecid) then
+
+      Statu = Dev_Clusters(IC)%m_Statu
+
+      Dev_ActiveStatu(IC) = Statu
+
+      if(Statu .eq. p_ACTIVEFREE_STATU) then
+
+        ! To get the coefficiency for the cluster.
+        ! This is dependent of the physics model for the dependence of diffusion coefficience
+        ! on the size of the cluster
+
+        POS = Dev_Clusters(IC)%m_POS
+
+        !The average displacement:by using the Einstein Relation
+        RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
+
+        LowerLimitLength = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*LowerLimitTime)
+
+        VectorLen = Dev_Clusters(IC)%m_DiffuseDirection(1)*Dev_Clusters(IC)%m_DiffuseDirection(1) + &
+                    Dev_Clusters(IC)%m_DiffuseDirection(2)*Dev_Clusters(IC)%m_DiffuseDirection(2) + &
+                    Dev_Clusters(IC)%m_DiffuseDirection(3)*Dev_Clusters(IC)%m_DiffuseDirection(3)
+
+        JumpHead = TSTEP - LowerLimitTime*LastPassageFactor
+
+        tempPos = 0.D0
+
+        if(JumpHead .GT. 0.D0) then
+
+            movePos = 0.D0
+
+            if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
+                movePos(1) =  curand_uniform(DevRandRecord(IC))-0.5D0
+                movePos(2) =  curand_uniform(DevRandRecord(IC))-0.5D0
+                movePos(3) =  curand_uniform(DevRandRecord(IC))-0.5D0
+
+                ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
+
+                movePos(1) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(1)/ArrowLen
+                movePos(2) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(2)/ArrowLen
+                movePos(3) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(3)/ArrowLen
+            else
+                RandomSign = 1
+                if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
+                    RandomSign = -1
+                end if
+                movePos = RandomSign*DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+            end if
+
+            tempPos = tempPos + movePos
+
+        end if
+
+        JumpHead = max(JumpHead,0.D0)
+
+        NJump = min(int(TSTEP/LowerLimitTime),LastPassageFactor)
+
+        DO IJump = 1,NJump
+
+            movePos = 0.D0
+
+            if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
+                movePos(1) =  curand_uniform(DevRandRecord(IC))-0.5D0
+                movePos(2) =  curand_uniform(DevRandRecord(IC))-0.5D0
+                movePos(3) =  curand_uniform(DevRandRecord(IC))-0.5D0
+
+                ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
+
+                movePos(1) = LowerLimitLength*movePos(1)/ArrowLen
+                movePos(2) = LowerLimitLength*movePos(2)/ArrowLen
+                movePos(3) = LowerLimitLength*movePos(3)/ArrowLen
+            else
+                RandomSign = 1
+                if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
+                    RandomSign = -1
+                end if
+                movePos = RandomSign*LowerLimitLength*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+            end if
+
+            tempPos = tempPos + movePos
+        END DO
+
+        JumpRemind = TSTEP - JumpHead - NJump*LowerLimitTime
+
+        if(JumpRemind .GT. 0.D0) then
+
+            movePos = 0.D0
+
+            if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
+                movePos(1) =  curand_uniform(DevRandRecord(IC))-0.5D0
+                movePos(2) =  curand_uniform(DevRandRecord(IC))-0.5D0
+                movePos(3) =  curand_uniform(DevRandRecord(IC))-0.5D0
+
+                ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
+
+                movePos(1) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(1)/ArrowLen
+                movePos(2) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(2)/ArrowLen
+                movePos(3) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(3)/ArrowLen
+            else
+                RandomSign = 1
+                if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
+                    RandomSign = -1
+                end if
+                movePos = RandomSign*DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+            end if
+
+            tempPos = tempPos + movePos
+        end if
+
+        tempPos = tempPos + POS
+
+        if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+            tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
+        else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+            tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
+        end if
+
+        if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+            tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
+        else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+            tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
+        end if
+
+        if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+            tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
+        else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+            tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
+        end if
+
+        SeedID = GrainBelongsTo_Dev(NSeeds,Dev_GrainSeeds,tempPos)
+
+        if(SeedID .ne. Dev_Clusters(IC)%m_GrainID(1)) then
+            call CalCrossPointInGB_Dev(Dev_GrainSeeds,Dev_Clusters(IC)%m_GrainID(1),SeedID,POS,tempPos,crossPos)
+            tempPos = crossPos
+            Dev_Clusters(IC)%m_GrainID(2) = SeedID
+            Dev_Clusters(IC)%m_Statu = p_ACTIVEINGB_STATU
+            Dev_ActiveStatu(IC) = p_ACTIVEINGB_STATU
+
+            ! In current implementation, the diffusion coeffficencies, radius are calculated when diffusors are created, statu changed or reaction occur
+            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TheDiffusorValue)
+
+            select case(TheDiffusorValue%ECRValueType_InGB)
+                case(p_ECR_ByValue)
+                    Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                case default
+                    ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+                    Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
+                                                                       ATOMS,                                                   &
+                                                                       dm_TKB,                                                  &
+                                                                       dm_LatticeLength)
+            end select
+
+            select case(TheDiffusorValue%DiffusorValueType_InGB)
+                case(p_DiffuseCoefficient_ByValue)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                case(p_DiffuseCoefficient_ByArrhenius)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                case(p_DiffuseCoefficient_ByBCluster)
+                    ! Here we adopt a model that D=D0*(1/R)**Gama
+                    Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+                case(p_DiffuseCoefficient_BySIACluster)
+                    Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
+                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                case(p_DiffuseCoefficient_ByVcCluster)
+                    Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+            end select
+
+            Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
+
+        end if
+
+        Dev_Clusters(IC)%m_POS = tempPos
+
+        ! if the new position is out of the box, the cluster is destroyed
+        if(dm_PERIOD(3) .eq. 0) then
+            if((tempPos(3) - Dev_Clusters(IC)%m_RAD) .lt. dm_BOXBOUNDARY(3,1)) then
+                Dev_Clusters(IC)%m_Statu = p_OUT_DESTROY_STATU
+                Dev_ActiveStatu(IC) = p_OUT_DESTROY_STATU
+            end if
+
+            if(tempPos(3) .gt. dm_BOXBOUNDARY(3,2)) then
+                Dev_Clusters(IC)%m_Statu = p_MIS_DESTROY_STATU
+                Dev_ActiveStatu(IC) = p_MIS_DESTROY_STATU
+            end if
+
+        end if
+
+      else if(Statu .eq. p_ACTIVEINGB_STATU) then
+
+        POS = Dev_Clusters(IC)%m_POS
+
+        Seed1Pos = Dev_GrainSeeds(Dev_Clusters(IC)%m_GrainID(1))%m_POS
+        SEP = Seed1Pos - POS
+        if(ABS(SEP(1)) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1) .GT. 0) then
+            Seed1Pos(1) = Seed1Pos(1) - SIGN(dm_BOXSIZE(1),SEP(1))
+        end if
+        if(ABS(SEP(2)) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2) .GT. 0) then
+            Seed1Pos(2) = Seed1Pos(2) - SIGN(dm_BOXSIZE(2),SEP(2))
+        end if
+        if(ABS(SEP(3)) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3) .GT. 0) then
+            Seed1Pos(3) = Seed1Pos(3) - SIGN(dm_BOXSIZE(3),SEP(3))
+        end if
+
+        Seed2Pos = Dev_GrainSeeds(Dev_Clusters(IC)%m_GrainID(2))%m_POS
+        SEP = Seed2Pos - POS
+        if(ABS(SEP(1)) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1) .GT. 0) then
+            Seed2Pos(1) = Seed2Pos(1) - SIGN(dm_BOXSIZE(1),SEP(1))
+        end if
+        if(ABS(SEP(2)) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2) .GT. 0) then
+            Seed2Pos(2) = Seed2Pos(2) - SIGN(dm_BOXSIZE(2),SEP(2))
+        end if
+        if(ABS(SEP(3)) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3) .GT. 0) then
+            Seed2Pos(3) = Seed2Pos(3) - SIGN(dm_BOXSIZE(3),SEP(3))
+        end if
+
+        normVector = Seed1Pos - Seed2Pos
+
+        if(ABS(normVector(1)*TENPOWEIGHT) .GE. 1) then
+            tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
+            tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
+            tempPos(1) = -(normVector(2)*tempPos(2) + normVector(3)*tempPos(3))/normVector(1)
+        end if
+
+        if(ABS(normVector(2)*TENPOWEIGHT) .GE. 1) then
+            tempPos(1) =  Dev_RandArray(IC)-0.5D0
+            tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
+            tempPos(2) = -(normVector(1)*tempPos(1) + normVector(3)*tempPos(3))/normVector(2)
+        end if
+
+        if(ABS(normVector(3)*TENPOWEIGHT) .GE. 1) then
+            tempPos(1) =  Dev_RandArray(IC)-0.5D0
+            tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
+            tempPos(3) = -(normVector(1)*tempPos(1) + normVector(2)*tempPos(2))/normVector(3)
+        end if
+
+        ArrowLen = DSQRT(tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3))
+
+        !The average displacement:by using the Einstein Relation
+        RR  = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
+
+        tempPos(1) = RR*tempPos(1)/ArrowLen
+        tempPos(2) = RR*tempPos(2)/ArrowLen
+        tempPos(3) = RR*tempPos(3)/ArrowLen
+
+        tempPos = tempPos + POS
+
+        if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1) .GT. 0) then
+            tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
+        else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1) .GT. 0) then
+            tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
+        end if
+
+        if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2) .GT. 0) then
+            tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
+        else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2) .GT. 0) then
+            tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
+        end if
+
+        if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3) .GT. 0) then
+            tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
+        else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3) .GT. 0) then
+            tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
+        end if
+
+        Dev_Clusters(IC)%m_POS = tempPos
+
+        ! if the new position is out of the box, the cluster is destroyed
+        if(dm_PERIOD(3) .eq. 0) then
+            if((tempPos(3) - Dev_Clusters(IC)%m_RAD) .lt. dm_BOXBOUNDARY(3,1)) then
+                Dev_Clusters(IC)%m_Statu = p_OUT_DESTROY_STATU
+                Dev_ActiveStatu(IC) = p_OUT_DESTROY_STATU
+            end if
+
+            if(tempPos(3) .gt. dm_BOXBOUNDARY(3,2)) then
+                Dev_Clusters(IC)%m_Statu = p_MIS_DESTROY_STATU
+                Dev_ActiveStatu(IC) = p_MIS_DESTROY_STATU
+            end if
+        end if
+
+      end if
+
+    end if
+
+    return
+  end subroutine WalkOneStep_Kernel_LastPassage
+
+  !********************************************************
   subroutine MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
     implicit none
     !---Dummy Vars---
@@ -415,14 +786,26 @@ module MIGCOALE_EVOLUTION_GPU
 
         err = curandGenerateUniformDouble(Dev_Rand%m_ranGen_ClustersReaction,Dev_Rand%dm_RandArray_Reaction,TotalNC) !Async in multiple streams
 
-        call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
-                                                       Dev_ClusterInfo_GPU%dm_Clusters,             &
-                                                       Dev_Boxes%dm_SEUsedIndexBox,                 &
-                                                       Dev_ClusterInfo_GPU%dm_MergeINDI,            &
-                                                       Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
-                                                       Dev_ClusterInfo_GPU%dm_KVOIS,                &
-                                                       Dev_ClusterInfo_GPU%dm_INDI)
-
+        if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_S4) then
+            call Merge_PreJudge_Kernel_S4<<<blocks,threads>>>(BlockNumEachBox,                             &
+                                                              Dev_ClusterInfo_GPU%dm_Clusters,             &
+                                                              Dev_Boxes%dm_SEUsedIndexBox,                 &
+                                                              Dev_ClusterInfo_GPU%dm_MergeINDI,            &
+                                                              Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
+                                                              Dev_ClusterInfo_GPU%dm_KVOIS,                &
+                                                              Dev_ClusterInfo_GPU%dm_INDI,                 &
+                                                              Dev_ClusterInfo_GPU%dm_MinTSteps,            &
+                                                              Host_SimuCtrlParam%LowerLimitLength)
+        else
+            call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
+                                                           Dev_ClusterInfo_GPU%dm_Clusters,             &
+                                                           Dev_Boxes%dm_SEUsedIndexBox,                 &
+                                                           Dev_ClusterInfo_GPU%dm_MergeINDI,            &
+                                                           Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
+                                                           Dev_ClusterInfo_GPU%dm_KVOIS,                &
+                                                           Dev_ClusterInfo_GPU%dm_INDI,                 &
+                                                           Dev_ClusterInfo_GPU%dm_MinTSteps)
+        end if
 
         ! We evolute the bubble merge in GPU
         !---Pre-Direction
@@ -456,7 +839,7 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine MergeClusters
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI)
+  attributes(global) subroutine Merge_PreJudge_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -466,6 +849,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::MergeTable_INDI(:,:)
     integer,device::Neighbor_KVOIS(:)
     integer,device::Neighbor_INDI(:,:)
+    real(kind=KINDDF),device::MinTSteps(:)
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -476,6 +860,11 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDSF)::RADA,RADB,DIST,RR
     integer::N_Neighbor,NewNA
     integer::I,J,JC,NN
+    real(kind=KINDDF)::DIST2
+    real(kind=KINDDF)::MinT
+    real(kind=KINDDF)::tTemp
+    real(kind=KINDDF)::DiffA
+    real(kind=KINDDF)::DiffB
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -491,8 +880,13 @@ module MIGCOALE_EVOLUTION_GPU
 
     IC = scid + (cid - bid0*p_BlockSize -1)
 
+
+    MinT = 1.D32
+
     if(IC .LE. ecid) then
         MergeTable_KVOIS(IC) = 0
+
+        MinTSteps(IC) = 1.D32
 
         if(Dev_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. Dev_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             Pos_X = Dev_Clusters(IC)%m_POS(1)
@@ -500,6 +894,8 @@ module MIGCOALE_EVOLUTION_GPU
             Pos_Z = Dev_Clusters(IC)%m_POS(3)
 
             RADA = Dev_Clusters(IC)%m_RAD
+
+            DiffA = Dev_Clusters(IC)%m_DiffCoeff
 
             N_Neighbor = Neighbor_KVOIS(IC)
 
@@ -540,11 +936,18 @@ module MIGCOALE_EVOLUTION_GPU
 
                 RR = RADA+RADB
 
-                if(Sep_X.GT.RR .or. Sep_Y.GT.RR .or. Sep_Z.GT.RR) then
-                    cycle
-                end if
+                DiffB = Dev_Clusters(JC)%m_DiffCoeff
 
                 DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                DIST2 = max(Dist - RR,0.E0)
+
+                tTemp = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))
+
+                if(tTemp .LE. MinT ) then
+                    MinT = tTemp
+                end if
+
                 if(DIST .GT. RR ) then
                     cycle
                 end if
@@ -557,11 +960,145 @@ module MIGCOALE_EVOLUTION_GPU
 
             MergeTable_KVOIS(IC) = NN
 
+            MinTSteps(IC) = MinT
+
        end if
 
     end if
 
   end subroutine Merge_PreJudge_Kernel
+
+  !********************************************************
+  attributes(global) subroutine Merge_PreJudge_Kernel_S4(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,LowerLimitLength)
+    implicit none
+    !---Dummy Vars---
+    integer,value::BlockNumEachBox
+    type(Acluster),device::Dev_Clusters(:)
+    integer,device::Dev_SEUsedIndexBox(:,:)
+    integer,device::MergeTable_KVOIS(:)
+    integer,device::MergeTable_INDI(:,:)
+    integer,device::Neighbor_KVOIS(:)
+    integer,device::Neighbor_INDI(:,:)
+    real(kind=KINDDF),device::MinTSteps(:)
+    real,value::LowerLimitLength
+    !---Local Vars---
+    integer::tid,bid,bid0,cid
+    integer::IC
+    integer::IBox
+    integer::scid,ecid
+    real(kind=KINDSF)::Pos_X,Pos_Y,Pos_Z
+    real(kind=KINDSF)::Sep_X,Sep_Y,Sep_Z
+    real(kind=KINDSF)::RADA,RADB,DIST,RR
+    integer::N_Neighbor,NewNA
+    integer::I,J,JC,NN
+    real(kind=KINDDF)::DIST2
+    real(kind=KINDDF)::MinT
+    real(kind=KINDDF)::tTemp
+    real(kind=KINDDF)::DiffA
+    real(kind=KINDDF)::DiffB
+    !---Body---
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
+    cid = (bid -1)*p_BLOCKSIZE + tid
+
+    IBox = (bid - 1)/BlockNumEachBox + 1
+
+    bid0 = (IBox - 1)*BlockNumEachBox
+
+    scid = Dev_SEUsedIndexBox(IBox,1)
+
+    ecid = Dev_SEUsedIndexBox(IBox,2)
+
+    IC = scid + (cid - bid0*p_BlockSize -1)
+
+
+    MinT = 1.D32
+
+    if(IC .LE. ecid) then
+        MergeTable_KVOIS(IC) = 0
+
+        MinTSteps(IC) = 1.D32
+
+        if(Dev_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. Dev_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+            Pos_X = Dev_Clusters(IC)%m_POS(1)
+            Pos_Y = Dev_Clusters(IC)%m_POS(2)
+            Pos_Z = Dev_Clusters(IC)%m_POS(3)
+
+            RADA = Dev_Clusters(IC)%m_RAD
+
+            DiffA = Dev_Clusters(IC)%m_DiffCoeff
+
+            N_Neighbor = Neighbor_KVOIS(IC)
+
+            NN = 0
+            !scan the neighbor clusters
+            DO J=1, N_Neighbor
+                JC = Neighbor_INDI(IC,J)
+
+                if(JC .GT. ecid) then
+                    cycle
+                end if
+
+                if((Dev_Clusters(JC)%m_Statu .ne. p_ACTIVEFREE_STATU .AND. Dev_Clusters(JC)%m_Statu .ne. p_ACTIVEINGB_STATU) .or. IC .eq. JC) then
+                    cycle
+                end if
+
+                Sep_X = Pos_X - Dev_Clusters(JC)%m_POS(1)
+                Sep_Y = Pos_Y - Dev_Clusters(JC)%m_POS(2)
+                Sep_Z = Pos_Z - Dev_Clusters(JC)%m_POS(3)
+
+                if(ABS(Sep_X) .GT. dm_HBOXSIZE(1) .AND. dm_PERIOD(1)) then
+                    Sep_X = Sep_X - SIGN(dm_BOXSIZE(1),Sep_X)
+                end if
+
+                if(ABS(Sep_Y) .GT. dm_HBOXSIZE(2) .AND. dm_PERIOD(2)) then
+                    Sep_Y = Sep_Y - SIGN(dm_BOXSIZE(2),Sep_Y)
+                end if
+
+                if(ABS(Sep_Z) .GT. dm_HBOXSIZE(3) .AND. dm_PERIOD(3)) then
+                    Sep_Z = Sep_Z - SIGN(dm_BOXSIZE(3),Sep_Z)
+                end if
+
+                Sep_X = ABS(Sep_X)
+                Sep_Y = ABS(Sep_Y)
+                Sep_Z = ABS(Sep_Z)
+
+                RADB = Dev_Clusters(JC)%m_RAD
+
+                RR = RADA+RADB
+
+                DiffB = Dev_Clusters(JC)%m_DiffCoeff
+
+                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                DIST2 = max(Dist - RR,0.E0)
+
+                tTemp = DIST2*LowerLimitLength*(1.D0/6.D0)/(DiffA + DiffB)
+
+                if(tTemp .LE. MinT ) then
+                    MinT = tTemp
+                end if
+
+                if(DIST .GT. RR ) then
+                    cycle
+                end if
+
+                NN = NN + 1
+
+                MergeTable_INDI(IC,NN) = JC
+
+            END DO
+
+            MergeTable_KVOIS(IC) = NN
+
+            MinTSteps(IC) = MinT
+
+       end if
+
+    end if
+
+  end subroutine Merge_PreJudge_Kernel_S4
+
 
   !************************************************************************
   attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays, &

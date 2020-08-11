@@ -27,7 +27,7 @@
 				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-fast" />
-					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
+					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35,nollvm" />
 				</Compiler>
 			</Target>
 		</Build>

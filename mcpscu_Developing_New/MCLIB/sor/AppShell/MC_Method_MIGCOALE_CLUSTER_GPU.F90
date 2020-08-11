@@ -204,7 +204,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call Initital_Global_Variables_GPU(Host_SimBoxes, PSimCtrlParam,m_MigCoalClusterRecord,Dev_Boxes)
 
-                call m_MigCoale_GVarsDev%Init(Host_SimBoxes, PSimCtrlParam)
+                call m_MigCoale_GVarsDev%Init(Host_SimBoxes, PSimCtrlParam,m_MigCoalClusterRecord)
             end if
 
             DO While(.true.)
@@ -332,6 +332,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 if(TotalSize*3 .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_RandArray_Walk)) then
                     call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(TotalSize)
+                end if
+
+                if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_DevRandRecord)) then
+                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
                 end if
 
                 if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_RandArray_Reaction)) then
@@ -476,7 +480,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             call TheImplantSection%Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,m_FREESURDIFPRE,m_GBSURDIFPRE)
         end if
 
-        call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+        call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP)
 
         if(Host_SimuCtrlParam%FreeDiffusion .ne. .true.) then
             call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
@@ -485,6 +489,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         call Record%IncreaseOneSimuStep()
 
         call Record%AddSimuTimes(TSTEP)
+
+        call Record%SetTimeSteps(TSTEP)
 
         return
     end subroutine For_One_Step

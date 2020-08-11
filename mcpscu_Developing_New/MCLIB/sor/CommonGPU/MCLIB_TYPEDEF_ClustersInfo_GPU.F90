@@ -14,6 +14,11 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         !---Merging Table---
         integer, device, dimension(:,:), allocatable::dm_MergeINDI
         integer, device, dimension(:), allocatable::dm_MergeKVOIS
+
+
+        !---Min TStep---
+        real(kind=KINDDF),device,dimension(:),allocatable::dm_MinTSteps
+
         !---Active status---
         integer, device, dimension(:), allocatable::dm_ActiveStatus
         !---Active Index---
@@ -141,6 +146,9 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
 
         call DeAllocateArray_GPU(this%dm_MergeKVOIS,"dm_MergeKVOIS")
 
+        !---Min TStep---
+        call DeAllocateArray_GPU(this%dm_MinTSteps,"dm_MinTSteps")
+
         !---Active status---
         call DeAllocateArray_GPU(this%dm_ActiveStatus,"dm_ActiveStatus")
 
@@ -177,6 +185,10 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
 
             call AllocateArray_GPU(this%dm_MergeKVOIS,AllocSize,"dm_MergeKVOIS")
 
+            !---MinTSTEP-------------
+            call AllocateArray_GPU(this%dm_MinTSteps,AllocSize,"dm_MinTSteps")
+            this%dm_MinTSteps = 0.D0
+
             !---Active status---
             call AllocateArray_GPU(this%dm_ActiveStatus,AllocSize,"dm_ActiveStatus")
 
@@ -212,6 +224,9 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
 
         call DeAllocateArray_GPU(this%dm_MergeKVOIS,"dm_MergeKVOIS")
 
+        !---Min TStep---
+        call DeAllocateArray_GPU(this%dm_MinTSteps,"dm_MinTSteps")
+
         !---Active status---
         call DeAllocateArray_GPU(this%dm_ActiveStatus,"dm_ActiveStatus")
 
@@ -242,7 +257,8 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
                                                  sizeof(oneClusterInfo_GPU%dm_MergeINDI) + &
                                                  sizeof(oneClusterInfo_GPU%dm_MergeKVOIS) + &
                                                  sizeof(oneClusterInfo_GPU%dm_ActiveStatus) + &
-                                                 sizeof(oneClusterInfo_GPU%dm_ActiveIndex)
+                                                 sizeof(oneClusterInfo_GPU%dm_ActiveIndex) + &
+                                                 sizeof(oneClusterInfo_GPU%dm_MinTSteps)
 
 
 
