@@ -123,6 +123,10 @@ module MIGCOALE_TIMECTL
         END ASSOCIATE
 
 
+        if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+            TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue)
+        end if
+
         !***********Focused TimePoint*********************
         call Record%TurnOffTriggerFocusedTimePoints()
 
