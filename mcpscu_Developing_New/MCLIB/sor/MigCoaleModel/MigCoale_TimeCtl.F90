@@ -124,7 +124,7 @@ module MIGCOALE_TIMECTL
 
 
         if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
-            TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue)
+            TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue/100.D0)
         end if
 
         !***********Focused TimePoint*********************
@@ -161,6 +161,7 @@ module MIGCOALE_TIMECTL
         real(kind=KINDDF)::RAVA
         real(kind=KINDDF)::TSTEPFREE,TSTEPGB
         integer::MultiBox
+        integer::I
         !---Body---
 
         TSTEPFREE = 1.D32
@@ -251,6 +252,25 @@ module MIGCOALE_TIMECTL
             end select
 
         END ASSOCIATE
+
+
+        if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+            TheVerifyTime = min(TheVerifyTime,Host_SimuCtrlParam%TermTValue/100.D0)
+        end if
+
+        !***********Focused TimePoint*********************
+        call Record%TurnOffTriggerFocusedTimePoints()
+
+        DO I = 1,Host_SimuCtrlParam%NFocusedTimePoint
+            if( ((Record%GetSimuTimes() + TheVerifyTime) .GE. Host_SimuCtrlParam%FocusedTimePoints(I)) .AND. &
+                Record%GetSimuTimes() .LT. Host_SimuCtrlParam%FocusedTimePoints(I) ) then
+
+                call Record%TurnOnTriggerFocusedTimePoints()
+
+                TheVerifyTime = Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes()
+                exit
+            end if
+        END DO
 
 
     end function Cal_VerifyTime_Implant
