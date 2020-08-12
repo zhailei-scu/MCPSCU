@@ -69,6 +69,10 @@ module MIGCOALE_TIMECTL
                     TSTEP = p_ZeroNCStep
                 end if
 
+                if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+                    TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue/100.D0)
+                end if
+
             case(mp_SelfAdjustlStep_AveSep)
                 if(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .LE. 0.D0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU) .LE. 0.D0) then
                     TSTEP = p_ZeroNCStep
@@ -104,14 +108,29 @@ module MIGCOALE_TIMECTL
                     TSTEP = p_ZeroNCStep
                 end if
 
+                if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+                    TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue/100.D0)
+                end if
+
             case(mp_FixedTimeStep)
                 TSTEP = Host_SimuCtrlParam%FixedTimeStepValue
 
             case(mp_SelfAdjustlStep_NNDR)
-                TSTEP = max(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps),dble(Host_SimuCtrlParam%LowerLimitTime))
+                TSTEP = minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
+
+                if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+                    TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue/100.D0)
+                end if
+
+                TSTEP = max(TSTEP,dble(Host_SimuCtrlParam%LowerLimitTime))
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
                 TSTEP = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/dble(Host_SimuCtrlParam%LowerLimitTime))*dble(Host_SimuCtrlParam%LowerLimitTime)
+
+                if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+                    TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue/100.D0)
+                end if
+
                 TSTEP = max(TSTEP,dble(Host_SimuCtrlParam%LowerLimitTime))
 
             case default
@@ -121,11 +140,6 @@ module MIGCOALE_TIMECTL
         end select
 
         END ASSOCIATE
-
-
-        if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
-            TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue/100.D0)
-        end if
 
         !***********Focused TimePoint*********************
         call Record%TurnOffTriggerFocusedTimePoints()
@@ -200,6 +214,10 @@ module MIGCOALE_TIMECTL
                     TheVerifyTime = p_ZeroNCStep
                 end if
 
+                if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+                    TheVerifyTime = min(TheVerifyTime,Host_SimuCtrlParam%TermTValue/100.D0)
+                end if
+
             case(mp_SelfAdjustlStep_AveSep)
                 if(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .LE. 0.D0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU) .LE. 0.D0) then
                     TheVerifyTime = p_ZeroNCStep
@@ -235,14 +253,29 @@ module MIGCOALE_TIMECTL
                     TheVerifyTime = p_ZeroNCStep
                 end if
 
+                if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+                    TheVerifyTime = min(TheVerifyTime,Host_SimuCtrlParam%TermTValue/100.D0)
+                end if
+
             case(mp_FixedTimeStep)
                 TheVerifyTime = Host_SimuCtrlParam%FixedTimeStepValue
 
             case(mp_SelfAdjustlStep_NNDR)
-                TheVerifyTime = max(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps),dble(Host_SimuCtrlParam%LowerLimitTime))
+                TheVerifyTime = minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
+
+                if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+                    TheVerifyTime = min(TheVerifyTime,Host_SimuCtrlParam%TermTValue/100.D0)
+                end if
+
+                TheVerifyTime = max(TheVerifyTime,dble(Host_SimuCtrlParam%LowerLimitTime))
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
                 TheVerifyTime = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/dble(Host_SimuCtrlParam%LowerLimitTime))*dble(Host_SimuCtrlParam%LowerLimitTime)
+
+                if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
+                    TheVerifyTime = min(TheVerifyTime,Host_SimuCtrlParam%TermTValue/100.D0)
+                end if
+
                 TheVerifyTime = max(TheVerifyTime,dble(Host_SimuCtrlParam%LowerLimitTime))
 
             case default
@@ -252,11 +285,6 @@ module MIGCOALE_TIMECTL
             end select
 
         END ASSOCIATE
-
-
-        if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
-            TheVerifyTime = min(TheVerifyTime,Host_SimuCtrlParam%TermTValue/100.D0)
-        end if
 
         !***********Focused TimePoint*********************
         call Record%TurnOffTriggerFocusedTimePoints()

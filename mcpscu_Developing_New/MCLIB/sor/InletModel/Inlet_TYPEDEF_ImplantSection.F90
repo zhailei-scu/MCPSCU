@@ -124,6 +124,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         !---Batch Implant---
         procedure,non_overridable,public,pass::ImplantClusters_BatchFromConfig
+        procedure,non_overridable,public,pass::Check_ImplantBatchFromConfig
         procedure,non_overridable,public,pass::AdjustTimeStep_ImplantBatchFromConfig
 
         procedure,non_overridable,public,pass::CopyImplantSectionFromOther
@@ -156,6 +157,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     private::FillVirtualBoundary_CPU_FromFile_ImplantContiune
     private::FillVirtualBoundary_CPU_FromExteFunc_ImplantContiune
     private::ImplantClusters_BatchFromConfig
+    private::Check_ImplantBatchFromConfig
     private::AdjustTimeStep_ImplantBatchFromConfig
     private::CopyImplantSectionFromOther
     private::Clean_ImplantSection
@@ -1586,7 +1588,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::NewTotalSize
         integer::IBox
         !---Body---
-        if(Record%GetStatu_InsertOneBatchInNextStep() .eq. .true.) then
+        if(Record%GetStatu_InsertOneBatchInNextStep() .eq. .true. .AND.  &
+           this%Check_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record) .eq. .true.) then
 
             TotalImplantNum = 0
 
@@ -1676,21 +1679,20 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call Record%InCrease_OneInsertBatchNum()
         end if
 
-        call this%AdjustTimeStep_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP)
+        call this%AdjustTimeStep_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,TSTEP)
 
         return
     end subroutine
 
 
     !*********************************************
-    subroutine AdjustTimeStep_ImplantBatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP)
+    subroutine AdjustTimeStep_ImplantBatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,TSTEP)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         !---Local Vars---
@@ -1720,6 +1722,39 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         return
     end subroutine AdjustTimeStep_ImplantBatchFromConfig
+
+    !*********************************************
+    function Check_ImplantBatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        CLASS(ImplantSection)::this
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(SimulationBoxes_GPU)::Dev_Boxes
+        type(MigCoalClusterRecord)::Record
+        logical::TheResult
+        !---Local Vars---
+        integer::I
+        !---Body---
+
+        TheResult = .false.
+
+        if(this%NInsertTimePoint .GT. 0) then
+            DO I = Record%Get_InsertBatchNum()+1,this%NInsertTimePoint
+                if( dabs(this%InsertTimePoint(I) - Record%GetSimuTimes())*TENPOWFIVE/Record%GetSimuTimes() .LE. 1.D0) then
+                    TheResult = .true.
+                    exit
+                end if
+
+            END DO
+        else
+            if( dabs((Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - Record%GetSimuTimes())*TENPOWFIVE/Record%GetSimuTimes() .LE. 1.D0) then
+                TheResult = .true.
+            end if
+        end if
+
+        return
+    end function Check_ImplantBatchFromConfig
 
     !*********************************************************************
     subroutine ImplantClusters_Contiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP)
