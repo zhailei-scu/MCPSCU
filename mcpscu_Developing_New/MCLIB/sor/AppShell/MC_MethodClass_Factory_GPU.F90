@@ -4,14 +4,14 @@ module MC_MethodClass_Factory_GPU
     implicit none
 
     abstract interface
-        subroutine For_One_Test(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,JobIndex)
+        subroutine For_One_Test(Host_SimBoxes,Host_SimuCtrlParamList,Dev_Boxes,JobIndex)
             use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             use MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             use MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
             use MCLIB_TYPEDEF_BASICRECORD
             implicit none
             type(SimulationBoxes)::Host_SimBoxes
-            type(SimulationCtrlParam),target::Host_SimuCtrlParam
+            type(SimulationCtrlParamList),target::Host_SimuCtrlParamList
             type(SimulationBoxes_GPU)::Dev_Boxes
             integer,intent(in)::JobIndex
         end subroutine
@@ -21,7 +21,7 @@ module MC_MethodClass_Factory_GPU
     type,public::MCMethodClassGPU
         character(len=20)::name
         type(SimulationBoxes),pointer::pSimulationBoxes=>null()
-        type(SimulationCtrlParam),pointer::pSimulationCtrlParam=>null()
+        type(SimulationCtrlParamList),pointer::pSimulationCtrlParamList=>null()
         procedure(For_One_Test),pointer,nopass::ForOneTest=>null()
 
         contains
@@ -37,18 +37,18 @@ module MC_MethodClass_Factory_GPU
 
     contains
     !*********************************************
-    subroutine Register_Method_Class(this,className,SimBoxes,SimCtrlParams)
+    subroutine Register_Method_Class(this,className,SimBoxes,SimCtrlParamsList)
         use MC_Method_MIGCOALE_CLUSTER_GPU, only:For_One_Test_MIGCOALE_CLUSTER_GPU => For_One_Test
         implicit none
         !---Dummy Vars---
         CLASS(MCMethodClassGPU)::this
         character*(*)::className
         type(SimulationBoxes),target::SimBoxes
-        type(SimulationCtrlParam),target::SimCtrlParams
+        type(SimulationCtrlParamList),target::SimCtrlParamsList
         !---Local Vars---
         !---Body---
         this%pSimulationBoxes=>SimBoxes
-        this%pSimulationCtrlParam=>SimCtrlParams
+        this%pSimulationCtrlParamList=>SimCtrlParamsList
 
         select case(className(1:LENTRIM(className)))
             case("MIGCOALE_CLUSTER_GPU")
@@ -71,10 +71,10 @@ module MC_MethodClass_Factory_GPU
         !---Body---
         Nullify(this%ForOneTest)
         Nullify(this%pSimulationBoxes)
-        Nullify(this%pSimulationCtrlParam)
+        Nullify(this%pSimulationCtrlParamList)
         this%ForOneTest=>null()
         this%pSimulationBoxes=>null()
-        this%pSimulationCtrlParam=>null()
+        this%pSimulationCtrlParamList=>null()
         this%name = ""
 
         return

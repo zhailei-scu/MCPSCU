@@ -73,6 +73,12 @@ module MCLIB_CONSTANTS
     integer, parameter::p_MAX_FOCUSEDTIMEPOINTS = 10
     #endif
 
+    #ifdef MAXIMPLANTSECTION
+    integer, parameter::p_MAX_IMPLANTSECTION = MAXIMPLANTSECTION
+    #else
+    integer, parameter::p_MAX_IMPLANTSECTION = 10
+    #endif
+
     character(len=1),parameter::p_ElementsTypeSpe = "@"
     character(len=1),parameter::p_ElementsNumSpe = "#"
     character(len=1),parameter::p_NumRangeSpe = "-"

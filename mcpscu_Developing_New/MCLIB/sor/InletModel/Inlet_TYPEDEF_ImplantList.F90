@@ -18,7 +18,6 @@ module INLET_TYPEDEF_IMPLANTLIST
         procedure,non_overridable,private,pass::Load_ImplantList
         procedure,non_overridable,private,pass::CheckImplantList
         procedure,non_overridable,public,pass::AppendOneSection=>AppendOne_ImplantSection
-        procedure,non_overridable,public,pass::Get_P=>GetImplantSection_P
         procedure,non_overridable,public,pass::Clean=>Clean_ImplantList
         Final::CleanImplantList
     end type
@@ -27,7 +26,6 @@ module INLET_TYPEDEF_IMPLANTLIST
     private::Load_ImplantList
     private::CheckImplantList
     private::AppendOne_ImplantSection
-    private::GetImplantSection_P
     private::Clean_ImplantList
     private::CleanImplantList
 
@@ -58,37 +56,37 @@ module INLET_TYPEDEF_IMPLANTLIST
         CLASS(ImplantList),target::this
         type(SimulationCtrlParam),target::Host_SimuCtrlParam
         !---Local Vars---
-        type(SimulationCtrlParam),pointer::PSimuCtrlParamCursor=>Null()
-        type(ImplantSection),pointer::PImplantSection=>null()
-        integer::ICount
+        type(ImplantList),pointer::cursor=>null()
+        integer::I
         !---Body---
-        PSimuCtrlParamCursor=>Host_SimuCtrlParam
 
-        ICount = 0
-        DO While(associated(PSimuCtrlParamCursor))
-            ICount = ICount + 1
+        cursor=>this
 
-            if(PSimuCtrlParamCursor%ImplantSectID .GE. 1) then
-                PImplantSection=>this%Get_P(PSimuCtrlParamCursor%ImplantSectID)
+        DO I = 1,Host_SimuCtrlParam%NImplantSection
 
-                if(.not. associated(PImplantSection)) then
-                    write(*,*) "MCPSCUERROR: The implantation section is not special :",PSimuCtrlParamCursor%ImplantSectID
-                    write(*,*) "For the simulation section :",ICount
-                    pause
-                    stop
-                end if
-
-                if(PImplantSection%InsertCountOneBatch .GT. 0.D0 .AND. PSimuCtrlParamCursor%NEIGHBORUPDATESTRATEGY .eq. mp_NEIGHBORUPDATEBYNCREMIND) then
-                    write(*,*) "MCPSCUERROR: You cannot use the neighbor-list update strategy by clusters number remind percent when the implantation"
-                    write(*,*) "flux exist."
-                    write(*,*) "For the simulation section :",ICount
-                    pause
-                    stop
-                end if
-
+            if(.not. associated(cursor)) then
+                write(*,*) "MCPSCUERROR: cannot load specialed section: ",Host_SimuCtrlParam%ImplantSectIDs(I)
+                pause
+                stop
             end if
 
-            PSimuCtrlParamCursor=>PSimuCtrlParamCursor%next
+            if(Host_SimuCtrlParam%ImplantSectIDs(I) .GE. this%ListCount) then
+                write(*,*) "MCPSCUERROR: The implantation section is not special :",Host_SimuCtrlParam%ImplantSectIDs(I)
+                pause
+                stop
+            end if
+
+
+            if(cursor%TheImplantSection%InsertCountOneBatch .GT. 0.D0 .AND. Host_SimuCtrlParam%NEIGHBORUPDATESTRATEGY .eq. mp_NEIGHBORUPDATEBYNCREMIND) then
+                write(*,*) "MCPSCUERROR: You cannot use the neighbor-list update strategy by clusters number remind percent when the implantation"
+                write(*,*) "flux exist."
+                pause
+                stop
+            end if
+
+
+            cursor=>cursor%next
+
         END DO
 
         return
@@ -108,8 +106,12 @@ module INLET_TYPEDEF_IMPLANTLIST
         character*32::KEYWORD
         integer::hFile
         integer::LINE
+        integer::CountSection
+        integer::I
         !---Body---
         LINE = 0
+
+        CountSection = 0
 
         truePath = INQUIREFILE(Host_SimuCtrlParam%ImpFile)
 
@@ -148,7 +150,14 @@ module INLET_TYPEDEF_IMPLANTLIST
                     call tempImplantSection%Clean_ImplantSection()
                     call tempImplantSection%LoadOne_ImplantSection(hFile,Host_Boxes,Host_SimuCtrlParam,LINE)
 
-                    call this%AppendOneSection(tempImplantSection)
+                    CountSection = CountSection + 1
+
+                    DO I = 1,Host_SimuCtrlParam%NImplantSection
+                        if(CountSection .eq. Host_SimuCtrlParam%ImplantSectIDs(I)) then
+                            call this%AppendOneSection(tempImplantSection)
+                        end if
+                    END DO
+
                 case default
                     write(*,*) "MCPSCUERROR: Unknown flag: ",KEYWORD
                     write(*,*) "At Line: ",LINE
@@ -207,49 +216,6 @@ module INLET_TYPEDEF_IMPLANTLIST
 
         return
     end subroutine
-
-    !***********************************************************************
-    function GetImplantSection_P(this,TheIndex) result(TheResult)
-        implicit none
-        !---Dummy Vars---
-        CLASS(ImplantList),target::this
-        integer,intent(in)::TheIndex
-        type(ImplantSection),intent(out),pointer::TheResult
-        !---Local Vars---
-        type(ImplantList),pointer::cursor=>null()
-        integer::CountTemp
-        !---Body---
-
-        TheResult=>null()
-
-        cursor=>this
-
-        CountTemp = 0
-
-        DO While(associated(cursor))
-
-
-            CountTemp = CountTemp + 1
-
-            if(CountTemp .eq. TheIndex) then
-                TheResult=>cursor%TheImplantSection
-                exit
-            end if
-
-            cursor=>cursor%next
-        END DO
-
-        Nullify(cursor)
-
-        if(.not. associated(TheResult)) then
-            write(*,*) "MCPSCUERROR: Cannot find the Implantation section by the id: ",TheIndex
-            pause
-            stop
-        end if
-
-        return
-    end function GetImplantSection_P
-
 
     !***********************************************************************
     subroutine Clean_ImplantList(this)

@@ -42,7 +42,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      real(kind=KINDDF)::TKB = 300D0*C_KB                                 ! the kinetic energy
 
      !***Implantation section*********
-     integer::ImplantSectID = 0                                         ! the implantation section index
+     integer::NImplantSection = 0
+     integer,dimension(:),allocatable::ImplantSectIDs                   ! the implantation section index
 
      !***Information about Time
      integer::TermTFlag = mp_TermTimeFlag_ByRealTime                    ! = 0 stans for by steps,flag = 1 by time(s)
@@ -111,16 +112,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      logical::FreeDiffusion = .false.
 
      !********************************************
-     type(SimulationCtrlParam),pointer::next=>null()
+     !type(SimulationCtrlParam),pointer::next=>null()
 
      contains
-     procedure,non_overridable,pass,public::AppendOne_SimulationCtrlParam
-     procedure,non_overridable,pass,public::Get_P=>GetSimulationCtrlParam_P
-     procedure,non_overridable,pass,private::CopyFromOther
-     procedure,non_overridable,nopass,private::CleanSimulationCtrlParam
      procedure,non_overridable,pass,public::DefaultValue_CtrlParam
-     procedure,non_overridable,pass,public::Load_Ctrl_Parameters
-     procedure,non_overridable,pass,public::Print_CtrlParameters
      procedure,non_overridable,pass,private::Load_Ctrl_CommParameter
      procedure,non_overridable,pass,private::Load_Ctrl_AnalyParameter
      procedure,non_overridable,pass,private::Load_Ctrl_SectionParameter
@@ -131,19 +126,33 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      procedure,non_overridable,pass,private::Load_Ctrl_TimeStep
      procedure,non_overridable,pass,private::Load_AddOnDataStatments
      procedure,non_overridable,pass,private::Load_ModelDataStatments
-     Generic::Assignment(=)=>CopyFromOther
-     Final::Clean
+     procedure,non_overridable,pass,private::CopySimulationCtrlParamFromOther
+     procedure,non_overridable,pass,private::Clean_SimulationCtrlParam
+     Generic::Assignment(=)=>CopySimulationCtrlParamFromOther
+     Final::CleanSimulationCtrlParam
 
   end type
 
-  private::AppendOne_SimulationCtrlParam
-  private::GetSimulationCtrlParam_P
-  private::CopyFromOther
-  private::CleanOneSimulationCtrlParam
-  private::CleanSimulationCtrlParam
+
+  type,public::SimulationCtrlParamList
+    type(SimulationCtrlParam)::theSimulationCtrlParam
+
+    type(SimulationCtrlParamList),pointer::next=>null()
+
+    integer,private::ListCount = 0
+    contains
+    procedure,non_overridable,pass,public::Load_Ctrl_Parameters
+    procedure,non_overridable,pass,public::Print_CtrlParameters
+    procedure,non_overridable,pass,public::AppendOne_SimulationCtrlParam
+    procedure,non_overridable,pass,public::Get_P=>GetSimulationCtrlParam_P
+    procedure,non_overridable,pass,public::GetCount=>GetSimulationCtrlParamListCount
+    procedure,non_overridable,pass,public::Clean_SimulationCtrlParamList
+    procedure,non_overridable,pass,public::CopySimulationCtrlParamListFromOther
+    Generic::Assignment(=)=>CopySimulationCtrlParamListFromOther
+    Final::CleanSimulationCtrlParamList
+  end type SimulationCtrlParamList
+
   private::DefaultValue_CtrlParam
-  private::Load_Ctrl_Parameters
-  private::Print_CtrlParameters
   private::Load_Ctrl_CommParameter
   private::Load_Ctrl_AnalyParameter
   private::Load_Ctrl_SectionParameter
@@ -154,31 +163,290 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
   private::Load_Ctrl_TimeStep
   private::Load_AddOnDataStatments
   private::Load_ModelDataStatments
-  private::Clean
-
+  private::CopySimulationCtrlParamFromOther
+  private::Clean_SimulationCtrlParam
+  private::CleanSimulationCtrlParam
+  private::Load_Ctrl_Parameters
+  private::Print_CtrlParameters
+  private::AppendOne_SimulationCtrlParam
+  private::GetSimulationCtrlParam_P
+  private::GetSimulationCtrlParamListCount
+  private::CopySimulationCtrlParamListFromOther
+  private::Clean_SimulationCtrlParamList
+  private::CleanSimulationCtrlParamList
 
   contains
 
-  !***************************************
+  !******************************************************
+  subroutine Load_Ctrl_Parameters(this,hFile)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationCtrlParamList),target::this
+    integer, intent(in)::hFile
+    !---Local Vars---
+    integer::LINE
+    character*1000::STR
+    character*32::KEYWORD
+    type(SimulationCtrlParamList),pointer::cursor=>null()
+    type(SimulationCtrlParam)::tempCtrlParam
+    !---Body---
+
+    call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
+    call RemoveComments(STR,"!")
+    STR = adjustl(STR)
+    call GETKEYWORD("&", STR, KEYWORD)
+    call UPCASE(KEYWORD)
+    if(KEYWORD(1:LENTRIM(KEYWORD)) .ne. m_CTLSTARTFLAG) then
+      write(*,*) "MCPSCUERROR: The Start Flag of simulation Control Parameters is Illegal: ",KEYWORD(1:LENTRIM(KEYWORD))
+      pause
+      stop
+    end if
+
+    DO While(.TRUE.)
+      call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
+      call RemoveComments(STR,"!")
+      STR = adjustl(STR)
+      call GETKEYWORD("&", STR, KEYWORD)
+      call UPCASE(KEYWORD)
+
+      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        case("&ENDCTLF")
+          exit
+
+        case("&COMMSUBCTL")
+          call this%theSimulationCtrlParam%Load_Ctrl_CommParameter(hFile,*100)
+          cursor=>this
+          DO While(.true.)
+            if(.not. associated(cursor)) then
+                exit
+            end if
+            cursor%theSimulationCtrlParam%MultiBox = this%theSimulationCtrlParam%MultiBox
+            cursor%theSimulationCtrlParam%TOTALBOX = this%theSimulationCtrlParam%TOTALBOX
+            cursor%theSimulationCtrlParam%INDEPBOX = this%theSimulationCtrlParam%INDEPBOX
+            cursor%theSimulationCtrlParam%RANDSEED = this%theSimulationCtrlParam%RANDSEED
+
+            cursor=>cursor%next
+          END DO
+
+        case("&ANALYSUBCTL")
+            call this%theSimulationCtrlParam%Load_Ctrl_AnalyParameter(hFile,*100)
+            cursor=>this
+            DO While(.true.)
+                if(.not. associated(cursor)) then
+                    exit
+                end if
+                cursor%theSimulationCtrlParam%STARTJOB = this%theSimulationCtrlParam%STARTJOB
+                cursor%theSimulationCtrlParam%ENDJOB = this%theSimulationCtrlParam%ENDJOB
+                cursor%theSimulationCtrlParam%JOBSTEP = this%theSimulationCtrlParam%JOBSTEP
+                cursor%theSimulationCtrlParam%STARTTSECTION = this%theSimulationCtrlParam%STARTTSECTION
+                cursor%theSimulationCtrlParam%ENDTSECTION = this%theSimulationCtrlParam%ENDTSECTION
+                cursor%theSimulationCtrlParam%TSECTIONSTEP = this%theSimulationCtrlParam%TSECTIONSTEP
+                cursor%theSimulationCtrlParam%STARTCFG = this%theSimulationCtrlParam%STARTCFG
+                cursor%theSimulationCtrlParam%ENDCFG = this%theSimulationCtrlParam%ENDCFG
+                cursor%theSimulationCtrlParam%CFGSTEP = this%theSimulationCtrlParam%CFGSTEP
+                cursor%theSimulationCtrlParam%STARTBOX = this%theSimulationCtrlParam%STARTBOX
+                cursor%theSimulationCtrlParam%ENDBOX = this%theSimulationCtrlParam%ENDBOX
+                cursor%theSimulationCtrlParam%BOXSTEP = this%theSimulationCtrlParam%BOXSTEP
+
+                cursor=>cursor%next
+            END DO
+
+        case("&SECTSUBCTL")
+            tempCtrlParam = this%theSimulationCtrlParam
+            call tempCtrlParam%Load_Ctrl_SectionParameter(hFile,*100)
+            call this%AppendOne_SimulationCtrlParam(tempCtrlParam)
+
+        case default
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          write(*,*) "Please Check Control File at Line: ",LINE
+          stop
+      end select
+
+    END DO
+
+    return
+    !-----------------------------------------------------
+    100 write(*,*) "MCPSCU ERROR: Failer to read Simulation Control Parameters."
+        write(*,*) "The process would be stop."
+        stop
+  end subroutine Load_Ctrl_Parameters
+
+  !********************************************
+  subroutine Print_CtrlParameters(this,hFile)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationCtrlParamList),target::this
+    integer,intent(in)::hFile
+    !---Local Vars---
+    type(SimulationCtrlParamList),pointer::cursor=>null()
+    integer::ISect
+    integer::IStatu
+    character*1000::ConfigContent
+    character*1000::CFormat
+    character*1000::CNUM
+    !---Body---
+
+    write(hFile,*) "!****************Control file information***********************"
+    write(hFile,fmt="('!',A70,'!',2x,I10)") "Box in one test =",this%theSimulationCtrlParam%MultiBox
+    write(hFile,fmt="('!',A70,'!',2x,I10)") "Total boxes num =",this%theSimulationCtrlParam%TOTALBOX
+    write(hFile,fmt="('!',A70,'!',2x,I10)") "Boxes independent =",this%theSimulationCtrlParam%INDEPBOX
+
+    write(hFile,fmt="('!',A70,'!',2x,3I10)") "Random Seeds =",this%theSimulationCtrlParam%RANDSEED
+
+
+    cursor=>this
+
+    ISect = 1
+    DO while(associated(cursor))
+        write(hFile,fmt="('*******************SubSection #: ',I10)") ISect
+
+        write(hFile,fmt="('!',A70,'!',2x,1PE16.8)") "SYSTEM SIMULATION TEMPERATURE =",cursor%theSimulationCtrlParam%TEMP
+
+        write(hFile,fmt="('!',A70,'!',2x,3I10)") "PERIDIC condition =",cursor%theSimulationCtrlParam%PERIOD
+
+        !***Inforamtion about neighborlist
+        write(hFile,fmt="('!',A70,'!',2x,I10)") "The parameter determine the strategy to calculate neighbor-List =",cursor%theSimulationCtrlParam%NEIGHBORCALWAY
+
+        write(hFile,fmt="('!',A70,'!',2x,I10)") "maxmun number of neighbore for an diffusor =",cursor%theSimulationCtrlParam%MAXNEIGHBORNUM
+
+        write(hFile,fmt="('!',A70,'!',2x,I10)") "The parameter determine the way to update neighbor-List =",cursor%theSimulationCtrlParam%NEIGHBORUPDATESTRATEGY
+
+        write(hFile,fmt="('!',A70,'!',2x,1PE16.8)") "The parameter determine when the neighbore list to be updated =",cursor%theSimulationCtrlParam%NEIGHBORUPDATE
+
+        write(hFile,fmt="('!',A70,'!',2x,1PE16.8)") "The cut-off region expand =",cursor%theSimulationCtrlParam%CUTREGIONEXTEND
+
+        !***Information about Implantation******************
+        if(allocated(cursor%theSimulationCtrlParam%ImplantSectIDs)) then
+            if(size(cursor%theSimulationCtrlParam%ImplantSectIDs) .GT. 0) then
+                write(CNUM,*) size(cursor%theSimulationCtrlParam%ImplantSectIDs)
+                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(I18,2x))"
+                write(hFile,fmt=CFormat(1:LENTRIM(CFormat)))  "The Implant sections index is : ", cursor%theSimulationCtrlParam%ImplantSectIDs
+            end if
+
+        end if
+
+        !***Information about Time
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Maxma simulation flag = , the time =",cursor%theSimulationCtrlParam%TermTFlag,cursor%theSimulationCtrlParam%TermTValue
+
+        write(hFile,fmt="('!',A70,'!',2x,I10)") "The focused time-points number is = ",cursor%theSimulationCtrlParam%NFocusedTimePoint
+
+        if(allocated(cursor%theSimulationCtrlParam%FocusedTimePoints)) then
+
+            if(size(cursor%theSimulationCtrlParam%FocusedTimePoints) .GT. 0) then
+                write(CNUM,*) size(cursor%theSimulationCtrlParam%FocusedTimePoints)
+                CFormat = ""
+                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(1PE18.10,2x))"
+                write(hFile,fmt=CFormat(1:LENTRIM(CFormat)))  "The focused time-points are : ", cursor%theSimulationCtrlParam%FocusedTimePoints
+            end if
+        end if
+
+        select case(this%theSimulationCtrlParam%UPDATETSTEPSTRATEGY)
+            case(mp_SelfAdjustlStep_NearestSep)
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
+                                                                    cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%EnlageTStepScale
+            case(mp_FixedTimeStep)
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
+                                                                    cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%FixedTimeStepValue
+            case(mp_SelfAdjustlStep_AveSep)
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
+                                                                    cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%EnlageTStepScale
+
+            case(mp_SelfAdjustlStep_NNDR)
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
+                                                                    cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%LowerLimitTime
+
+            case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,1PE16.8,2x,I10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = . the corresponded value three = ", &
+                                                                              cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY, &
+                                                                              cursor%theSimulationCtrlParam%LowerLimitTime, &
+                                                                              cursor%theSimulationCtrlParam%LowerLimitLength, &
+                                                                              cursor%theSimulationCtrlParam%LastPassageFactor
+        end select
+
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "The update statistic frequency flag =, the correspond value = ",cursor%theSimulationCtrlParam%TUpdateStatisFlag,cursor%theSimulationCtrlParam%TUpdateStatisValue
+
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Output instant configuration flag = , the interval =",cursor%theSimulationCtrlParam%OutPutConfFlag,cursor%theSimulationCtrlParam%OutPutConfValue
+
+        ConfigContent = ""
+
+        DO IStatu = 1,p_NUMBER_OF_STATU
+            if(cursor%theSimulationCtrlParam%OutPutConfContent(IStatu) .eq. .true.) then
+                ConfigContent = adjustl(ConfigContent)
+                ConfigContent = adjustl(trim(ConfigContent))//adjustl(trim(p_CStatu(IStatu)))//" ,"
+            end if
+        END DO
+
+        write(hFile,fmt="('!',A70,'!',2x,A256)") "The information that is specialed to be out in config is ",adjustl(trim(ConfigContent))
+
+        write(hFile,fmt="('!',A70,'!',2x,L10)") "Whether output configure file before sweep out the menory = ",cursor%theSimulationCtrlParam%OutPutConf_SweepOut
+
+        write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE16.8))") "Output instant size statistic information flag =, the interval for integral box =, the interval for each box =",           &
+                                                               cursor%theSimulationCtrlParam%OutPutSCFlag, &
+                                                               cursor%theSimulationCtrlParam%OutPutSCValue_IntegralBox, &
+                                                               cursor%theSimulationCtrlParam%OutPutSCValue_EachBox
+
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Output instant function statistic information flag =, the interval =",cursor%theSimulationCtrlParam%OutPutFuncSFlag,cursor%theSimulationCtrlParam%OutPutFuncSValue
+
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Output instant information for restart flag =,the interval =",cursor%theSimulationCtrlParam%OutPutSwapFlag,cursor%theSimulationCtrlParam%OutPutSwapValue
+
+        write(hFile,fmt="('*******************END SubSection #: ',I10)") ISect
+
+        cursor=>cursor%next
+        ISect = ISect + 1
+
+    END DO
+
+
+    return
+  end subroutine
+
+  !**************************************************************
   subroutine AppendOne_SimulationCtrlParam(this,newOne)
     implicit none
     !---Dummy Vars---
-    CLASS(SimulationCtrlParam),target::this
+    CLASS(SimulationCtrlParamList),target::this
     type(SimulationCtrlParam)::newOne
     !---Local Vars---
-    type(SimulationCtrlParam),pointer::cursor=>null(),cursorP=>null()
-    !---Body---
-    cursor=>this%next
-    cursorP=>this
-    DO while(associated(cursor))
-       cursor=>cursor%next
-       cursorP=>cursorP%next
-    END DO
+    type(SimulationCtrlParamList),pointer::cursor=>null(),cursorP=>null()
 
-    allocate(cursor)
-    ! The assignment(=) had been overrided
-    cursor = newOne
-    cursorP%next=>cursor
+    !---Body---
+    cursorP=>this
+
+    if(.not. associated(cursorP)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the RecordList first!"
+        pause
+        stop
+    end if
+
+    if(this%GetCount() .LE. 0) then
+        this%ListCount = 1
+        !---The Assignment (=) had been override
+        this%theSimulationCtrlParam = newOne
+    else
+        cursor=>this%next
+        cursorP=>this
+
+        DO While(associated(cursor))
+            cursor=>cursor%next
+            cursorP=>cursorP%next
+        END DO
+
+        this%ListCount = this%ListCount + 1
+
+        allocate(cursor)
+        Nullify(cursor%next)
+        cursor%next=>null()
+        !---The Assignment (=) had been override
+        cursor%theSimulationCtrlParam = newOne
+
+        cursorP%next=>cursor
+    end if
+
+    Nullify(cursorP)
+    cursorP=>null()
+    Nullify(cursor)
+    cursor=>null()
+
     return
   end subroutine AppendOne_SimulationCtrlParam
 
@@ -187,11 +455,11 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
   function GetSimulationCtrlParam_P(this,TheIndex) result(TheResult)
     implicit none
     !---Dummy Vars---
-    CLASS(SimulationCtrlParam),target::this
+    CLASS(SimulationCtrlParamList),target::this
     integer,intent(in)::TheIndex
-    type(SimulationCtrlParam),intent(out),pointer::TheResult
+    type(SimulationCtrlParamList),intent(out),pointer::TheResult
     !---Local Vars---
-    type(SimulationCtrlParam),pointer::cursor=>null()
+    type(SimulationCtrlParamList),pointer::cursor=>null()
     integer::CountTemp
     !---Body---
 
@@ -224,9 +492,139 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     return
   end function GetSimulationCtrlParam_P
 
+  !**************************************************************
+  function GetSimulationCtrlParamListCount(this) result(TheResult)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationCtrlParamList),target::this
+    integer::TheResult
+    !---Body---
+
+    TheResult = this%ListCount
+
+    return
+  end function GetSimulationCtrlParamListCount
+
+  !**************************************************************
+  subroutine CopySimulationCtrlParamListFromOther(this,other)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationCtrlParamList),intent(out),target::this
+    CLASS(SimulationCtrlParamList),intent(in),target::other
+    !---Local Vars---
+    type(SimulationCtrlParamList),pointer::thisCursorP=>null()
+    type(SimulationCtrlParamList),pointer::thisCursor=>null()
+    type(SimulationCtrlParamList),pointer::otherCursorP=>null()
+    type(SimulationCtrlParamList),pointer::otherCursor=>null()
+    !---Body---
+    thisCursorP=>this
+
+    if(.not. associated(thisCursorP)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the RecordList first!"
+        pause
+        stop
+    end if
+
+    call this%Clean_SimulationCtrlParamList()
+
+    otherCursorP=>other
+
+    if(.not. associated(otherCursorP)) then
+        return
+    end if
+
+    if(otherCursorP%GetCount() .LE. 0) then
+        return
+    end if
+
+    !---The Assignment (=) had been override
+    thisCursorP%theSimulationCtrlParam = otherCursorP%theSimulationCtrlParam
+    this%ListCount = this%ListCount + 1
+
+    thisCursor=>thisCursorP%next
+    otherCursor=>otherCursorP%next
+
+    Do while(associated(otherCursor))
+        allocate(thisCursor)
+
+        thisCursor%theSimulationCtrlParam = otherCursor%theSimulationCtrlParam
+        this%ListCount = this%ListCount + 1
+
+        thisCursorP%next => thisCursor
+
+        thisCursor => thisCursor%next
+        otherCursor => otherCursor%next
+
+        thisCursorP => thisCursorP%next
+        otherCursorP => otherCursorP%next
+
+    End Do
+
+    nullify(thisCursor)
+    thisCursor=>null()
+    nullify(thisCursorP)
+    thisCursorP=>null()
+    nullify(otherCursor)
+    otherCursor=>null()
+    nullify(otherCursorP)
+    otherCursorP=>null()
+
+    return
+  end subroutine
+
+  !**************************************************************
+  subroutine Clean_SimulationCtrlParamList(this)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationCtrlParamList),target::this
+    !---Local Vars---
+    type(SimulationCtrlParamList),pointer::cursor=>null(),next=>null()
+
+    !---Body---
+    cursor=>this
+
+    if(.not. associated(cursor)) then
+        return
+    end if
+
+    cursor=>this%next
+
+    call this%theSimulationCtrlParam%Clean_SimulationCtrlParam()
+
+    DO While(associated(cursor))
+        next=>cursor%next
+        call cursor%theSimulationCtrlParam%Clean_SimulationCtrlParam()
+        Nullify(cursor)
+        deallocate(cursor)
+        cursor=>next
+    END DO
+
+    this%ListCount = 0
+
+    this%next=>null()
+
+    Nullify(cursor)
+    cursor=>null()
+    Nullify(next)
+    next=>null()
+
+    return
+  end subroutine Clean_SimulationCtrlParamList
+
+
+  !**************************************************************
+  subroutine CleanSimulationCtrlParamList(this)
+    implicit none
+    !---Dummy Vars---
+    type(SimulationCtrlParamList)::this
+    !---Body---
+    call this%Clean_SimulationCtrlParamList()
+
+    return
+  end subroutine CleanSimulationCtrlParamList
 
   !****************************************************************
-  subroutine CopyFromOther(this,otherOne)
+  subroutine CopySimulationCtrlParamFromOther(this,otherOne)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationCtrlParam),intent(out)::this
@@ -258,7 +656,28 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%TKB = otherOne%TKB
 
     !***Implantation sectin*********
-    this%ImplantSectID = otherOne%ImplantSectID
+    this%NImplantSection = otherOne%NImplantSection
+    if(allocated(this%ImplantSectIDs)) deallocate(this%ImplantSectIDs)
+    if(allocated(otherOne%ImplantSectIDs)) then
+        if(size(otherOne%ImplantSectIDs) .GT. 0) then
+
+            if(size(otherOne%ImplantSectIDs) .ne. otherOne%NImplantSection) then
+                write(*,*) "MCPSCURROR: It is seems like that the dimension of ImplantSectIDs is: ", size(otherOne%ImplantSectIDs)
+                write(*,*) "Bu the NImplantSection is : ",otherOne%NImplantSection
+                pause
+                stop
+            end if
+
+            allocate(this%ImplantSectIDs(otherOne%NImplantSection))
+
+            this%ImplantSectIDs = otherOne%ImplantSectIDs
+        end if
+    else if(otherOne%NImplantSection .GT. 0) then
+        write(*,*) "MCPSCUERROR: have not allocate the ImplantSectIDs, but NImplantSection greater than 0"
+        write(*,*) otherOne%NImplantSection
+        pause
+        stop
+    end if
 
     !***Information about Time
     this%TermTFlag = otherOne%TermTFlag
@@ -345,13 +764,13 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     call Copy_StatementList(otherOne%ModelData,this%ModelData)
 
     return
-  end subroutine CopyFromOther
+  end subroutine CopySimulationCtrlParamFromOther
 
   !****************************************************************
-  subroutine CleanOneSimulationCtrlParam(this)
+  subroutine Clean_SimulationCtrlParam(this)
     implicit none
     !---Dummy Vars---
-    type(SimulationCtrlParam)::this
+    CLASS(SimulationCtrlParam)::this
     !---Body---
     !***Run status
      this%RESTARTAT = 0
@@ -379,7 +798,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%TKB = 300D0*C_KB
 
      !***Implantation section*********
-     this%ImplantSectID = 0
+     this%NImplantSection = 0
+     call DeAllocateArray_Host(this%ImplantSectIDs,"this%ImplantSectIDs")
 
      !***Information about Time
      this%TermTFlag = mp_TermTimeFlag_ByRealTime
@@ -445,66 +865,61 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      call Release_StatementList(this%ModelData)
      this%ModelData=>null()
 
-  end subroutine CleanOneSimulationCtrlParam
+  end subroutine Clean_SimulationCtrlParam
 
+
+  !****************************************************************
+  !subroutine Clean_SimulationCtrlParam(this)
+  !  implicit none
+    !---Dummy Vars---
+  !  CLASS(SimulationCtrlParam),pointer::this
+    !---Local Vars--
+  !  type(SimulationCtrlParam),pointer::cursorP=>null()
+  !  type(SimulationCtrlParam),pointer::cursor=>null()
+    !---Body---
+
+  !  if(.not. associated(this)) then
+  !      return
+  !  end if
+
+  !  cursorP=>this
+  !  cursor=>this%next
+
+  !  if(associated(cursor)) then
+  !      DO While(associated(cursor))
+  !          Nullify(cursorP%next)
+  !          cursorP%next=>null()
+  !          call cursorP%Clean_SimulationCtrlParam()
+  !          deallocate(cursorP)
+  !          cursorP=>cursor
+  !          cursor=>cursor%next
+  !      END DO
+
+  !     Nullify(cursor)
+  !      cursor=>null()
+
+  !  else
+  !      call cursorP%Clean_SimulationCtrlParam()
+  !  end if
+
+  !  Nullify(cursorP)
+  !  cursorP=>null()
+
+  !   return
+  !end subroutine Clean_SimulationCtrlParam
 
   !****************************************************************
   subroutine CleanSimulationCtrlParam(this)
     implicit none
     !---Dummy Vars---
-    type(SimulationCtrlParam),pointer::this
-    !---Local Vars--
-    type(SimulationCtrlParam),pointer::cursorP=>null()
-    type(SimulationCtrlParam),pointer::cursor=>null()
+    type(SimulationCtrlParam)::this
     !---Body---
 
-    if(.not. associated(this)) then
-        return
-    end if
 
-    cursorP=>this
-    cursor=>this%next
-
-    if(associated(cursor)) then
-        DO While(associated(cursor))
-            Nullify(cursorP%next)
-            cursorP%next=>null()
-            call CleanOneSimulationCtrlParam(cursorP)
-            deallocate(cursorP)
-            cursorP=>cursor
-            cursor=>cursor%next
-        END DO
-
-        Nullify(cursor)
-        cursor=>null()
-
-    else
-        call CleanOneSimulationCtrlParam(cursorP)
-    end if
-
-    Nullify(cursorP)
-    cursorP=>null()
-
-     return
-  end subroutine
-
-  !****************************************************************
-  subroutine Clean(this)
-    implicit none
-    !---Dummy Vars---
-    type(SimulationCtrlParam),target::this
-    !---Local Vars---
-    type(SimulationCtrlParam),pointer::ptr=>null()
-    !---Body---
-    ptr=>this
-
-    call CleanSimulationCtrlParam(ptr)
-
-    Nullify(ptr)
-    ptr=>null()
+    call this%Clean_SimulationCtrlParam()
 
     return
-  end subroutine Clean
+  end subroutine CleanSimulationCtrlParam
 
 
   !****************************************************************
@@ -539,7 +954,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%TKB = 300D0*C_KB
 
      !***Implantation section*********
-     this%ImplantSectID = 0
+     this%NImplantSection = 0
+     call DeAllocateArray_Host(this%ImplantSectIDs,"this%ImplantSectIDs")
 
      !***Information about Time
      this%TermTFlag = mp_TermTimeFlag_ByRealTime
@@ -606,114 +1022,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      call Release_StatementList(this%ModelData)
      this%ModelData=>null()
 
-     this%next=>null()
-
     return
   end subroutine DefaultValue_CtrlParam
-
-  !******************************************************
-  subroutine Load_Ctrl_Parameters(this,hFile)
-    implicit none
-    !---Dummy Vars---
-    CLASS(SimulationCtrlParam),target::this
-    integer, intent(in)::hFile
-    !---Local Vars---
-    integer::LINE
-    character*1000::STR
-    character*32::KEYWORD
-    type(SimulationCtrlParam),pointer::cursor=>null()
-    type(SimulationCtrlParam)::tempCtrlParam
-    integer::ISect
-    !---Body---
-
-    call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
-    call RemoveComments(STR,"!")
-    STR = adjustl(STR)
-    call GETKEYWORD("&", STR, KEYWORD)
-    call UPCASE(KEYWORD)
-    if(KEYWORD(1:LENTRIM(KEYWORD)) .ne. m_CTLSTARTFLAG) then
-      write(*,*) "MCPSCUERROR: The Start Flag of simulation Control Parameters is Illegal: ",KEYWORD(1:LENTRIM(KEYWORD))
-      pause
-      stop
-    end if
-
-    ISect = 0
-    DO While(.TRUE.)
-      call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
-      call RemoveComments(STR,"!")
-      STR = adjustl(STR)
-      call GETKEYWORD("&", STR, KEYWORD)
-      call UPCASE(KEYWORD)
-
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
-        case("&ENDCTLF")
-          exit
-
-        case("&COMMSUBCTL")
-          call this%Load_Ctrl_CommParameter(hFile,*100)
-          cursor=>this
-          DO While(.true.)
-            if(.not. associated(cursor)) then
-                exit
-            end if
-            cursor%MultiBox = this%MultiBox
-            cursor%TOTALBOX = this%TOTALBOX
-            cursor%INDEPBOX = this%INDEPBOX
-            cursor%RANDSEED = this%RANDSEED
-
-            cursor=>cursor%next
-          END DO
-
-        case("&ANALYSUBCTL")
-            call this%Load_Ctrl_AnalyParameter(hFile,*100)
-            cursor=>this
-            DO While(.true.)
-                if(.not. associated(cursor)) then
-                    exit
-                end if
-                cursor%STARTJOB = this%STARTJOB
-                cursor%ENDJOB = this%ENDJOB
-                cursor%JOBSTEP = this%JOBSTEP
-                cursor%STARTTSECTION = this%STARTTSECTION
-                cursor%ENDTSECTION = this%ENDTSECTION
-                cursor%TSECTIONSTEP = this%TSECTIONSTEP
-                cursor%STARTCFG = this%STARTCFG
-                cursor%ENDCFG = this%ENDCFG
-                cursor%CFGSTEP = this%CFGSTEP
-                cursor%STARTBOX = this%STARTBOX
-                cursor%ENDBOX = this%ENDBOX
-                cursor%BOXSTEP = this%BOXSTEP
-
-
-                cursor=>cursor%next
-            END DO
-
-        case("&SECTSUBCTL")
-
-          if(ISect .eq. 0) then
-            call this%Load_Ctrl_SectionParameter(hFile,*100)
-          else
-            tempCtrlParam = this
-            tempCtrlParam%next=>null()
-            call tempCtrlParam%Load_Ctrl_SectionParameter(hFile,*100)
-            call this%AppendOne_SimulationCtrlParam(tempCtrlParam)
-          end if
-          ISect = ISect + 1
-
-        case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
-          write(*,*) "Please Check Control File at Line: ",LINE
-          stop
-      end select
-
-    END DO
-
-    return
-    !-----------------------------------------------------
-    100 write(*,*) "MCPSCU ERROR: Failer to read Simulation Control Parameters."
-        write(*,*) "The process would be stop."
-        stop
-  end subroutine Load_Ctrl_Parameters
 
   !*****************************************
   subroutine Load_Ctrl_CommParameter(this,hFile,*)
@@ -1162,9 +1472,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     !---Local Vars---
     character*1000::STR
     character*32::KEYWORD
-    character*20::SUBNUM(10)
+    character*20::SUBNUM(20)
     integer::LINE
     integer::N
+    integer::I
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -1177,14 +1488,18 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             case("&ENDSUBCTL")
                 exit
             case("&IMPLANTID")
-                call EXTRACT_NUMB(STR,1,N,SUBNUM)
-                if(N .LT. 1) then
-                    write(*,*) "MCPSCUERROR: Too few parameters for the Keyword: ",KEYWORD
-                    write(*,*) "You should special: '&IMPLANTID The used implantation id in current time section = '"
-                    pause
-                    stop
+                call EXTRACT_NUMB(STR,p_MAX_IMPLANTSECTION,N,SUBNUM)
+
+                if(N .GT. 0) then
+                    call AllocateArray_Host(this%ImplantSectIDs,N,"ImplantSectIDs")
                 end if
-                this%ImplantSectID = ISTR(SUBNUM(1))
+
+                this%NImplantSection = N
+
+                DO I = 1,N
+                    this%ImplantSectIDs(I) = ISTR(SUBNUM(I))
+                END DO
+
             case default
                 write(*,*) "MCPSCUERROR: The flag is illegal: ",KEYWORD
                 pause
@@ -1686,121 +2001,5 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     100 return 1
   end subroutine Load_ModelDataStatments
 
-  !********************************************
-  subroutine Print_CtrlParameters(this,hFile)
-    implicit none
-    !---Dummy Vars---
-    CLASS(SimulationCtrlParam),target::this
-    integer,intent(in)::hFile
-    !---Local Vars---
-    type(SimulationCtrlParam),pointer::cursor=>null()
-    integer::ISect
-    integer::IStatu
-    character*1000::ConfigContent
-    character*1000::CFormat
-    character*1000::CNUM
-    !---Body---
-
-    write(hFile,*) "!****************Control file information***********************"
-    write(hFile,fmt="('!',A70,'!',2x,I10)") "Box in one test =",this%MultiBox
-    write(hFile,fmt="('!',A70,'!',2x,I10)") "Total boxes num =",this%TOTALBOX
-    write(hFile,fmt="('!',A70,'!',2x,I10)") "Boxes independent =",this%INDEPBOX
-
-    write(hFile,fmt="('!',A70,'!',2x,3I10)") "Random Seeds =",this%RANDSEED
-
-
-    cursor=>this
-
-    ISect = 1
-    DO while(associated(cursor))
-        write(hFile,fmt="('*******************SubSection #: ',I10)") ISect
-
-        write(hFile,fmt="('!',A70,'!',2x,1PE16.8)") "SYSTEM SIMULATION TEMPERATURE =",cursor%TEMP
-
-        write(hFile,fmt="('!',A70,'!',2x,3I10)") "PERIDIC condition =",cursor%PERIOD
-
-        !***Inforamtion about neighborlist
-        write(hFile,fmt="('!',A70,'!',2x,I10)") "The parameter determine the strategy to calculate neighbor-List =",cursor%NEIGHBORCALWAY
-
-        write(hFile,fmt="('!',A70,'!',2x,I10)") "maxmun number of neighbore for an diffusor =",cursor%MAXNEIGHBORNUM
-
-        write(hFile,fmt="('!',A70,'!',2x,I10)") "The parameter determine the way to update neighbor-List =",cursor%NEIGHBORUPDATESTRATEGY
-
-        write(hFile,fmt="('!',A70,'!',2x,1PE16.8)") "The parameter determine when the neighbore list to be updated =",cursor%NEIGHBORUPDATE
-
-        write(hFile,fmt="('!',A70,'!',2x,1PE16.8)") "The cut-off region expand =",cursor%CUTREGIONEXTEND
-
-        !***Information about Implantation******************
-        write(hFile,fmt="('!',A70,'!',2x,I10)") "The implantation section index is :", cursor%ImplantSectID
-
-        !***Information about Time
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Maxma simulation flag = , the time =",cursor%TermTFlag,cursor%TermTValue
-
-        write(hFile,fmt="('!',A70,'!',2x,I10)") "The focused time-points number is = ",cursor%NFocusedTimePoint
-
-        if(allocated(cursor%FocusedTimePoints)) then
-
-            if(size(cursor%FocusedTimePoints) .GT. 0) then
-                write(CNUM,*) size(cursor%FocusedTimePoints)
-                CFormat = ""
-                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(1PE18.10,2x))"
-                write(hFile,fmt=CFormat(1:LENTRIM(CFormat)))  "The focused time-points are : ", cursor%FocusedTimePoints
-            end if
-        end if
-
-        select case(this%UPDATETSTEPSTRATEGY)
-            case(mp_SelfAdjustlStep_NearestSep)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%EnlageTStepScale
-            case(mp_FixedTimeStep)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%FixedTimeStepValue
-            case(mp_SelfAdjustlStep_AveSep)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%EnlageTStepScale
-
-            case(mp_SelfAdjustlStep_NNDR)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimitTime
-
-            case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,1PE16.8,2x,I10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = . the corresponded value three = ", &
-                                                                              cursor%UPDATETSTEPSTRATEGY,cursor%LowerLimitTime,cursor%LowerLimitLength,cursor%LastPassageFactor
-        end select
-
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "The update statistic frequency flag =, the correspond value = ",cursor%TUpdateStatisFlag,cursor%TUpdateStatisValue
-
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Output instant configuration flag = , the interval =",cursor%OutPutConfFlag,cursor%OutPutConfValue
-
-        ConfigContent = ""
-
-        DO IStatu = 1,p_NUMBER_OF_STATU
-            if(cursor%OutPutConfContent(IStatu) .eq. .true.) then
-                ConfigContent = adjustl(ConfigContent)
-                ConfigContent = adjustl(trim(ConfigContent))//adjustl(trim(p_CStatu(IStatu)))//" ,"
-            end if
-        END DO
-
-        write(hFile,fmt="('!',A70,'!',2x,A256)") "The information that is specialed to be out in config is ",adjustl(trim(ConfigContent))
-
-        write(hFile,fmt="('!',A70,'!',2x,L10)") "Whether output configure file before sweep out the menory = ",cursor%OutPutConf_SweepOut
-
-        write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE16.8))") "Output instant size statistic information flag =, the interval for integral box =, the interval for each box =",           &
-                                                               cursor%OutPutSCFlag,cursor%OutPutSCValue_IntegralBox,cursor%OutPutSCValue_EachBox
-
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Output instant function statistic information flag =, the interval =",cursor%OutPutFuncSFlag,cursor%OutPutFuncSValue
-
-        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Output instant information for restart flag =,the interval =",cursor%OutPutSwapFlag,cursor%OutPutSwapValue
-
-        write(hFile,fmt="('*******************END SubSection #: ',I10)") ISect
-
-        cursor=>cursor%next
-        ISect = ISect + 1
-
-    END DO
-
-
-    return
-  end subroutine
 
 end module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM

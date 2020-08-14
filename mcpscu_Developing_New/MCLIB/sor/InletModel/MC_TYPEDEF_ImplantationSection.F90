@@ -369,29 +369,15 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         CLASS(ImplantList),target::this
         type(SimulationCtrlParam),target::Host_SimuCtrlParam
         !---Local Vars---
-        type(SimulationCtrlParam),pointer::PSimuCtrlParamCursor=>Null()
-        type(ImplantSection),pointer::PImplantSection=>null()
-        integer::ICount
+        integer::I
         !---Body---
-        PSimuCtrlParamCursor=>Host_SimuCtrlParam
-
-        ICount = 0
-        DO While(associated(PSimuCtrlParamCursor))
-            ICount = ICount + 1
-
-            if(PSimuCtrlParamCursor%ImplantSectID .GE. 1) then
-                PImplantSection=>this%Get_P(PSimuCtrlParamCursor%ImplantSectID)
-
-                if(.not. associated(PImplantSection)) then
-                    write(*,*) "MCPSCUERROR: The implantation section is not special :",PSimuCtrlParamCursor%ImplantSectID
-                    write(*,*) "For the simulation section :",ICount
-                    pause
-                    stop
-                end if
-
+        DO I = 1,Host_SimuCtrlParam%NImplantSection
+            if(Host_SimuCtrlParam%ImplantSectIDs(I) .GE. this%ListCount) then
+                write(*,*) "MCPSCUERROR: The implantation section is not special :",Host_SimuCtrlParam%ImplantSectIDs(I)
+                pause
+                stop
             end if
 
-            PSimuCtrlParamCursor=>PSimuCtrlParamCursor%next
         END DO
 
         return

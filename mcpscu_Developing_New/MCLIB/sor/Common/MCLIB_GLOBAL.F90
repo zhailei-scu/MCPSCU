@@ -19,12 +19,12 @@ module MCLIB_GLOBAL
    contains
 
   !***********************************************
-  subroutine Initialize_Global_Variables(CtrlParam,SimBoxes)
+  subroutine Initialize_Global_Variables(CtrlParamList,SimBoxes)
     !*** Purpose: Load the initialize parameters for simulation
     use MiniUtilities, only:EXTRACT_NUMB,EXTRACT_SUBSTR,GETINPUTSTRLINE, ISTR, DRSTR
     implicit none
     !---Dummy Vars---
-    type(SimulationCtrlParam)::CtrlParam
+    type(SimulationCtrlParamList)::CtrlParamList
     type(SimulationBoxes)::SimBoxes
     !---Local Vars---
     character*1000::sampleFilePath,STR
@@ -36,7 +36,7 @@ module MCLIB_GLOBAL
     character*1000::STRTMP(5)
     integer::N
     !---Body---
-    call CtrlParam%DefaultValue_CtrlParam()
+    call CtrlParamList%theSimulationCtrlParam%DefaultValue_CtrlParam()
 
     if(COMMAND_ARGUMENT_COUNT() .LT. 1) then
        write(*,*) "MCPSCU ERROR: Need to output the sample File ."
@@ -55,7 +55,7 @@ module MCLIB_GLOBAL
 
     fileUnit = OpenExistedFile(sampleFilePath)
 
-    call resolveLongFileName(sampleFilePath,CtrlParam%InputFilePath,CtrlParam%InputFileShortName)
+    call resolveLongFileName(sampleFilePath,CtrlParamList%theSimulationCtrlParam%InputFilePath,CtrlParamList%theSimulationCtrlParam%InputFileShortName)
 
     call GETINPUTSTRLINE(fileUnit,STR,LINE,'!',*100)
     call RemoveComments(STR,'!')
@@ -65,10 +65,10 @@ module MCLIB_GLOBAL
 
     select case(KEYWORD(1:LENTRIM(KEYWORD)))
         case("&START_MIGCOALE_CLUSTER_GPU")
-          CtrlParam%RESTARTAT = 0
+          CtrlParamList%theSimulationCtrlParam%RESTARTAT = 0
           m_AppType = KEYWORD(LENTRIM("&START_")+1:LENTRIM(KEYWORD))
         case("&RESTART_MIGCOALE_CLUSTER_GPU")
-          CtrlParam%RESTARTAT = 1
+          CtrlParamList%theSimulationCtrlParam%RESTARTAT = 1
           m_AppType = KEYWORD(LENTRIM("&RESTART_")+1:LENTRIM(KEYWORD))
         case default
           write(*,*) "MCPSCUERROR: Illegal flag in sample file: ",KEYWORD(1:LENTRIM(KEYWORD))
@@ -101,7 +101,7 @@ module MCLIB_GLOBAL
                 pause
                 stop
             end if
-            ctlFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParam%InputFilePath)
+            ctlFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParamList%theSimulationCtrlParam%InputFilePath)
 
           case("&BOXF")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
@@ -112,7 +112,7 @@ module MCLIB_GLOBAL
                 pause
                 stop
             end if
-            boxFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParam%InputFilePath)
+            boxFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParamList%theSimulationCtrlParam%InputFilePath)
 
           case("&INIF")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
@@ -123,8 +123,8 @@ module MCLIB_GLOBAL
                 pause
                 stop
             end if
-            initFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParam%InputFilePath)
-            CtrlParam%IniConfig = adjustl(trim(initFile))
+            initFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParamList%theSimulationCtrlParam%InputFilePath)
+            CtrlParamList%theSimulationCtrlParam%IniConfig = adjustl(trim(initFile))
 
           case("&IMPF")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
@@ -135,20 +135,20 @@ module MCLIB_GLOBAL
                 pause
                 stop
             end if
-            impFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParam%InputFilePath)
-            CtrlParam%ImpFile = adjustl(trim(impFile))
+            impFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParamList%theSimulationCtrlParam%InputFilePath)
+            CtrlParamList%theSimulationCtrlParam%ImpFile = adjustl(trim(impFile))
 
           case("&COUT")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
             outPath = STRTMP(1)
             outPath = adjustl(outPath)
             if(IsAbsolutePath(outPath)) then
-                CtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
+                CtrlParamList%theSimulationCtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
             else
-                if(LENTRIM(adjustl(CtrlParam%InputFilePath)) .GT. 0) then
-                    CtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(CtrlParam%InputFilePath))//FolderSpe//adjustl(trim(outPath)))
+                if(LENTRIM(adjustl(CtrlParamList%theSimulationCtrlParam%InputFilePath)) .GT. 0) then
+                    CtrlParamList%theSimulationCtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(CtrlParamList%theSimulationCtrlParam%InputFilePath))//FolderSpe//adjustl(trim(outPath)))
                 else
-                    CtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
+                    CtrlParamList%theSimulationCtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
                 end if
             endif
 
@@ -161,8 +161,8 @@ module MCLIB_GLOBAL
                 pause
                 stop
             end if
-            restartFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParam%InputFilePath)
-            CtrlParam%RestartCfg = adjustl(restartFile)
+            restartFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParamList%theSimulationCtrlParam%InputFilePath)
+            CtrlParamList%theSimulationCtrlParam%RestartCfg = adjustl(restartFile)
 
       end select
     END DO
@@ -171,7 +171,7 @@ module MCLIB_GLOBAL
 
     fileUnit = OpenExistedFile(ctlFile)
 
-    call CtrlParam%Load_Ctrl_Parameters(fileUnit)
+    call CtrlParamList%Load_Ctrl_Parameters(fileUnit)
 
     close(fileUnit)
 
@@ -181,7 +181,7 @@ module MCLIB_GLOBAL
 
     close(fileUnit)
 
-    call CheckSimulationParamters(CtrlParam,SimBoxes)
+    call CheckSimulationParamters(CtrlParamList,SimBoxes)
 
     return
     !------------------------------------
@@ -235,15 +235,15 @@ module MCLIB_GLOBAL
   end subroutine OpenLogFile
 
   !***********************************************
-  subroutine Print_Global_Variables(hFile,CtrlParam,SimBoxes)
+  subroutine Print_Global_Variables(hFile,CtrlParamList,SimBoxes)
     implicit none
     !---Dummy Vars---
     integer,intent(in)::hFile
-    type(SimulationCtrlParam)::CtrlParam
+    type(SimulationCtrlParamList)::CtrlParamList
     type(SimulationBoxes)::SimBoxes
 
     !---Body---
-    call CtrlParam%Print_CtrlParameters(hFile)
+    call CtrlParamList%Print_CtrlParameters(hFile)
 
     call SimBoxes%Print_Parameter_SimulationBoxes(hFile)
     return
@@ -251,31 +251,31 @@ module MCLIB_GLOBAL
 
 
   !***********************************************
-  subroutine CheckSimulationParamters(CtrlParam,SimBoxes)
+  subroutine CheckSimulationParamters(CtrlParamList,SimBoxes)
     implicit none
     !---Dummy Vars---
-    type(SimulationCtrlParam),target::CtrlParam
+    type(SimulationCtrlParamList),target::CtrlParamList
     type(SimulationBoxes)::SimBoxes
     !---Local Vars---
     integer::ISection
-    type(SimulationCtrlParam),pointer::PCtrlParam=>null()
+    type(SimulationCtrlParamList),pointer::PCtrlParam=>null()
     !---Body---
     ISection = 1
 
-    PCtrlParam=>CtrlParam
+    PCtrlParam=>CtrlParamList
 
     DO while(associated(PCtrlParam))
       !---We can exclude some time section where the reaction need not to be considered and thus the neighbor-lists can not required, then, the---
       !---calculation would be accelerated---
 
       if(associated(SimBoxes%ReadReactionProp_List)) then
-         PCtrlParam%FreeDiffusion = SimBoxes%ReadReactionProp_List%WhetherFreeDiffusion(PCtrlParam%TKB)
+         PCtrlParam%theSimulationCtrlParam%FreeDiffusion = SimBoxes%ReadReactionProp_List%WhetherFreeDiffusion(PCtrlParam%theSimulationCtrlParam%TKB)
       else
-         PCtrlParam%FreeDiffusion = .true.
+         PCtrlParam%theSimulationCtrlParam%FreeDiffusion = .true.
       end if
 
-      if(PCtrlParam%FreeDiffusion .eq. .true.) then
-         PCtrlParam%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_AveSep
+      if(PCtrlParam%theSimulationCtrlParam%FreeDiffusion .eq. .true.) then
+         PCtrlParam%theSimulationCtrlParam%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_AveSep
 
          write(*,*) "***********************************************************************************************"
          write(*,*) "MCPSCU Info: The reaction would not be considered in time section: ",ISection
