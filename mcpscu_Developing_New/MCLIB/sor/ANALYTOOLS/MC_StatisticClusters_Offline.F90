@@ -153,7 +153,7 @@ module MC_StatisticClusters_Offline
 
 
 
-            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,I30,1x,6(I30,1x),6(1PE30.8,1x),6(I30,1x),6(1PE30.8,1x))")    IBox,                                   &
+            write(hFileOutEachBox,fmt="(I30,1x,1PE30.10,1x,I30,1x,6(I30,1x),6(1PE30.8,1x),6(I30,1x),6(1PE30.8,1x))")    IBox,                                   &
                                                                                                                 Record%GetSimuTimes(),                         &
                                                                                                                 NCCountEachBox(p_ACTIVEFREE_STATU)             &
                                                                                                                 + NCCountEachBox(p_ACTIVEINGB_STATU),          &
@@ -175,7 +175,7 @@ module MC_StatisticClusters_Offline
         END DO
 
 
-        write(hFileOutTotalBox,fmt="(1PE30.8,1x,,I30,1x,6(I30,1x),6(1PE30.8,1x),6(I30,1x),6(1PE30.8,1x))")  Record%GetSimuTimes(),          &
+        write(hFileOutTotalBox,fmt="(1PE30.10,1x,,I30,1x,6(I30,1x),6(1PE30.8,1x),6(I30,1x),6(1PE30.8,1x))")  Record%GetSimuTimes(),          &
                                                                                                     NCCount(p_ACTIVEFREE_STATU)             &
                                                                                                     + NCCount(p_ACTIVEINGB_STATU),          &
                                                                                                     NCCount(1:p_NUMBER_OF_STATU),           &
@@ -388,7 +388,7 @@ module MC_StatisticClusters_Offline
                 end if
             END DO
 
-            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")        IBox,                              &
+            write(hFileOutEachBox,fmt="(I30,1x,1PE30.10,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")        IBox,                              &
                                                                                                                 Record%GetSimuTimes(),                         &
                                                                                                                 NCCountEachBox_SIA(1:p_NUMBER_OF_STATU),       &
                                                                                                                 NCCountEachBox_Vac(1:p_NUMBER_OF_STATU),       &
@@ -411,7 +411,7 @@ module MC_StatisticClusters_Offline
         END DO
 
 
-        write(hFileOutTotalBox,fmt="(1PE30.8,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")      Record%GetSimuTimes(),              &
+        write(hFileOutTotalBox,fmt="(1PE30.10,1x,7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")      Record%GetSimuTimes(),              &
                                                                                                             NCCount_SIA(1:p_NUMBER_OF_STATU),       &
                                                                                                             NCCount_Vac(1:p_NUMBER_OF_STATU),       &
                                                                                                             NAVA_SIA(1:p_NUMBER_OF_STATU),          &
@@ -653,7 +653,7 @@ module MC_StatisticClusters_Offline
                 end if
             END DO
 
-            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")        IBox,                    &
+            write(hFileOutEachBox,fmt="(I30,1x,1PE30.10,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")        IBox,                    &
                                                                                                                 Record%GetSimuTimes(),                         &
                                                                                                                 NCCountEachBox(1:p_NUMBER_OF_STATU),           &
                                                                                                                 NCCountEachBox_SIA(1:p_NUMBER_OF_STATU),       &
@@ -676,7 +676,7 @@ module MC_StatisticClusters_Offline
         END DO
 
 
-        write(hFileOutTotalBox,fmt="(1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")  Record%GetSimuTimes(),        &
+        write(hFileOutTotalBox,fmt="(1PE30.10,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),I30,I30)")  Record%GetSimuTimes(),        &
                                                                                                             NCCount(1:p_NUMBER_OF_STATU),           &
                                                                                                             NCCount_SIA(1:p_NUMBER_OF_STATU),       &
                                                                                                             NCCount_Vac(1:p_NUMBER_OF_STATU),       &
@@ -958,7 +958,7 @@ module MC_StatisticClusters_Offline
                 end if
             END DO
 
-            write(hFileOutEachBox,fmt="(I30,1x,1PE30.8,1x,I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),4(I30,1x))")             &
+            write(hFileOutEachBox,fmt="(I30,1x,1PE30.10,1x,I30,1x,1PE30.10,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),4(I30,1x))")             &
                                                                                                                 IBox,                                          &
                                                                                                                 Record%GetSimuTimes(),                         &
                                                                                                                 Record%GetSimuSteps(),                         &
@@ -986,7 +986,7 @@ module MC_StatisticClusters_Offline
         END DO
 
 
-        write(hFileOutTotalBox,fmt="(1PE30.8,1x,I30,1x,1PE30.8,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),6(I30,1x))")            &
+        write(hFileOutTotalBox,fmt="(1PE30.10,1x,I30,1x,1PE30.10,1x,7(I30,1x),7(I30,1x),7(I30,1x),7(1PE30.8,1x),7(1PE30.8,1x),6(I30,1x))")            &
                                                                                                             Record%GetSimuTimes(),                  &
                                                                                                             Record%GetSimuSteps(),                  &
                                                                                                             Record%GetTimeSteps(),                  &

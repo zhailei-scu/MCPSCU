@@ -1743,7 +1743,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             if(size(cursor%FocusedTimePoints) .GT. 0) then
                 write(CNUM,*) size(cursor%FocusedTimePoints)
                 CFormat = ""
-                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(1PE16.8,2x))"
+                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(1PE18.10,2x))"
                 write(hFile,fmt=CFormat(1:LENTRIM(CFormat)))  "The focused time-points are : ", cursor%FocusedTimePoints
             end if
         end if

@@ -339,7 +339,7 @@ module MODEL_TYPEDEF_ATOMSLIST
 
         pCursor=>this
         othersCursor=>others%next
-        cursor=this%next
+        cursor=>this%next
 
         !---the (=) had been overrided
         this%m_Atom = others%m_Atom
@@ -352,8 +352,8 @@ module MODEL_TYPEDEF_ATOMSLIST
             cursor%m_ListCount = othersCursor%m_ListCount
             cursor%m_AtomsNumber = othersCursor%m_AtomsNumber
             pCursor%next=>cursor
+            pCursor=>cursor
             cursor=>cursor%next
-            pCursor=>cursor%next
             othersCursor=>othersCursor%next
         END DO
 

@@ -13,6 +13,42 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
   character(len=5), parameter, private::m_BOXSTARTFLAG = "&BOXF"
 
+
+  abstract interface
+    subroutine UDefReadWriteRecord(hFile,Record)
+        use MCLIB_TYPEDEF_BASICRECORD
+        implicit none
+        integer::hFile
+        CLASS(SimulationRecord)::Record
+    end subroutine UDefReadWriteRecord
+
+  end interface
+
+  type,public::UDefReadWriteRecordList
+    procedure(UDefReadWriteRecord),pointer,nopass::TheReadWriteProc=>null()
+
+    type(UDefReadWriteRecordList),pointer::next=>null()
+
+    integer,private::ListCount = 0
+
+    contains
+
+    procedure,non_overridable,public,pass::AppendOne=>Append_OneProc
+
+    procedure,non_overridable,public,pass::GetReadWriteRecordListCount=>Get_ReadWriteRecordListCount
+
+    procedure,non_overridable,public,pass::CopyReadWriteRecordListFromOther
+
+    procedure,non_overridable,public,pass::Clean_ReadWriteRecorList
+
+    Generic::Assignment(=)=>CopyReadWriteRecordListFromOther
+
+    Final::CleanReadWriteRecorList
+
+  end type UDefReadWriteRecordList
+
+
+
   type,public::SimulationBoxes
 
     !***********Diffusor list memory mapping*************
@@ -100,6 +136,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
   end type SimulationBoxes
 
+  private::Append_OneProc
+  private::Get_ReadWriteRecordListCount
+  private::CopyReadWriteRecordListFromOther
+  private::Clean_ReadWriteRecorList
+  private::CleanReadWriteRecorList
   private::DefaultValue_SimulationBoxes
   private::Load_Parameter_SimulationBoxes
   private::Print_Parameter_SimulationBoxes
@@ -141,8 +182,186 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   private::Putin_SPMF_OUTCFG_FORMAT18_Distribution
   private::DoPutin_FromDistribution
   private::CopySimulationBoxesFromOther
-
   contains
+
+  !**************************************************************
+  function Get_ReadWriteRecordListCount(this) result(TheResult)
+    implicit none
+    !---Dummy Vars---
+    CLASS(UDefReadWriteRecordList),target::this
+    integer::TheResult
+    !---Body---
+
+    TheResult = this%ListCount
+
+    return
+  end function Get_ReadWriteRecordListCount
+
+  !**************************************************************
+  subroutine Append_OneProc(this,newOne)
+    implicit none
+    !---Dummy Vars---
+    CLASS(UDefReadWriteRecordList),target::this
+    procedure(UDefReadWriteRecord),pointer::newOne
+    !---Local Vars---
+    type(UDefReadWriteRecordList),pointer::cursor=>null(),cursorP=>null()
+
+    !---Body---
+    cursorP=>this
+
+    if(.not. associated(cursorP)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the RecordList first!"
+        pause
+        stop
+    end if
+
+    if(this%GetReadWriteRecordListCount() .LE. 0) then
+        this%ListCount = 1
+        this%TheReadWriteProc = newOne
+    else
+        cursor=>this%next
+        cursorP=>this
+
+        DO While(associated(cursor))
+            cursor=>cursor%next
+            cursorP=>cursorP%next
+        END DO
+
+        this%ListCount = this%ListCount + 1
+
+        allocate(cursor)
+        Nullify(cursor%next)
+        cursor%next=>null()
+        cursor%TheReadWriteProc = newOne
+
+        cursorP%next=>cursor
+    end if
+
+    Nullify(cursorP)
+    cursorP=>null()
+    Nullify(cursor)
+    cursor=>null()
+
+    return
+  end subroutine Append_OneProc
+
+  !**************************************************************
+  subroutine CopyReadWriteRecordListFromOther(this,other)
+    implicit none
+    !---Dummy Vars---
+    CLASS(UDefReadWriteRecordList),intent(out),target::this
+    CLASS(UDefReadWriteRecordList),intent(in),target::other
+    !---Local Vars---
+    type(UDefReadWriteRecordList),pointer::thisCursorP=>null()
+    type(UDefReadWriteRecordList),pointer::thisCursor=>null()
+    type(UDefReadWriteRecordList),pointer::otherCursorP=>null()
+    type(UDefReadWriteRecordList),pointer::otherCursor=>null()
+    !---Body---
+    thisCursorP=>this
+
+    if(.not. associated(thisCursorP)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the RecordList first!"
+        pause
+        stop
+    end if
+
+    call this%Clean_ReadWriteRecorList()
+
+    otherCursorP=>other
+
+    if(.not. associated(otherCursorP)) then
+        return
+    end if
+
+    if(otherCursorP%GetReadWriteRecordListCount() .LE. 0) then
+        return
+    end if
+
+    thisCursorP%TheReadWriteProc = otherCursorP%TheReadWriteProc
+    this%ListCount = this%ListCount + 1
+
+    thisCursor=>thisCursorP%next
+    otherCursor=>otherCursorP%next
+
+    Do while(associated(otherCursor))
+        allocate(thisCursor)
+
+        thisCursor%TheReadWriteProc = otherCursor%TheReadWriteProc
+        this%ListCount = this%ListCount + 1
+
+        thisCursorP%next => thisCursor
+
+        thisCursor => thisCursor%next
+        otherCursor => otherCursor%next
+
+        thisCursorP => thisCursorP%next
+        otherCursorP => otherCursorP%next
+
+    End Do
+
+    nullify(thisCursor)
+    thisCursor=>null()
+    nullify(thisCursorP)
+    thisCursorP=>null()
+    nullify(otherCursor)
+    otherCursor=>null()
+    nullify(otherCursorP)
+    otherCursorP=>null()
+
+    return
+  end subroutine
+
+  !**************************************************************
+  subroutine Clean_ReadWriteRecorList(this)
+    implicit none
+    !---Dummy Vars---
+    CLASS(UDefReadWriteRecordList),target::this
+    !---Local Vars---
+    type(UDefReadWriteRecordList),pointer::cursor=>null(),next=>null()
+
+    !---Body---
+    cursor=>this
+
+    if(.not. associated(cursor)) then
+        return
+    end if
+
+    cursor=>this%next
+
+    this%TheReadWriteProc=>null()
+
+    DO While(associated(cursor))
+        next=>cursor%next
+        cursor%TheReadWriteProc=>null()
+        Nullify(cursor)
+        deallocate(cursor)
+        cursor=>next
+    END DO
+
+    this%ListCount = 0
+
+    this%next=>null()
+
+    Nullify(cursor)
+    cursor=>null()
+    Nullify(next)
+    next=>null()
+
+    return
+  end subroutine Clean_ReadWriteRecorList
+
+
+  !**************************************************************
+  subroutine CleanReadWriteRecorList(this)
+    implicit none
+    !---Dummy Vars---
+    type(UDefReadWriteRecordList)::this
+    !---Body---
+    call this%Clean_ReadWriteRecorList()
+
+    return
+  end subroutine CleanReadWriteRecorList
+
 
   !***************************************************************
   subroutine Init_SimulationBox(this,Host_SimuCtrlParam)
@@ -207,8 +426,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     ! The Assignment(=) had been override
     this%MatrixAtom = Other%MatrixAtom
 
-    if(associated(this%Atoms_list)) then
+    if(associated(Other%Atoms_list)) then
         ! The Assignment(=) had been override
+        if(.not. associated(this%Atoms_list)) allocate(this%Atoms_list)
         this%Atoms_list = Other%Atoms_list
     end if
 
@@ -219,12 +439,14 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     this%m_BoxesBasicStatistic = Other%m_BoxesBasicStatistic
 
     ! The Assignment(=) had been override
-    if(associated(this%ReadDiffusorProp_List)) then
+    if(associated(Other%ReadDiffusorProp_List)) then
+        if(.not. associated(this%ReadDiffusorProp_List)) allocate(this%ReadDiffusorProp_List)
         this%ReadDiffusorProp_List = Other%ReadDiffusorProp_List
     end if
 
     ! The Assignment(=) had been override
-    if(associated(this%ReadReactionProp_List)) then
+    if(associated(Other%ReadReactionProp_List)) then
+        if(.not. associated(this%ReadReactionProp_List)) allocate(this%ReadReactionProp_List)
         this%ReadReactionProp_List = Other%ReadReactionProp_List
     end if
 
@@ -2295,15 +2517,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Sweep_UnActiveMemory_CPU
 
   !**********************OutPut***************************
-  subroutine PutoutToFile(this,Host_SimuCtrlParam,SimuRecord,hFile)
+  subroutine PutoutToFile(this,Host_SimuCtrlParam,SimuRecord,hFile,TheUDefWriteRecordList)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     Class(SimulationRecord)::SimuRecord
     integer,intent(in)::hFile
+    type(UDefReadWriteRecordList),target,optional::TheUDefWriteRecordList
     !---Local Vars---
     type(AtomsList),pointer::cursor=>null()
+    type(UDefReadWriteRecordList),pointer::cursorUDefWriteRecordList=>null()
     integer::MultiBox
     integer::IBox
     integer::IAKind
@@ -2329,19 +2553,40 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(hFile,FMT="(A,1x,A30)") KEYWORD(1:LENTRIM(KEYWORD)),adjustl(trim(mp_Version))
 
     KEYWORD = "&TIME"
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetSimuTimes()
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetSimuTimes()
 
     KEYWORD = "&ISTEP"
     write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuSteps()
 
     KEYWORD = "&TSTEP"
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetTimeSteps()
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetTimeSteps()
 
     KEYWORD = "&IPATCH"
     write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuPatch()
 
     KEYWORD = "&ITIMESECTION"
     write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetTimeSections()
+
+    KEYWORD = "&UDEFSECTION"
+    write(hFile, FMT="(A,1x,I15)") KEYWORD(1:LENTRIM(KEYWORD))
+
+    if(present(TheUDefWriteRecordList)) then
+
+        cursorUDefWriteRecordList=>TheUDefWriteRecordList
+
+        Do while(associated(cursorUDefWriteRecordList))
+            call cursorUDefWriteRecordList%TheReadWriteProc(hFile,SimuRecord)
+
+            cursorUDefWriteRecordList=>cursorUDefWriteRecordList%next
+        End Do
+
+    end if
+
+    KEYWORD = "&ENDUDEFSECTION"
+    write(hFile, FMT="(A,1x,I15)") KEYWORD(1:LENTRIM(KEYWORD))
+
+    Nullify(cursorUDefWriteRecordList)
+    cursorUDefWriteRecordList=>null()
 
     write(hFile,*) ""
 
@@ -2584,7 +2829,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
 
   !*************************************************************
-  subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord(this,hFile,SimuRecord,TheVersion,LINE)
+  subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord(this,hFile,SimuRecord,TheVersion,LINE,TheUDefReadRecordList)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
@@ -2592,11 +2837,13 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     CLASS(SimulationRecord)::SimuRecord
     character*30::TheVersion
     integer,intent(inout)::LINE
+    type(UDefReadWriteRecordList),optional,target::TheUDefReadRecordList
     !---Local Vars---
     character*1000::STR
     character*32::KEYWORD
     character*32::STRTMP(20)
     integer::N
+    type(UDefReadWriteRecordList),pointer::cursor=>null()
     !---Body---
 
     DO While(.true.)
@@ -2633,6 +2880,18 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case("&ITIMESECTION")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
                 call SimuRecord%SetTimeSections(ISTR(STRTMP(1)))
+
+            case("&UDEFSECTION")
+                if(present(TheUDefReadRecordList)) then
+                    cursor=>TheUDefReadRecordList
+
+                    Do while(associated(cursor))
+                        call cursor%TheReadWriteProc(hFile,SimuRecord)
+                        cursor=>cursor%next
+                    End Do
+                end if
+
+            case("&ENDUDEFSECTION")
                 exit
 
             case default
@@ -2643,6 +2902,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         end select
 
     END DO
+
+
+
+    Nullify(cursor)
+
+    cursor=>null()
 
     return
     100 write(*,*) "MCPSCUERROR: Fail to load the configuration file"
@@ -4323,18 +4588,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call this%m_BoxesBasicStatistic%Clean()
 
-    return
-  end subroutine CleanSimulationBoxes
-
-  !**********************************************
-  subroutine DestorySimulationBoxes(this)
-    implicit none
-    !---Dummy Vars---
-    type(SimulationBoxes)::this
-    !---Body---
-
-    call this%Clean()
-
     call this%m_DiffusorTypesMap%Clean()
 
     call this%m_ReactionsMap%Clean()
@@ -4350,10 +4603,31 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     call this%MatrixAtom%CleanAtom()
 
     call this%Atoms_list%CleanAtomsList()
+    if(associated(this%Atoms_list)) deallocate(this%Atoms_list)
+    Nullify(this%Atoms_list)
+    this%Atoms_list => null()
 
     call this%ReadDiffusorProp_List%Clean_ReadDiffusorPropList()
+    if(associated(this%ReadDiffusorProp_List)) deallocate(this%ReadDiffusorProp_List)
+    Nullify(this%ReadDiffusorProp_List)
+    this%ReadDiffusorProp_List =>null()
 
     call this%ReadReactionProp_List%Clean_ReadReactionPropList()
+    if(associated(this%ReadReactionProp_List)) deallocate(this%ReadReactionProp_List)
+    Nullify(this%ReadReactionProp_List)
+    this%ReadReactionProp_List=>null()
+
+    return
+  end subroutine CleanSimulationBoxes
+
+  !**********************************************
+  subroutine DestorySimulationBoxes(this)
+    implicit none
+    !---Dummy Vars---
+    type(SimulationBoxes)::this
+    !---Body---
+
+    call this%Clean()
 
     return
   end subroutine DestorySimulationBoxes
