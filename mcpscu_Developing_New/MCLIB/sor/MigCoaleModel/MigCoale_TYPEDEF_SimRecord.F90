@@ -104,6 +104,13 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
     contains
 
+
+
+
+
+
+
+
     !***********type MigCoalClusterRecord *****************
     subroutine InitMigCoalClusterRecord(this,MultiBox,SimuSteps,SimuTimes,SimuPatchs,TimeSection)
         implicit none

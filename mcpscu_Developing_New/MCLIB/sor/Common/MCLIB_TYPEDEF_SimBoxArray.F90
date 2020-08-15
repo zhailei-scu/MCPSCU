@@ -89,6 +89,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !**********Info for reactions************
     type(ReadReactionPropList),pointer::ReadReactionProp_List=>null()
 
+
+    !*********User defined RecordListReadWrite****************************
+    type(UDefReadWriteRecordList),pointer::UDefReadWriteRecord_List=>null()
+
     contains
 
     procedure,non_overridable,public,pass::DefaultValueSimulationBoxes=>DefaultValue_SimulationBoxes
@@ -448,6 +452,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     if(associated(Other%ReadReactionProp_List)) then
         if(.not. associated(this%ReadReactionProp_List)) allocate(this%ReadReactionProp_List)
         this%ReadReactionProp_List = Other%ReadReactionProp_List
+    end if
+
+    ! The Assignment(=) had been override
+    if(associated(Other%UDefReadWriteRecord_List)) then
+        if(.not. associated(this%UDefReadWriteRecord_List)) allocate(this%UDefReadWriteRecord_List)
+        this%UDefReadWriteRecord_List = Other%UDefReadWriteRecord_List
     end if
 
     return
@@ -2546,27 +2556,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     ! output the configuration(can also be for the restart)
     MultiBox = Host_SimuCtrlParam%MultiBox
 
-    !---Start to write---
-    write(hFile,FMT="(A)") OKMC_OUTCFG_FORMAT18
-
-    KEYWORD = "&VERSION"
-    write(hFile,FMT="(A,1x,A30)") KEYWORD(1:LENTRIM(KEYWORD)),adjustl(trim(mp_Version))
-
-    KEYWORD = "&TIME"
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetSimuTimes()
-
-    KEYWORD = "&ISTEP"
-    write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuSteps()
-
-    KEYWORD = "&TSTEP"
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetTimeSteps()
-
-    KEYWORD = "&IPATCH"
-    write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuPatch()
-
-    KEYWORD = "&ITIMESECTION"
-    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetTimeSections()
-
     KEYWORD = "&UDEFSECTION"
     write(hFile, FMT="(A,1x,I15)") KEYWORD(1:LENTRIM(KEYWORD))
 
@@ -2587,6 +2576,27 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     Nullify(cursorUDefWriteRecordList)
     cursorUDefWriteRecordList=>null()
+
+    !---Start to write---
+    write(hFile,FMT="(A)") OKMC_OUTCFG_FORMAT18
+
+    KEYWORD = "&VERSION"
+    write(hFile,FMT="(A,1x,A30)") KEYWORD(1:LENTRIM(KEYWORD)),adjustl(trim(mp_Version))
+
+    KEYWORD = "&TIME"
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetSimuTimes()
+
+    KEYWORD = "&ISTEP"
+    write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuSteps()
+
+    KEYWORD = "&TSTEP"
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetTimeSteps()
+
+    KEYWORD = "&IPATCH"
+    write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuPatch()
+
+    KEYWORD = "&ITIMESECTION"
+    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetTimeSections()
 
     write(hFile,*) ""
 
@@ -2857,6 +2867,16 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call UPCASE(KEYWORD)
 
         select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            case("&UDEFSECTION")
+                if(present(TheUDefReadRecordList)) then
+                    cursor=>TheUDefReadRecordList
+
+                    Do while(associated(cursor))
+                        call cursor%TheReadWriteProc(hFile,SimuRecord)
+                        cursor=>cursor%next
+                    End Do
+                end if
+
             case("&VERSION")
                 call EXTRACT_SUBSTR(STR,1,N,STRTMP)
                 TheVersion = adjustl(trim(STRTMP(1)))
@@ -2881,17 +2901,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
                 call SimuRecord%SetTimeSections(ISTR(STRTMP(1)))
 
-            case("&UDEFSECTION")
-                if(present(TheUDefReadRecordList)) then
-                    cursor=>TheUDefReadRecordList
-
-                    Do while(associated(cursor))
-                        call cursor%TheReadWriteProc(hFile,SimuRecord)
-                        cursor=>cursor%next
-                    End Do
-                end if
-
-            case("&ENDUDEFSECTION")
                 exit
 
             case default
@@ -4616,6 +4625,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     if(associated(this%ReadReactionProp_List)) deallocate(this%ReadReactionProp_List)
     Nullify(this%ReadReactionProp_List)
     this%ReadReactionProp_List=>null()
+
+
+    call this%UDefReadWriteRecord_List%Clean_ReadWriteRecorList()
+    if(associated(this%UDefReadWriteRecord_List)) deallocate(this%UDefReadWriteRecord_List)
+    Nullify(this%UDefReadWriteRecord_List)
+    this%UDefReadWriteRecord_List=>null()
 
     return
   end subroutine CleanSimulationBoxes

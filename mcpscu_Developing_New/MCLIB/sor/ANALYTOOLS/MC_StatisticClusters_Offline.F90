@@ -1034,7 +1034,7 @@ program Main_StatisticClusters_Offline
     character*1000::ARG
     character*1000::SampleFile
     type(SimulationBoxes)::Host_Boxes
-    type(SimulationCtrlParam)::Host_SimuCtrlParam
+    type(SimulationCtrlParamList)::Host_SimuCtrlParamList
     type(MigCoalClusterRecord)::Record
     character*1000::pathIn
     character*1000::OutFolder
@@ -1072,11 +1072,11 @@ program Main_StatisticClusters_Offline
     call OpenLogFile(m_hFILELOG)
 
     !********Load Global vars from input file**************
-    call Initialize_Global_Variables(Host_SimuCtrlParam,Host_Boxes)
+    call Initialize_Global_Variables(Host_SimuCtrlParamList,Host_Boxes)
 
-    call Print_Global_Variables(6,Host_SimuCtrlParam,Host_Boxes)
+    call Print_Global_Variables(6,Host_SimuCtrlParamList,Host_Boxes)
 
-    OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"Statistic/")
+    OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath))//"Statistic/")
 
     pathOutEachBox = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"EachBox.stat"
     pathOutTotalBox = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"TotalBox.stat"
@@ -1087,11 +1087,11 @@ program Main_StatisticClusters_Offline
     open(unit=hFileOutEachBox,file=pathOutEachBox, form="formatted")
     open(unit=hFileOutTotalBox,file=pathOutTotalBox, form="formatted")
 
-    DO IJOB = Host_SimuCtrlParam%STARTJOB,Host_SimuCtrlParam%ENDJOB,Host_SimuCtrlParam%JOBSTEP
+    DO IJOB = Host_SimuCtrlParamList%theSimulationCtrlParam%STARTJOB,Host_SimuCtrlParamList%theSimulationCtrlParam%ENDJOB,Host_SimuCtrlParamList%theSimulationCtrlParam%JOBSTEP
 
-        DO ITSECTION = Host_SimuCtrlParam%STARTTSECTION,Host_SimuCtrlParam%ENDTSECTION,Host_SimuCtrlParam%TSECTIONSTEP
+        DO ITSECTION = Host_SimuCtrlParamList%theSimulationCtrlParam%STARTTSECTION,Host_SimuCtrlParamList%theSimulationCtrlParam%ENDTSECTION,Host_SimuCtrlParamList%theSimulationCtrlParam%TSECTIONSTEP
 
-            DO ICFG = Host_SimuCtrlParam%STARTCFG,Host_SimuCtrlParam%ENDCFG,Host_SimuCtrlParam%CFGSTEP
+            DO ICFG = Host_SimuCtrlParamList%theSimulationCtrlParam%STARTCFG,Host_SimuCtrlParamList%theSimulationCtrlParam%ENDCFG,Host_SimuCtrlParamList%theSimulationCtrlParam%CFGSTEP
 
                 C_JOB = ""
                 write(C_JOB,*) IJOB
@@ -1107,7 +1107,7 @@ program Main_StatisticClusters_Offline
                 write(C_ICFG,*) ICFG
                 C_ICFG = adjustl(C_ICFG)
 
-                pathIn = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"Config_"//trim(C_JOB)//"_"//trim(C_TIMESECTION)//"_"//trim(C_ICFG)//".dat"
+                pathIn = Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath))//FolderSpe//"Config_"//trim(C_JOB)//"_"//trim(C_TIMESECTION)//"_"//trim(C_ICFG)//".dat"
 
                 INQUIRE(FILE=pathIn,EXIST=exits)
                 if(.not. exits) then
@@ -1117,9 +1117,9 @@ program Main_StatisticClusters_Offline
                 write(*,*) "MCPSCUInfo: The analysis file: ",pathIn
 
                 !*******Init the simulation boxes*****************
-                call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
+                call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-                call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,pathIn,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
+                call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,pathIn,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 
                 GTNAtom = 1
 
@@ -1128,11 +1128,11 @@ program Main_StatisticClusters_Offline
 
                 select case(adjustl(trim(TheVersion)))
                     case("2019_08_16")
-                        call StatisticClusters_SIAAndVAC_Ver2019_08_16(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+                        call StatisticClusters_SIAAndVAC_Ver2019_08_16(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
                     case(adjustl(trim(mp_Version)))
-                        call StatisticClusters_SIAAndVAC_Ver2019_08_20(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+                        call StatisticClusters_SIAAndVAC_Ver2019_08_20(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
                     case default
-                        call StatisticClusters_SIAAndVAC_Ver2019_08_20(Host_Boxes,Host_SimuCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
+                        call StatisticClusters_SIAAndVAC_Ver2019_08_20(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
                 end select
 
                 call Host_Boxes%Clean()

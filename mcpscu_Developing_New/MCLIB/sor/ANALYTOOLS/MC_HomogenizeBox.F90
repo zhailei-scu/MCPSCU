@@ -65,7 +65,7 @@ program Main_MC_HomogenizeBox
     character*1000::ConfigFile
     character*1000::ARG
     type(SimulationBoxes)::Host_Boxes
-    type(SimulationCtrlParam)::Host_SimuCtrlParam
+    type(SimulationCtrlParamList)::Host_SimuCtrlParamList
     type(MigCoalClusterRecord)::Record
     character*1000::OutFolder
     character*1000::pathOut
@@ -94,24 +94,24 @@ program Main_MC_HomogenizeBox
     call OpenLogFile(m_hFILELOG)
 
     !********Load Global vars from input file**************
-    call Initialize_Global_Variables(Host_SimuCtrlParam,Host_Boxes)
+    call Initialize_Global_Variables(Host_SimuCtrlParamList,Host_Boxes)
 
-    call Print_Global_Variables(6,Host_SimuCtrlParam,Host_Boxes)
+    call Print_Global_Variables(6,Host_SimuCtrlParamList,Host_Boxes)
 
-    OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"HomogenizeBox/")
+    OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath))//"HomogenizeBox/")
 
     pathOut = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"HomogenizeBox.dat"
 
     hFileOut = CreateNewFile(pathOut)
 
     !*******Init the simulation boxes*****************
-    call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
+    call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-    call Host_Boxes%PutinCfg(Host_SimuCtrlParam,Record,ConfigFile,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
+    call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,ConfigFile,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 
     write(*,*) "The KMC Configuration version is: ",TheVersion
 
-    call HomogenizeBox(Host_Boxes,Host_SimuCtrlParam,Record,hFileOut)
+    call HomogenizeBox(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam,Record,hFileOut)
 
     close(hFileOut)
 

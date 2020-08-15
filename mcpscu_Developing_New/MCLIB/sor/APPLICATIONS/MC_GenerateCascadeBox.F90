@@ -2449,7 +2449,7 @@ module MC_GenerateCascadeBox
         integer,intent(in)::hFile
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(SimulationCtrlParamList)::Host_SimuCtrlParamList
         type(MigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
@@ -2526,26 +2526,26 @@ module MC_GenerateCascadeBox
         call OpenLogFile(m_hFILELOG)
 
         !********Load Global vars from input file**************
-        call Initialize_Global_Variables(Host_SimuCtrlParam,Host_Boxes)
+        call Initialize_Global_Variables(Host_SimuCtrlParamList,Host_Boxes)
 
 
-        ISEED0 = Host_SimuCtrlParam%RANDSEED(1)
+        ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1)
         call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
         ISEED0 = ISEED0 + processid - 1
         call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
         call DRAND32_PUTSEED(ISEED)
 
-        call Print_Global_Variables(6,Host_SimuCtrlParam,Host_Boxes)
+        call Print_Global_Variables(6,Host_SimuCtrlParamList,Host_Boxes)
 
-        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"CascadeBox/")
+        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath))//"CascadeBox/")
 
-        Host_SimuCtrlParam%OutFilePath = trim(adjustl(OutFolder))
+        Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath = trim(adjustl(OutFolder))
 
         call Host_Boxes%m_ClustersInfo_CPU%Clean()
 
-        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
+        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -2599,7 +2599,7 @@ module MC_GenerateCascadeBox
         !------------------------
 
         IC = 0
-        DO IBox = 1,Host_SimuCtrlParam%MultiBox
+        DO IBox = 1,Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
 
             CheckSIAEachBox = 0
             CheckVACEachBox = 0
@@ -2650,9 +2650,9 @@ module MC_GenerateCascadeBox
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + VectorLen*cos(ZDirection)
 
                             DO I = 1,3
-                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
-                                else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                                else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXSIZE(I)
                                 end if
 
@@ -2730,7 +2730,7 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -2789,9 +2789,9 @@ module MC_GenerateCascadeBox
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + VectorLen*cos(ZDirection)
 
                             DO I = 1,3
-                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
-                                else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                                else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXSIZE(I)
                                 end if
 
@@ -2869,7 +2869,7 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -2900,7 +2900,7 @@ module MC_GenerateCascadeBox
 
         END DO
 
-        call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
+        call Host_Boxes%PutoutCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record)
 
         call DeAllocateArray_Host(CellCentralPos,"CellCentralPos")
 
@@ -2926,7 +2926,7 @@ module MC_GenerateCascadeBox
         integer,intent(in)::hFile
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(SimulationCtrlParamList)::Host_SimuCtrlParamList
         type(MigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
@@ -2987,38 +2987,38 @@ module MC_GenerateCascadeBox
         call OpenLogFile(m_hFILELOG)
 
         !********Load Global vars from input file**************
-        call Initialize_Global_Variables(Host_SimuCtrlParam,Host_Boxes)
+        call Initialize_Global_Variables(Host_SimuCtrlParamList,Host_Boxes)
 
 
-        ISEED0 = Host_SimuCtrlParam%RANDSEED(1)
+        ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1)
         call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
         ISEED0 = ISEED0 + processid - 1
         call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
         call DRAND32_PUTSEED(ISEED)
 
-        call Print_Global_Variables(6,Host_SimuCtrlParam,Host_Boxes)
+        call Print_Global_Variables(6,Host_SimuCtrlParamList,Host_Boxes)
 
-        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"CascadeBox/")
+        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath))//"CascadeBox/")
 
-        Host_SimuCtrlParam%OutFilePath = trim(adjustl(OutFolder))
+        Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath = trim(adjustl(OutFolder))
 
         call Host_Boxes%m_ClustersInfo_CPU%Clean()
 
-        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
+        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
 
-        if(Host_SimuCtrlParam%MultiBox .LE. 0) then
+        if(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox .LE. 0) then
             write(*,*) "MCPSCUERROR: The box number less than 1"
             pause
             stop
         end if
 
         if(allocated(ClusterNum_EachBox)) deallocate(ClusterNum_EachBox)
-        allocate(ClusterNum_EachBox(Host_SimuCtrlParam%MultiBox))
+        allocate(ClusterNum_EachBox(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox))
         ClusterNum_EachBox = 0
 
         if(WhetherCascadeSameInOneBox) then
-            DO IBox = 1,Host_SimuCtrlParam%MultiBox
+            DO IBox = 1,Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
                 SelectedBoxIndex = mod(IBox,Index_EndBox - Index_StartBox + 1)
 
                 if(SelectedBoxIndex .eq. 0) then
@@ -3034,7 +3034,7 @@ module MC_GenerateCascadeBox
                 end if
             END DO
         else
-            DO IBox = 1,Host_SimuCtrlParam%MultiBox
+            DO IBox = 1,Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
                 DO ICase = 1,CascadeNum
                     SelectedBoxIndex = mod((IBox-1)*CascadeNum + ICase,Index_EndBox - Index_StartBox + 1)
 
@@ -3054,7 +3054,7 @@ module MC_GenerateCascadeBox
             END DO
         end if
 
-        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,ClusterNum_EachBox)
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,ClusterNum_EachBox)
 
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -3108,7 +3108,7 @@ module MC_GenerateCascadeBox
         !------------------------
 
         IC = 0
-        DO IBox = 1,Host_SimuCtrlParam%MultiBox
+        DO IBox = 1,Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
 
             CheckSIAEachBox = 0
             CheckVACEachBox = 0
@@ -3188,14 +3188,14 @@ module MC_GenerateCascadeBox
                             stop
                         end if
 
-                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
-                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXSIZE(I)
                         end if
                     END DO
 
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -3255,14 +3255,14 @@ module MC_GenerateCascadeBox
                         end if
 
 
-                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
-                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                        else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXSIZE(I)
                         end if
                     END DO
 
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -3293,7 +3293,7 @@ module MC_GenerateCascadeBox
 
         END DO
 
-        call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
+        call Host_Boxes%PutoutCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record)
 
         if(allocated(Read_ClusterArray)) deallocate(Read_ClusterArray)
 
@@ -3322,7 +3322,7 @@ module MC_GenerateCascadeBox
         integer,intent(in)::hFile
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(SimulationCtrlParamList)::Host_SimuCtrlParamList
         type(MigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
@@ -3386,26 +3386,26 @@ module MC_GenerateCascadeBox
         call OpenLogFile(m_hFILELOG)
 
         !********Load Global vars from input file**************
-        call Initialize_Global_Variables(Host_SimuCtrlParam,Host_Boxes)
+        call Initialize_Global_Variables(Host_SimuCtrlParamList,Host_Boxes)
 
 
-        ISEED0 = Host_SimuCtrlParam%RANDSEED(1)
+        ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1)
         call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
         ISEED0 = ISEED0 + processid - 1
         call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
         call DRAND32_PUTSEED(ISEED)
 
-        call Print_Global_Variables(6,Host_SimuCtrlParam,Host_Boxes)
+        call Print_Global_Variables(6,Host_SimuCtrlParamList,Host_Boxes)
 
-        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"CascadeBox/")
+        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath))//"CascadeBox/")
 
-        Host_SimuCtrlParam%OutFilePath = trim(adjustl(OutFolder))
+        Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath = trim(adjustl(OutFolder))
 
         call Host_Boxes%m_ClustersInfo_CPU%Clean()
 
-        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
+        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -3413,7 +3413,7 @@ module MC_GenerateCascadeBox
         !------------------------
 
         IC = 0
-        DO IBox = 1,Host_SimuCtrlParam%MultiBox
+        DO IBox = 1,Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
 
             CheckSIAEachBox = 0
             CheckVACEachBox = 0
@@ -3484,7 +3484,7 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -3564,7 +3564,7 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -3596,7 +3596,7 @@ module MC_GenerateCascadeBox
 
         END DO
 
-        call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
+        call Host_Boxes%PutoutCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record)
 
         call DeAllocateArray_Host(NAtomEachSIACluster,"NAtomEachSIACluster")
 
@@ -3975,7 +3975,7 @@ module MC_GenerateCascadeBox
         integer,intent(in)::hFile
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(SimulationCtrlParamList)::Host_SimuCtrlParamList
         type(MigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
@@ -4035,26 +4035,26 @@ module MC_GenerateCascadeBox
         call OpenLogFile(m_hFILELOG)
 
         !********Load Global vars from input file**************
-        call Initialize_Global_Variables(Host_SimuCtrlParam,Host_Boxes)
+        call Initialize_Global_Variables(Host_SimuCtrlParamList,Host_Boxes)
 
 
-        ISEED0 = Host_SimuCtrlParam%RANDSEED(1)
+        ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1)
         call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
         ISEED0 = ISEED0 + processid - 1
         call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
         call DRAND32_PUTSEED(ISEED)
 
-        call Print_Global_Variables(6,Host_SimuCtrlParam,Host_Boxes)
+        call Print_Global_Variables(6,Host_SimuCtrlParamList,Host_Boxes)
 
-        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParam%OutFilePath))//"CascadeBox/")
+        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath))//"CascadeBox/")
 
-        Host_SimuCtrlParam%OutFilePath = trim(adjustl(OutFolder))
+        Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath = trim(adjustl(OutFolder))
 
         call Host_Boxes%m_ClustersInfo_CPU%Clean()
 
-        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParam)
+        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParam,CascadeNum*(NSIACluster + NVACCluster))
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster + NVACCluster))
 
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -4110,7 +4110,7 @@ module MC_GenerateCascadeBox
         !------------------------
 
         IC = 0
-        DO IBox = 1,Host_SimuCtrlParam%MultiBox
+        DO IBox = 1,Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
             DO ICase = 1,CascadeNum
                 Sphere_Central(ICase,:) = CellCentralPos(ICase,:)
 
@@ -4132,9 +4132,9 @@ module MC_GenerateCascadeBox
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + VectorLen*cos(ZDirection)
 
                         DO I = 1,3
-                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
-                            else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                            else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXSIZE(I)
                             end if
 
@@ -4149,7 +4149,7 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -4182,9 +4182,9 @@ module MC_GenerateCascadeBox
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = Sphere_Central(ICase,3) + VectorLen*cos(ZDirection)
 
                         DO I = 1,3
-                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                            if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%BOXSIZE(I)
-                            else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParam%PERIOD(I) .GT. 0) then
+                            else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(I) .GT. 0) then
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%BOXSIZE(I)
                             end if
 
@@ -4199,7 +4199,7 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParam)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -4219,7 +4219,7 @@ module MC_GenerateCascadeBox
 
         END DO
 
-        call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
+        call Host_Boxes%PutoutCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record)
 
         call DeAllocateArray_Host(CellCentralPos,"CellCentralPos")
 
