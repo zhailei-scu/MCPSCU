@@ -52,6 +52,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,non_overridable,public,pass::GetStatu_InsertOneBatchInNextStep
         procedure,non_overridable,public,pass::InCrease_OneInsertBatchNum
         procedure,non_overridable,public,pass::Get_InsertBatchNum
+        procedure,non_overridable,public,pass::Set_InsertBatchNum
         procedure,non_overridable,public,pass::IncreaseOneSweepOutCount=>Increase_OneSweepOutCount
         procedure,non_overridable,public,pass::GetSweepOutCount=>Get_SweepOutCount
         procedure,NON_OVERRIDABLE,public,pass::AddImplantedEntitiesNum=>Add_ImplantedEntitiesNum
@@ -68,7 +69,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,NON_OVERRIDABLE,public,pass::GetLastOutSizeDistTime_EachBox
         procedure,non_overridable,public,pass::WhetherOutSizeDist_IntegralBox
         procedure,non_overridable,public,pass::WhetherOutSizeDist_EachBox
-        procedure,non_overridable,pass,private::TheDefProc=>TheDefProc_MigCoalClusterRecord
+        procedure,non_overridable,pass,private::CopyMigCoalClusterRecordFromOther
+        Generic::Assignment(=)=>CopyMigCoalClusterRecordFromOther
+        procedure,non_overridable,pass,private::Clean_MigCoalClusterRecord
+        !---Based on our test, the final procedure cannot be applied in type who extended from other abstract one
+        Final::CleanMigCoalClusterRecord
 
     end type MigCoalClusterRecord
 
@@ -84,7 +89,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::GetStatu_InsertOneBatchInNextStep
     private::InCrease_OneInsertBatchNum
     private::Get_InsertBatchNum
-
+    private::Set_InsertBatchNum
     private::Increase_OneSweepOutCount
     private::Get_SweepOutCount
     private::Add_ImplantedEntitiesNum
@@ -100,16 +105,79 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::GetLastOutSizeDistTime_EachBox
     private::WhetherOutSizeDist_IntegralBox
     private::WhetherOutSizeDist_EachBox
-    private::TheDefProc_MigCoalClusterRecord
+    private::CopyMigCoalClusterRecordFromOther
+    private::Clean_MigCoalClusterRecord
+    private::CleanMigCoalClusterRecord
 
     contains
 
+    subroutine UDefReadWriteRecord_BatchNum(hFile,Record,LINE)
+        !use MCLIB_TYPEDEF_BASICRECORD
+        implicit none
+        integer::hFile
+        type(MigCoalClusterRecord)::Record
+        integer,optional::LINE
+        !---Local Vars---
+        character*1000::STR
+        character*32::KEYWORD
+        character*32::STRTMP(20)
+        integer::N
+        !---Body---
+        if(present(LINE)) then    ! Read file
+            DO While(.true.)
+                call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+                call RemoveComments(STR,"!")
+
+                call GETKEYWORD("&",STR,KEYWORD)
+
+                STR = adjustl(STR)
+
+                call UPCASE(KEYWORD)
+
+                select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                    case("&ENDUDEFSECTION")
+                        exit
+
+                    case("&BATCHNUM")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &BATCHNUM setting"
+                            write(*,*) "You must special the inputted batchNum"
+                            pause
+                            stop
+                        end if
+
+                        call Record%Set_InsertBatchNum(ISTR(STRTMP(1)))
+
+                        if(Record%Get_InsertBatchNum() .LT. 0) then
+                            write(*,*) "MCPSCUERROR: The total insert batch number cannot less than 0"
+                            write(*,*) Record%Get_InsertBatchNum()
+                            pause
+                            stop
+                        end if
+
+                    case default
+                        write(*,*) "MCPSCUERROR: Unknown flags: ",KEYWORD(1:LENTRIM(KEYWORD))
+                        write(*,*) "At line: ",LINE
+                        pause
+                        stop
+                end select
+            END DO
 
 
+        else                      ! Write to file
+            KEYWORD = "&BATCHNUM"
+            write(hFile, FMT="(A,1x,I15)") KEYWORD(1:LENTRIM(KEYWORD)),Record%Get_InsertBatchNum()
+        end if
 
-
-
-
+        return
+        100 write(*,*) "MCPSCUERROR: Error to load simulation record "
+            write(*,*) "At line: ",LINE
+            write(*,*) STR
+            pause
+            stop
+    end subroutine UDefReadWriteRecord_BatchNum
 
     !***********type MigCoalClusterRecord *****************
     subroutine InitMigCoalClusterRecord(this,MultiBox,SimuSteps,SimuTimes,SimuPatchs,TimeSection)
@@ -126,6 +194,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         real(kind=KINDDF)::Times
         integer::Patchs
         integer::TheTimeSection
+        type(UDefReadWriteRecordList)::tempUDefReadWriteRecordList
         !---Body-- -::
         Steps = 0
         Times = 0.D0
@@ -182,6 +251,10 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         this%RandSeed_SpaceDist_Implant_Z = 0
 
         this%RandSeed_SizeDist_Implant = 0
+
+        tempUDefReadWriteRecordList%TheReadWriteProc=>UDefReadWriteRecord_BatchNum
+
+        call this%GetUDefReadWriteRecord_List()%AppendOne(tempUDefReadWriteRecordList)
 
         return
     end subroutine InitMigCoalClusterRecord
@@ -386,14 +459,108 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         return
     end function WhetherOutSizeDist_EachBox
 
-
-
-    !*******************************************
-    subroutine TheDefProc_MigCoalClusterRecord(this)
+    !**************************************************************
+    subroutine Clean_MigCoalClusterRecord(this)
         implicit none
-        CLASS(MigCoalClusterRecord)::this
+        !---Dummy Vars---
+        CLass(MigCoalClusterRecord)::this
+        !---Body---
+        call this%SimulationRecord%TheDefCleanProc()
+
+        this%StartImplantTime = 0.D0
+        this%ImplantedEntities = 0
+        this%LastRecordImplantNum = 0
+        this%NCUT = 0
+
+        this%LastUpdateAveSepTime = 0.D0
+
+        this%rescaleCount = 0
+
+        this%InsertOneBatchInNextStep = .false.
+        this%InsetedBatchNum = 0
+
+        this%SweepOutCount = 0
+
+        this%HSizeStatistic_TotalBox = 0
+        this%HSizeStatistic_EachBox = 0
+        this%LastOutSizeDistTime_IntegralBox = 0.D0
+        this%LastOutSizeDistTime_EachBox = 0.D0
+
+        this%RandSeed_OutDevWalk = 0
+
+        this%RandSeed_InnerDevWalk = 0
+
+        this%RandSeed_Reaction = 0
+
+        this%RandSeed_SpaceDist_Implant_Layer = 0
+
+        this%RandSeed_SpaceDist_Implant_X = 0
+
+        this%RandSeed_SpaceDist_Implant_Y = 0
+
+        this%RandSeed_SpaceDist_Implant_Z = 0
+
+        this%RandSeed_SizeDist_Implant = 0
+
+        return
     end subroutine
 
+    !**************************************************************
+    subroutine CopyMigCoalClusterRecordFromOther(this,Other)
+        implicit none
+        !---Dummy Vars---
+        CLass(MigCoalClusterRecord),intent(out)::this
+        CLass(MigCoalClusterRecord),intent(in)::Other
+        !---Body---
+        !---The Assignment(=) had been override
+        this%SimulationRecord = Other%SimulationRecord
+
+        this%StartImplantTime = Other%StartImplantTime
+        this%ImplantedEntities = Other%ImplantedEntities
+        this%LastRecordImplantNum = Other%LastRecordImplantNum
+        this%NCUT = Other%NCUT
+
+        this%LastUpdateAveSepTime = Other%LastUpdateAveSepTime
+
+        this%rescaleCount = Other%rescaleCount
+
+        this%InsertOneBatchInNextStep = Other%InsertOneBatchInNextStep
+        this%InsetedBatchNum = Other%InsetedBatchNum
+
+        this%SweepOutCount = Other%SweepOutCount
+
+        this%HSizeStatistic_TotalBox = Other%HSizeStatistic_TotalBox
+        this%HSizeStatistic_EachBox = Other%HSizeStatistic_EachBox
+        this%LastOutSizeDistTime_IntegralBox = Other%LastOutSizeDistTime_IntegralBox
+        this%LastOutSizeDistTime_EachBox = Other%LastOutSizeDistTime_EachBox
+
+        this%RandSeed_OutDevWalk = Other%RandSeed_OutDevWalk
+
+        this%RandSeed_InnerDevWalk = Other%RandSeed_InnerDevWalk
+
+        this%RandSeed_Reaction = Other%RandSeed_Reaction
+
+        this%RandSeed_SpaceDist_Implant_Layer = Other%RandSeed_SpaceDist_Implant_Layer
+
+        this%RandSeed_SpaceDist_Implant_X = Other%RandSeed_SpaceDist_Implant_X
+
+        this%RandSeed_SpaceDist_Implant_Y = Other%RandSeed_SpaceDist_Implant_Y
+
+        this%RandSeed_SpaceDist_Implant_Z = Other%RandSeed_SpaceDist_Implant_Z
+
+        this%RandSeed_SizeDist_Implant = Other%RandSeed_SizeDist_Implant
+        return
+    end subroutine
+
+    !**************************************************************
+    subroutine CleanMigCoalClusterRecord(this)
+        implicit none
+        !---Dummy Vars---
+        type(MigCoalClusterRecord)::this
+
+        call this%Clean_MigCoalClusterRecord()
+        return
+    end subroutine
 
     !**************************************************************
     subroutine Increase_OneRescaleCount(this)
@@ -469,6 +636,15 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         TheResult = this%InsetedBatchNum
         return
     end function
+
+    !*************************************************************
+    subroutine Set_InsertBatchNum(this,TheBatchNum)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+        integer::TheBatchNum
+
+        this%InsetedBatchNum = TheBatchNum
+    end subroutine
 
     !**************************************************************
     function Get_SweepOutCount(this) result(SweepOutCount)

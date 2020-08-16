@@ -1,4 +1,4 @@
-module MCLIB_TYPEDEF_BASICRECORD
+module MCLIB_TYPEDEF_BASICRECORD_SUB
 
     USE MCLIB_CONSTANTS
     USE MCLIB_UTILITIES
@@ -79,11 +79,15 @@ module MCLIB_TYPEDEF_BASICRECORD
         procedure,NON_OVERRIDABLE,public,pass::InitRunningRecord
         procedure,NON_OVERRIDABLE,public,pass::StopRunning=>Stop_Running
         procedure,NON_OVERRIDABLE,public,pass::IsStoppedRunning=>Is_StoppedRunning
+        procedure,non_overridable,public,pass::CopyRunningRecordFromOther
+        procedure,non_overridable,public,pass::Clean_RunningRecord
+        Generic::Assignment(=)=>CopyRunningRecordFromOther
+        Final::CleanRunningRecord
 
     end type RunningRecord
 
 
-    type,abstract,public::SimulationRecord
+    type,abstract,public::SimulationRecord_SUB
         type(RunningRecord)::Running_Record
 
         integer,private::SimulaitonSteps = 0
@@ -106,7 +110,7 @@ module MCLIB_TYPEDEF_BASICRECORD
         logical,private::TriggerFocusedTimePoints = .false.
 
         contains
-        procedure,NON_OVERRIDABLE,public,pass::InitSimulationRecord
+        procedure,NON_OVERRIDABLE,public,pass::InitSimulationRecord_SUB
         procedure,NON_OVERRIDABLE,public,pass::SetSimuSteps=>Set_SimuSteps
         procedure,NON_OVERRIDABLE,public,pass::GetSimuSteps=>Get_SimuSteps
         procedure,NON_OVERRIDABLE,public,pass::IncreaseOneSimuStep=>Increase_OneSimuStep
@@ -144,16 +148,19 @@ module MCLIB_TYPEDEF_BASICRECORD
         procedure,NON_OVERRIDABLE,public,pass::SetOutPutIndex=>Set_OutPutIndex
         procedure,NON_OVERRIDABLE,public,pass::IncreaseOneOutPutIndex=>Increase_OneOutPutIndex
 
-
         procedure,NON_OVERRIDABLE,public,pass::TurnOnTriggerFocusedTimePoints=>TurnOn_TriggerFocusedTimePoints
         procedure,NON_OVERRIDABLE,public,pass::TurnOffTriggerFocusedTimePoints=>TurnOff_TriggerFocusedTimePoints
         procedure,NON_OVERRIDABLE,public,pass::GetStatusTriggerFocusedTimePoints=>Get_StatusTriggerFocusedTimePoints
 
+        procedure,non_overridable,public,pass::CopySimulationRecordSUBFromOther
+        procedure,non_overridable,public,pass::Clean_SimulationRecordSUB
+        Generic::Assignment(=)=>CopySimulationRecordSUBFromOther
+
         !---abstract method---
-        procedure(DefProc),pass,deferred,private::TheDefProc
+        procedure(DefCleanProc),pass,deferred,private::TheDefCleanProc
+        procedure(DefCopyProc),pass,deferred,private::TheDefCopyProc
 
-    end type SimulationRecord
-
+    end type SimulationRecord_SUB
 
     private::Init_BoxStatis
     private::CopyBoxStatisFromOther
@@ -169,7 +176,10 @@ module MCLIB_TYPEDEF_BASICRECORD
     private::InitRunningRecord
     private::Stop_Running
     private::Is_StoppedRunning
-    private::InitSimulationRecord
+    private::CopyRunningRecordFromOther
+    private::Clean_RunningRecord
+    private::CleanRunningRecord
+    private::InitSimulationRecord_SUB
     private::Set_SimuSteps
     private::Get_SimuSteps
     private::Increase_OneSimuStep
@@ -198,9 +208,10 @@ module MCLIB_TYPEDEF_BASICRECORD
     private::TurnOn_TriggerFocusedTimePoints
     private::TurnOff_TriggerFocusedTimePoints
     private::Get_StatusTriggerFocusedTimePoints
+    private::CopySimulationRecordSUBFromOther
+    private::Clean_SimulationRecordSUB
 
     contains
-
 
     !*************For type BoxStatis*******************************
     subroutine Init_BoxStatis(this)
@@ -462,10 +473,49 @@ module MCLIB_TYPEDEF_BASICRECORD
         return
     end function Is_StoppedRunning
 
-    !****abstract type SimulationRecord*****************
-    subroutine InitSimulationRecord(this,MultiBox,SimuSteps,SimuTimes,SimuPatchs,TimeSections)
+
+    subroutine CopyRunningRecordFromOther(this,Other)
+        implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(RunningRecord),intent(out)::this
+        CLASS(RunningRecord),intent(in)::Other
+        !---Body---
+        this%LastRecordOutprofileTime = Other%LastRecordOutprofileTime
+        this%stopRunningFlag = Other%stopRunningFlag
+
+        this%Start_Clock = Other%Start_Clock
+        this%End_Clock = Other%End_Clock
+        this%Start_DateTime = Other%Start_DateTime
+        this%End_DateTime = Other%End_DateTime
+        return
+    end subroutine
+
+    subroutine Clean_RunningRecord(this)
+        implicit none
+        CLASS(RunningRecord)::this
+
+        this%LastRecordOutprofileTime = 0.D0
+
+        this%stopRunningFlag= .false.
+        this%Start_Clock = ''
+        this%End_Clock = ''
+        this%Start_DateTime = 0
+        this%End_DateTime = 0
+        return
+    end subroutine
+
+    subroutine CleanRunningRecord(this)
+        implicit none
+        type(RunningRecord)::this
+
+        call this%Clean_RunningRecord()
+        return
+    end subroutine
+
+    !****abstract type SimulationRecord_SUB*****************
+    subroutine InitSimulationRecord_SUB(this,MultiBox,SimuSteps,SimuTimes,SimuPatchs,TimeSections)
+        !---Dummy Vars---
+        CLASS(SimulationRecord_SUB)::this
         integer,intent(in)::MultiBox
         integer,optional::SimuSteps
         real(kind=KINDDF),optional::SimuTimes
@@ -524,12 +574,12 @@ module MCLIB_TYPEDEF_BASICRECORD
         this%TriggerFocusedTimePoints = .false.
 
         return
-    end subroutine InitSimulationRecord
+    end subroutine InitSimulationRecord_SUB
 
     !***************************************************
     subroutine Set_SimuSteps(this,Steps)
             implicit none
-            CLASS(SimulationRecord)::this
+            CLASS(SimulationRecord_SUB)::this
             integer::Steps
             this%SimulaitonSteps = Steps
     end subroutine
@@ -537,7 +587,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     integer function Get_SimuSteps(this)
             implicit none
-            CLASS(SimulationRecord)::this
+            CLASS(SimulationRecord_SUB)::this
             Get_SimuSteps = this%SimulaitonSteps
     end function
 
@@ -545,7 +595,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     subroutine Increase_OneSimuStep(this)
         implicit none
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         this%SimulaitonSteps = this%SimulaitonSteps + 1
 
@@ -555,7 +605,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     subroutine Set_SimuTimes(this,Times)
             implicit none
-            CLASS(SimulationRecord)::this
+            CLASS(SimulationRecord_SUB)::this
             real(kind=KINDDF)::Times
             this%SimulationTimes = Times
     end subroutine
@@ -563,7 +613,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     real(kind=KINDDF) function Get_SimuTimes(this)
             implicit none
-            CLASS(SimulationRecord)::this
+            CLASS(SimulationRecord_SUB)::this
             Get_SimuTimes = this%SimulationTimes
     end function
 
@@ -571,7 +621,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     subroutine Set_TimeSteps(this,TimeStep)
             implicit none
-            CLASS(SimulationRecord)::this
+            CLASS(SimulationRecord_SUB)::this
             real(kind=KINDDF)::TimeStep
             this%TimeStep = TimeStep
     end subroutine
@@ -579,7 +629,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     real(kind=KINDDF) function Get_TimeSteps(this)
             implicit none
-            CLASS(SimulationRecord)::this
+            CLASS(SimulationRecord_SUB)::this
             Get_TimeSteps = this%TimeStep
     end function
 
@@ -587,7 +637,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine Add_SimuTimes(this,increaseTime)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         real(kind=KINDDF),intent(in)::increaseTime
         !---Body---
         this%SimulationTimes = this%SimulationTimes + increaseTime
@@ -599,7 +649,7 @@ module MCLIB_TYPEDEF_BASICRECORD
    subroutine Set_SimuPatch(this,SimPath)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         integer,intent(in)::SimPath
         !---Body---
 
@@ -612,7 +662,7 @@ module MCLIB_TYPEDEF_BASICRECORD
    function Get_SimuPatch(this) result(SimPath)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         integer,intent(out)::SimPath
         !---Body---
 
@@ -624,7 +674,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     subroutine Set_TimeSections(this,TimeSection)
         implicit none
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         integer::TimeSection
         this%TimeSections = TimeSection
     end subroutine Set_TimeSections
@@ -632,7 +682,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     integer function Get_TimeSections(this)
         implicit none
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         Get_TimeSections = this%TimeSections
     end function Get_TimeSections
 
@@ -640,7 +690,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !***************************************************
     subroutine Increase_OneTimeSection(this)
         implicit none
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         this%TimeSections = this%TimeSections + 1
 
@@ -650,7 +700,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !****************************************************
     real(kind=KINDDF) function Get_LastUpdateStatisTime(this)
         implicit none
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         Get_LastUpdateStatisTime = this%LastUpdateStatisTime
         return
@@ -660,7 +710,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine Set_LastUpdateStatisTime(this,TIME)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         real(kind=KINDDF),intent(in)::TIME
         !---Body---
         this%LastUpdateStatisTime = TIME
@@ -672,7 +722,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     function Get_LastUpdateNLTime(this) result(TheTime)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%LastUpdateNLTime
@@ -683,7 +733,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine Set_LastUpdateNLTime(this,TheTime)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%LastUpdateNLTime = TheTime
@@ -694,7 +744,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     function Get_LastUpdateNLNC0(this) result(NC0)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         integer,intent(out)::NC0
         !---Body---
         NC0 = this%LastUpdateNL_NC0
@@ -705,7 +755,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine Set_LastUpdateNLNC0(this,NC0)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         integer,intent(in)::NC0
         !---Body---
         this%LastUpdateNL_NC0 = NC0
@@ -717,7 +767,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine RecordNC_ForSweepOut(this,MultiBox,TheBoxesBasicStatistic)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         integer,intent(in)::MultiBox
         type(BoxesBasicStatistic),intent(in)::TheBoxesBasicStatistic
         !---Local Vars---
@@ -739,7 +789,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     !****************************************************
     real function Get_LastRecordOutConfigTime(this)
         implicit none
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         Get_LastRecordOutConfigTime = this%LastRecordOutConfigTime
         return
@@ -749,7 +799,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine Set_LastRecordOutConfigTime(this,TIME)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         real(kind=KINDDF),intent(in)::TIME
         !---Body---
         this%LastRecordOutConfigTime = TIME
@@ -761,7 +811,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     integer function Get_OutPutIndex(this)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         Get_OutPutIndex = this%OutPutIndex
 
@@ -772,7 +822,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine Set_OutPutIndex(this,OutIndex)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
         integer,intent(in)::OutIndex
 
         this%OutPutIndex = OutIndex
@@ -784,7 +834,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine Increase_OneOutPutIndex(this)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         this%OutPutIndex = this%OutPutIndex + 1
         return
@@ -793,16 +843,22 @@ module MCLIB_TYPEDEF_BASICRECORD
     !*****Note: this is not same with the "Fortran 95/2003 For Scientists and Engineers, Third Edition (chinese version)(P668)"
     !*****Because the abstract useage way in this book is not depended on PGFORTRAN compiler. The  following is based on our test
     !*****and verified to suit for pgfortran.
-    subroutine DefProc(this)
+    subroutine DefCleanProc(this)
             implicit none
-            CLASS(SimulationRecord)::this
+            CLASS(SimulationRecord_SUB)::this
+    end subroutine
+
+    subroutine DefCopyProc(this,Other)
+        implicit none
+        CLASS(SimulationRecord_SUB),intent(out)::this
+        CLASS(SimulationRecord_SUB),intent(in)::Other
     end subroutine
 
     !******************************************************
     subroutine TurnOn_TriggerFocusedTimePoints(this)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         this%TriggerFocusedTimePoints = .true.
         return
@@ -813,7 +869,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     subroutine TurnOff_TriggerFocusedTimePoints(this)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         this%TriggerFocusedTimePoints = .false.
 
@@ -823,7 +879,7 @@ module MCLIB_TYPEDEF_BASICRECORD
     integer function Get_StatusTriggerFocusedTimePoints(this)
         implicit none
         !---Dummy Vars---
-        CLASS(SimulationRecord)::this
+        CLASS(SimulationRecord_SUB)::this
 
         Get_StatusTriggerFocusedTimePoints = this%TriggerFocusedTimePoints
 
@@ -831,4 +887,459 @@ module MCLIB_TYPEDEF_BASICRECORD
 
     end function
 
-end module MCLIB_TYPEDEF_BASICRECORD
+    !***********************************************************
+    subroutine CopySimulationRecordSUBFromOther(this,Other)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord_SUB),intent(out)::this
+        CLASS(SimulationRecord_SUB),intent(in)::Other
+        !---Local Vars---
+        integer::Size1
+        integer::Size2
+        !---Body---
+        !---The Assignment(=) had been override
+        this%Running_Record = Other%Running_Record
+
+        this%SimulaitonSteps = Other%SimulaitonSteps
+        this%SimulationPatch = Other%SimulationPatch
+        this%SimulationTimes = Other%SimulationTimes
+        this%TimeStep = Other%TimeStep
+        this%TimeSections = Other%TimeSections
+
+        this%LastUpdateStatisTime = Other%LastUpdateStatisTime
+
+        this%LastUpdateNLTime = Other%LastUpdateNLTime
+        this%LastUpdateNL_NC0 = Other%LastUpdateNL_NC0
+
+        this%RecordNCBeforeSweepOut_Integal  = Other%RecordNCBeforeSweepOut_Integal
+
+        if(allocated(this%RecordNCBeforeSweepOut_SingleBox)) deallocate(this%RecordNCBeforeSweepOut_SingleBox)
+        if(allocated(Other%RecordNCBeforeSweepOut_SingleBox)) then
+            Size1 = size(Other%RecordNCBeforeSweepOut_SingleBox,dim=1)
+            Size2 = size(Other%RecordNCBeforeSweepOut_SingleBox,dim=2)
+            if(Size1 .GT. 0 .AND. Size2 .GT. 0) then
+                call AllocateArray_Host(this%RecordNCBeforeSweepOut_SingleBox,Size1,Size2,"RecordNCBeforeSweepOut_SingleBox")
+                this%RecordNCBeforeSweepOut_SingleBox = Other%RecordNCBeforeSweepOut_SingleBox
+            end if
+        end if
+
+        this%LastRecordOutConfigTime = Other%LastRecordOutConfigTime
+        this%OutPutIndex = Other%OutPutIndex
+
+        this%TriggerFocusedTimePoints = Other%TriggerFocusedTimePoints
+
+        return
+    end subroutine
+
+
+    !***********************************************************
+    subroutine Clean_SimulationRecordSUB(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord_SUB)::this
+        !---Body---
+        call this%Running_Record%Clean_RunningRecord()
+
+        this%SimulaitonSteps = 0
+        this%SimulationPatch = 1
+        this%SimulationTimes = 0.D0
+        this%TimeStep = 0.D0
+        this%TimeSections = 1
+
+        this%LastUpdateStatisTime = 0.D0
+
+        this%LastUpdateNLTime = 0.D0
+        this%LastUpdateNL_NC0 = 1
+
+        this%RecordNCBeforeSweepOut_Integal = 0
+        if(allocated(this%RecordNCBeforeSweepOut_SingleBox)) deallocate(this%RecordNCBeforeSweepOut_SingleBox)
+
+        this%LastRecordOutConfigTime = 0.D0
+        this%OutPutIndex = 0
+
+        this%TriggerFocusedTimePoints = .false.
+
+        return
+    end subroutine
+
+end module MCLIB_TYPEDEF_BASICRECORD_SUB
+
+module MCLIB_TYPEDEF_BASICRECORD
+    USE MCLIB_CONSTANTS
+    USE MCLIB_UTILITIES
+    USE MCLIB_TYPEDEF_BASICRECORD_SUB
+    implicit none
+
+    abstract interface
+        subroutine UDefReadWriteRecord(hFile,Record,LINE)
+            use MCLIB_TYPEDEF_BASICRECORD_SUB
+            implicit none
+            integer::hFile
+            integer,optional::LINE
+            CLASS(SimulationRecord_SUB)::Record
+        end subroutine UDefReadWriteRecord
+
+    end interface
+
+    type,public::UDefReadWriteRecordList
+        procedure(UDefReadWriteRecord),pointer,nopass::TheReadWriteProc=>null()
+
+        type(UDefReadWriteRecordList),pointer::next=>null()
+
+        integer,private::ListCount = 0
+
+        contains
+
+        procedure,non_overridable,public,pass::AppendOne=>Append_One
+
+        procedure,non_overridable,public,pass::GetReadWriteRecordListCount=>Get_ReadWriteRecordListCount
+
+        procedure,non_overridable,public,pass::CopyReadWriteRecordListFromOther
+
+        procedure,non_overridable,public,pass::Clean_ReadWriteRecorList
+
+        Generic::Assignment(=)=>CopyReadWriteRecordListFromOther
+
+        !Final::CleanReadWriteRecorList
+
+    end type UDefReadWriteRecordList
+
+    type,public,extends(SimulationRecord_SUB)::SimulationRecord
+
+        !*********User defined RecordListReadWrite****************************
+        type(UDefReadWriteRecordList),private,pointer::UDefReadWriteRecord_List=>null()
+
+        contains
+
+        procedure,NON_OVERRIDABLE,public,pass::InitSimulationRecord
+
+        procedure,non_overridable,public,pass::SetUDefReadWriteRecord_List=>Set_UDefReadWriteRecord_List
+        procedure,non_overridable,public,pass::GetUDefReadWriteRecord_List=>Get_UDefReadWriteRecord_List
+
+        !---abstract method---
+        procedure,non_overridable,pass,public::TheDefCleanProc=>Clean_SimulationRecord
+        procedure,non_overridable,pass,public::TheDefCopyProc=>CopySimulationRecordFromOther
+        Generic::Assignment(=)=>CopySimulationRecordFromOther
+        !---Based on our test, the final procedure cannot be applied in type who extended from other abstract one
+        !Final:CleanSimulationRecord
+    end type SimulationRecord
+
+    private::Append_One
+    private::Get_ReadWriteRecordListCount
+    private::CopyReadWriteRecordListFromOther
+    private::Clean_ReadWriteRecorList
+    private::CleanReadWriteRecorList
+    private::InitSimulationRecord
+    private::Set_UDefReadWriteRecord_List
+    private::Get_UDefReadWriteRecord_List
+    private::Clean_SimulationRecord
+    private::CopySimulationRecordFromOther
+
+    contains
+
+    !**************************************************************
+    function Get_ReadWriteRecordListCount(this) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        CLASS(UDefReadWriteRecordList),target::this
+        integer::TheResult
+        !---Body---
+
+        TheResult = this%ListCount
+
+        return
+    end function Get_ReadWriteRecordListCount
+
+    !**************************************************************
+    subroutine Append_One(this,newOne)
+        implicit none
+        !---Dummy Vars---
+        CLASS(UDefReadWriteRecordList),target::this
+        type(UDefReadWriteRecordList)::newOne
+        !---Local Vars---
+        type(UDefReadWriteRecordList),pointer::cursor=>null(),cursorP=>null()
+
+        !---Body---
+        cursorP=>this
+
+        if(.not. associated(cursorP)) then
+            write(*,*) "MCPSCUERROR: You need to allocate the RecordList first!"
+            pause
+            stop
+        end if
+
+        if(this%GetReadWriteRecordListCount() .LE. 0) then
+            this%ListCount = 1
+            this%TheReadWriteProc => newOne%TheReadWriteProc
+        else
+            cursor=>this%next
+            cursorP=>this
+
+            DO While(associated(cursor))
+                cursor=>cursor%next
+                cursorP=>cursorP%next
+            END DO
+
+            this%ListCount = this%ListCount + 1
+
+            allocate(cursor)
+            Nullify(cursor%next)
+            cursor%next=>null()
+            cursor%TheReadWriteProc => newOne%TheReadWriteProc
+
+            cursorP%next=>cursor
+        end if
+
+        Nullify(cursorP)
+        cursorP=>null()
+        Nullify(cursor)
+        cursor=>null()
+
+        return
+    end subroutine Append_One
+
+    !**************************************************************
+    subroutine CopyReadWriteRecordListFromOther(this,other)
+        implicit none
+        !---Dummy Vars---
+        CLASS(UDefReadWriteRecordList),intent(out),target::this
+        CLASS(UDefReadWriteRecordList),intent(in),target::other
+        !---Local Vars---
+        type(UDefReadWriteRecordList),pointer::thisCursorP=>null()
+        type(UDefReadWriteRecordList),pointer::thisCursor=>null()
+        type(UDefReadWriteRecordList),pointer::otherCursorP=>null()
+        type(UDefReadWriteRecordList),pointer::otherCursor=>null()
+        !---Body---
+        thisCursorP=>this
+
+        if(.not. associated(thisCursorP)) then
+            write(*,*) "MCPSCUERROR: You need to allocate the RecordList first!"
+            pause
+            stop
+        end if
+
+        call this%Clean_ReadWriteRecorList()
+
+        otherCursorP=>other
+
+        if(.not. associated(otherCursorP)) then
+            return
+        end if
+
+        if(otherCursorP%GetReadWriteRecordListCount() .LE. 0) then
+            return
+        end if
+
+        thisCursorP%TheReadWriteProc = otherCursorP%TheReadWriteProc
+        this%ListCount = this%ListCount + 1
+
+        thisCursor=>thisCursorP%next
+        otherCursor=>otherCursorP%next
+
+        Do while(associated(otherCursor))
+            allocate(thisCursor)
+
+            thisCursor%TheReadWriteProc = otherCursor%TheReadWriteProc
+            this%ListCount = this%ListCount + 1
+
+            thisCursorP%next => thisCursor
+
+            thisCursor => thisCursor%next
+            otherCursor => otherCursor%next
+
+            thisCursorP => thisCursorP%next
+            otherCursorP => otherCursorP%next
+
+        End Do
+
+        nullify(thisCursor)
+        thisCursor=>null()
+        nullify(thisCursorP)
+        thisCursorP=>null()
+        nullify(otherCursor)
+        otherCursor=>null()
+        nullify(otherCursorP)
+        otherCursorP=>null()
+
+        return
+    end subroutine
+
+    !**************************************************************
+    subroutine Clean_ReadWriteRecorList(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(UDefReadWriteRecordList),target::this
+        !---Local Vars---
+        type(UDefReadWriteRecordList),pointer::cursor=>null(),next=>null()
+
+        !---Body---
+        cursor=>this
+
+        if(.not. associated(cursor)) then
+            return
+        end if
+
+        cursor=>this%next
+
+        this%TheReadWriteProc=>null()
+
+        DO While(associated(cursor))
+            next=>cursor%next
+            cursor%TheReadWriteProc=>null()
+            Nullify(cursor)
+            deallocate(cursor)
+            cursor=>next
+        END DO
+
+        this%ListCount = 0
+
+        this%next=>null()
+
+        Nullify(cursor)
+        cursor=>null()
+        Nullify(next)
+        next=>null()
+
+        return
+    end subroutine Clean_ReadWriteRecorList
+
+    !**************************************************************
+    subroutine CleanReadWriteRecorList(this)
+        implicit none
+        !---Dummy Vars---
+        type(UDefReadWriteRecordList)::this
+        !---Body---
+        call this%Clean_ReadWriteRecorList()
+
+        return
+    end subroutine CleanReadWriteRecorList
+
+    !******************************************************
+    subroutine Set_UDefReadWriteRecord_List(this,TheUDefReadWriteRecord_List)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord)::this
+        type(UDefReadWriteRecordList),target::TheUDefReadWriteRecord_List
+
+        if(associated(this%UDefReadWriteRecord_List)) then
+            call this%UDefReadWriteRecord_List%Clean_ReadWriteRecorList()
+            deallocate(this%UDefReadWriteRecord_List)
+        end if
+        allocate(this%UDefReadWriteRecord_List)
+
+        !---The Assignment had been override
+        this%UDefReadWriteRecord_List = TheUDefReadWriteRecord_List
+
+        return
+    end subroutine
+
+
+    !******************************************************
+    function Get_UDefReadWriteRecord_List(this) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord)::this
+        type(UDefReadWriteRecordList),pointer::TheResult
+
+        TheResult=>null()
+
+        if(associated(this%UDefReadWriteRecord_List)) then
+            TheResult=>this%UDefReadWriteRecord_List
+        end if
+
+        return
+    end function
+
+    !**** type SimulationRecord*****************
+    subroutine InitSimulationRecord(this,MultiBox,SimuSteps,SimuTimes,SimuPatchs,TimeSections)
+        !---Dummy Vars---
+        CLASS(SimulationRecord)::this
+        integer,intent(in)::MultiBox
+        integer,optional::SimuSteps
+        real(kind=KINDDF),optional::SimuTimes
+        integer,optional::SimuPatchs
+        integer,optional::TimeSections
+        !---Local Vars---
+        integer::Steps
+        real(kind=KINDDF)::Times
+        integer::Patchs
+        integer::TheTimeSection
+        !---Body---
+        Steps = 0
+        Times = 0.D0
+        Patchs = 1
+        TheTimeSection = 1
+
+        if(present(SimuSteps)) then
+            Steps = SimuSteps
+        end if
+
+        if(present(SimuTimes)) then
+            Times = SimuTimes
+        end if
+
+        if(present(SimuPatchs)) then
+            Patchs = SimuPatchs
+        end if
+
+        if(present(TimeSections)) then
+            TheTimeSection = TimeSections
+        end if
+
+
+        call this%InitSimulationRecord_SUB(MultiBox,SimuSteps=Steps,SimuTimes=Times,SimuPatchs=Patchs,TimeSections=TheTimeSection)
+
+        allocate(this%UDefReadWriteRecord_List)
+
+        return
+    end subroutine InitSimulationRecord
+
+    !***********************************************************
+    subroutine CopySimulationRecordFromOther(this,Other)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord),intent(out)::this
+        CLASS(SimulationRecord),intent(in)::Other
+        !---Body---
+        !---The Assignment(=) had been override
+        this%SimulationRecord_SUB = Other%SimulationRecord_SUB
+
+        ! The Assignment(=) had been override
+        if(associated(Other%UDefReadWriteRecord_List)) then
+            if(.not. associated(this%UDefReadWriteRecord_List)) allocate(this%UDefReadWriteRecord_List)
+            this%UDefReadWriteRecord_List = Other%UDefReadWriteRecord_List
+        end if
+
+        return
+    end subroutine
+
+
+    !***********************************************************
+    subroutine Clean_SimulationRecord(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SimulationRecord)::this
+        !---Body---
+        call this%SimulationRecord_SUB%Clean_SimulationRecordSUB()
+
+        call this%UDefReadWriteRecord_List%Clean_ReadWriteRecorList()
+        if(associated(this%UDefReadWriteRecord_List)) deallocate(this%UDefReadWriteRecord_List)
+        Nullify(this%UDefReadWriteRecord_List)
+        this%UDefReadWriteRecord_List=>null()
+
+        return
+    end subroutine
+
+    !***********************************************************
+    !subroutine CleanSimulationRecord(this)
+    !    implicit none
+    !    !---Dummy Vars---
+    !    type(SimulationRecord)::this
+    !    !---Body---
+    !    call this%Clean_SimulationRecord()
+    !
+    !    return
+    !end subroutine
+
+end module
+
