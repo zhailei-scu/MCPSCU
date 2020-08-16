@@ -152,14 +152,16 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
         procedure,NON_OVERRIDABLE,public,pass::TurnOffTriggerFocusedTimePoints=>TurnOff_TriggerFocusedTimePoints
         procedure,NON_OVERRIDABLE,public,pass::GetStatusTriggerFocusedTimePoints=>Get_StatusTriggerFocusedTimePoints
 
-        procedure,non_overridable,public,pass::CopySimulationRecordSUBFromOther
+        procedure,public,pass::CopySimulationRecordSUBFromOther
         procedure,non_overridable,public,pass::Clean_SimulationRecordSUB
-        Generic::Assignment(=)=>CopySimulationRecordSUBFromOther
-
+        !---Based On Our test, the abstract cannot override (=), other wise his childrens' assginment(=) would be invalid
+        !Generic::Assignment(=)=>CopySimulationRecordSUBFromOther
         !---abstract method---
         procedure(DefCleanProc),pass,deferred,private::TheDefCleanProc
         procedure(DefCopyProc),pass,deferred,private::TheDefCopyProc
 
+        !---Based On Our test, the abstract cannot own Final (de-constructor)---
+        !Final::CleanSimulationRecordSUB
     end type SimulationRecord_SUB
 
     private::Init_BoxStatis
@@ -897,6 +899,8 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
         integer::Size1
         integer::Size2
         !---Body---
+
+        call this%Clean_SimulationRecordSUB()
         !---The Assignment(=) had been override
         this%Running_Record = Other%Running_Record
 
@@ -1017,6 +1021,8 @@ module MCLIB_TYPEDEF_BASICRECORD
         procedure,non_overridable,public,pass::GetUDefReadWriteRecord_List=>Get_UDefReadWriteRecord_List
 
         !---abstract method---
+        procedure,non_overridable,pass,public::Clean_SimulationRecord
+        procedure,non_overridable,pass,public::CopySimulationRecordFromOther
         procedure,non_overridable,pass,public::TheDefCleanProc=>Clean_SimulationRecord
         procedure,non_overridable,pass,public::TheDefCopyProc=>CopySimulationRecordFromOther
         Generic::Assignment(=)=>CopySimulationRecordFromOther
@@ -1130,7 +1136,7 @@ module MCLIB_TYPEDEF_BASICRECORD
             return
         end if
 
-        thisCursorP%TheReadWriteProc = otherCursorP%TheReadWriteProc
+        thisCursorP%TheReadWriteProc => otherCursorP%TheReadWriteProc
         this%ListCount = this%ListCount + 1
 
         thisCursor=>thisCursorP%next
@@ -1139,7 +1145,7 @@ module MCLIB_TYPEDEF_BASICRECORD
         Do while(associated(otherCursor))
             allocate(thisCursor)
 
-            thisCursor%TheReadWriteProc = otherCursor%TheReadWriteProc
+            thisCursor%TheReadWriteProc => otherCursor%TheReadWriteProc
             this%ListCount = this%ListCount + 1
 
             thisCursorP%next => thisCursor
@@ -1299,10 +1305,14 @@ module MCLIB_TYPEDEF_BASICRECORD
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord),intent(out)::this
-        CLASS(SimulationRecord),intent(in)::Other
+        type(SimulationRecord),intent(in)::Other
         !---Body---
-        !---The Assignment(=) had been override
-        this%SimulationRecord_SUB = Other%SimulationRecord_SUB
+
+        call this%TheDefCleanProc()
+
+        call this%SimulationRecord_SUB%CopySimulationRecordSUBFromOther(Other%SimulationRecord_SUB)
+        !---The Assignment(=) cannot be defined in abstract class---
+        !this%SimulationRecord_SUB = Other%SimulationRecord_SUB
 
         ! The Assignment(=) had been override
         if(associated(Other%UDefReadWriteRecord_List)) then

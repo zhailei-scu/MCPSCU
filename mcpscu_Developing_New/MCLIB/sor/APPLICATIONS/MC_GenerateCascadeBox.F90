@@ -2545,6 +2545,8 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
@@ -3006,6 +3008,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox .LE. 0) then
             write(*,*) "MCPSCUERROR: The box number less than 1"
@@ -3404,6 +3407,8 @@ module MC_GenerateCascadeBox
         call Host_Boxes%m_ClustersInfo_CPU%Clean()
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
+
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
@@ -4053,6 +4058,8 @@ module MC_GenerateCascadeBox
         call Host_Boxes%m_ClustersInfo_CPU%Clean()
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
+
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster + NVACCluster))
 

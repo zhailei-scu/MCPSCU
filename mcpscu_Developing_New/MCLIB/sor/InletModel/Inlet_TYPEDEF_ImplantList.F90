@@ -70,13 +70,6 @@ module INLET_TYPEDEF_IMPLANTLIST
                 stop
             end if
 
-            if(Host_SimuCtrlParam%ImplantSectIDs(I) .GT. this%ListCount) then
-                write(*,*) "MCPSCUERROR: The implantation section is not special :",Host_SimuCtrlParam%ImplantSectIDs(I)
-                pause
-                stop
-            end if
-
-
             if(cursor%TheImplantSection%InsertCountOneBatch .GT. 0.D0 .AND. Host_SimuCtrlParam%NEIGHBORUPDATESTRATEGY .eq. mp_NEIGHBORUPDATEBYNCREMIND) then
                 write(*,*) "MCPSCUERROR: You cannot use the neighbor-list update strategy by clusters number remind percent when the implantation"
                 write(*,*) "flux exist."
@@ -166,6 +159,15 @@ module INLET_TYPEDEF_IMPLANTLIST
             end select
 
         END DO
+
+        if(this%ListCount .LT. Host_SimuCtrlParam%NImplantSection) then
+            write(*,*) "MCPSCUERROR: The total implant section is less than you special ",Host_SimuCtrlParam%ImplantSectIDs
+            write(*,*) "total section counts is: ",CountSection
+            pause
+            stop
+        end if
+
+        close(hFile)
 
         return
 

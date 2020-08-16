@@ -47,6 +47,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,non_overridable,public,pass::SetLastUpdateAveSepTime=>Set_LastUpdateAveSepTime
         procedure,non_overridable,public,pass::IncreaseOneRescaleCount=>Increase_OneRescaleCount
         procedure,non_overridable,public,pass::GetRescaleCount=>Get_RescaleCount
+        procedure,non_overridable,public,pass::SetRescaleCount=>Set_RescaleCount
         procedure,non_overridable,public,pass::SetTrue_InsertOneBatchInNextStep
         procedure,non_overridable,public,pass::SetFalse_InsertOneBatchInNextStep
         procedure,non_overridable,public,pass::GetStatu_InsertOneBatchInNextStep
@@ -55,6 +56,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,non_overridable,public,pass::Set_InsertBatchNum
         procedure,non_overridable,public,pass::IncreaseOneSweepOutCount=>Increase_OneSweepOutCount
         procedure,non_overridable,public,pass::GetSweepOutCount=>Get_SweepOutCount
+        procedure,non_overridable,public,pass::SetSweepOutCount=>Set_SweepOutCount
         procedure,NON_OVERRIDABLE,public,pass::AddImplantedEntitiesNum=>Add_ImplantedEntitiesNum
         procedure,NON_OVERRIDABLE,public,pass::GetImplantedEntitiesNum=>Get_ImplantedEntitiesNum
         procedure,NON_OVERRIDABLE,public,pass::SetImplantedEntitiesNum=>Set_ImplantedEntitiesNum
@@ -84,6 +86,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::Get_LastUpdateAveSepTime
     private::Increase_OneRescaleCount
     private::Get_RescaleCount
+    private::Set_RescaleCount
     private::SetTrue_InsertOneBatchInNextStep
     private::SetFalse_InsertOneBatchInNextStep
     private::GetStatu_InsertOneBatchInNextStep
@@ -92,6 +95,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::Set_InsertBatchNum
     private::Increase_OneSweepOutCount
     private::Get_SweepOutCount
+    private::Set_SweepOutCount
     private::Add_ImplantedEntitiesNum
     private::Get_ImplantedEntitiesNum
     private::Set_ImplantedEntitiesNum
@@ -138,6 +142,101 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                     case("&ENDUDEFSECTION")
                         exit
 
+                    case("&STARTIMPTIME")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &STARTIMPTIME setting"
+                            write(*,*) "You must special the inputted start implant time"
+                            pause
+                            stop
+                        end if
+
+                        call Record%SetStartImplantTime(DRSTR(STRTMP(1)))
+
+                        if(Record%GetStartImplantTime() .LT. 0.D0) then
+                            write(*,*) "MCPSCUERROR: The start implant time cannot less than 0"
+                            write(*,*) Record%GetStartImplantTime()
+                            pause
+                            stop
+                        end if
+
+                    case("&NIMPLANT")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &NIMPLANT setting"
+                            write(*,*) "You must special the total implant number (for continue implant)"
+                            pause
+                            stop
+                        end if
+
+                        call Record%SetImplantedEntitiesNum(ISTR(STRTMP(1)))
+
+                        if(Record%GetImplantedEntitiesNum() .LT. 0) then
+                            write(*,*) "MCPSCUERROR: The total implant number (for continue implant) cannot less than 0"
+                            write(*,*) Record%GetImplantedEntitiesNum()
+                            pause
+                            stop
+                        end if
+
+                    case("&NLASTRECORDIMPLANT")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &NLASTRECORDIMPLANT setting"
+                            write(*,*) "You must special the last recorded implant number (for continue implant)"
+                            pause
+                            stop
+                        end if
+
+                        call Record%SetLastRecordImplantNum(ISTR(STRTMP(1)))
+
+                        if(Record%GetLastRecordImplantNum() .LT. 0) then
+                            write(*,*) "MCPSCUERROR: The last recorded implant number (for continue implant) cannot less than 0"
+                            write(*,*) Record%GetLastRecordImplantNum()
+                            pause
+                            stop
+                        end if
+
+                    case("&NCUT")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &NCUT setting"
+                            write(*,*) "You must special the NCUT"
+                            pause
+                            stop
+                        end if
+
+                        call Record%SetNCUT(ISTR(STRTMP(1)))
+
+                        if(Record%GetNCUT() .LT. 0) then
+                            write(*,*) "MCPSCUERROR: The NCUT cannot less than 0"
+                            write(*,*) Record%GetNCUT()
+                            pause
+                            stop
+                        end if
+
+                    case("&NRESCALE")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &NRESCALE setting"
+                            write(*,*) "You must special the rescale number"
+                            pause
+                            stop
+                        end if
+
+                        call Record%SetRescaleCount(ISTR(STRTMP(1)))
+
+                        if(Record%GetRescaleCount() .LT. 0) then
+                            write(*,*) "MCPSCUERROR: The total rescale number cannot less than 0"
+                            write(*,*) Record%GetRescaleCount()
+                            pause
+                            stop
+                        end if
+
                     case("&BATCHNUM")
                         call EXTRACT_NUMB(STR,1,N,STRTMP)
 
@@ -157,6 +256,122 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
+                    case("&NSWEEPOUT")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &NSWEEPOUT setting"
+                            write(*,*) "You must special the sweep out number"
+                            pause
+                            stop
+                        end if
+
+                        call Record%SetSweepOutCount(ISTR(STRTMP(1)))
+
+                        if(Record%GetSweepOutCount() .LT. 0) then
+                            write(*,*) "MCPSCUERROR: The total sweep out number cannot less than 0"
+                            write(*,*) Record%GetSweepOutCount()
+                            pause
+                            stop
+                        end if
+
+                    case("&RSEEDOUTDEVWALK")
+                        call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &RSEEDOUTDEVWALK setting"
+                            write(*,*) "You must special the random seed for outer device random generator"
+                            pause
+                            stop
+                        end if
+                        Record%RandSeed_OutDevWalk(1) = ISTR(STRTMP(1))
+                        Record%RandSeed_OutDevWalk(2) = ISTR(STRTMP(2))
+
+
+                    case("&RSEEDINNERDEVWALK")
+                        call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &RSEEDINNERDEVWALK setting"
+                            write(*,*) "You must special the random seed for inner device random generator"
+                            pause
+                            stop
+                        end if
+                        Record%RandSeed_InnerDevWalk(1) = ISTR(STRTMP(1))
+                        Record%RandSeed_InnerDevWalk(2) = ISTR(STRTMP(2))
+
+                    case("&RSEEDREACTION")
+                        call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &RSEEDREACTION setting"
+                            write(*,*) "You must special the random seed for reaction"
+                            pause
+                            stop
+                        end if
+                        Record%RandSeed_Reaction(1) = ISTR(STRTMP(1))
+                        Record%RandSeed_Reaction(2) = ISTR(STRTMP(2))
+
+                    case("&RSEEDIMPSPECLAYER")
+                        call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &RSEEDIMPSPECLAYER setting"
+                            write(*,*) "You must special the random seed for implant Layer distribution"
+                            pause
+                            stop
+                        end if
+                        Record%RandSeed_SpaceDist_Implant_Layer(1) = ISTR(STRTMP(1))
+                        Record%RandSeed_SpaceDist_Implant_Layer(2) = ISTR(STRTMP(2))
+
+                    case("&RSEEDIMPSPECX")
+                        call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &RSEEDIMPSPECX setting"
+                            write(*,*) "You must special the random seed for implant X-Direction distribution"
+                            pause
+                            stop
+                        end if
+                        Record%RandSeed_SpaceDist_Implant_X(1) = ISTR(STRTMP(1))
+                        Record%RandSeed_SpaceDist_Implant_X(2) = ISTR(STRTMP(2))
+
+                    case("&RSEEDIMPSPECY")
+                        call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &RSEEDIMPSPECY setting"
+                            write(*,*) "You must special the random seed for implant Y-Direction distribution"
+                            pause
+                            stop
+                        end if
+                        Record%RandSeed_SpaceDist_Implant_Y(1) = ISTR(STRTMP(1))
+                        Record%RandSeed_SpaceDist_Implant_Y(2) = ISTR(STRTMP(2))
+
+                    case("&RSEEDIMPSPECZ")
+                        call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &RSEEDIMPSPECZ setting"
+                            write(*,*) "You must special the random seed for implant Z-Direction distribution"
+                            pause
+                            stop
+                        end if
+                        Record%RandSeed_SpaceDist_Implant_Z(1) = ISTR(STRTMP(1))
+                        Record%RandSeed_SpaceDist_Implant_Z(2) = ISTR(STRTMP(2))
+
+                    case("&RSEEDIMPSIZE")
+                        call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                        if(N .LT. 2) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &RSEEDIMPSIZE setting"
+                            write(*,*) "You must special the random seed for implant size distribution"
+                            pause
+                            stop
+                        end if
+                        Record%RandSeed_SizeDist_Implant(1) = ISTR(STRTMP(1))
+                        Record%RandSeed_SizeDist_Implant(2) = ISTR(STRTMP(2))
+
                     case default
                         write(*,*) "MCPSCUERROR: Unknown flags: ",KEYWORD(1:LENTRIM(KEYWORD))
                         write(*,*) "At line: ",LINE
@@ -167,8 +382,51 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
 
         else                      ! Write to file
+            KEYWORD = "&STARTIMPTIME"
+            write(hFile, FMT="(A,1x,A16,1x,A16,1x,1PE18.10)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),"(in s) ",Record%GetStartImplantTime()
+
+            KEYWORD = "&NIMPLANT"
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetImplantedEntitiesNum()
+
+            KEYWORD = "&NLASTRECORDIMPLANT"
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetLastRecordImplantNum()
+
+            KEYWORD = "&NCUT"
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetNCUT()
+
+            KEYWORD = "&NRESCALE"
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetRescaleCount()
+
             KEYWORD = "&BATCHNUM"
-            write(hFile, FMT="(A,1x,I15)") KEYWORD(1:LENTRIM(KEYWORD)),Record%Get_InsertBatchNum()
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%Get_InsertBatchNum()
+
+            KEYWORD = "&NSWEEPOUT"
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetSweepOutCount()
+
+            KEYWORD = "&RSEEDOUTDEVWALK"
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_OutDevWalk
+
+            KEYWORD = "&RSEEDINNERDEVWALK"
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_InnerDevWalk
+
+            KEYWORD = "&RSEEDREACTION"
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_Reaction
+
+            KEYWORD = "&RSEEDIMPSPECLAYER"
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SpaceDist_Implant_Layer
+
+            KEYWORD = "&RSEEDIMPSPECX"
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SpaceDist_Implant_X
+
+            KEYWORD = "&RSEEDIMPSPECY"
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SpaceDist_Implant_Y
+
+            KEYWORD = "&RSEEDIMPSPECZ"
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SpaceDist_Implant_Z
+
+            KEYWORD = "&RSEEDIMPSIZE"
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SizeDist_Implant
+
         end if
 
         return
@@ -513,8 +771,10 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         implicit none
         !---Dummy Vars---
         CLass(MigCoalClusterRecord),intent(out)::this
-        CLass(MigCoalClusterRecord),intent(in)::Other
+        type(MigCoalClusterRecord),intent(in)::Other
         !---Body---
+
+        call this%Clean_MigCoalClusterRecord()
         !---The Assignment(=) had been override
         this%SimulationRecord = Other%SimulationRecord
 
@@ -583,6 +843,16 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         rescaleCount = this%rescaleCount
         return
     end function Get_RescaleCount
+
+    !**************************************************************
+    subroutine Set_RescaleCount(this,theCount)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+        integer,intent(in)::theCount
+
+        this%rescaleCount = theCount
+        return
+    end subroutine Set_RescaleCount
 
     !**************************************************************
     subroutine Increase_OneSweepOutCount(this)
@@ -659,6 +929,15 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         return
     end function Get_SweepOutCount
 
+    !**************************************************************
+    subroutine Set_SweepOutCount(this,theCount)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+        integer,intent(in)::theCount
+
+        this%SweepOutCount = theCount
+        return
+    end subroutine Set_SweepOutCount
     !*******************************************************
     subroutine Set_LastUpdateAveSepTime(this,TheTime)
         implicit none

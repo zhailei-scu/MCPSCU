@@ -2365,6 +2365,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     KEYWORD = "&IPATCH"
     write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuPatch()
 
+    KEYWORD = "&LASTOUTCFGTIME"
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetLastRecordOutConfigTime()
+
+    KEYWORD = "&LASTOUTINDEX"
+    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetOutPutIndex()
+
     KEYWORD = "&ITIMESECTION"
     write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetTimeSections()
 
@@ -2667,10 +2673,17 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
                 call SimuRecord%SetSimuPatch(ISTR(STRTMP(1)))
 
+            case("&LASTOUTCFGTIME")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetLastRecordOutConfigTime(DRSTR(STRTMP(1)))
+
+            case("&LASTOUTINDEX")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+                call SimuRecord%SetOutPutIndex(ISTR(STRTMP(1)))
+
             case("&ITIMESECTION")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
                 call SimuRecord%SetTimeSections(ISTR(STRTMP(1)))
-
                 exit
 
             case default

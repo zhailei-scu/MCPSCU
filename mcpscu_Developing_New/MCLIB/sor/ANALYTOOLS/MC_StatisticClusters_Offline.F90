@@ -1119,6 +1119,8 @@ program Main_StatisticClusters_Offline
                 !*******Init the simulation boxes*****************
                 call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
+                call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+
                 call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,pathIn,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 
                 GTNAtom = 1

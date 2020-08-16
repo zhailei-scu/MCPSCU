@@ -809,6 +809,8 @@ module MCLIB_UTILITIES_FORMER
         end if
     End Do
 
+    close(hFile)
+
     return
   end subroutine
 
