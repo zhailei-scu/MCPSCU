@@ -70,7 +70,7 @@ module INLET_TYPEDEF_IMPLANTLIST
                 stop
             end if
 
-            if(Host_SimuCtrlParam%ImplantSectIDs(I) .GE. this%ListCount) then
+            if(Host_SimuCtrlParam%ImplantSectIDs(I) .GT. this%ListCount) then
                 write(*,*) "MCPSCUERROR: The implantation section is not special :",Host_SimuCtrlParam%ImplantSectIDs(I)
                 pause
                 stop

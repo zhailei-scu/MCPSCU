@@ -102,10 +102,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(SimulationCtrlParamList),pointer::cursor=>null()
         type(ImplantSection),pointer::PImplantSection=>null()
         type(InitBoxSimCfg)::tempInitBoxSimCfg
-        integer::TimeStep0
-        real::SimTime0
-        integer::TimeSection0
-        integer::JobIndex0
+        type(MigCoalClusterRecord)::tempMigCoalClusterRecord
         integer::ITEST
         integer::TestLoop0,TestLoop1
         integer::I
@@ -114,12 +111,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::ISEED(2)
         logical::exitflag
         !---Body---
-        TimeStep0 = 0
-        SimTime0 = ZERO
-        TimeSection0 = 1
-        JobIndex0 = 1
-
-        call m_MigCoalClusterRecord%InitMigCoalClusterRecord(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox,SimuSteps=TimeStep0,SimuTimes=SimTime0,SimuPatchs=JobIndex0,TimeSection=TimeSection0)
+        call tempMigCoalClusterRecord%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%RESTARTAT .GT. 0) then
             call m_InitBoxSimCfgList%Clean_InitBoxSimCfgList()
@@ -128,10 +120,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             tempInitBoxSimCfg%InitCfgFileName = Host_SimuCtrlParamList%theSimulationCtrlParam%RestartCfg
             call m_InitBoxSimCfgList%AppendOne_InintSimBoxCfg(tempInitBoxSimCfg)
         else
-            call ReadInitBoxSimCfgList(Host_SimBoxes,Host_SimuCtrlParamList%theSimulationCtrlParam,m_InitBoxSimCfgList,m_MigCoalClusterRecord)
+            call ReadInitBoxSimCfgList(Host_SimBoxes,Host_SimuCtrlParamList%theSimulationCtrlParam,m_InitBoxSimCfgList,tempMigCoalClusterRecord)
         end if
 
-        call ReadInitBoxSimRecord(Host_SimBoxes,m_InitBoxSimCfgList,m_MigCoalClusterRecord)
+        call ReadInitBoxSimRecord(Host_SimBoxes,m_InitBoxSimCfgList,tempMigCoalClusterRecord)
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%RESTARTAT .GT. 0) then
             !---For restart, we should use the random number in the sequence before last running---
@@ -141,15 +133,15 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             DO While(.true.)
                 exitflag = .true.
 
-                ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1) + m_MigCoalClusterRecord%GetSimuSteps() + DRAND32()*RAND32SEEDLIB_SIZE
+                ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1) + tempMigCoalClusterRecord%GetSimuSteps() + DRAND32()*RAND32SEEDLIB_SIZE
 
-                if(m_MigCoalClusterRecord%GetSimuTimes() .GT. 0.D0) then
-                    ISEED0 = ISEED0 + max(RAND32SEEDLIB_SIZE/m_MigCoalClusterRecord%GetSimuTimes(), &
-                                          RAND32SEEDLIB_SIZE*m_MigCoalClusterRecord%GetSimuTimes())
+                if(tempMigCoalClusterRecord%GetSimuTimes() .GT. 0.D0) then
+                    ISEED0 = ISEED0 + max(RAND32SEEDLIB_SIZE/tempMigCoalClusterRecord%GetSimuTimes(), &
+                                          RAND32SEEDLIB_SIZE*tempMigCoalClusterRecord%GetSimuTimes())
                 end if
 
                 call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
-                ISEED0 = ISEED0 + JobIndex + m_MigCoalClusterRecord%GetTimeSections() - 1
+                ISEED0 = ISEED0 + JobIndex + tempMigCoalClusterRecord%GetTimeSections() - 1
                 call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
 
                 DO I = 1,size(ISEED)
@@ -166,30 +158,29 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             END DO
         end if
 
-        TimeStep0 = m_MigCoalClusterRecord%GetSimuSteps()
-        SimTime0 = m_MigCoalClusterRecord%GetSimuTimes()
-        TimeSection0 = m_MigCoalClusterRecord%GetTimeSections()
-
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%INDEPBOX) then
-            if(JobIndex .LT. m_MigCoalClusterRecord%GetSimuPatch()) then
+            if(JobIndex .LT. tempMigCoalClusterRecord%GetSimuPatch()) then
                 return
             end if
 
             TestLoop0 = 1
             TestLoop1 = 1
         else
-            TestLoop0 = m_MigCoalClusterRecord%GetSimuPatch()
+            TestLoop0 = tempMigCoalClusterRecord%GetSimuPatch()
             TestLoop1 = Host_SimuCtrlParamList%theSimulationCtrlParam%TOTALBOX/Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
         end if
 
         DO ITEST = TestLoop0,TestLoop1
 
-            cursor=>Host_SimuCtrlParamList%Get_P(TimeSection0)
+            !---The Assignment had been override----
+            m_MigCoalClusterRecord = tempMigCoalClusterRecord
+
+            cursor=>Host_SimuCtrlParamList%Get_P(m_MigCoalClusterRecord%GetTimeSections())
 
             if(Host_SimuCtrlParamList%theSimulationCtrlParam%INDEPBOX) then
-                call m_MigCoalClusterRecord%InitMigCoalClusterRecord(cursor%theSimulationCtrlParam%MultiBox,SimuSteps=TimeStep0,SimuTimes=SimTime0,SimuPatchs=JobIndex,TimeSection=TimeSection0)
+                call m_MigCoalClusterRecord%SetSimuPatch(JobIndex)
             else
-                call m_MigCoalClusterRecord%InitMigCoalClusterRecord(cursor%theSimulationCtrlParam%MultiBox,SimuSteps=TimeStep0,SimuTimes=SimTime0,SimuPatchs=ITEST,TimeSection=TimeSection0)
+                call m_MigCoalClusterRecord%SetSimuPatch(ITEST)
             end if
 
             if(ITEST .eq. 1) then

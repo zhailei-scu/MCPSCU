@@ -186,7 +186,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         CLASS(MigCoalClusterRecord)::this
         integer,intent(in)::MultiBox
         integer,optional::SimuSteps
-        real,optional::SimuTimes
+        real(kind=KINDDF),optional::SimuTimes
         integer,optional::SimuPatchs
         integer,optional::TimeSection
         !---Local Vars---
@@ -195,7 +195,10 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         integer::Patchs
         integer::TheTimeSection
         type(UDefReadWriteRecordList)::tempUDefReadWriteRecordList
-        !---Body-- -::
+        !---Body-- -
+
+        call this%Clean_MigCoalClusterRecord()
+
         Steps = 0
         Times = 0.D0
         Patchs = 1

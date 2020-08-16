@@ -372,7 +372,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         integer::I
         !---Body---
         DO I = 1,Host_SimuCtrlParam%NImplantSection
-            if(Host_SimuCtrlParam%ImplantSectIDs(I) .GE. this%ListCount) then
+            if(Host_SimuCtrlParam%ImplantSectIDs(I) .GT. this%ListCount) then
                 write(*,*) "MCPSCUERROR: The implantation section is not special :",Host_SimuCtrlParam%ImplantSectIDs(I)
                 pause
                 stop
