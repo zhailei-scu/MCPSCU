@@ -390,49 +390,49 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
         else                      ! Write to file
             KEYWORD = "&STARTIMPTIME"
-            write(hFile, FMT="(A,1x,A16,1x,A16,1x,1PE18.10)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),"(in s) ",fp_Record%GetStartImplantTime()
+            write(hFile, FMT="(A,1x,A32,1x,A16,1x,1PE18.10)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),"(in s) ",fp_Record%GetStartImplantTime()
 
             KEYWORD = "&NIMPLANT"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetImplantedEntitiesNum()
+            write(hFile, FMT="(A,1x,A32,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetImplantedEntitiesNum()
 
             KEYWORD = "&NLASTRECORDIMPLANT"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetLastRecordImplantNum()
+            write(hFile, FMT="(A,1x,A32,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetLastRecordImplantNum()
 
             KEYWORD = "&NCUT"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetNCUT()
+            write(hFile, FMT="(A,1x,A32,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetNCUT()
 
             KEYWORD = "&NRESCALE"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetRescaleCount()
+            write(hFile, FMT="(A,1x,A32,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetRescaleCount()
 
             KEYWORD = "&BATCHNUM"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%Get_InsertBatchNum()
+            write(hFile, FMT="(A,1x,A32,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%Get_InsertBatchNum()
 
             KEYWORD = "&NSWEEPOUT"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetSweepOutCount()
+            write(hFile, FMT="(A,1x,A32,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetSweepOutCount()
 
             KEYWORD = "&RSEEDOUTDEVWALK"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_OutDevWalk
+            write(hFile, FMT="(A,1x,A32,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_OutDevWalk
 
             KEYWORD = "&RSEEDINNERDEVWALK"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_InnerDevWalk
+            write(hFile, FMT="(A,1x,A32,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_InnerDevWalk
 
             KEYWORD = "&RSEEDREACTION"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_Reaction
+            write(hFile, FMT="(A,1x,A32,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_Reaction
 
             KEYWORD = "&RSEEDIMPSPECLAYER"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Layer
+            write(hFile, FMT="(A,1x,A32,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Layer
 
             KEYWORD = "&RSEEDIMPSPECX"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_X
+            write(hFile, FMT="(A,1x,A32,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_X
 
             KEYWORD = "&RSEEDIMPSPECY"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Y
+            write(hFile, FMT="(A,1x,A32,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Y
 
             KEYWORD = "&RSEEDIMPSPECZ"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Z
+            write(hFile, FMT="(A,1x,A32,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Z
 
             KEYWORD = "&RSEEDIMPSIZE"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SizeDist_Implant
+            write(hFile, FMT="(A,1x,A32,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SizeDist_Implant
 
         end if
 
