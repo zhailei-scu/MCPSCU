@@ -116,7 +116,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     contains
 
     subroutine UDefReadWriteRecord_BatchNum(hFile,Record,LINE)
-        !use MCLIB_TYPEDEF_BASICRECORD
+        use MCLIB_TYPEDEF_BASICRECORD_SUB
         implicit none
         integer::hFile
         CLASS(SimulationRecord_SUB),target::Record
