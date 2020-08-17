@@ -191,11 +191,11 @@ module MODEL_TYPEDEF_ATOMSLIST
             return
         end if
 
-        cursor=>this%next
-
         call CleanAtom(cursor%m_Atom)
         cursor%m_ListCount = 0
         cursor%m_AtomsNumber = 0
+
+        cursor=>this%next
 
         DO While(associated(cursor))
             next=>cursor%next
@@ -207,6 +207,8 @@ module MODEL_TYPEDEF_ATOMSLIST
             Nullify(cursor)
             cursor=>next
         END DO
+
+        this%next=>null()
 
         Nullify(cursor)
         cursor=>null()

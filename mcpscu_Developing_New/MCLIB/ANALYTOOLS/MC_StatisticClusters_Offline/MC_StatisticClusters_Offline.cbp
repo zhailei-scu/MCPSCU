@@ -11,7 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/scratch/110doc00/ZhaiLei/New_Cascade/BoxSizeInf/20keV/Locally/New_Cascade1Box200LU_NBox800_NoDump/SampleSetup.dat /scratch/110doc00/ZhaiLei/New_Cascade/BoxSizeInf/20keV/Locally/New_Cascade1Box200LU_NBox800_NoDump/CascadeBox/CascadeGenerateCtrlFile.dat" />
+				<Option parameters="/home/zhail/Cascade1Box5000LU_NBox800_Test/SampleSetup.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
@@ -41,7 +41,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Release/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/mcworkspace/MCSample_New/SampleSetup.dat /home/zhail/mcworkspace/MCSample_New/CascadeBox/CascadeGenerateCtrlFile.dat" />
+				<Option parameters="/home/zhail/Cascade1Box5000LU_NBox800_Test/SampleSetup.dat" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35,nollvm" />

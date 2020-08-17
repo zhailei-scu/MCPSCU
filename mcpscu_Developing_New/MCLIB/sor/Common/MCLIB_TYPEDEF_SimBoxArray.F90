@@ -4380,6 +4380,18 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call this%m_BoxesBasicStatistic%Clean()
 
+    return
+  end subroutine CleanSimulationBoxes
+
+  !**********************************************
+  subroutine DestorySimulationBoxes(this)
+    implicit none
+    !---Dummy Vars---
+    type(SimulationBoxes)::this
+    !---Body---
+
+    call this%Clean()
+
     call this%m_DiffusorTypesMap%Clean()
 
     call this%m_ReactionsMap%Clean()
@@ -4408,18 +4420,6 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     if(associated(this%ReadReactionProp_List)) deallocate(this%ReadReactionProp_List)
     Nullify(this%ReadReactionProp_List)
     this%ReadReactionProp_List=>null()
-
-    return
-  end subroutine CleanSimulationBoxes
-
-  !**********************************************
-  subroutine DestorySimulationBoxes(this)
-    implicit none
-    !---Dummy Vars---
-    type(SimulationBoxes)::this
-    !---Body---
-
-    call this%Clean()
 
     return
   end subroutine DestorySimulationBoxes
