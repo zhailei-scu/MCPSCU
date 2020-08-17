@@ -979,8 +979,8 @@ module MCLIB_TYPEDEF_BASICRECORD
             use MCLIB_TYPEDEF_BASICRECORD_SUB
             implicit none
             integer::hFile
-            integer,optional::LINE
             CLASS(SimulationRecord_SUB)::Record
+            integer,optional::LINE
         end subroutine UDefReadWriteRecord
 
     end interface

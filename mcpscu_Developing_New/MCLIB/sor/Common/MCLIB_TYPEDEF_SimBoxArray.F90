@@ -2687,7 +2687,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 exit
 
             case default
-                write(*,*) "MCPSCUERROR: Illegal flag: ",KEYWORD
+                write(*,*) "MCPSCUERROR: Illegal flag : ",KEYWORD
                 write(*,*) STR
                 pause
                 stop

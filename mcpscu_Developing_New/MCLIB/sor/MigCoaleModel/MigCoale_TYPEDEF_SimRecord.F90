@@ -119,14 +119,21 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         !use MCLIB_TYPEDEF_BASICRECORD
         implicit none
         integer::hFile
-        type(MigCoalClusterRecord)::Record
+        CLASS(SimulationRecord_SUB),target::Record
         integer,optional::LINE
         !---Local Vars---
         character*1000::STR
         character*32::KEYWORD
         character*32::STRTMP(20)
         integer::N
+        type(MigCoalClusterRecord),pointer::fp_Record=>null()
+        type(c_ptr)::cp_Record
         !---Body---
+
+        cp_Record = c_loc(Record)
+
+        call c_f_pointer(cp_Record,fp_Record)
+
         if(present(LINE)) then    ! Read file
             DO While(.true.)
                 call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -152,11 +159,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
-                        call Record%SetStartImplantTime(DRSTR(STRTMP(1)))
+                        call fp_Record%SetStartImplantTime(DRSTR(STRTMP(1)))
 
-                        if(Record%GetStartImplantTime() .LT. 0.D0) then
+                        if(fp_Record%GetStartImplantTime() .LT. 0.D0) then
                             write(*,*) "MCPSCUERROR: The start implant time cannot less than 0"
-                            write(*,*) Record%GetStartImplantTime()
+                            write(*,*) fp_Record%GetStartImplantTime()
                             pause
                             stop
                         end if
@@ -171,11 +178,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
-                        call Record%SetImplantedEntitiesNum(ISTR(STRTMP(1)))
+                        call fp_Record%SetImplantedEntitiesNum(ISTR(STRTMP(1)))
 
-                        if(Record%GetImplantedEntitiesNum() .LT. 0) then
+                        if(fp_Record%GetImplantedEntitiesNum() .LT. 0) then
                             write(*,*) "MCPSCUERROR: The total implant number (for continue implant) cannot less than 0"
-                            write(*,*) Record%GetImplantedEntitiesNum()
+                            write(*,*) fp_Record%GetImplantedEntitiesNum()
                             pause
                             stop
                         end if
@@ -190,11 +197,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
-                        call Record%SetLastRecordImplantNum(ISTR(STRTMP(1)))
+                        call fp_Record%SetLastRecordImplantNum(ISTR(STRTMP(1)))
 
-                        if(Record%GetLastRecordImplantNum() .LT. 0) then
+                        if(fp_Record%GetLastRecordImplantNum() .LT. 0) then
                             write(*,*) "MCPSCUERROR: The last recorded implant number (for continue implant) cannot less than 0"
-                            write(*,*) Record%GetLastRecordImplantNum()
+                            write(*,*) fp_Record%GetLastRecordImplantNum()
                             pause
                             stop
                         end if
@@ -209,11 +216,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
-                        call Record%SetNCUT(ISTR(STRTMP(1)))
+                        call fp_Record%SetNCUT(ISTR(STRTMP(1)))
 
-                        if(Record%GetNCUT() .LT. 0) then
+                        if(fp_Record%GetNCUT() .LT. 0) then
                             write(*,*) "MCPSCUERROR: The NCUT cannot less than 0"
-                            write(*,*) Record%GetNCUT()
+                            write(*,*) fp_Record%GetNCUT()
                             pause
                             stop
                         end if
@@ -228,11 +235,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
-                        call Record%SetRescaleCount(ISTR(STRTMP(1)))
+                        call fp_Record%SetRescaleCount(ISTR(STRTMP(1)))
 
-                        if(Record%GetRescaleCount() .LT. 0) then
+                        if(fp_Record%GetRescaleCount() .LT. 0) then
                             write(*,*) "MCPSCUERROR: The total rescale number cannot less than 0"
-                            write(*,*) Record%GetRescaleCount()
+                            write(*,*) fp_Record%GetRescaleCount()
                             pause
                             stop
                         end if
@@ -247,11 +254,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
-                        call Record%Set_InsertBatchNum(ISTR(STRTMP(1)))
+                        call fp_Record%Set_InsertBatchNum(ISTR(STRTMP(1)))
 
-                        if(Record%Get_InsertBatchNum() .LT. 0) then
+                        if(fp_Record%Get_InsertBatchNum() .LT. 0) then
                             write(*,*) "MCPSCUERROR: The total insert batch number cannot less than 0"
-                            write(*,*) Record%Get_InsertBatchNum()
+                            write(*,*) fp_Record%Get_InsertBatchNum()
                             pause
                             stop
                         end if
@@ -266,11 +273,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
-                        call Record%SetSweepOutCount(ISTR(STRTMP(1)))
+                        call fp_Record%SetSweepOutCount(ISTR(STRTMP(1)))
 
-                        if(Record%GetSweepOutCount() .LT. 0) then
+                        if(fp_Record%GetSweepOutCount() .LT. 0) then
                             write(*,*) "MCPSCUERROR: The total sweep out number cannot less than 0"
-                            write(*,*) Record%GetSweepOutCount()
+                            write(*,*) fp_Record%GetSweepOutCount()
                             pause
                             stop
                         end if
@@ -284,8 +291,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             pause
                             stop
                         end if
-                        Record%RandSeed_OutDevWalk(1) = ISTR(STRTMP(1))
-                        Record%RandSeed_OutDevWalk(2) = ISTR(STRTMP(2))
+                        fp_Record%RandSeed_OutDevWalk(1) = ISTR(STRTMP(1))
+                        fp_Record%RandSeed_OutDevWalk(2) = ISTR(STRTMP(2))
 
 
                     case("&RSEEDINNERDEVWALK")
@@ -297,8 +304,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             pause
                             stop
                         end if
-                        Record%RandSeed_InnerDevWalk(1) = ISTR(STRTMP(1))
-                        Record%RandSeed_InnerDevWalk(2) = ISTR(STRTMP(2))
+                        fp_Record%RandSeed_InnerDevWalk(1) = ISTR(STRTMP(1))
+                        fp_Record%RandSeed_InnerDevWalk(2) = ISTR(STRTMP(2))
 
                     case("&RSEEDREACTION")
                         call EXTRACT_NUMB(STR,2,N,STRTMP)
@@ -309,8 +316,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             pause
                             stop
                         end if
-                        Record%RandSeed_Reaction(1) = ISTR(STRTMP(1))
-                        Record%RandSeed_Reaction(2) = ISTR(STRTMP(2))
+                        fp_Record%RandSeed_Reaction(1) = ISTR(STRTMP(1))
+                        fp_Record%RandSeed_Reaction(2) = ISTR(STRTMP(2))
 
                     case("&RSEEDIMPSPECLAYER")
                         call EXTRACT_NUMB(STR,2,N,STRTMP)
@@ -321,8 +328,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             pause
                             stop
                         end if
-                        Record%RandSeed_SpaceDist_Implant_Layer(1) = ISTR(STRTMP(1))
-                        Record%RandSeed_SpaceDist_Implant_Layer(2) = ISTR(STRTMP(2))
+                        fp_Record%RandSeed_SpaceDist_Implant_Layer(1) = ISTR(STRTMP(1))
+                        fp_Record%RandSeed_SpaceDist_Implant_Layer(2) = ISTR(STRTMP(2))
 
                     case("&RSEEDIMPSPECX")
                         call EXTRACT_NUMB(STR,2,N,STRTMP)
@@ -333,8 +340,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             pause
                             stop
                         end if
-                        Record%RandSeed_SpaceDist_Implant_X(1) = ISTR(STRTMP(1))
-                        Record%RandSeed_SpaceDist_Implant_X(2) = ISTR(STRTMP(2))
+                        fp_Record%RandSeed_SpaceDist_Implant_X(1) = ISTR(STRTMP(1))
+                        fp_Record%RandSeed_SpaceDist_Implant_X(2) = ISTR(STRTMP(2))
 
                     case("&RSEEDIMPSPECY")
                         call EXTRACT_NUMB(STR,2,N,STRTMP)
@@ -345,8 +352,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             pause
                             stop
                         end if
-                        Record%RandSeed_SpaceDist_Implant_Y(1) = ISTR(STRTMP(1))
-                        Record%RandSeed_SpaceDist_Implant_Y(2) = ISTR(STRTMP(2))
+                        fp_Record%RandSeed_SpaceDist_Implant_Y(1) = ISTR(STRTMP(1))
+                        fp_Record%RandSeed_SpaceDist_Implant_Y(2) = ISTR(STRTMP(2))
 
                     case("&RSEEDIMPSPECZ")
                         call EXTRACT_NUMB(STR,2,N,STRTMP)
@@ -357,8 +364,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             pause
                             stop
                         end if
-                        Record%RandSeed_SpaceDist_Implant_Z(1) = ISTR(STRTMP(1))
-                        Record%RandSeed_SpaceDist_Implant_Z(2) = ISTR(STRTMP(2))
+                        fp_Record%RandSeed_SpaceDist_Implant_Z(1) = ISTR(STRTMP(1))
+                        fp_Record%RandSeed_SpaceDist_Implant_Z(2) = ISTR(STRTMP(2))
 
                     case("&RSEEDIMPSIZE")
                         call EXTRACT_NUMB(STR,2,N,STRTMP)
@@ -369,8 +376,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             pause
                             stop
                         end if
-                        Record%RandSeed_SizeDist_Implant(1) = ISTR(STRTMP(1))
-                        Record%RandSeed_SizeDist_Implant(2) = ISTR(STRTMP(2))
+                        fp_Record%RandSeed_SizeDist_Implant(1) = ISTR(STRTMP(1))
+                        fp_Record%RandSeed_SizeDist_Implant(2) = ISTR(STRTMP(2))
 
                     case default
                         write(*,*) "MCPSCUERROR: Unknown flags: ",KEYWORD(1:LENTRIM(KEYWORD))
@@ -383,51 +390,53 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
         else                      ! Write to file
             KEYWORD = "&STARTIMPTIME"
-            write(hFile, FMT="(A,1x,A16,1x,A16,1x,1PE18.10)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),"(in s) ",Record%GetStartImplantTime()
+            write(hFile, FMT="(A,1x,A16,1x,A16,1x,1PE18.10)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),"(in s) ",fp_Record%GetStartImplantTime()
 
             KEYWORD = "&NIMPLANT"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetImplantedEntitiesNum()
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetImplantedEntitiesNum()
 
             KEYWORD = "&NLASTRECORDIMPLANT"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetLastRecordImplantNum()
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetLastRecordImplantNum()
 
             KEYWORD = "&NCUT"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetNCUT()
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetNCUT()
 
             KEYWORD = "&NRESCALE"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetRescaleCount()
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetRescaleCount()
 
             KEYWORD = "&BATCHNUM"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%Get_InsertBatchNum()
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%Get_InsertBatchNum()
 
             KEYWORD = "&NSWEEPOUT"
-            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%GetSweepOutCount()
+            write(hFile, FMT="(A,1x,A16,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetSweepOutCount()
 
             KEYWORD = "&RSEEDOUTDEVWALK"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_OutDevWalk
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_OutDevWalk
 
             KEYWORD = "&RSEEDINNERDEVWALK"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_InnerDevWalk
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_InnerDevWalk
 
             KEYWORD = "&RSEEDREACTION"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_Reaction
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_Reaction
 
             KEYWORD = "&RSEEDIMPSPECLAYER"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SpaceDist_Implant_Layer
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Layer
 
             KEYWORD = "&RSEEDIMPSPECX"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SpaceDist_Implant_X
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_X
 
             KEYWORD = "&RSEEDIMPSPECY"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SpaceDist_Implant_Y
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Y
 
             KEYWORD = "&RSEEDIMPSPECZ"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SpaceDist_Implant_Z
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SpaceDist_Implant_Z
 
             KEYWORD = "&RSEEDIMPSIZE"
-            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),Record%RandSeed_SizeDist_Implant
+            write(hFile, FMT="(A,1x,A16,2(1x,I15))") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%RandSeed_SizeDist_Implant
 
         end if
+
+        fp_Record=>null()
 
         return
         100 write(*,*) "MCPSCUERROR: Error to load simulation record "
