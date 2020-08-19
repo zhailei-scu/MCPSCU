@@ -1673,6 +1673,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                       max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
                                           TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)))
 
+            call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
+
 
             Dev_Boxes%dm_SEUsedIndexBox = Host_Boxes%m_BoxesInfo%SEUsedIndexBox
 
@@ -1703,10 +1705,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
         !---Local Vars---
         integer::I
         !---Body---
-
-        if(Record%GetStatu_InsertOneBatchInNextStep() .eq. .true.) then
-            call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
-        end if
 
         call Record%SetFalse_InsertOneBatchInNextStep()
 

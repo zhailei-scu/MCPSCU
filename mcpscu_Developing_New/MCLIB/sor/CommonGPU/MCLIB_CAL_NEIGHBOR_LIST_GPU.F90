@@ -818,14 +818,16 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_Boxes%dm_SEExpdIndexBox,                  &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
-                                                                                    BlockNumEachBox)
+                                                                                    BlockNumEachBox,                               &
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
     else
         call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
                                                                                     Dev_Boxes%dm_SEUsedIndexBox,                   &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
-                                                                                    BlockNumEachBox)
+                                                                                    BlockNumEachBox,                               &
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
     end if
 
 
@@ -837,7 +839,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
   end subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex
 
   !******************************************************************************************
-  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox)
+  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps)
     !***  PURPOSE:  to update the neighbore list of atoms(multiBox and block share tech is used)
     !             NNearestNeighbor      , the user defined number of nearest neighborhood
     !             Dev_Clusters          , clusters array
@@ -853,6 +855,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer,device::KVOIS(:)
     integer,device::INDI(:,:)
     integer,value::BlockNumEachBox
+    real(kind=KINDDF),device::MinTSteps(:)
     !---Local Vars---
     integer::tid,bid,IC0,cid,IB
     integer::scid,ecid
@@ -867,10 +870,11 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     real(kind=KINDSF),shared,dimension(p_BLOCKSIZE)::Shared_RR
     real(kind=KINDSF)::Pos_x,Pos_y,Pos_z,SEP_x,SEP_y,SEP_z
     real(kind=KINDSF)::DiffA,DiffB,RADA,RADB
-    real(kind=KINDSF),dimension(p_MXNEAREST)::Nearest_DIST2
+    real(kind=KINDSF),dimension(p_MXNEAREST)::Nearest_Time
     real(kind=KINDSF)::DIST2
-    real(kind=KINDSF)::Nearest_maxDIST2,temp_DIST2
-    integer::Nearest_maxDISTIndex
+    real(kind=KINDSF)::Nearest_maxTime,temp_Time
+    integer::Nearest_maxTimeIndex
+    real(kind=KINDDF)::MinT,reactTime
     integer::NN
     !---Body---
     tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
@@ -887,7 +891,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     IC = scid + (cid - (bid0 -1)*p_BLOCKSIZE - 1)
 
     NN = 0
-    Nearest_maxDIST2=-1.D0
+    Nearest_maxTime=-1.D0
 
     if(IC .LE. ecid) then
         Pos_x = Dev_Clusters(IC)%m_POS(1)
@@ -897,10 +901,14 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
         DiffA = Dev_Clusters(IC)%m_DiffCoeff
         RADA = Dev_Clusters(IC)%m_RAD
         KVOIS(IC) = 0
+
+        MinTSteps(IC) = 1.D32
     end if
 
     ICFROM = scid
     ICTO = min(ICFROM+p_BLOCKSIZE-1,ecid)
+
+    MinT = 1.D32
 
     DO while(ICTO .GE. ICFROM)
        if((ICFROM+tid-1) .LE. ecid) then
@@ -939,32 +947,37 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
                   DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
 
-                  DIST2 = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+                  reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+
+                  if(reactTime .LE. MinT ) then
+                    MinT = reactTime
+                  end if
 
                   if(NN .LT. NNearestNeighbor) then
 
                     NN = NN + 1
                     KVOIS(IC) = NN
                     INDI(IC,NN) = I
-                    Nearest_DIST2(NN) = DIST2
+                    Nearest_Time(NN) = reactTime
 
-                    if(Nearest_maxDIST2 .LT. DIST2) then
+                    if(Nearest_maxTime .LT. reactTime) then
 
-                      Nearest_maxDIST2 = DIST2
-                      Nearest_maxDISTIndex = NN
+                      Nearest_maxTime = reactTime
+                      Nearest_maxTimeIndex = NN
                     end if
 
-                  else if(Nearest_maxDIST2 .GT. DIST2) then
+                  else if(Nearest_maxTime .GT. reactTime) then
 
-                    INDI(IC,Nearest_maxDISTIndex) = I
-                    Nearest_DIST2(Nearest_maxDISTIndex) = DIST2
-                    Nearest_maxDIST2 = -1.0
+                    INDI(IC,Nearest_maxTimeIndex) = I
+                    Nearest_Time(Nearest_maxTimeIndex) = reactTime
+                    Nearest_maxTime = -1.0
                     DO K = 1,NNearestNeighbor
-                      temp_DIST2 = Nearest_DIST2(K)
-                      if(temp_DIST2 .GT. Nearest_maxDIST2) then
+                      temp_Time = Nearest_Time(K)
+                      if(temp_Time .GT. Nearest_maxTime) then
 
-                        Nearest_maxDIST2 = temp_DIST2
-                        Nearest_maxDISTIndex = K
+                        Nearest_maxTime = temp_Time
+                        Nearest_maxTimeIndex = K
                       end if
                     END DO
                   end if
@@ -981,6 +994,10 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
       call syncthreads()
 
     END DO
+
+    if(IC .LE. ecid) then
+        MinTSteps(IC) = MinT
+    end if
 
     return
   end subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex
