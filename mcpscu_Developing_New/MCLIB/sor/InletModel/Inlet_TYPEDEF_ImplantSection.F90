@@ -1643,6 +1643,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
 
+            call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
+
+            call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeReactionRandNum(NewTotalSize)
+
             call CleanSimulationBoxes_GPU(Dev_Boxes)
 
             call Dev_Boxes%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParam)
@@ -1679,44 +1683,45 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call Record%InCrease_OneInsertBatchNum()
         end if
 
-        call this%AdjustTimeStep_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,TSTEP)
+        call this%AdjustTimeStep_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP)
 
         return
     end subroutine
 
 
     !*********************************************
-    subroutine AdjustTimeStep_ImplantBatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,TSTEP)
+    subroutine AdjustTimeStep_ImplantBatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
+        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         !---Local Vars---
         integer::I
         !---Body---
 
+        if(Record%GetStatu_InsertOneBatchInNextStep() .eq. .true.) then
+            call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
+        end if
+
+        call Record%SetFalse_InsertOneBatchInNextStep()
+
         if(this%NInsertTimePoint .GT. 0) then
-            call Record%SetFalse_InsertOneBatchInNextStep()
             DO I = Record%Get_InsertBatchNum()+1,this%NInsertTimePoint
                 if(this%InsertTimePoint(I) .GE. Record%GetSimuTimes() .AND. this%InsertTimePoint(I) .LE. (Record%GetSimuTimes() + TSTEP) ) then
                     TSTEP = this%InsertTimePoint(I) - Record%GetSimuTimes()
                     call Record%SetTrue_InsertOneBatchInNextStep()
                     exit
-                else
-                    call Record%SetFalse_InsertOneBatchInNextStep()
                 end if
-
             END DO
         else
             if(floor((Record%GetSimuTimes() + TSTEP)/this%InsertTimeInterval) .GT. Record%Get_InsertBatchNum()) then
                 TSTEP = (Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - Record%GetSimuTimes()
                 call Record%SetTrue_InsertOneBatchInNextStep()
-            else
-                call Record%SetFalse_InsertOneBatchInNextStep()
             end if
         end if
 
@@ -1844,6 +1849,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeImplantRandNum(MultiBox*NewAllocateNCEachBox)
+                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
+                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeReactionRandNum(NewTotalSize)
 
                 call this%DoImplantTillVirtualBoundary_CPUTOGPU_ImplantContiune(Host_Boxes,Host_SimuCtrlParam,Record,Dev_Boxes,NewAllocateNCEachBox)
 
@@ -1964,19 +1971,25 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF)::VerifyTime
         !---Body---
 
-        DO While(.true.)
+        ImplantNumEachBox_Ceiling = ceiling(this%InsertCountOneBatch*TSTEP/this%InsertTimeInterval)
 
-            ImplantNumEachBox_Ceiling = ceiling(this%InsertCountOneBatch*TSTEP/this%InsertTimeInterval)
+        if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_AveSep) then
 
-            VerifyTime = Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record,ImplantNumEachBox_Ceiling)
+            DO While(.true.)
 
-            if(VerifyTime .LT. TSTEP) then
-                TSTEP = TSTEP*0.95
-                cycle
-            else
-                exit
-            end if
-        END DO
+                VerifyTime = Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record,ImplantNumEachBox_Ceiling)
+
+                if(VerifyTime .LT. TSTEP*0.95) then
+                    TSTEP = TSTEP*0.95
+
+                    ImplantNumEachBox_Ceiling = ceiling(this%InsertCountOneBatch*TSTEP/this%InsertTimeInterval)
+                    cycle
+                else
+                    exit
+                end if
+            END DO
+
+        end if
 
         return
     end subroutine AdjustTimeStep_ImplantContiune

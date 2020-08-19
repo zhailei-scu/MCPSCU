@@ -64,23 +64,31 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     end if
 
     if(SureToUpdateNL .eq. .true.) then
-        select case(Host_SimuCtrlParam%NEIGHBORCALWAY)
-            case(mp_CalcNeighborList_NNEAREST)
-                call Cal_Neighbore_Table_GPU_Nearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
-            case(mp_CalcNeighborList_RCUT)
-                if(.not. present(RMAX)) then
-                    write(*,*) "MCPSCUERROR: Must special the max radius if the cut-off neighbor-list is used."
+
+        if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR .or.   &
+           Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
+            call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+        else
+            select case(Host_SimuCtrlParam%NEIGHBORCALWAY)
+                case(mp_CalcNeighborList_NNEAREST)
+                    call Cal_Neighbore_Table_GPU_Nearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+                case(mp_CalcNeighborList_RCUT)
+                    if(.not. present(RMAX)) then
+                        write(*,*) "MCPSCUERROR: Must special the max radius if the cut-off neighbor-list is used."
+                        pause
+                        stop
+                    end if
+                    call Cal_Neighbore_Table_GPU_Old(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,RMAX)
+                case default
+                    write(*,*) "MCPSCUERROR: Unknown strategy to update neighbor-list."
                     pause
                     stop
-                end if
-                call Cal_Neighbore_Table_GPU_Old(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,RMAX)
-            case default
-                write(*,*) "MCPSCUERROR: Unknown strategy to update neighbor-list."
-                pause
-                stop
-        end select
+            end select
+        end if
 
-        call CalClustersSep_Dev(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+        if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NearestSep) then
+            call CalClustersSep_Dev(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+        end if
 
         call Record%SetLastUpdateNLNC0(NAct)
         call Record%SetLastUpdateNLTime((dble(Record%GetSimuSteps())))
@@ -748,6 +756,234 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     return
   end subroutine Kernel_NeighborList_Nearest_WithOutActiveIndex
+
+  !**********************************************************************************
+  subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+    implicit none
+    !---Dummy Vars---
+    type(SimulationBoxes), intent(in)::Host_Boxes
+    type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
+    type(SimulationBoxes_GPU)::Dev_Boxes
+    !---Local Vars---
+    integer::MULTIBOX
+    integer::NNearestNeighbor
+    type(dim3)::blocks
+    type(dim3)::threads
+    integer::NB, NBX, NBY, BX, BY, err
+    integer::BlockNumEachBox
+    logical::ChangedToUsedIndex
+    !---Body---
+    #ifdef MC_PROFILING
+    call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
+    N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
+    #endif
+    !---Body---
+
+    MULTIBOX = Host_SimuCtrlParam%MultiBox
+
+    ChangedToUsedIndex = .false.
+
+    NNearestNeighbor = Host_SimuCtrlParam%MAXNEIGHBORNUM
+
+    !*** to determine the block size
+    BX = p_BLOCKSIZE
+    BY = 1
+    !*** to determine the dimension of blocks
+    if(maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1)) .GE. &
+       maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))) then
+        ChangedToUsedIndex = .false.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1))/p_BLOCKSIZE + 1
+    else
+        ChangedToUsedIndex = .true.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))/p_BLOCKSIZE + 1
+    end if
+    NB = BlockNumEachBox*MultiBox
+
+    blocks  = dim3(NB, 1, 1)
+    threads = dim3(BX, BY, 1)
+
+    if(NNearestNeighbor .GT. p_MXNEAREST) then
+       write(*,*) "Warning! The user defined number of nearest neighborhood is too large:",NNearestNeighbor,p_MXNEAREST
+       NNearestNeighbor = p_MXNEAREST
+       write(*,*) "To continue the evolution, the user defined number of nearest neighborhood is changed to:",NNearestNeighbor
+    else if(NNearestNeighbor .LE. 0) then
+       write(*,*) "Warning! The user defined number of nearest neighborhood is ZERO:",NNearestNeighbor
+       NNearestNeighbor = p_MXNEAREST
+       write(*,*) "To continue the evolution, the user defined number of nearest neighborhood is changed to:",NNearestNeighbor
+    end if
+
+    if(ChangedToUsedIndex .eq. .false.) then
+        call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                    Dev_Boxes%dm_SEExpdIndexBox,                  &
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                    BlockNumEachBox)
+    else
+        call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                    Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                    BlockNumEachBox)
+    end if
+
+
+    #ifdef MC_PROFILING
+    call Time_Accumulate(T_Cal_Neighbore_Table_GPU_Nearest_Start,T_Cal_Neighbore_Table_GPU_Nearest)
+    #endif
+
+    return
+  end subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex
+
+  !******************************************************************************************
+  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox)
+    !***  PURPOSE:  to update the neighbore list of atoms(multiBox and block share tech is used)
+    !             NNearestNeighbor      , the user defined number of nearest neighborhood
+    !             Dev_Clusters          , clusters array
+    !             Dev_SEExpdIndexBox   , array to record the start and end index range of clusters that would calculate the neighbor-lists in each box
+    !             KVOIS                 , the number of neighbores of clusters
+    !             INDI                  , the index list of the neighbores
+    implicit none
+    !
+    !---Dummy Vars---
+    integer,value::NNearestNeighbor
+    type(ACluster), device::Dev_Clusters(:)
+    integer, device::Dev_SEExpdIndexBox(:,:)
+    integer,device::KVOIS(:)
+    integer,device::INDI(:,:)
+    integer,value::BlockNumEachBox
+    !---Local Vars---
+    integer::tid,bid,IC0,cid,IB
+    integer::scid,ecid
+    integer::bid0
+    integer::IC
+    integer::ICFROM,ICTO
+    integer::STATU
+    integer::I,JC,K
+    real(kind=KINDSF),shared,dimension(p_BLOCKSIZE)::Shared_PosX,Shared_PosY,Shared_PosZ
+    integer,shared,dimension(p_BLOCKSIZE)::Shared_Statu
+    real(kind=KINDSF),shared,dimension(p_BLOCKSIZE)::Shared_DiffCoeff
+    real(kind=KINDSF),shared,dimension(p_BLOCKSIZE)::Shared_RR
+    real(kind=KINDSF)::Pos_x,Pos_y,Pos_z,SEP_x,SEP_y,SEP_z
+    real(kind=KINDSF)::DiffA,DiffB,RADA,RADB
+    real(kind=KINDSF),dimension(p_MXNEAREST)::Nearest_DIST2
+    real(kind=KINDSF)::DIST2
+    real(kind=KINDSF)::Nearest_maxDIST2,temp_DIST2
+    integer::Nearest_maxDISTIndex
+    integer::NN
+    !---Body---
+    tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
+    bid = (blockidx%y-1)*griddim%x +  blockidx%x         ! the index of block
+    IC0 = (bid-1)*p_BLOCKSIZE + 1                         ! the first thread index of this block
+    cid = IC0 + tid - 1                                  ! current thread index
+
+    IB = (bid - 1)/BlockNumEachBox + 1
+    bid0 = (IB - 1)*BlockNumEachBox + 1
+
+    scid =  Dev_SEExpdIndexBox(IB,1)                  ! start search index
+    ecid =  Dev_SEExpdIndexBox(IB,2)                  ! end   search index
+
+    IC = scid + (cid - (bid0 -1)*p_BLOCKSIZE - 1)
+
+    NN = 0
+    Nearest_maxDIST2=-1.D0
+
+    if(IC .LE. ecid) then
+        Pos_x = Dev_Clusters(IC)%m_POS(1)
+        Pos_y = Dev_Clusters(IC)%m_POS(2)
+        Pos_z = Dev_Clusters(IC)%m_POS(3)
+        STATU = Dev_Clusters(IC)%m_Statu
+        DiffA = Dev_Clusters(IC)%m_DiffCoeff
+        RADA = Dev_Clusters(IC)%m_RAD
+        KVOIS(IC) = 0
+    end if
+
+    ICFROM = scid
+    ICTO = min(ICFROM+p_BLOCKSIZE-1,ecid)
+
+    DO while(ICTO .GE. ICFROM)
+       if((ICFROM+tid-1) .LE. ecid) then
+        Shared_Statu(tid) = Dev_Clusters(ICFROM+tid-1)%m_Statu
+        Shared_PosX(tid) = Dev_Clusters(ICFROM+tid-1)%m_POS(1)
+        Shared_PosY(tid) = Dev_Clusters(ICFROM+tid-1)%m_POS(2)
+        Shared_PosZ(tid) = Dev_Clusters(ICFROM+tid-1)%m_POS(3)
+        Shared_DiffCoeff(tid) = Dev_Clusters(ICFROM+tid-1)%m_DiffCoeff
+        Shared_RR(tid) = Dev_Clusters(ICFROM+tid-1)%m_RAD
+       end if
+
+       call syncthreads()
+
+       IF(IC .LE. ecid .AND. (STATU .EQ. p_ACTIVEFREE_STATU .or. STATU .EQ. p_ACTIVEINGB_STATU)) THEN
+
+         DO I = ICFROM, ICTO    ! mutual
+
+             if(I .ne. IC) then
+
+                JC = I - ICFROM + 1
+                if(Shared_Statu(JC) .eq. p_ACTIVEFREE_STATU .or. Shared_Statu(JC) .eq. p_ACTIVEINGB_STATU) then
+                  SEP_x = Pos_x - Shared_PosX(JC)
+                  SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+
+                  SEP_y = Pos_y - Shared_PosY(JC)
+                  SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+
+                  SEP_z = Pos_z - Shared_PosZ(JC)
+                  SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+
+                  DIST2 = SEP_x*SEP_x + SEP_y*SEP_y + SEP_z*SEP_z
+
+                  RADB = Shared_RR(JC)
+
+                  DiffB = Shared_DiffCoeff(JC)
+
+                  DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                  DIST2 = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                  if(NN .LT. NNearestNeighbor) then
+
+                    NN = NN + 1
+                    KVOIS(IC) = NN
+                    INDI(IC,NN) = I
+                    Nearest_DIST2(NN) = DIST2
+
+                    if(Nearest_maxDIST2 .LT. DIST2) then
+
+                      Nearest_maxDIST2 = DIST2
+                      Nearest_maxDISTIndex = NN
+                    end if
+
+                  else if(Nearest_maxDIST2 .GT. DIST2) then
+
+                    INDI(IC,Nearest_maxDISTIndex) = I
+                    Nearest_DIST2(Nearest_maxDISTIndex) = DIST2
+                    Nearest_maxDIST2 = -1.0
+                    DO K = 1,NNearestNeighbor
+                      temp_DIST2 = Nearest_DIST2(K)
+                      if(temp_DIST2 .GT. Nearest_maxDIST2) then
+
+                        Nearest_maxDIST2 = temp_DIST2
+                        Nearest_maxDISTIndex = K
+                      end if
+                    END DO
+                  end if
+
+                end if
+             end if
+         END DO
+
+      END IF
+
+      ICFROM = ICTO + 1
+      ICTO = min(ICFROM+p_BLOCKSIZE-1,ecid)
+
+      call syncthreads()
+
+    END DO
+
+    return
+  end subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex
 
   !********************************************************
   subroutine CalClustersSep_Dev(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
