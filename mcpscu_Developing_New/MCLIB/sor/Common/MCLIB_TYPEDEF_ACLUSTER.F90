@@ -443,8 +443,9 @@ module MCLIB_TYPEDEF_ACLUSTER
             next=>cursor%next
             call Clean_Cluster(cursor%TheCluster)
             cursor%quantififyValue = 0.D0
-            Nullify(cursor)
+            cursor%next=>null()
             deallocate(cursor)
+            Nullify(cursor)
             cursor=>next
         END DO
 

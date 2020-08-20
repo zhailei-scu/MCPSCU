@@ -203,6 +203,7 @@ module MODEL_TYPEDEF_ATOMSLIST
             cursor%m_ListCount = 0
             cursor%m_AtomsNumber = 0
 
+            cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next
@@ -360,8 +361,11 @@ module MODEL_TYPEDEF_ATOMSLIST
         END DO
 
         Nullify(cursor)
+        cursor=>null()
         Nullify(pCursor)
+        pCursor=>null()
         Nullify(othersCursor)
+        othersCursor=>null()
 
         return
     end subroutine CopyAtomsListFromOther

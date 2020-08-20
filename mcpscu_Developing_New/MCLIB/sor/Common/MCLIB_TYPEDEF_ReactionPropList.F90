@@ -454,8 +454,11 @@ module MCLIB_TYPEDEF_ReactionPropList
         this%ListCount = otherOne%GetList_Count()
 
         Nullify(cursorOfSelfP)
+        cursorOfSelfP=>null()
         Nullify(cursorOfSelf)
+        cursorOfSelf=>null()
         Nullify(cursorOfOthers)
+        cursorOfOthers=>null()
         return
     end subroutine CopyReadReactionPropListFromOther
 
@@ -517,6 +520,7 @@ module MCLIB_TYPEDEF_ReactionPropList
 
             allocate(cursor)
             NUllify(cursor%next)
+            cursor%next=>null()
             ! The assignment(=) had been overrided
             cursor%Reaction = newOne
             cursorP%next=>cursor
@@ -833,6 +837,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         DO While(associated(cursor))
             next=>cursor%next
             call CleanReadedReactionPair(cursor%Reaction)
+            cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next

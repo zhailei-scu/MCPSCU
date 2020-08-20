@@ -61,7 +61,7 @@ module MCLIB_TYPEDEF_RECORDLIST_GPU
         End Do
 
         Nullify(cursor)
-
+        cursor=>null()
         return
     end subroutine
 
@@ -96,8 +96,11 @@ module MCLIB_TYPEDEF_RECORDLIST_GPU
         this%m_ListCount = otherOne%GetList_Count()
 
         Nullify(cursorOfSelfP)
+        cursorOfSelfP=>null()
         Nullify(cursorOfSelf)
+        cursorOfSelf=>null()
         Nullify(cursorOfOthers)
+        cursorOfOthers=>null()
         return
     end subroutine CopyOneStepProcedureListFromOther
 
@@ -126,6 +129,7 @@ module MCLIB_TYPEDEF_RECORDLIST_GPU
 
             allocate(cursor)
             NUllify(cursor%next)
+            cursor%next=>null()
             cursor%m_Procedure=>newOne
             cursorP%next=>cursor
         end if
@@ -159,13 +163,22 @@ module MCLIB_TYPEDEF_RECORDLIST_GPU
         type(OneStepProcedureList),pointer::next=>null()
         !---Body---
 
+        cursor=>this
+        if(.not. associated(cursor)) then
+            return
+        end if
+
         Nullify(this%m_Procedure)
+
+        this%m_Procedure=>null()
 
         cursor=>this%next
 
         DO While(associated(cursor))
             next=>cursor%next
             Nullify(cursor%m_Procedure)
+            cursor%m_Procedure=>null()
+            cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next

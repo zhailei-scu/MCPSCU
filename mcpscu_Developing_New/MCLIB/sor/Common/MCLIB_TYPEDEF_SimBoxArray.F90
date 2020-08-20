@@ -736,6 +736,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     END DO
 
     Nullify(cursor)
+    cursor=>null()
 
     call this%ReadDiffusorProp_List%ConvertToDiffusorsTypesMap(this%Atoms_list,this%m_DiffusorTypesMap)
 
@@ -1148,6 +1149,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     END DO
 
     Nullify(cursor)
+    cursor=>null()
 
     call this%ReadReactionProp_List%ConvertToReactionsMap(this%Atoms_list,this%m_ReactionsMap)
 
@@ -2490,6 +2492,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     END DO
 
     Nullify(cursor)
+    cursor=>null()
 
     return
   end subroutine PutoutToFile

@@ -143,7 +143,9 @@ module MCLIB_TYPEDEF_GEOMETRY
             Pcursor%next=>Cursor
 
             Nullify(Pcursor)
+            Pcursor=>null()
             Nullify(Cursor)
+            Cursor=>null()
 
         end if
 
@@ -238,30 +240,34 @@ module MCLIB_TYPEDEF_GEOMETRY
         !---Dummy Vars---
         type(GrainSeedList),pointer::list
         !---Local Vars---
-        type(GrainSeedList),pointer::PCursor=>null()
         type(GrainSeedList),pointer::cursor=>null()
+        type(GrainSeedList),pointer::next=>null()
         !---Body---
-        if(associated(list)) then
+        cursor=>list
+
+        if(associated(cursor)) then
 
             if(list%m_count .GT. 0) then
-                PCursor=>list
+                list%m_count = 0
+
                 cursor=>list%next
+
                 DO While(associated(cursor))
-                    Nullify(PCursor%next)
-                    PCursor%next=>null()
-                    deallocate(PCursor)
-                    PCursor=>cursor
-                    cursor=>cursor%next
+                    next=>cursor%next
+                    cursor%next=>null()
+                    deallocate(cursor)
+                    Nullify(cursor)
+                    cursor=>next
                 END DO
-
-                Nullify(cursor)
-                cursor=>null()
-
-                Nullify(PCursor)
-                PCursor=>null()
 
             end if
         end if
+
+        Nullify(cursor)
+        cursor=>null()
+
+        Nullify(next)
+        next=>null()
 
         return
     end subroutine
@@ -276,7 +282,9 @@ module MCLIB_TYPEDEF_GEOMETRY
         !---Body---
         ptr=>this
 
-        call CleanGrainSeedList(ptr)
+        if(associated(ptr)) then
+            call CleanGrainSeedList(ptr)
+        end if
 
         Nullify(ptr)
         ptr=>null()

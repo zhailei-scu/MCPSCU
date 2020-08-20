@@ -409,8 +409,11 @@ module MCLIB_TYPEDEF_DiffusorPropList
         this%ListCount = otherOne%GetList_Count()
 
         Nullify(cursorOfSelfP)
+        cursorOfSelfP=>null()
         Nullify(cursorOfSelf)
+        cursorOfSelf=>null()
         Nullify(cursorOfOthers)
+        cursorOfOthers=>null()
         return
     end subroutine CopyReadDiffusorPropListFromOther
 
@@ -457,6 +460,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
 
             allocate(cursor)
             NUllify(cursor%next)
+            cursor%next=>null()
             ! The assignment(=) had been overrided
             cursor%Diffusor = newOne
             cursorP%next=>cursor
@@ -741,7 +745,9 @@ module MCLIB_TYPEDEF_DiffusorPropList
         call ConstructClusterList%Clean_ClusterList()
 
         Nullify(cursor)
+        cursor=>null()
         Nullify(ClusterListCursor)
+        ClusterListCursor=>null()
         return
     end subroutine PrintOutCheckingResult
 
@@ -771,6 +777,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
         DO While(associated(cursor))
             next=>cursor%next
             call CleanReadedDiffusorValue(cursor%Diffusor)
+            cursor%next=>Null()
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next

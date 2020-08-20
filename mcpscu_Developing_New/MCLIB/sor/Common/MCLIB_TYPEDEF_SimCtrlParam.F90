@@ -482,6 +482,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     END DO
 
     Nullify(cursor)
+    cursor=>null()
 
     if(.not. associated(TheResult)) then
         write(*,*) "MCPSCUERROR: Cannot find the simulation control section by the id: ",TheIndex
@@ -594,8 +595,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     DO While(associated(cursor))
         next=>cursor%next
         call cursor%theSimulationCtrlParam%Clean_SimulationCtrlParam()
-        Nullify(cursor)
+        cursor%next=>null()
         deallocate(cursor)
+        Nullify(cursor)
         cursor=>next
     END DO
 

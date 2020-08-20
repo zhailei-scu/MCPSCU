@@ -1192,8 +1192,9 @@ module MCLIB_TYPEDEF_BASICRECORD
         DO While(associated(cursor))
             next=>cursor%next
             cursor%TheReadWriteProc=>null()
-            Nullify(cursor)
+            cursor%next=>null()
             deallocate(cursor)
+            Nullify(cursor)
             cursor=>next
         END DO
 

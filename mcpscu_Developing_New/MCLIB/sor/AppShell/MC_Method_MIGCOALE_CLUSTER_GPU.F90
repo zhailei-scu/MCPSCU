@@ -622,6 +622,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
             allocate(cursor)
             NUllify(cursor%next)
+            cursor%next=>null()
             ! The assignment(=) had been overrided
             cursor%TheValue = newOne
             cursorP%next=>cursor
@@ -654,6 +655,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(InitBoxSimCfgList),pointer::cursor=>null()
         type(InitBoxSimCfgList),pointer::next=>null()
         !---Body---
+        cursor=>this
+
+        if(.not. associated(cursor)) then
+            return
+        end if
+
         cursor=>this%next
 
         call this%TheValue%Clean_InitBoxSimCfg()
@@ -661,6 +668,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         DO While(associated(cursor))
             next=>cursor%next
             call cursor%TheValue%Clean_InitBoxSimCfg()
+            cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next
@@ -939,6 +947,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         END DO
 
         Nullify(cursor)
+        cursor=>null()
 
         return
 
@@ -1472,6 +1481,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         END DO
 
         Nullify(cursor)
+        cursor=>null()
 
         return
     end subroutine

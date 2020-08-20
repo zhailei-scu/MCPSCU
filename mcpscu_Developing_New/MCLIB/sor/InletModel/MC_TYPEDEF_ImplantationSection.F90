@@ -530,6 +530,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         Nullify(cursor)
 
+        cursor=>null()
+
         if(.not. associated(TheResult)) then
             write(*,*) "MCPSCUERROR: Cannot find the Implantation section by the id: ",TheIndex
             pause
@@ -562,6 +564,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         Do while(associated(cursor))
             next=>cursor%next
             call cursor%TheImplantSection%Clean()
+            cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next

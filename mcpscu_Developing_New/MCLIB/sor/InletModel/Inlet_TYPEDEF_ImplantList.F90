@@ -211,11 +211,17 @@ module INLET_TYPEDEF_IMPLANTLIST
             ! The assignment(=) had been override
             next%TheImplantSection = TheImplantSection
             Nullify(next%next)
+            next%next=>null()
             cursor%next=>next
         end if
 
         this%ListCount = this%ListCount + 1
 
+        Nullify(cursor)
+        cursor=>null()
+
+        Nullify(next)
+        next=>null()
         return
     end subroutine
 
@@ -241,6 +247,7 @@ module INLET_TYPEDEF_IMPLANTLIST
         Do while(associated(cursor))
             next=>cursor%next
             call cursor%TheImplantSection%Clean_ImplantSection()
+            cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)
             cursor=>next

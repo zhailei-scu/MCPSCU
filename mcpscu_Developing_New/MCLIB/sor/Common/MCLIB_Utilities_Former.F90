@@ -77,8 +77,11 @@ module MCLIB_UTILITIES_FORMER
     this%ListCount = otherOne%GetSTRList_Count()
 
     Nullify(cursorOfSelfP)
+    cursorOfSelfP=>null()
     Nullify(cursorOfSelf)
+    cursorOfSelf=>null()
     Nullify(cursorOfOthers)
+    cursorOfOthers=>null()
     return
   end subroutine CopySTRListFromOther
 
@@ -114,6 +117,7 @@ module MCLIB_UTILITIES_FORMER
 
         allocate(cursor)
         NUllify(cursor%next)
+        cursor%next=>null()
         cursor%TheValue = newOne
         cursorP%next=>cursor
     end if
@@ -252,6 +256,7 @@ module MCLIB_UTILITIES_FORMER
     DO While(associated(cursor))
         next=>cursor%next
         cursor%TheValue = ""
+        cursor%next=>null()
         deallocate(cursor)
         Nullify(cursor)
         cursor=>next
