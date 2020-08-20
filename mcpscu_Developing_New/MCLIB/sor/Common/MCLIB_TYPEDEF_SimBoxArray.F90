@@ -2755,6 +2755,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*15::CElement(p_ATOMS_GROUPS_NUMBER)
     integer::I
     integer::STA
+    integer::RecordIndex
     !---Body---
 
     MultiBox = Host_SimuCtrlParam%MultiBox
@@ -3019,6 +3020,13 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         IC = this%m_BoxesInfo%SEUsedIndexBox(IBox,2) + NCEachBox(IBox)
 
+        RecordIndex = 0
+        if(this%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GE. this%m_BoxesInfo%SEUsedIndexBox(IBox,1) .AND. &
+           this%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GT. 0) then
+           RecordIndex = this%m_ClustersInfo_CPU%m_Clusters(this%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
+        end if
+
+
         call this%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ISTR(STRTMP(2))
@@ -3121,10 +3129,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             end select
         end if
 
-        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) .LE. 0) then
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - this%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1)
+
+        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .GT. 0) then
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = RecordIndex + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2)
         end if
+
 
         this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) + 1
         this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) + 1
@@ -3921,6 +3931,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     real(kind=KINDDF)::tempRand
     logical::exitFlag
     type(DiffusorValue)::TheDiffusorValue
+    integer::RecordIndex
     !---Body---
 
     LayerNum = size(LayerThick)
@@ -3950,6 +3961,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         LastIndex = this%m_BoxesInfo%SEUsedIndexBox(IBox,2)
 
         RemindedNum = NCEachBox
+
+        RecordIndex = 0
+        if(this%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GE. this%m_BoxesInfo%SEUsedIndexBox(IBox,1) .AND. &
+           this%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GT. 0) then
+           RecordIndex = this%m_ClustersInfo_CPU%m_Clusters(this%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
+        end if
 
         DO ILayer = 1,LayerNum
             DO IGroup = 1,NClustersGroup
@@ -4053,8 +4070,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         end select
                     end if
 
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - this%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
+
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
 
                     RemindedNum = RemindedNum - 1
 
@@ -4174,7 +4193,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             end select
                         end if
 
-                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = IC - this%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
+
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
                         exitFlag = .true.

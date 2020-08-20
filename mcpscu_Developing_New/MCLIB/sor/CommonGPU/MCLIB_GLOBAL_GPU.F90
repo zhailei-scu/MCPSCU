@@ -90,13 +90,12 @@ module MCLIB_GLOBAL_GPU
 
 
   !*******************************************************************
-  subroutine Initital_Global_Variables_GPU(Host_Boxes,Host_SimuCtrlParam,Host_Record,Dev_Boxes)
+  subroutine Initital_Global_Variables_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
     !*** Purpose: to initial some vars and array for growth fixbox in GPU
     implicit none
     !---dummy Vars----
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    CLASS(SimulationRecord)::Host_Record
     type(SimulationBoxes_GPU)::Dev_Boxes
     !---Local Vars----
     integer::MultiBox
@@ -116,7 +115,7 @@ module MCLIB_GLOBAL_GPU
 
     call Dev_Boxes%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParam)
 
-    call Dev_Boxes%CopyInBoxesArrayFromHost(Host_Boxes,TotalSize,Host_Record,IfCpyNL=.false.)
+    call Dev_Boxes%CopyInBoxesArrayFromHost(Host_Boxes,TotalSize,IfCpyNL=.false.)
 
 
     return

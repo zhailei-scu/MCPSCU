@@ -1587,6 +1587,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::MultiBox
         integer::NewTotalSize
         integer::IBox
+        integer::NInsertedBatch
         !---Body---
         if(Record%GetStatu_InsertOneBatchInNextStep() .eq. .true. .AND.  &
            this%Check_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record) .eq. .true.) then
@@ -1605,14 +1606,20 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             NCBefore = sum(Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC)
 
+            !--- Store temp info before insert---
+            NInsertedBatch = Record%Get_InsertBatchNum()
+
             call Dev_Boxes%dm_ClusterInfo_GPU%CopyOutToHost(Host_Boxes%m_ClustersInfo_CPU,NC0,IfCpyNL=.false.)
 
             call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
 
+            !---Start to Insert one batch---
+            call Record%InCrease_OneInsertBatchNum()
+
             DO I = 1,this%InsertCountOneBatch
                 select case(this%InsetSequence)
                 case(p_InsertConfig_ByAlphaBeta)
-                    ISelected = mod(Record%Get_InsertBatchNum()*this%InsertCountOneBatch + I,this%ImplantCfgFileList%GetSTRList_Count())
+                    ISelected = mod(NInsertedBatch*this%InsertCountOneBatch + I,this%ImplantCfgFileList%GetSTRList_Count())
 
                     if(ISelected .eq. 0) then
                         ISelected = this%ImplantCfgFileList%GetSTRList_Count()
@@ -1629,6 +1636,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 end select
 
                 cfgFile = this%ImplantCfgFileList%GetValueBySTRListIndex(ISelected)
+                !---The Assignment had been override--
+                tempRecord = Record
                 call Host_Boxes%PutinCfg(Host_SimuCtrlParam,tempRecord,cfgFile,SURDIFPRE_FREE,SURDIFPRE_INGB,TheVersion,AsInitial=.false.)
 
             END DO
@@ -1651,7 +1660,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             call Dev_Boxes%InitSimulationBoxes_Dev(Host_Boxes,Host_SimuCtrlParam)
 
-            call Dev_Boxes%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,Record,IfCpyNL=.false.)
+            call Dev_Boxes%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
 
             call GetBoxesMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record)
             call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
@@ -1681,8 +1690,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
             TotalImplantNum = NCAfter - NCBefore
 
             call Record%AddImplantedEntitiesNum(TotalImplantNum)
-
-            call Record%InCrease_OneInsertBatchNum()
         end if
 
         call this%AdjustTimeStep_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP)
@@ -1823,7 +1830,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record,SweepOutCount=Record%GetSweepOutCount())
 
-            call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam,Record)
+            call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam)
 
             call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
@@ -1837,7 +1844,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                 write(*,*) ".....Add virtual range...."
 
-                call Dev_Boxes%ExpandClustersInfo_GPUToCPU_EqualNum(Host_Boxes,Host_SimuCtrlParam,Record,NewAllocateNCEachBox)
+                call Dev_Boxes%ExpandClustersInfo_GPUToCPU_EqualNum(Host_Boxes,Host_SimuCtrlParam,NewAllocateNCEachBox)
 
                 if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(MultiBox,2) .GT. 0) then
                     NewTotalSize = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(MultiBox,2) - Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(1,1) + 1
@@ -2178,7 +2185,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::IGroup
         logical::exitFlag
         integer::LayerNum
-        integer::NCAccum
+        integer::RecordIndex
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2190,6 +2197,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 NCUsed = 0
             else
                 NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+            end if
+
+            RecordIndex = 0
+            if(NCUsed .GT. 0) then
+                RecordIndex = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
             end if
 
             if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
@@ -2230,8 +2242,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
             end if
 
             MaxGroups = size(this%ClustersSampleRate,dim=2)
-
-            NCAccum = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) + sum(Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
 
             DO IC = ICFROM,ICTO
 
@@ -2349,8 +2359,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 end select
                             end if
 
-                            NCAccum = NCAccum + 1
-                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = NCAccum
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
+
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
                             exitFlag = .true.
@@ -2454,7 +2464,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       type(DiffusorValue)::TheDiffusorValue
       logical::exitFlag
       integer::LayerNum
-      integer::NCAccum
+      integer::RecordIndex
       !---Body---
       MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2466,6 +2476,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
             NCUsed = 0
         else
             NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+        end if
+
+        RecordIndex = 0
+        if(NCUsed .GT. 0) then
+           RecordIndex = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
         end if
 
         if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
@@ -2495,8 +2510,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
         end if
 
         MaxGroups = size(this%ClustersSampleRate,dim=2)
-
-        NCAccum = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) + sum(Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
 
         DO IC=ICFROM,ICTO
 
@@ -2567,8 +2580,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
-                        NCAccum = NCAccum + 1
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = NCAccum
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
+
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
                         exitFlag = .true.
@@ -2608,7 +2621,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       integer::NAtoms
       integer::IElement
       type(DiffusorValue)::TheDiffusorValue
-      integer::NCAccum
+      integer::RecordIndex
       !---Body---
       MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2622,6 +2635,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
             NCUsed = 0
         else
             NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+        end if
+
+        RecordIndex = 0
+        if(NCUsed .GT. 0) then
+           RecordIndex = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
         end if
 
         if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
@@ -2649,7 +2667,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
             stop
         end if
 
-        NCAccum = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) + sum(Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
 
         DO II = 1, NewAllocateNCEachBox
 
@@ -2709,8 +2726,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
-            NCAccum = NCAccum + 1
-            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = NCAccum
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
+
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
         END DO
@@ -2744,7 +2761,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::NCUsed
         integer::IElement
         type(DiffusorValue)::TheDiffusorValue
-        integer::NCAccum
+        integer::RecordIndex
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
         BOXBOUNDARY = Host_Boxes%BOXBOUNDARY
@@ -2756,6 +2773,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 NCUsed = 0
             else
                 NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
+            end if
+
+            RecordIndex = 0
+            if(NCUsed .GT. 0) then
+                RecordIndex = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
             end if
 
             if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
@@ -2783,7 +2805,6 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 stop
             end if
 
-            NCAccum = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) + sum(Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
 
             DO II = 1, NewAllocateNCEachBox
 
@@ -2853,8 +2874,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
-                NCAccum = NCAccum + 1
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = NCAccum
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
+
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
             END DO

@@ -11,7 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/Cascade1Box5000LU_NBox800_Test/SampleSetup.dat" />
+				<Option parameters="/home/zhail/Cascade1Box5000LU_NBox800/SampleSetup.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />

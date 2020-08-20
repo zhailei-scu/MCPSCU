@@ -477,10 +477,6 @@ module MC_StatisticClusters_Offline
         integer::Num_RecombineEachBox
         integer::Num_Recombine
         integer::I
-        integer::NSIA
-        integer::NVAC
-        integer::Left
-        integer::Right
         !---Body---
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -603,23 +599,9 @@ module MC_StatisticClusters_Offline
 
                 if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ABSORBED_STATU) then
 
-                    Left = min(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1),Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
-                    Right = max(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1),Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
-
-                    DO I = Left,Right
-                        if(I .GT. 1) then
-                            NVAC = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1-1)%m_Atoms(VacIndex)%m_NA)
-                        else
-                            NVAC = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1)%m_Atoms(VacIndex)%m_NA)
-                        end if
-
-                        NSIA = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1)%m_Atoms(SIAIndex)%m_NA)
-
-                        if(NVAC .GT. 0 .AND. NSIA .GT. 0) then
-                            NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
-                        end if
-
-                    END DO
+                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) .ne. Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2)) then
+                        NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
+                    end if
 
                 end if
 
@@ -751,10 +733,6 @@ module MC_StatisticClusters_Offline
         integer::NBox_NSIA_GT1
         integer::NBox_NVAC_GT1
         integer::I
-        integer::NSIA
-        integer::NVAC
-        integer::Left
-        integer::Right
         !---Body---
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
@@ -894,23 +872,9 @@ module MC_StatisticClusters_Offline
 
                 if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ABSORBED_STATU) then
 
-                    Left = min(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1),Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
-                    Right = max(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1),Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
-
-                    DO I = Left,Right
-                        if(I .GT. 1) then
-                            NVAC = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1-1)%m_Atoms(VacIndex)%m_NA)
-                        else
-                            NVAC = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1)%m_Atoms(VacIndex)%m_NA)
-                        end if
-
-                        NSIA = abs(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(ICFrom+I-1)%m_Atoms(SIAIndex)%m_NA)
-
-                        if(NVAC .GT. 0 .AND. NSIA .GT. 0) then
-                            NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
-                        end if
-
-                    END DO
+                    if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) .ne. Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2)) then
+                        NC_InterCascadeReact_EachBox = NC_InterCascadeReact_EachBox + 1
+                    end if
 
                 end if
 
@@ -935,6 +899,15 @@ module MC_StatisticClusters_Offline
 
             if(NCCountEachBox_VAC(p_ACTIVEFREE_STATU) .GT. 1) then
                 NBox_NVAC_GT1 = NBox_NVAC_GT1 + 1
+            end if
+
+            if((NAVAEachBox_SIA(p_ACTIVEFREE_STATU) + NAVAEachBox_SIA(p_ACTIVEINGB_STATU)) .ne. (NAVAEachBox_Vac(p_ACTIVEFREE_STATU) + NAVAEachBox_Vac(p_ACTIVEINGB_STATU))) then
+                write(*,*) "MCPSCUERROR: It is impossible that SIA atoms number is not equal with VAC"
+                write(*,*) "In Box: ", IBox
+                write(*,*) "Total SIA atoms number: ",(NAVAEachBox_SIA(p_ACTIVEFREE_STATU) + NAVAEachBox_SIA(p_ACTIVEINGB_STATU))
+                write(*,*) "Total VAC atoms number: ",(NAVAEachBox_Vac(p_ACTIVEFREE_STATU) + NAVAEachBox_Vac(p_ACTIVEINGB_STATU))
+                pause
+                stop
             end if
 
 
