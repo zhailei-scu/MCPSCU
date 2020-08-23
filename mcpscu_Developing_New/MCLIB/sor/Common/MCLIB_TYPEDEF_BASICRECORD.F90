@@ -69,7 +69,7 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     !------------------
     type,public::RunningRecord
 
-        real::LastRecordOutprofileTime = 0.D0
+        real(kind=KINDDF)::LastRecordOutprofileTime = 0.D0
 
         logical,private::stopRunningFlag = .false.
         character(LEN = 12)::Start_Clock(3), End_Clock(3)

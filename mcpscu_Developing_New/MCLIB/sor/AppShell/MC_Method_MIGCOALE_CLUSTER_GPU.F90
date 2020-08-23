@@ -125,7 +125,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call ReadInitBoxSimRecord(Host_SimBoxes,m_InitBoxSimCfgList,tempMigCoalClusterRecord)
 
-        if(Host_SimuCtrlParamList%theSimulationCtrlParam%RESTARTAT .GT. 0) then
+        if(Host_SimuCtrlParamList%theSimulationCtrlParam%RESTARTAT .GT. 0 .or. &
+          tempMigCoalClusterRecord%GetSimuSteps() .GT. 0) then
             !---For restart, we should use the random number in the sequence before last running---
             !---However, it too hard to realize, currently, we should at least that the random number in---
             !---the restart job is not same with last running, so, it is necessary to change the random seed again---
@@ -134,11 +135,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 exitflag = .true.
 
                 ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1) + tempMigCoalClusterRecord%GetSimuSteps() + DRAND32()*RAND32SEEDLIB_SIZE
-
-                if(tempMigCoalClusterRecord%GetSimuTimes() .GT. 0.D0) then
-                    ISEED0 = ISEED0 + max(RAND32SEEDLIB_SIZE/tempMigCoalClusterRecord%GetSimuTimes(), &
-                                          RAND32SEEDLIB_SIZE*tempMigCoalClusterRecord%GetSimuTimes())
-                end if
 
                 call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
                 ISEED0 = ISEED0 + JobIndex + tempMigCoalClusterRecord%GetTimeSections() - 1
@@ -761,7 +757,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         Record%HSizeStatistic_EachBox = CreateNewFile(path)
 
-        write(Record%HSizeStatistic_EachBox, fmt="(130(A20,1x))") "Step",                              &
+        write(Record%HSizeStatistic_EachBox, fmt="(130(A30,1x))") "Step",                              &
                                                                   "IBox",                              &
                                                                   "Time(s)",                           &
                                                                   "TStep(s)",                          &
@@ -783,7 +779,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         Record%HSizeStatistic_TotalBox = CreateNewFile(path)
 
-        write(Record%HSizeStatistic_TotalBox, fmt="(130(A20,1x))")  "Step",                              &
+        write(Record%HSizeStatistic_TotalBox, fmt="(130(A30,1x))")  "Step",                              &
                                                                     "Time(s)",                           &
                                                                     "TStep(s)",                          &
                                                                     "NACTClusters",                      &
@@ -2021,7 +2017,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Concentrate = NCAct/(MultiBox*Host_Boxes%BOXVOLUM)
 
-                write(Record%HSizeStatistic_TotalBox, fmt="(I20,1x,2(1PE20.8,1x),10(I20,1x),17(1PE20.8,1x),8(I20,1x))") Record%GetSimuSteps(),             &
+                write(Record%HSizeStatistic_TotalBox, fmt="(I30,1x,2(1PE30.10,1x),10(I30,1x),17(1PE30.10,1x),8(I30,1x))") Record%GetSimuSteps(),             &
                                                                                                            Record%GetSimuTimes(),                          &
                                                                                                            Record%GetTimeSteps(),                          &
                                                                                                            NCAct,                                          &
@@ -2140,7 +2136,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Concentrate = NCAct/Host_Boxes%BOXVOLUM
 
-                write(Record%HSizeStatistic_EachBox,fmt="(2(I20,1x),2(1PE20.8,1x),10(I20,1x),17(1PE20.8,1x),8(I20,1x))") Record%GetSimuSteps(),               &
+                write(Record%HSizeStatistic_EachBox,fmt="(2(I30,1x),2(1PE30.10,1x),10(I30,1x),17(1PE30.10,1x),8(I30,1x))") Record%GetSimuSteps(),               &
                                                                                                              IBox,                                            &
                                                                                                              Record%GetSimuTimes(),                           &
                                                                                                              Record%GetTimeSteps(),                           &

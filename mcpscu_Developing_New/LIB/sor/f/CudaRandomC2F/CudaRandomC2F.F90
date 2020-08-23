@@ -43,6 +43,16 @@ module CudaRandomC2F_M
      end function curandSetPseudoRandomGeneratorSeed
   end interface curandSetPseudoRandomGeneratorSeed
 
+  interface curandSetGeneratorOffset
+    integer function curandSetGeneratorOffset( &
+        generator,offSet) &
+        bind(C,name="curandSetGeneratorOffset")
+        use iso_c_binding
+        integer(c_size_t), value::generator
+        integer(c_long_long),value::offSet
+    end function curandSetGeneratorOffset
+  end interface curandSetGeneratorOffset
+
   interface curandGenerateUniform
      integer function curandGenerateUniform( &
           generator, odata, numele) &

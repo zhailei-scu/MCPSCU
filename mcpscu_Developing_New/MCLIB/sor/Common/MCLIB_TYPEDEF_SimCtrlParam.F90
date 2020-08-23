@@ -47,7 +47,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      !***Information about Time
      integer::TermTFlag = mp_TermTimeFlag_ByRealTime                    ! = 0 stans for by steps,flag = 1 by time(s)
-     real::TermTValue = 3000                                            ! terminate time
+     real(kind=KINDDF)::TermTValue = 3000                                            ! terminate time
 
      integer::NFocusedTimePoint = 0
      real(kind=KINDDF),dimension(:),allocatable::FocusedTimePoints      ! the focused time points
@@ -58,7 +58,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                         ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute uniform in the box
      real::FixedTimeStepValue = 1                                       ! Fixed step time length for mp_FixedTimeStep strategy
      real::EnlageTStepScale = 0.01                                      ! adjustl time-step enlarge-scale mp_SelfAdjustlStep_NearestSep strategy and mp_SelfAdjustlStep_AveSep
-     real::LowerLimitTime = 3.68D-13                                    ! The lower limit time of NDDR algorithm
+     real(kind=KINDDF)::LowerLimitTime = 3.68D-13                                    ! The lower limit time of NDDR algorithm
      real::LowerLimitLength = 2.74D-8                                   ! The lower limit length of NDDR_S4 algorithm
      integer::LastPassageFactor = 5                                     ! The last passage factor
 

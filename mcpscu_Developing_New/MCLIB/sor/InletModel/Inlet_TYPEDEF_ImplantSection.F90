@@ -2025,7 +2025,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::PreAllocatedNCEachBox
         integer::PreFreeNCEachBox
         integer::RestoreImplantNumEachBox
-        real::ImplantPersistTime
+        real(kind=KINDDF)::ImplantPersistTime
         integer,dimension(:),allocatable::NCFree
         !---Body---
 

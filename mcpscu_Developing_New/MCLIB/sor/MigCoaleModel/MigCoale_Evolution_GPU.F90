@@ -409,7 +409,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
     integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     real(kind=KINDDF),value::TSTEP
-    real,value::LowerLimitTime
+    real(kind=KINDDF),value::LowerLimitTime
     integer,value::LastPassageFactor
     !---Local Vars---
     integer::tid,bid,bid0,cid

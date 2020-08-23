@@ -41,7 +41,7 @@
 			<Option weight="2" />
 		</Unit>
 		<Unit filename="../sor/MigCoaleModel/MigCoale_GlobalVars_Dev.F90">
-			<Option weight="0" />
+			<Option weight="1" />
 		</Unit>
 		<Unit filename="../sor/MigCoaleModel/MigCoale_Statistic_CPU.F90">
 			<Option weight="1" />
