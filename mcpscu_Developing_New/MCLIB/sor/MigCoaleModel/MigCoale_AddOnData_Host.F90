@@ -55,7 +55,7 @@ module MIGCOALE_ADDONDATA_HOST
         end if
 
         KEYWORD = "&CHECKNCLUSTERS"
-        if(HasKeyword_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData)) then
+        if(HasKeyword_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData) .eq. .true.) then
             call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
             call RemoveComments(STR,"!")
             call EXTRACT_NUMB(STR,1,N,STRTEMP)
