@@ -2036,18 +2036,19 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                                                                                            Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)
                 call flush(Record%HSizeStatistic_TotalBox)
 
-                if((TBasicInfo%NC(p_ACTIVEFREE_STATU) + TBasicInfo%NC(p_ACTIVEINGB_STATU) + &
-                   sum(TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)) - &
-                   Record%GetImplantedEntitiesNum() - sum(TBasicInfo%NC0) - TBasicInfo%NCDumpAdded) .ne. 0) then
+                if(m_CheckNClusters .eq. .true.) then
+                    if((TBasicInfo%NC(p_ACTIVEFREE_STATU) + TBasicInfo%NC(p_ACTIVEINGB_STATU) + &
+                        sum(TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)) - &
+                        Record%GetImplantedEntitiesNum() - sum(TBasicInfo%NC0) - TBasicInfo%NCDumpAdded) .ne. 0) then
 
-                   write(*,*) "MCPSCUERROR: The clusters number is not conservation."
-                   write(*,*) "The accumulated clusters for all kinds =",TBasicInfo%NC(p_ACTIVEFREE_STATU) + TBasicInfo%NC(p_ACTIVEINGB_STATU) + &
-                               sum(TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
-                   write(*,*) "The total implanted cluster number = ",Record%GetImplantedEntitiesNum()
-                   write(*,*) "The initial cluster number plus rescale added number = ",TBasicInfo%NC0(p_ACTIVEFREE_STATU) + TBasicInfo%NC0(p_ACTIVEINGB_STATU) + TBasicInfo%NCDumpAdded
-                   pause
+                        write(*,*) "MCPSCUERROR: The clusters number is not conservation."
+                        write(*,*) "The accumulated clusters for all kinds =",TBasicInfo%NC(p_ACTIVEFREE_STATU) + TBasicInfo%NC(p_ACTIVEINGB_STATU) + &
+                                    sum(TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU))
+                        write(*,*) "The total implanted cluster number = ",Record%GetImplantedEntitiesNum()
+                        write(*,*) "The initial cluster number plus rescale added number = ",TBasicInfo%NC0(p_ACTIVEFREE_STATU) + TBasicInfo%NC0(p_ACTIVEINGB_STATU) + TBasicInfo%NCDumpAdded
+                        pause
+                    end if
                 end if
-
             end if
 
             NCAct = TBasicInfo%NC(p_ACTIVEFREE_STATU) + TBasicInfo%NC(p_ACTIVEINGB_STATU)

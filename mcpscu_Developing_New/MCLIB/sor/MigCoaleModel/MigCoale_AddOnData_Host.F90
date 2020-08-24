@@ -18,6 +18,8 @@ module MIGCOALE_ADDONDATA_HOST
                                                              ! 8*PI*SURFE/(3*KB*TEMP)
     logical::m_DumplicateBox = .true.
 
+    logical::m_CheckNClusters = .false.
+
     contains
 
     subroutine resolveAddOnData(Host_Boxes,Host_SimuCtrlParam)
@@ -50,6 +52,25 @@ module MIGCOALE_ADDONDATA_HOST
             m_DumplicateBox = .false.
         else
             m_DumplicateBox = .true.
+        end if
+
+        KEYWORD = "&CHECKNCLUSTERS"
+        if(HasKeyword_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData)) then
+            call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
+            call RemoveComments(STR,"!")
+            call EXTRACT_NUMB(STR,1,N,STRTEMP)
+            if(N .LT. 1) then
+                write(*,*) "MCPSCUERROR: Too few parameters for determine whether check cluster number conservation: ",LINE
+                write(*,*) STR
+                write(*,*) "You should special: &CHECKNCLUSTERS  If check cluster number conservation = "
+                pause
+                stop
+            end if
+            if(ISTR(STRTEMP(1)) .eq. 0) then
+                m_CheckNClusters = .false.
+            else
+                m_CheckNClusters = .true.
+            end if
         end if
 
         KEYWORD = "&SURDIF"

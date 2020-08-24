@@ -56,6 +56,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -114,6 +115,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -173,6 +175,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -231,6 +234,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -289,6 +293,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -347,6 +352,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -405,6 +411,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -463,6 +470,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -521,6 +529,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -579,6 +588,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -637,6 +647,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -695,6 +706,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
@@ -753,6 +765,7 @@
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
 	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
 	&SIZEPARAM Size dependent parameter Gama =  4.D0
