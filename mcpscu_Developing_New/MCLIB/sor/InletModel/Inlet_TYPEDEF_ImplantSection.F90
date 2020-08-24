@@ -1718,14 +1718,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
         if(this%NInsertTimePoint .GT. 0) then
             DO I = Record%Get_InsertBatchNum()+1,this%NInsertTimePoint
                 if(this%InsertTimePoint(I) .GE. Record%GetSimuTimes() .AND. this%InsertTimePoint(I) .LE. (Record%GetSimuTimes() + TSTEP) ) then
-                    TSTEP = this%InsertTimePoint(I) - Record%GetSimuTimes()
+                    TSTEP = DABS(this%InsertTimePoint(I) - Record%GetSimuTimes())
                     call Record%SetTrue_InsertOneBatchInNextStep()
                     exit
                 end if
             END DO
         else
             if(floor((Record%GetSimuTimes() + TSTEP)/this%InsertTimeInterval) .GT. Record%Get_InsertBatchNum()) then
-                TSTEP = (Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - Record%GetSimuTimes()
+                TSTEP = DABS((Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - Record%GetSimuTimes())
                 call Record%SetTrue_InsertOneBatchInNextStep()
             end if
         end if
