@@ -1715,6 +1715,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         call Record%SetFalse_InsertOneBatchInNextStep()
 
+
         if(this%NInsertTimePoint .GT. 0) then
             DO I = Record%Get_InsertBatchNum()+1,this%NInsertTimePoint
                 if(this%InsertTimePoint(I) .GE. Record%GetSimuTimes() .AND. this%InsertTimePoint(I) .LE. (Record%GetSimuTimes() + TSTEP) ) then
