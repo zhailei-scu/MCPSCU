@@ -151,6 +151,7 @@ module MIGCOALE_TIMECTL
                 call Record%TurnOnTriggerFocusedTimePoints()
 
                 TSTEP = DABS(Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes())
+
                 exit
             end if
         END DO
