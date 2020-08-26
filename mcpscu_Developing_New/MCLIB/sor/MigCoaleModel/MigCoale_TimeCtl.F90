@@ -150,7 +150,7 @@ module MIGCOALE_TIMECTL
 
                 call Record%TurnOnTriggerFocusedTimePoints()
 
-                TSTEP = Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes()
+                TSTEP = DABS(Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes())
                 exit
             end if
         END DO
@@ -287,7 +287,6 @@ module MIGCOALE_TIMECTL
         END ASSOCIATE
 
         !***********Focused TimePoint*********************
-        call Record%TurnOffTriggerFocusedTimePoints()
 
         DO I = 1,Host_SimuCtrlParam%NFocusedTimePoint
             if( ((Record%GetSimuTimes() + TheVerifyTime) .GE. Host_SimuCtrlParam%FocusedTimePoints(I)) .AND. &
@@ -295,7 +294,7 @@ module MIGCOALE_TIMECTL
 
                 call Record%TurnOnTriggerFocusedTimePoints()
 
-                TheVerifyTime = Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes()
+                TheVerifyTime = DABS(Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes())
                 exit
             end if
         END DO
