@@ -1901,7 +1901,7 @@ module MCLIB_Utilities_GPU
 !	}
 !}
 
-  attributes(device) subroutine Comparetor_toApply(KeyA,KeyB,ValueA,ValueB,dir)
+  attributes(device) subroutine Comparetor_toApply_Shared(KeyA,KeyB,ValueA,ValueB,dir)
     implicit none
     !---Dummy Vars---
     real(kind=KINDDF)::KeyA
@@ -1914,16 +1914,45 @@ module MCLIB_Utilities_GPU
     integer::tempValue
     !---Body---
     if((KeyA .GT. KeyB) .AND. (dir .GT. 0) ) then
-		tempKey = KeyA;
-		KeyA = KeyB;
-		KeyB = tempKey;
-		tempValue = ValueA;
-		ValueA = ValueB;
-		ValueB = tempValue;
+		tempKey = KeyA
+		KeyA = KeyB
+		KeyB = tempKey
+		tempValue = ValueA
+		ValueA = ValueB
+		ValueB = tempValue
     end if
 
     return
-  end subroutine Comparetor_toApply
+  end subroutine Comparetor_toApply_Shared
+
+
+  attributes(device) subroutine Comparetor_toApply_Global(pos,stride,KeyArray,ValueArray,dir)
+    implicit none
+    !---Dummy Vars---
+    integer::pos
+    integer::stride
+    type(ACluster),device::KeyArray(:)
+    integer,device::ValueArray(:)
+    integer::dir
+    !--Local Vars---
+    real(kind=KINDDF)::KeyA
+    real(kind=KINDDF)::KeyB
+    integer::ValueA
+    integer::ValueB
+    integer::tempValue
+    !---Body---
+    ValueA = ValueArray(pos)
+    ValueB = ValueArray(pos+stride)
+    KeyA = KeyArray(ValueA)%m_POS(1)
+    KeyB = KeyArray(ValueB)%m_POS(1)
+
+    if((KeyA .GT. KeyB) .AND. (dir .GT. 0) ) then
+		ValueArray(pos) = ValueB
+        ValueArray(pos+stride) = ValueA
+    end if
+
+    return
+  end subroutine Comparetor_toApply_Global
 
   !*************************************************************************
 !/*Used For Array Size less than BLOCKSIZE And is not of power 2*/
@@ -2003,7 +2032,7 @@ module MCLIB_Utilities_GPU
   attributes(global) subroutine Kernel_Shared_ArbitraryBitonicSort_toApply(KeyArray,ValueArray,IDStartEnd_ForSort,dir,padNum)
     implicit none
     !---Dummy Vars---
-    real(kind=KINDDF),device::KeyArray(:)
+    type(ACluster),device::KeyArray(:)
     integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
@@ -2033,19 +2062,19 @@ module MCLIB_Utilities_GPU
 
 	Share_KeysArray(tid) = padNum
 	if (IDRelative .LE. ICEnd) then
-		Share_KeysArray(tid) = KeyArray(IDRelative)
+		Share_KeysArray(tid) = KeyArray(IDRelative)%m_POS(1)
 		Share_ValuesArray(tid) = ValueArray(IDRelative)
 	end if
 
 	Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = padNum;
 	if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
-		Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2);
-		Share_ValuesArray(tid + p_BLOCKSIZE_BITONIC / 2) = ValueArray(IDRelative + p_BLOCKSIZE_BITONIC / 2);
+		Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2)%m_POS(1)
+		Share_ValuesArray(tid + p_BLOCKSIZE_BITONIC / 2) = ValueArray(IDRelative + p_BLOCKSIZE_BITONIC / 2)
 	end if
 
-	LastPowerTwo = 1;
+	LastPowerTwo = 1
 
-	SegmentSize = ICEnd - ICStart + 1;
+	SegmentSize = ICEnd - ICStart + 1
 
     I = 2
     DO While(I .LT. SegmentSize)
@@ -2064,7 +2093,7 @@ module MCLIB_Utilities_GPU
 
             pos = 2 * (tid -1) - IAND(tid-1,stride - 1) + 1
 
-            call Comparetor_toApply(Share_KeysArray(pos), Share_KeysArray(pos + stride), Share_ValuesArray(pos), Share_ValuesArray(pos + stride), tempDir);
+            call Comparetor_toApply_Shared(Share_KeysArray(pos), Share_KeysArray(pos + stride), Share_ValuesArray(pos), Share_ValuesArray(pos + stride), tempDir)
 
             stride = ISHFT(stride,-1)
         END DO
@@ -2079,7 +2108,7 @@ module MCLIB_Utilities_GPU
 
         pos = 2 * (tid -1) - IAND(tid-1,stride - 1) + 1
 
-        call Comparetor_toApply(Share_KeysArray(pos), Share_KeysArray(pos + stride), Share_ValuesArray(pos), Share_ValuesArray(pos + stride), tempDir)
+        call Comparetor_toApply_Shared(Share_KeysArray(pos), Share_KeysArray(pos + stride), Share_ValuesArray(pos), Share_ValuesArray(pos + stride), tempDir)
 
         stride = ISHFT(stride,-1)
     END DO
@@ -2087,12 +2116,12 @@ module MCLIB_Utilities_GPU
 	call syncthreads()
 
 	if (IDRelative .LE. ICEnd) then
-		KeyArray(IDRelative) = Share_KeysArray(tid)
+!		KeyArray(IDRelative) = Share_KeysArray(tid)
 		ValueArray(IDRelative) = Share_ValuesArray(tid)
 	end if
 
 	if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
-		KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2) = Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2)
+!		KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2) = Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2)
 		ValueArray(IDRelative + p_BLOCKSIZE_BITONIC / 2) = Share_ValuesArray(tid + p_BLOCKSIZE_BITONIC / 2)
 	end if
 
@@ -2145,14 +2174,15 @@ module MCLIB_Utilities_GPU
 !}
 
 
-  attributes(global) subroutine Kernel_GlobalMerge_Pre_toApply(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray, dir, OEFlags)
+  attributes(global) subroutine Kernel_GlobalMerge_Pre_toApply(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray,ValueArray, dir, OEFlags)
     implicit none
     !---Dummy Vars----
     integer,value::BlockNumEachBox
     integer,value::TheSize
     integer,value::SegmentsStride
     integer,device::IDStartEnd_ForSort(:,:)
-    real(KINDDF),device::KeyArray(:)
+    type(ACluster),device::KeyArray(:)
+    integer,device::ValueArray(:)
     integer,value::dir
     integer,device::OEFlags(:)
     !---Local Vars---
@@ -2197,7 +2227,7 @@ module MCLIB_Utilities_GPU
 	ICLevelRightHalfStart = IDStartEnd_ForSort(IDSegStart + SegmentsStride,1)
 	ICLevelRightHalfEnd = ICLevelEnd
 
-    LogicalToInt = (KeyArray(ICLevelRightHalfEnd) .GE. KeyArray(ICLevelRightHalfStart))
+    LogicalToInt = (KeyArray(ValueArray(ICLevelRightHalfEnd))%m_POS(1) .GE. KeyArray(ValueArray(ICLevelRightHalfStart))%m_POS(1))
 
     LogicalToInt = LogicalToInt*LogicalToInt   ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
 
@@ -2266,7 +2296,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
     integer,value::TheSize
     integer,value::SegmentsStride
     integer,device::IDStartEnd_ForSort(:,:)
-    real(KINDDF),device::KeyArray(:)
+    type(ACluster),device::KeyArray(:)
     integer,device::ValueArray(:)
     integer,value::dir
     integer,device::OEFlags(:)
@@ -2316,7 +2346,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	Stride = (ICLevelEnd - ICLevelStart + 1) / 2 + OEFlags(IDSegMap)
 
 	if (pos .LE. ICSegEnd .AND. (pos + Stride) .LE. ICLevelEnd) then
-		call Comparetor_toApply(KeyArray(pos), KeyArray(pos + Stride), ValueArray(pos), ValueArray(pos+Stride), tempDir)
+		call Comparetor_toApply_Global(pos, pos + Stride,KeyArray, ValueArray, tempDir)
     end if
 
     return
@@ -2413,7 +2443,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
   attributes(global) subroutine Kernel_Shared_Merge_toApply(BlockNumEachBox_Share,KeyArray,ValueArray,IDStartEnd_ForSort,dir,padNum,TheSize)
     !---Dummy Vars----
     integer,value::BlockNumEachBox_Share
-    real(KINDDF),device::KeyArray(:)
+    type(ACluster),device::KeyArray(:)
     integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
@@ -2454,13 +2484,13 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	if (ICEnd .GT. 1) then
 		Share_KeyArray(tid) = tempPadNum
 		if (IDRelative .LE. ICEnd) then
-			Share_KeyArray(tid) = KeyArray(IDRelative)
+			Share_KeyArray(tid) = KeyArray(IDRelative)%m_Pos(1)
 			Share_ValueArray(tid) = ValueArray(IDRelative)
 		end if
 
 		Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = tempPadNum
 		if ((IDRelative + p_BLOCKSIZE_BITONIC/2) .LE. ICEnd) then
-			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2)
+			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2)%m_Pos(1)
 			Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2) = ValueArray(IDRelative + p_BLOCKSIZE_BITONIC/2)
 		end if
 
@@ -2484,7 +2514,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 
                 pos = 2*(tid - 1) - IAND(tid-1,stride -1) + 1
 
-                call Comparetor_toApply(Share_KeyArray(pos), Share_KeyArray(pos + stride), Share_ValueArray(pos), Share_ValueArray(pos + stride), tempDir)
+                call Comparetor_toApply_Shared(Share_KeyArray(pos), Share_KeyArray(pos + stride), Share_ValueArray(pos), Share_ValueArray(pos + stride), tempDir)
 
                 stride = ISHFT(stride,-1)
             END DO
@@ -2500,7 +2530,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 
             pos = 2*(tid - 1) - IAND(tid-1,stride -1) + 1
 
-            call Comparetor_toApply(Share_KeyArray(pos), Share_KeyArray(pos + stride), Share_ValueArray(pos), Share_ValueArray(pos + stride), tempDir)
+            call Comparetor_toApply_Shared(Share_KeyArray(pos), Share_KeyArray(pos + stride), Share_ValueArray(pos), Share_ValueArray(pos + stride), tempDir)
 
             stride = ISHFT(stride,-1)
         END DO
@@ -2508,12 +2538,12 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 		call syncthreads()
 
 		if (IDRelative .LE. ICEnd) then
-			KeyArray(IDRelative) = Share_KeyArray(tid)
+			!KeyArray(IDRelative) = Share_KeyArray(tid)
 			ValueArray(IDRelative) = Share_ValueArray(tid)
 		end if
 
 		if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
-			KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2) = Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2)
+			!KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2) = Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2)
 			ValueArray(IDRelative + p_BLOCKSIZE_BITONIC/2) = Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2)
 		end if
 
@@ -2636,7 +2666,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
   attributes(global) subroutine Kernel_Shared_Merge_Last_toApply(BlockNumEachBox_Share,KeyArray,ValueArray,IDStartEnd_ForSort,dir,TheSize)
     !---Dummy Vars----
     integer,value::BlockNumEachBox_Share
-    real(KINDDF),device::KeyArray(:)
+    type(ACluster),device::KeyArray(:)
     integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
@@ -2683,12 +2713,12 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	if (ICEnd .GT. 1) then
 
 		if (ICRelative .LE. ICEnd) then
-			Share_KeyArray(tid) = KeyArray(ICRelative)
+			Share_KeyArray(tid) = KeyArray(ICRelative)%m_Pos(1)
 			Share_ValueArray(tid) = ValueArray(ICRelative)
 		end if
 
 		if ((ICRelative + p_BLOCKSIZE_BITONIC/2) .LE. ICEnd) then
-			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2)
+			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2)%m_Pos(1)
 			Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2) = ValueArray(ICRelative + p_BLOCKSIZE_BITONIC/2)
 		end if
 
@@ -2742,7 +2772,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 			call syncthreads()
 
 			if (pos .LE. tempICEnd) then
-				call Comparetor_toApply(Share_KeyArray(pos), Share_KeyArray(pos + stride), Share_ValueArray(pos), Share_ValueArray(pos + stride), tempDir)
+				call Comparetor_toApply_Shared(Share_KeyArray(pos), Share_KeyArray(pos + stride), Share_ValueArray(pos), Share_ValueArray(pos + stride), tempDir)
             end if
 
             LevelSeg = ISHFT(LevelSeg,-1)
@@ -2751,11 +2781,11 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 		call syncthreads()
 
 		if (ICRelative .LE. ICEnd) then
-			KeyArray(ICRelative) = Share_KeyArray(tid)
+			!KeyArray(ICRelative) = Share_KeyArray(tid)
 			ValueArray(ICRelative) = Share_ValueArray(tid)
 		end if
 		if ((ICRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
-			KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2) = Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2)
+			!KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2) = Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2)
 			ValueArray(ICRelative + p_BLOCKSIZE_BITONIC/2) = Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2)
 		end if
 
