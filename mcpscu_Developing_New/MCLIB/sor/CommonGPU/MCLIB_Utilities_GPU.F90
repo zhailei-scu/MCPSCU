@@ -20,6 +20,9 @@ module MCLIB_Utilities_GPU
 
   integer,private,parameter::p_BLOCKSIZE_BITONIC = 1024
 
+  integer,parameter::p_Sort_Descending = 0
+  integer,parameter::p_Sort_Ascending = 1
+
   INTERFACE Assignment (=)
     MODULE PROCEDURE CopyClusterFromOther_Dev
   END INTERFACE
@@ -61,12 +64,10 @@ module MCLIB_Utilities_GPU
 
   end interface DeAllocateArray_GPU
 
-
   type,public::BitionicSort
 	integer,dimension(:,:),allocatable::IDStartEnd_ForSort_Host
 	integer,device,dimension(:,:),allocatable::IDStartEnd_ForSort_Dev
-	integer,device,dimension(:),allocatable::OEFlags
-	integer::MaxSegmentsEachBox = 0
+	integer,device,dimension(:),allocatable::OEFlags_Dev
 	integer::MaxSegmentsNumEachBox = 0
 	integer::MaxSegmentsNumAllBox = 0
 	integer::MaxClusterNumEachBox = 0
@@ -74,11 +75,14 @@ module MCLIB_Utilities_GPU
 	type(dim3)::threadsGlobal
 	type(dim3)::blocksShared
     type(dim3)::threadsShared
+    integer::dir = p_Sort_Ascending
+    real(kind=KINDDF)::padNum = 1.D32
 
     contains
+    procedure,public,non_overridable,pass::Init=>InitBitionicSort
     procedure,public,non_overridable,pass::Sort=>ArbitraryBitonicSort_toApply
-
-
+    procedure,public,non_overridable,pass::Clean=>Clean_BitionicSort
+    Final::CleanBitionicSort
   end type BitionicSort
 
   private::ArbitraryBitonicSort_toApply
@@ -2981,29 +2985,199 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 !	cudaFree(OEFlags);
 !}
 
-  subroutine ArbitraryBitonicSort_toApply(this,NBox, KeyArray, SortedIndex, IDStartEnd_ForSort_Dev,dir)
+  recursive subroutine FillTheSEArray_ForBitonicSort(Level,MaxSegmentsNumEachBox,IBox,Left,Right,TheIndex,SEArray)
+    implicit none
+    !---Dummy Vars---
+    integer::Level
+    integer::MaxSegmentsNumEachBox
+    integer::IBox
+    integer::Left
+    integer::Right
+    integer::TheIndex
+    integer,dimension(:,:),allocatable::SEArray
+    !---Local Vars---
+	integer::trueIndex
+    !---Body---
+	if (0 .eq. Level .or. Left .eq. Right) then
+		trueIndex = (IBox-1)*MaxSegmentsNumEachBox + TheIndex + 1
+
+		SEArray(trueIndex,1) = Left
+
+		SEArray(trueIndex,2) = Right
+		return
+	end if
+
+	call FillTheSEArray_ForBitonicSort(Level-1, MaxSegmentsNumEachBox, IBox, Left, Left + (Right - Left + 1)/2 - 1, TheIndex*2, SEArray)
+	call FillTheSEArray_ForBitonicSort(Level-1, MaxSegmentsNumEachBox, IBox, Left + (Right - Left + 1)/2, Right, TheIndex*2 + 1, SEArray)
+
+	return
+  end subroutine FillTheSEArray_ForBitonicSort
+
+  !**************************************************
+  subroutine InitBitionicSort(this,MultiBox,dir,IDStartEnd_ForBox_Host)
+    implicit none
+    !---Dummy Vars---
+    CLASS(BitionicSort)::this
+    integer,intent(in)::MultiBox
+    integer,intent(in)::dir
+    integer,dimension(:,:),allocatable::IDStartEnd_ForBox_Host
+    !---Local Vars---
+    integer::IBox
+    integer::tempMaxSegmentsNumEachBox
+    integer::tempNCEachBox
+    integer::I
+    integer::J
+    integer::Level
+    integer::BXGlobal
+	integer::BYGlobal
+	integer::NBGlobal
+	integer::NBXGlobal
+	integer::NBYGlobal
+	integer::BXShared
+	integer::BYShared
+	integer::NBShared
+	integer::NBXShared
+	integer::NBYShared
+    !---Body---
+    if(dir .ne. p_Sort_Descending .AND. dir .ne. p_Sort_Ascending) then
+        write(*,*) "MCPSCUERROR: The sort direction can only be Descending: ",p_Sort_Descending
+        write(*,*) "or Ascending: ",p_Sort_Ascending
+        pause
+        stop
+    end if
+    this%dir = dir
+
+    this%padNum = 1.D32
+	if (p_Sort_Descending .eq. dir) then
+		this%padNum = -1.D32
+	end if
+
+	this%MaxClusterNumEachBox = 0
+	this%MaxSegmentsNumEachBox = 0
+
+    DO IBox = 1,MultiBox
+        tempNCEachBox = IDStartEnd_ForBox_Host(IBox,2) - IDStartEnd_ForBox_Host(IBox,1) + 1
+
+        tempMaxSegmentsNumEachBox = 1
+
+		if (this%MaxClusterNumEachBox .LT. tempNCEachBox) then
+            this%MaxClusterNumEachBox = tempNCEachBox
+        end if
+
+		DO while (tempNCEachBox .GT. p_BLOCKSIZE_BITONIC)
+			tempNCEachBox = tempNCEachBox - tempNCEachBox/2
+
+			tempMaxSegmentsNumEachBox = ISHFT(tempMaxSegmentsNumEachBox,1)
+		END DO
+
+		if (this%MaxSegmentsNumEachBox .LT. tempMaxSegmentsNumEachBox) then
+            this%MaxSegmentsNumEachBox = tempMaxSegmentsNumEachBox
+        end if
+    END DO
+
+	this%MaxSegmentsNumAllBox = this%MaxSegmentsNumEachBox*MultiBox
+
+    call AllocateArray_Host(this%IDStartEnd_ForSort_Host,this%MaxSegmentsNumAllBox,2,"this%IDStartEnd_ForSort_Host")
+
+    DO I = 1,this%MaxSegmentsNumAllBox
+        DO J = 1,2
+            this%IDStartEnd_ForSort_Host(I,J) = -1
+        END DO
+    END DO
+
+    DO IBox=1,MultiBox
+        tempNCEachBox = IDStartEnd_ForBox_Host(IBox,2) - IDStartEnd_ForBox_Host(IBox,1) + 1
+
+		Level = 0
+        DO while(tempNCEachBox .GT. p_BLOCKSIZE_BITONIC)
+            tempNCEachBox = tempNCEachBox - tempNCEachBox/2
+            Level = Level + 1
+        END DO
+
+		call FillTheSEArray_ForBitonicSort(Level,this%MaxSegmentsNumEachBox,IBox,IDStartEnd_ForBox_Host(IBox,1), IDStartEnd_ForBox_Host(IBox,2), 0, this%IDStartEnd_ForSort_Host)
+
+    END DO
+
+    call AllocateArray_GPU(this%IDStartEnd_ForSort_Dev,this%MaxSegmentsNumAllBox,2,"this%IDStartEnd_ForSort_Dev")
+
+    this%IDStartEnd_ForSort_Dev = this%IDStartEnd_ForSort_Host
+
+    call AllocateArray_GPU(this%OEFlags_Dev,this%MaxSegmentsNumAllBox,"this%OEFlags_Dev")
+
+	BXGlobal = p_BLOCKSIZE_BITONIC
+	BYGlobal = 1
+	NBGlobal = this%MaxSegmentsNumAllBox/2
+	NBXGlobal = NBGlobal
+	NBYGlobal = 1
+	this%blocksGlobal = dim3(NBXGlobal, NBYGlobal, 1)
+	this%threadsGlobal = dim3(BXGlobal, BYGlobal, 1)
+
+	BXShared = p_BLOCKSIZE_BITONIC / 2
+	BYShared = 1
+	NBShared = this%MaxSegmentsNumAllBox;
+	NBXShared = NBShared
+	NBYShared = 1
+	this%blocksShared = dim3(NBXShared, NBYShared, 1)
+	this%threadsShared = dim3(BXShared, BYShared, 1)
+
+    return
+  end subroutine InitBitionicSort
+
+  !**********************************************************************************
+  subroutine Clean_BitionicSort(this)
+    implicit none
+    !---Dummy Vars----
+    CLASS(BitionicSort)::this
+    !---Body---
+    if(allocated(this%IDStartEnd_ForSort_Host)) then
+        deallocate(this%IDStartEnd_ForSort_Host)
+    end if
+
+    if(allocated(this%IDStartEnd_ForSort_Dev)) then
+        deallocate(this%IDStartEnd_ForSort_Dev)
+    end if
+
+    if(allocated(this%OEFlags_Dev)) then
+        deallocate(this%OEFlags_Dev)
+    end if
+
+	this%MaxSegmentsNumEachBox = 0
+	this%MaxSegmentsNumAllBox = 0
+	this%MaxClusterNumEachBox = 0
+    this%dir = p_Sort_Ascending
+    this%padNum = 1.D32
+
+    return
+  end subroutine
+
+  !**********************************************************************************
+  subroutine CleanBitionicSort(this)
+    implicit none
+    !---Dummy Vars----
+    type(BitionicSort)::this
+    !---Body---
+    call this%Clean()
+
+    return
+  end subroutine
+
+  !**********************************************************************************
+  subroutine ArbitraryBitonicSort_toApply(this,NBox, KeyArray, SortedIndex)
     implicit none
     !---Dummy Vars----
     CLASS(BitionicSort)::this
     integer,intent(in)::NBox
     type(ACluster),device,dimension(:),allocatable::KeyArray
     integer,device,dimension(:),allocatable::SortedIndex
-    integer,device,dimension(:,:),allocatable::IDStartEnd_ForSort_Dev
-    integer,intent(in)::dir
     !---Local Vars---
-	real(kind=KINDDF)::padNum
 	integer::TheSize
 	integer::Stride
     !---Body---
-	padNum = -1.D32;
-	if (0 .ne. dir) then
-		padNum = 1.D32
-	end if
 
 	if (this%MaxClusterNumEachBox .LE. p_BLOCKSIZE_BITONIC) then
-		call Kernel_Shared_ArbitraryBitonicSort_toApply <<<this%blocksShared,this%threadsShared>>> (KeyArray, SortedIndex,this%IDStartEnd_ForSort_Dev, dir, padNum)
+		call Kernel_Shared_ArbitraryBitonicSort_toApply<<<this%blocksShared,this%threadsShared>>>(KeyArray, SortedIndex,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
 	else
-		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,SortedIndex,this%IDStartEnd_ForSort_Dev,dir,padNum,1)
+		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,SortedIndex,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
 
         TheSize = 2
         DO While(TheSize .LE. this%MaxSegmentsNumEachBox)
@@ -3011,11 +3185,11 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
             Stride = TheSize/2
             Do While(Stride .GE. 0)
                 if(Stride .GE. 1) then
-                    call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,SortedIndex,dir,this%OEFlags)
+                    call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,SortedIndex,this%dir,this%OEFlags_Dev)
 
-					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,SortedIndex,dir,this%OEFlags)
+					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,SortedIndex,this%dir,this%OEFlags_Dev)
                 else
-                    call Kernel_Shared_Merge_Last_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,SortedIndex,this%IDStartEnd_ForSort_Dev,dir,TheSize)
+                    call Kernel_Shared_Merge_Last_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,SortedIndex,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
 
                     exit
                 end if
