@@ -62,38 +62,59 @@ module MCLIB_Utilities_GPU
   end interface DeAllocateArray_GPU
 
 
+  type,public::BitionicSort
+	integer,dimension(:,:),allocatable::IDStartEnd_ForSort_Host
+	integer,device,dimension(:,:),allocatable::IDStartEnd_ForSort_Dev
+	integer,device,dimension(:),allocatable::OEFlags
+	integer::MaxSegmentsEachBox = 0
+	integer::MaxSegmentsNumEachBox = 0
+	integer::MaxSegmentsNumAllBox = 0
+	integer::MaxClusterNumEachBox = 0
+	type(dim3)::blocksGlobal
+	type(dim3)::threadsGlobal
+	type(dim3)::blocksShared
+    type(dim3)::threadsShared
+
+    contains
+    procedure,public,non_overridable,pass::Sort=>ArbitraryBitonicSort_toApply
+
+
+  end type BitionicSort
+
+  private::ArbitraryBitonicSort_toApply
+
   contains
 
-      attributes(device) subroutine CopyClusterFromOther_Dev(Dist,Source)
-        implicit none
-        !---Dummy Vars---
-        type(ACluster),intent(out)::Dist
-        type(ACluster),intent(in)::Source
-        !---Local Vars---
-        integer::IElement
-        !---Body---
-        DO IElement = 1,p_ATOMS_GROUPS_NUMBER
-            Dist%m_Atoms(IElement) = Source%m_Atoms(IElement)
-        END DO
+  attributes(device) subroutine CopyClusterFromOther_Dev(Dist,Source)
+    implicit none
+    !---Dummy Vars---
+    type(ACluster),intent(out)::Dist
+    type(ACluster),intent(in)::Source
+    !---Local Vars---
+    integer::IElement
+    !---Body---
+    DO IElement = 1,p_ATOMS_GROUPS_NUMBER
+        Dist%m_Atoms(IElement) = Source%m_Atoms(IElement)
+    END DO
 
-        Dist%m_POS = Source%m_POS
+    Dist%m_POS = Source%m_POS
 
-        Dist%m_RAD = Source%m_RAD
+    Dist%m_RAD = Source%m_RAD
 
-        Dist%m_Layer = Source%m_Layer
+    Dist%m_Layer = Source%m_Layer
 
-        Dist%m_Statu = Source%m_Statu
+    Dist%m_Statu = Source%m_Statu
 
-        Dist%m_GrainID = Source%m_GrainID
+    Dist%m_GrainID = Source%m_GrainID
 
-        Dist%m_DiffCoeff = Source%m_DiffCoeff
+    Dist%m_DiffCoeff = Source%m_DiffCoeff
 
-        Dist%m_DiffuseDirection = Source%m_DiffuseDirection
+    Dist%m_DiffuseDirection = Source%m_DiffuseDirection
 
-        Dist%m_Record = Source%m_Record
+    Dist%m_Record = Source%m_Record
 
-        return
-    end subroutine
+    return
+  end subroutine
 
   !****************************************************
   subroutine Get_DeviceMemInfo(FreeMemSize,TotalMemSize)
@@ -2447,7 +2468,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
     integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
-    real(KINDDF)::padNum
+    real(kind=KINDDF),value::padNum
     integer,value::TheSize
     !---Local Vars---
     integer::tid
@@ -2960,6 +2981,52 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 !	cudaFree(OEFlags);
 !}
 
+  subroutine ArbitraryBitonicSort_toApply(this,NBox, KeyArray, SortedIndex, IDStartEnd_ForSort_Dev,dir)
+    implicit none
+    !---Dummy Vars----
+    CLASS(BitionicSort)::this
+    integer,intent(in)::NBox
+    type(ACluster),device,dimension(:),allocatable::KeyArray
+    integer,device,dimension(:),allocatable::SortedIndex
+    integer,device,dimension(:,:),allocatable::IDStartEnd_ForSort_Dev
+    integer,intent(in)::dir
+    !---Local Vars---
+	real(kind=KINDDF)::padNum
+	integer::TheSize
+	integer::Stride
+    !---Body---
+	padNum = -1.D32;
+	if (0 .ne. dir) then
+		padNum = 1.D32
+	end if
 
+	if (this%MaxClusterNumEachBox .LE. p_BLOCKSIZE_BITONIC) then
+		call Kernel_Shared_ArbitraryBitonicSort_toApply <<<this%blocksShared,this%threadsShared>>> (KeyArray, SortedIndex,this%IDStartEnd_ForSort_Dev, dir, padNum)
+	else
+		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,SortedIndex,this%IDStartEnd_ForSort_Dev,dir,padNum,1)
+
+        TheSize = 2
+        DO While(TheSize .LE. this%MaxSegmentsNumEachBox)
+
+            Stride = TheSize/2
+            Do While(Stride .GE. 0)
+                if(Stride .GE. 1) then
+                    call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,SortedIndex,dir,this%OEFlags)
+
+					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,SortedIndex,dir,this%OEFlags)
+                else
+                    call Kernel_Shared_Merge_Last_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,SortedIndex,this%IDStartEnd_ForSort_Dev,dir,TheSize)
+
+                    exit
+                end if
+
+                Stride = ISHFT(Stride,-1)
+            End Do
+
+            TheSize = ISHFT(TheSize,1)
+        END DO
+    end if
+
+  end subroutine ArbitraryBitonicSort_toApply
 
 end module MCLIB_Utilities_GPU
