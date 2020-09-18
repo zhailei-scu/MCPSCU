@@ -1339,4 +1339,316 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
         return
   end subroutine CalSep_Kernel
 
+
+
+!  __global__ void Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen(int BlockNumEachBox, int **IDStartEnd_Dev, double** Dev_ClustersPosXYZ, int* SortedIndexX, int* Dev_NNearestNeighbor) {
+!	int tid = threadIdx.y*blockDim.x + threadIdx.x;
+!	int bid = blockIdx.y*gridDim.x + blockIdx.x;
+!	int cid = bid * BLOCKSIZE + tid;
+!	double Pos_X;
+!	double Pos_Y;
+!	double Pos_Z;
+!	int MappedJC;
+!	double distance;
+!	double minDistance;
+!	double distanceX;
+!	double distanceY;
+!	double distanceZ;
+!	int NNID;
+!	int MapedIdex;
+!	int IBox;
+!	int scid;
+!	int ecid;
+!	int bid0;
+!	int IC;
+!	int JC;
+!	int LeftRemind;
+!	int RightRemind;
+!	int MaxRemind;
+!	bool flagLeftBreak;
+!	bool flagRightBreak;
+!	flagLeftBreak = false;
+!	flagRightBreak = false;
+!
+!	IBox = bid / BlockNumEachBox;
+!
+!	scid = IDStartEnd_Dev[IBox][0];
+!	ecid = IDStartEnd_Dev[IBox][1];
+!
+!	bid0 = IBox * BlockNumEachBox;
+!
+!	IC = scid + (cid - bid0 * BLOCKSIZE);
+!
+!	minDistance = 1.E32;
+!
+!	if (IC <= ecid) {
+!
+!		MapedIdex = SortedIndexX[IC];
+!
+!		Pos_X = Dev_ClustersPosXYZ[MapedIdex][0];
+!		Pos_Y = Dev_ClustersPosXYZ[MapedIdex][1];
+!		Pos_Z = Dev_ClustersPosXYZ[MapedIdex][2];
+!
+!		LeftRemind = IC - scid;
+!		RightRemind = ecid - IC;
+!
+!		MaxRemind = RightRemind;
+!		if (LeftRemind > MaxRemind) MaxRemind = LeftRemind;
+!
+!		for (int Shift = 1; Shift <= MaxRemind; Shift++) {
+!
+!			/*Right Hand Searching*/
+!			if (Shift <= RightRemind && false == flagRightBreak) {
+!				JC = IC + Shift;
+!
+!				MappedJC = SortedIndexX[JC];
+!
+!				distanceX = Dev_ClustersPosXYZ[MappedJC][0] - Pos_X;
+!				distanceY = Dev_ClustersPosXYZ[MappedJC][1] - Pos_Y;
+!				distanceZ = Dev_ClustersPosXYZ[MappedJC][2] - Pos_Z;
+!
+!				distanceX = distanceX * distanceX;
+!				distanceY = distanceY * distanceY;
+!				distanceZ = distanceZ * distanceZ;
+!
+!				distance = distanceX + distanceY + distanceZ;
+!
+!				if (minDistance > distance) {
+!					minDistance = distance;
+!					NNID = MappedJC;
+!				}
+!
+!				if (distanceX > minDistance) {
+!					flagRightBreak = true;
+!
+!					if (true == flagLeftBreak) {
+!						break;
+!					}
+!				}
+!			}
+!
+!			/*Left Hand Searching*/
+!			if (Shift <= LeftRemind && false == flagLeftBreak) {
+!				JC = IC - Shift;
+!
+!				MappedJC = SortedIndexX[JC];
+!
+!				distanceX = Dev_ClustersPosXYZ[MappedJC][0] - Pos_X;
+!				distanceY = Dev_ClustersPosXYZ[MappedJC][1] - Pos_Y;
+!				distanceZ = Dev_ClustersPosXYZ[MappedJC][2] - Pos_Z;
+!
+!				distanceX = distanceX * distanceX;
+!				distanceY = distanceY * distanceY;
+!				distanceZ = distanceZ * distanceZ;
+!
+!				distance = distanceX + distanceY + distanceZ;
+!
+!				if (minDistance > distance) {
+!					minDistance = distance;
+!					NNID = MappedJC;
+!				}
+!
+!				if (distanceX > minDistance) {
+!					flagLeftBreak = true;
+!
+!					if (true == flagRightBreak) {
+!						break;
+!					}
+!				}
+!			}
+!
+!		}
+!
+!		Dev_NNearestNeighbor[MapedIdex] = NNID;
+!	}
+!}
+
+  attributes(global) subroutine Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen(Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,SortedIndexX,MinTSteps,maxDiffuse)
+    implicit none
+    !--Dummy Vars---
+    type(ACluster), device::Dev_Clusters(:)
+    integer, device::Dev_SEExpdIndexBox(:,:)
+    integer,device::KVOIS(:)
+    integer,device::INDI(:,:)
+    integer,value::BlockNumEachBox
+    integer,device::SortedIndexX(:)
+    real(kind=KINDDF),device::MinTSteps(:)
+    real(kind=KINDDF),value::maxDiffuse
+    !---Local Vars---
+    integer::IBox
+    integer::tid
+    integer::bid
+    integer::cid
+    integer::scid
+    integer::ecid
+    integer::bid0
+    integer::IC
+    integer::JC
+    integer::MapedIdex
+    integer::MappedJC
+    integer::STATUIC,STATUJC
+    integer::NClusters
+    integer::Shift
+    real(kind=KINDSF)::Pos_X,Pos_Y,Pos_Z,Sep_x,Sep_y,Sep_z
+    real(kind=KINDSF)::DiffA,DiffB,RADA,RADB
+    real(kind=KINDSF)::DIST2
+    real(kind=KINDDF)::MinT,reactTime
+    real(kind=KINDDF)::minDistance
+    logical::flagRightBreak,flagLeftBreak
+    integer::NNID
+    !---Body---
+    tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
+    bid = (blockidx%y-1)*griddim%x +  blockidx%x         ! the index of block
+    cid = (bid-1)*p_BLOCKSIZE + tid                      ! the first thread index of this block
+
+	IBox = (bid-1)/BlockNumEachBox + 1
+
+	scid = Dev_SEExpdIndexBox(IBox,1)
+	ecid = Dev_SEExpdIndexBox(IBox,2)
+
+	NClusters = ecid - scid + 1
+
+	bid0 = (IBox-1)*BlockNumEachBox + 1
+
+	IC = scid + (cid - (bid0 -1)*p_BLOCKSIZE - 1)
+
+	MinT = 1.D32
+	minDistance = 1.D32
+
+	flagRightBreak = .false.
+	flagLeftBreak = .false.
+
+	if (IC .LE. ecid) then
+
+		MapedIdex = SortedIndexX(IC)
+
+        STATUIC = Dev_Clusters(MapedIdex)%m_Statu
+
+        IF(STATUIC .EQ. p_ACTIVEFREE_STATU .or. STATUIC .EQ. p_ACTIVEINGB_STATU) THEN
+          Pos_X = Dev_Clusters(MapedIdex)%m_POS(1)
+          Pos_Y = Dev_Clusters(MapedIdex)%m_POS(2)
+          Pos_Z = Dev_Clusters(MapedIdex)%m_POS(3)
+
+          RADA = Dev_Clusters(MapedIdex)%m_RAD
+
+          DiffA = Dev_Clusters(MapedIdex)%m_DiffCoeff
+
+          DO Shift=1,NClusters-1
+
+			!***********Right hand searching**********************
+			JC = IC + Shift
+            JC = JC - (int(JC/ecid))*dm_PERIOD(1)*NClusters
+			if (.false. .eq. flagRightBreak .AND. JC .LE. ecid) then
+
+				MappedJC = SortedIndexX(JC)
+
+				STATUJC = Dev_Clusters(MappedJC)%m_Statu
+
+				if(STATUJC .eq. p_ACTIVEFREE_STATU .or. STATUJC .eq. p_ACTIVEINGB_STATU) then
+
+                    SEP_x = Pos_X - Dev_Clusters(MappedJC)%m_POS(1)
+                    SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+                    SEP_x = SEP_x*SEP_x
+
+                    SEP_y = Pos_y - Dev_Clusters(MappedJC)%m_POS(2)
+                    SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+                    SEP_y = SEP_y*SEP_y
+
+                    SEP_z = Pos_z - Dev_Clusters(MappedJC)%m_POS(3)
+                    SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+                    SEP_z = SEP_z*SEP_z
+
+                    DIST2 = SEP_x + SEP_y + SEP_z
+
+                    RADB = Dev_Clusters(MappedJC)%m_RAD
+
+                    DiffB = Dev_Clusters(MappedJC)%m_DiffCoeff
+
+                    DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                    reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                    if(reactTime .LE. MinT ) then
+                      MinT = reactTime
+                      NNID = MappedJC
+                      minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT)
+                    end if
+
+				    if (SEP_x .GT. minDistance) then
+					  flagRightBreak = .true.
+
+					  if (.true. .eq. flagLeftBreak) then
+						  exit
+                      end if
+				    end if
+
+                end if
+
+            end if
+
+            !***********Left hand searching**********************
+			JC = IC - Shift
+            JC = JC + (int(JC/scid))*dm_PERIOD(1)*NClusters
+			if (.false. .eq. flagLeftBreak .AND. JC .GE. scid) then
+
+				MappedJC = SortedIndexX(JC)
+
+				STATUJC = Dev_Clusters(MappedJC)%m_Statu
+
+				if(STATUJC .eq. p_ACTIVEFREE_STATU .or. STATUJC .eq. p_ACTIVEINGB_STATU) then
+
+                    SEP_x = Pos_X - Dev_Clusters(MappedJC)%m_POS(1)
+                    SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+                    SEP_x = SEP_x*SEP_x
+
+                    SEP_y = Pos_y - Dev_Clusters(MappedJC)%m_POS(2)
+                    SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+                    SEP_y = SEP_y*SEP_y
+
+                    SEP_z = Pos_z - Dev_Clusters(MappedJC)%m_POS(3)
+                    SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+                    SEP_z = SEP_z*SEP_z
+
+                    DIST2 = SEP_x + SEP_y + SEP_z
+
+                    RADB = Dev_Clusters(MappedJC)%m_RAD
+
+                    DiffB = Dev_Clusters(MappedJC)%m_DiffCoeff
+
+                    DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                    reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                    if(reactTime .LE. MinT ) then
+                      MinT = reactTime
+                      NNID = MappedJC
+                      minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT)
+                    end if
+
+				    if (SEP_x .GT. minDistance) then
+					  flagLeftBreak = .true.
+
+					  if (.true. .eq. flagRightBreak) then
+						  exit
+                      end if
+				    end if
+
+                end if
+
+            end if
+
+          END DO
+
+          KVOIS(MapedIdex) = 1
+		  INDI(MapedIdex,1) = NNID
+		  MinTSteps(MapedIdex) = MinT
+        end if
+	 end if
+
+	 return
+  end subroutine Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen
+
+
+
+
 end module MCLIB_CAL_NEIGHBOR_LIST_GPU
