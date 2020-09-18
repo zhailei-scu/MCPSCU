@@ -1724,27 +1724,91 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 !}
 
 
-  subroutine Host_Sort_Test(MulitBox,DevClusters,Dev_SortedIndex,Dev_IDSEArray,Host_OutSortedIndexArray)
+  subroutine Host_CheckSort_Test(MulitBox,DevClusters,Dev_IDSEArray,SortedIndex_Dev)
     implicit none
     !---Dummy Vars---
     integer::MulitBox
     type(ACluster),device,dimension(:),allocatable::DevClusters
-    integer,device,dimension(:),allocatable::Dev_SortedIndex
     integer,device,dimension(:,:),allocatable::Dev_IDSEArray
-    integer,dimension(:),allocatable::Host_OutSortedIndexArray
+    integer,device,dimension(:),allocatable::SortedIndex_Dev
     !---Local Vars---
     type(ACluster),dimension(:),allocatable::HostClusters
-    integer,dimension(:),allocatable::Host_SortedIndex
     integer,dimension(:,:),allocatable::Host_IDSEArray
     integer::NSize
+    integer::IBox
+    integer::ICFrom
+    integer::ICTo
+    type(ACluster)::tempCluster
+    integer::temp
+    integer::IC,JC
+    integer,dimension(:),allocatable::Host_MySortedIndexArray
+    integer,dimension(:),allocatable::Host_OutSortedIndexArray
     !---Body---
     NSize = size(DevClusters)
 
     call AllocateArray_Host(HostClusters,NSize,"HostClusters")
     HostClusters = DevClusters
 
-    call AllocateArray_Host(Host_SortedIndex,NSize,"Host_SortedIndex")
-    Host_SortedIndex = Dev_SortedIndex
+    call AllocateArray_Host(Host_IDSEArray,MulitBox,2,"Host_IDSEArray")
+
+    Host_IDSEArray = Dev_IDSEArray
+
+    call AllocateArray_Host(Host_OutSortedIndexArray,NSize,"Host_OutSortedIndexArray")
+
+    DO IBox = 1,MulitBox
+        ICFrom = Host_IDSEArray(IBox,1)
+        ICTo = Host_IDSEArray(IBox,2)
+
+
+        DO IC = ICFrom,ICTo
+            Host_OutSortedIndexArray(IC) = IC
+        END DO
+
+        DO IC = ICFrom,ICTo
+            DO JC=IC,ICTo
+
+                if(HostClusters(Host_OutSortedIndexArray(IC))%m_POS(1) .GT. HostClusters(Host_OutSortedIndexArray(JC))%m_POS(1)) then
+                    temp = Host_OutSortedIndexArray(IC)
+                    Host_OutSortedIndexArray(IC) = Host_OutSortedIndexArray(JC)
+                    Host_OutSortedIndexArray(JC) = temp
+                end if
+
+            END DO
+
+        END DO
+    END DO
+
+
+    call AllocateArray_Host(Host_MySortedIndexArray,NSize,"Host_MySortedIndexArray")
+    Host_MySortedIndexArray = SortedIndex_Dev
+
+    DO IBox = 1,MulitBox
+        ICFrom = Host_IDSEArray(IBox,1)
+        ICTo = Host_IDSEArray(IBox,2)
+        write(*,*) "******************IBox********************",IBox
+
+        DO IC = ICFrom,ICTo
+
+            if(Host_MySortedIndexArray(IC) .ne. Host_OutSortedIndexArray(IC)) then
+                write(*,*) "It is wrong for index: ",IC
+                write(*,*) Host_MySortedIndexArray(IC),Host_OutSortedIndexArray(IC)
+
+
+                write(*,*) "******************My sort method******************"
+                DO JC = ICFrom,ICTo
+                    write(*,*) JC,Host_MySortedIndexArray(JC),HostClusters(Host_MySortedIndexArray(JC))%m_POS(1)
+                END DO
+
+                write(*,*) "******************CPU sort method******************"
+                DO JC = ICFrom,ICTo
+                    write(*,*) JC,Host_OutSortedIndexArray(JC),HostClusters(Host_OutSortedIndexArray(JC))%m_POS(1)
+                END DO
+
+                pause
+            end if
+
+        END DO
+    END DO
 
     return
   end subroutine
@@ -1797,6 +1861,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     threads = dim3(BX, BY, 1)
 
     call Dev_Boxes%dm_BitionicSort%Sort(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
+
+    call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
 
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
