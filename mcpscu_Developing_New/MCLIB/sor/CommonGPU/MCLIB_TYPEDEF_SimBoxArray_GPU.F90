@@ -49,6 +49,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
     integer, device, dimension(:,:), allocatable::dm_SEAddedClustersBoxes         ! the start and end index for added clusters in each Box
 
 
+    type(BitionicSort)::dm_BitionicSort
+
     contains
     procedure,non_overridable,public,pass::InitSimulationBoxes_Dev=>Init_SimulationBoxes_Dev
     procedure,non_overridable,public,pass::InitBoxesInfo_GPU=>Init_BoxesInfo_GPU
@@ -127,6 +129,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
     call this%dm_ReactionsMap%Clean()
 
     call this%dm_ReactionsMap%Init(Host_Boxes%m_ReactionsMap)
+
+    call this%dm_BitionicSort%Init(MULTIBOX,p_Sort_Ascending,Host_Boxes%m_BoxesInfo%SEVirtualIndexBox)
 
     return
   end subroutine Init_SimulationBoxes_Dev

@@ -68,6 +68,7 @@ module MCLIB_Utilities_GPU
 	integer,dimension(:,:),allocatable::IDStartEnd_ForSort_Host
 	integer,device,dimension(:,:),allocatable::IDStartEnd_ForSort_Dev
 	integer,device,dimension(:),allocatable::OEFlags_Dev
+	integer,device,dimension(:),allocatable::SortedIndex_Dev
 	integer::MaxSegmentsNumEachBox = 0
 	integer::MaxSegmentsNumAllBox = 0
 	integer::MaxClusterNumEachBox = 0
@@ -77,6 +78,7 @@ module MCLIB_Utilities_GPU
     type(dim3)::threadsShared
     integer::dir = p_Sort_Ascending
     real(kind=KINDDF)::padNum = 1.D32
+    logical::HasInitedFlag = .false.
 
     contains
     procedure,public,non_overridable,pass::Init=>InitBitionicSort
@@ -3038,6 +3040,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	integer::NBShared
 	integer::NBXShared
 	integer::NBYShared
+	integer::TotalNC
     !---Body---
     if(dir .ne. p_Sort_Descending .AND. dir .ne. p_Sort_Ascending) then
         write(*,*) "MCPSCUERROR: The sort direction can only be Descending: ",p_Sort_Descending
@@ -3104,6 +3107,14 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 
     call AllocateArray_GPU(this%OEFlags_Dev,this%MaxSegmentsNumAllBox,"this%OEFlags_Dev")
 
+    if(IDStartEnd_ForBox_Host(MultiBox,2) .GT. 0) then
+        TotalNC = IDStartEnd_ForBox_Host(MultiBox,2) - IDStartEnd_ForBox_Host(1,1) + 1
+    else
+        TotalNC = 0
+    end if
+
+    call AllocateArray_GPU(this%SortedIndex_Dev,TotalNC,"this%SortedIndex_Dev")
+
 	BXGlobal = p_BLOCKSIZE_BITONIC
 	BYGlobal = 1
 	NBGlobal = this%MaxSegmentsNumAllBox/2
@@ -3120,6 +3131,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	this%blocksShared = dim3(NBXShared, NBYShared, 1)
 	this%threadsShared = dim3(BXShared, BYShared, 1)
 
+    this%HasInitedFlag = .true.
     return
   end subroutine InitBitionicSort
 
@@ -3141,11 +3153,16 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
         deallocate(this%OEFlags_Dev)
     end if
 
+    if(allocated(this%SortedIndex_Dev)) then
+        deallocate(this%SortedIndex_Dev)
+    end if
+
 	this%MaxSegmentsNumEachBox = 0
 	this%MaxSegmentsNumAllBox = 0
 	this%MaxClusterNumEachBox = 0
     this%dir = p_Sort_Ascending
     this%padNum = 1.D32
+    this%HasInitedFlag = .false.
 
     return
   end subroutine
@@ -3162,22 +3179,21 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
   end subroutine
 
   !**********************************************************************************
-  subroutine ArbitraryBitonicSort_toApply(this,NBox, KeyArray, SortedIndex)
+  subroutine ArbitraryBitonicSort_toApply(this,NBox, KeyArray)
     implicit none
     !---Dummy Vars----
     CLASS(BitionicSort)::this
     integer,intent(in)::NBox
     type(ACluster),device,dimension(:),allocatable::KeyArray
-    integer,device,dimension(:),allocatable::SortedIndex
     !---Local Vars---
 	integer::TheSize
 	integer::Stride
     !---Body---
 
 	if (this%MaxClusterNumEachBox .LE. p_BLOCKSIZE_BITONIC) then
-		call Kernel_Shared_ArbitraryBitonicSort_toApply<<<this%blocksShared,this%threadsShared>>>(KeyArray, SortedIndex,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
+		call Kernel_Shared_ArbitraryBitonicSort_toApply<<<this%blocksShared,this%threadsShared>>>(KeyArray, this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
 	else
-		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,SortedIndex,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
+		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
 
         TheSize = 2
         DO While(TheSize .LE. this%MaxSegmentsNumEachBox)
@@ -3185,11 +3201,11 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
             Stride = TheSize/2
             Do While(Stride .GE. 0)
                 if(Stride .GE. 1) then
-                    call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,SortedIndex,this%dir,this%OEFlags_Dev)
+                    call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev,this%dir,this%OEFlags_Dev)
 
-					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,SortedIndex,this%dir,this%OEFlags_Dev)
+					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev,this%dir,this%OEFlags_Dev)
                 else
-                    call Kernel_Shared_Merge_Last_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,SortedIndex,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
+                    call Kernel_Shared_Merge_Last_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
 
                     exit
                 end if

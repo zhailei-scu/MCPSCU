@@ -1649,6 +1649,129 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
   end subroutine Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen
 
 
+!  void My_NeighborListCal_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen(int NClusters, int NBox, int **IDStartEnd_Host, &
+!                                                                                   int **IDStartEnd_Dev, double* ToSortDev_ClustersPosX,
+!                                                                                   double** Dev_ClustersPosXYZ, int* SortedIndexX, int* ReverseMap_SortedIndexX,  int* Host_NNearestNeighbor, float &timerMyMethod) {
+!	dim3 threads;
+!	dim3 blocks;
+!	int NB;
+!	cudaError err;
+!	int noone;
+!	int BlockNumEachBox;
+!	int BlockNumEachBoxtemp;
+!	int* Dev_NNearestNeighbor;
+!
+!	cudaMalloc((void**)&Dev_NNearestNeighbor, NClusters * sizeof(int));
+!
+!	SimpleSort_multipleBox(NClusters, NBox, IDStartEnd_Host, ToSortDev_ClustersPosX, SortedIndexX, ReverseMap_SortedIndexX);
+!
+!	cudaEvent_t StartEvent;
+!	cudaEvent_t StopEvent;
+!
+!	BlockNumEachBox = 0;
+!
+!	for (int i = 0; i < NBox; i++) {
+!		BlockNumEachBoxtemp = (IDStartEnd_Host[i][1] - IDStartEnd_Host[i][0]) / BLOCKSIZE + 1;
+!
+!		if (BlockNumEachBox < BlockNumEachBoxtemp) BlockNumEachBox = BlockNumEachBoxtemp;
+!	}
+!
+!	NB = BlockNumEachBox * NBox;
+!
+!	blocks = dim3(NB, 1, 1);
+!	threads = dim3(BLOCKSIZE, 1, 1);
+!
+!	cudaDeviceSynchronize();
+!
+!	cudaEventCreate(&StartEvent);
+!	cudaEventCreate(&StopEvent);
+!
+!	cudaEventRecord(StartEvent, 0);
+!
+!	Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<< < blocks, threads >> > (BlockNumEachBox, IDStartEnd_Dev, Dev_ClustersPosXYZ, SortedIndexX, Dev_NNearestNeighbor);
+!
+!	cudaDeviceSynchronize();
+!
+!	cudaEventRecord(StopEvent, 0);
+!
+!	cudaEventSynchronize(StopEvent);
+!
+!	cudaEventElapsedTime(&timerMyMethod, StartEvent, StopEvent);
+!
+!	cudaMemcpy(Host_NNearestNeighbor, Dev_NNearestNeighbor, NClusters * sizeof(int), cudaMemcpyDeviceToHost);
+!
+!	cudaEventDestroy(StartEvent);
+!	cudaEventDestroy(StopEvent);
+!}
+
+
+  subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+	    !***  PURPOSE:  to update the neighbore list of atoms (GPU version ,NNearest , MultiBox)
+    !     INPUT:  Host_Boxes               , boxes information in host
+    !             Host_SimuCtrlParam
+    !             Dev_Boxes                , boxes information in device
+    implicit none
+    !---Dummy Vars---
+    type(SimulationBoxes), intent(in)::Host_Boxes
+    type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
+    type(SimulationBoxes_GPU)::Dev_Boxes
+    real(kind=KINDDF),intent(in)::MaxDiffuse
+    !---Local Vars---
+    integer::MULTIBOX
+    type(dim3)::blocks
+    type(dim3)::threads
+    integer::NB, NBX, NBY, BX, BY
+    integer::BlockNumEachBox
+    logical::ChangedToUsedIndex
+    !---Body---
+    #ifdef MC_PROFILING
+    call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
+    N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
+    #endif
+    !---Body---
+
+    MULTIBOX = Host_SimuCtrlParam%MultiBox
+
+    ChangedToUsedIndex = .false.
+
+    !*** to determine the block size
+    BX = p_BLOCKSIZE
+    BY = 1
+    !*** to determine the dimension of blocks
+    if(maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1)) .GE. &
+       maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))) then
+        ChangedToUsedIndex = .false.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1))/p_BLOCKSIZE + 1
+    else
+        ChangedToUsedIndex = .true.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))/p_BLOCKSIZE + 1
+    end if
+    NB = BlockNumEachBox*MultiBox
+
+    blocks  = dim3(NB, 1, 1)
+    threads = dim3(BX, BY, 1)
+
+    if(ChangedToUsedIndex .eq. .false.) then
+        call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                                   Dev_Boxes%dm_SEExpdIndexBox,                   &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                                   BlockNumEachBox,                               &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndex_Dev,     &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                                   MaxDiffuse)
+    else
+        call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                                   Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                                   BlockNumEachBox,                               &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndex_Dev,     &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                                   MaxDiffuse)
+    end if
+
+  end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen
 
 
 end module MCLIB_CAL_NEIGHBOR_LIST_GPU
