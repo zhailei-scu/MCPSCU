@@ -21,7 +21,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
   contains
   !**********************************************************************************
-  subroutine Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly,RMAX)
+  subroutine Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly,RMAX,MaxDiffuse)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes), intent(in)::Host_Boxes
@@ -30,6 +30,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     CLASS(SimulationRecord)::Record
     logical,optional::IfDirectly
     real(kind=KINDDF),optional::RMAX
+    real(kind=KINDDF),optional::MaxDiffuse
     !---Local Vars---
     logical::SureToUpdateNL
     integer::NAct
@@ -67,7 +68,25 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
         if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR .or.   &
            Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-            call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+
+           select case(Host_SimuCtrlParam%NEIGHBORCALWAY)
+                case(mp_CalcNeighborList_NNEAREST)
+                    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+                case(mp_CalcNeighborList_RCUT)
+                    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+                case(mp_CalcNeighborList_SortX)
+                    if(.not. present(MaxDiffuse)) then
+                        write(*,*) "MCPSCUERROR: Must special the max diffusor if the SortX neighbor-list is used."
+                        pause
+                        stop
+                    end if
+                    call Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+                case default
+                    write(*,*) "MCPSCUERROR: Unknown strategy to update neighbor-list."
+                    pause
+                    stop
+           end select
+
         else
             select case(Host_SimuCtrlParam%NEIGHBORCALWAY)
                 case(mp_CalcNeighborList_NNEAREST)
@@ -1750,6 +1769,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     blocks  = dim3(NB, 1, 1)
     threads = dim3(BX, BY, 1)
+
+    call Dev_Boxes%dm_BitionicSort%Sort(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
 
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &

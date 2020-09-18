@@ -44,7 +44,9 @@ module MIGCOALE_TIMECTL
             case(mp_SelfAdjustlStep_NearestSep)
                 if(Dev_Boxes%dm_ClusterInfo_GPU%GetNLUpdateCount_Dev() .LE. 0) then
                     call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                                max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU)))
+                                                max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU)),&
+                                                MaxDiffuse=max(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                               TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU)))
                 end if
 
                 if(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .LE. 0.D0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU) .LE. 0.D0) then
@@ -190,7 +192,9 @@ module MIGCOALE_TIMECTL
             case(mp_SelfAdjustlStep_NearestSep)
                 if(Dev_Boxes%dm_ClusterInfo_GPU%GetNLUpdateCount_Dev() .LE. 0) then
                     call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                                max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU)))
+                                                max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU)),&
+                                                MaxDiffuse=max(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                               TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU)))
                 end if
 
                 if(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .LE. 0.D0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU) .LE. 0.D0) then

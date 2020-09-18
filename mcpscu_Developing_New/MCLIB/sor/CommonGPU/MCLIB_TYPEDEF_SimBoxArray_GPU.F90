@@ -1480,6 +1480,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
         call this%CleanBoxesInfo_GPU()
 
+        call this%dm_BitionicSort%Clean()
+
         return
     end subroutine
 
