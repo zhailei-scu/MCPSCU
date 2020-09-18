@@ -2090,13 +2090,13 @@ module MCLIB_Utilities_GPU
 	Share_KeysArray(tid) = padNum
 	if (IDRelative .LE. ICEnd) then
 		Share_KeysArray(tid) = KeyArray(IDRelative)%m_POS(1)
-		Share_ValuesArray(tid) = ValueArray(IDRelative)
+		Share_ValuesArray(tid) = IDRelative
 	end if
 
 	Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = padNum;
 	if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
 		Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2)%m_POS(1)
-		Share_ValuesArray(tid + p_BLOCKSIZE_BITONIC / 2) = ValueArray(IDRelative + p_BLOCKSIZE_BITONIC / 2)
+		Share_ValuesArray(tid + p_BLOCKSIZE_BITONIC / 2) = IDRelative + p_BLOCKSIZE_BITONIC/2
 	end if
 
 	LastPowerTwo = 1
@@ -2512,13 +2512,13 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 		Share_KeyArray(tid) = tempPadNum
 		if (IDRelative .LE. ICEnd) then
 			Share_KeyArray(tid) = KeyArray(IDRelative)%m_Pos(1)
-			Share_ValueArray(tid) = ValueArray(IDRelative)
+			Share_ValueArray(tid) = IDRelative
 		end if
 
 		Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = tempPadNum
 		if ((IDRelative + p_BLOCKSIZE_BITONIC/2) .LE. ICEnd) then
 			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2)%m_Pos(1)
-			Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2) = ValueArray(IDRelative + p_BLOCKSIZE_BITONIC/2)
+			Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2) = IDRelative + p_BLOCKSIZE_BITONIC/2
 		end if
 
 		LastPowerTwo = 1

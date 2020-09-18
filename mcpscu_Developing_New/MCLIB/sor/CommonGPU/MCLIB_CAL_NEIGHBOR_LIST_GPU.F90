@@ -1724,6 +1724,32 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 !}
 
 
+  subroutine Host_Sort_Test(MulitBox,DevClusters,Dev_SortedIndex,Dev_IDSEArray,Host_OutSortedIndexArray)
+    implicit none
+    !---Dummy Vars---
+    integer::MulitBox
+    type(ACluster),device,dimension(:),allocatable::DevClusters
+    integer,device,dimension(:),allocatable::Dev_SortedIndex
+    integer,device,dimension(:,:),allocatable::Dev_IDSEArray
+    integer,dimension(:),allocatable::Host_OutSortedIndexArray
+    !---Local Vars---
+    type(ACluster),dimension(:),allocatable::HostClusters
+    integer,dimension(:),allocatable::Host_SortedIndex
+    integer,dimension(:,:),allocatable::Host_IDSEArray
+    integer::NSize
+    !---Body---
+    NSize = size(DevClusters)
+
+    call AllocateArray_Host(HostClusters,NSize,"HostClusters")
+    HostClusters = DevClusters
+
+    call AllocateArray_Host(Host_SortedIndex,NSize,"Host_SortedIndex")
+    Host_SortedIndex = Dev_SortedIndex
+
+    return
+  end subroutine
+
+
   subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
 	    !***  PURPOSE:  to update the neighbore list of atoms (GPU version ,NNearest , MultiBox)
     !     INPUT:  Host_Boxes               , boxes information in host
