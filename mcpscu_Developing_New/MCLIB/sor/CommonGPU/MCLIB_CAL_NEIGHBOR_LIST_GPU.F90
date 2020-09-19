@@ -1515,6 +1515,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     real(kind=KINDDF)::minDistance
     logical::flagRightBreak,flagLeftBreak
     integer::NNID
+    integer::Flag
     !---Body---
     tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
     bid = (blockidx%y-1)*griddim%x +  blockidx%x         ! the index of block
@@ -1556,7 +1557,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
 			!***********Right hand searching**********************
 			JC = IC + Shift
-            JC = JC - (int(JC/ecid))*dm_PERIOD(1)*NClusters
+			Flag = (JC .GT. ecid)
+			Flag = Flag*Flag
+            JC = JC - Flag*dm_PERIOD(1)*NClusters  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
 			if (.false. .eq. flagRightBreak .AND. JC .LE. ecid) then
 
 				MappedJC = SortedIndexX(JC)
@@ -1607,7 +1610,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
             !***********Left hand searching**********************
 			JC = IC - Shift
-            JC = JC + (int(JC/scid))*dm_PERIOD(1)*NClusters
+			Flag = (JC .LT. scid)
+			Flag = Flag*Flag
+            JC = JC + Flag*dm_PERIOD(1)*NClusters  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
 			if (.false. .eq. flagLeftBreak .AND. JC .GE. scid) then
 
 				MappedJC = SortedIndexX(JC)
@@ -1813,6 +1818,85 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     return
   end subroutine
 
+  !******************************************************************
+  subroutine CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+    implicit none
+    !---Dummy Vars---
+    type(SimulationBoxes), intent(in)::Host_Boxes
+    type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
+    type(SimulationBoxes_GPU)::Dev_Boxes
+    !---Local Vars---
+    type(ACluster),dimension(:),allocatable::HostClusters
+    integer,dimension(:,:),allocatable::Host_IDSEArray
+    integer::NSize
+    integer::IBox
+    integer::ICFrom
+    integer::ICTo
+    integer::temp
+    integer::IC,JC
+    integer,dimension(:),allocatable::Host_KVOIS_MyMethod
+    integer,dimension(:),allocatable::Host_KVOIS_BeforeMethod
+    integer,dimension(:,:),allocatable::Host_INDI_MyMethod
+    integer,dimension(:,:),allocatable::Host_INDI_BeforeMethod
+    real(kind=KINDDF),dimension(:),allocatable::Host_MinTSteps_MyMethod
+    real(kind=KINDDF),dimension(:),allocatable::Host_MinTSteps_BeforeMethod
+    integer::MulitBox
+    !---Body---
+    MulitBox = Host_SimuCtrlParam%MultiBox
+
+    NSize = size(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
+
+    call AllocateArray_Host(HostClusters,NSize,"HostClusters")
+    HostClusters = Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters
+
+    call AllocateArray_Host(Host_IDSEArray,MulitBox,2,"Host_IDSEArray")
+
+    Host_IDSEArray = Dev_Boxes%dm_SEExpdIndexBox
+
+    call AllocateArray_Host(Host_KVOIS_MyMethod,NSize,"Host_KVOIS_MyMethod")
+    Host_KVOIS_MyMethod = Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS
+
+    call AllocateArray_Host(Host_INDI_MyMethod,NSize,1,"Host_INDI_MyMethod")
+    Host_INDI_MyMethod = Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI
+
+    call AllocateArray_Host(Host_MinTSteps_MyMethod,NSize,"Host_MinTSteps_MyMethod")
+    Host_MinTSteps_MyMethod = Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps
+
+
+    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+
+    call AllocateArray_Host(Host_KVOIS_BeforeMethod,NSize,"Host_KVOIS_BeforeMethod")
+    Host_KVOIS_BeforeMethod = Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS
+
+    call AllocateArray_Host(Host_INDI_BeforeMethod,NSize,1,"Host_INDI_BeforeMethod")
+    Host_INDI_BeforeMethod = Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI
+
+    call AllocateArray_Host(Host_MinTSteps_BeforeMethod,NSize,"Host_MinTSteps_BeforeMethod")
+    Host_MinTSteps_BeforeMethod = Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps
+
+
+
+    DO IBox = 1,MulitBox
+        ICFrom = Host_IDSEArray(IBox,1)
+        ICTo = Host_IDSEArray(IBox,2)
+        write(*,*) "******************IBox********************",IBox
+
+        DO IC = ICFrom,ICTo
+            if(Host_INDI_BeforeMethod(IC,1) .ne. Host_INDI_MyMethod(IC,1)) then
+                write(*,*) "The neighbor is not true for index: ",IC,Host_INDI_BeforeMethod(IC,1),Host_INDI_MyMethod(IC,1)
+                write(*,*) Host_MinTSteps_BeforeMethod(IC),Host_MinTSteps_MyMethod(IC)
+                pause
+            end if
+
+
+        END DO
+    END DO
+
+
+
+    return
+  end subroutine
+
 
   subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
 	    !***  PURPOSE:  to update the neighbore list of atoms (GPU version ,NNearest , MultiBox)
@@ -1862,7 +1946,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     call Dev_Boxes%dm_BitionicSort%Sort(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
 
-    call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
+    !call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
 
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -1883,6 +1967,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
                                                                                                    MaxDiffuse)
     end if
+
+    !call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+
 
   end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen
 
