@@ -1940,7 +1940,7 @@ module MCLIB_Utilities_GPU
     real(kind=KINDDF)::tempKey
     integer::tempValue
     !---Body---
-    if((KeyA .GT. KeyB) .AND. (dir .GT. 0) ) then
+    if((KeyA .GT. KeyB) .eq. (dir .eq. p_Sort_Ascending) ) then
 		tempKey = KeyA
 		KeyA = KeyB
 		KeyB = tempKey
@@ -1973,7 +1973,7 @@ module MCLIB_Utilities_GPU
     KeyA = KeyArray(ValueA)%m_POS(1)
     KeyB = KeyArray(ValueB)%m_POS(1)
 
-    if((KeyA .GT. KeyB) .AND. (dir .GT. 0) ) then
+    if((KeyA .GT. KeyB) .eq. (dir .eq. p_Sort_Ascending) ) then
 		ValueArray(pos) = ValueB
         ValueArray(pos+stride) = ValueA
     end if
@@ -2093,7 +2093,7 @@ module MCLIB_Utilities_GPU
 		Share_ValuesArray(tid) = IDRelative
 	end if
 
-	Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = padNum;
+	Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = padNum
 	if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
 		Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2)%m_POS(1)
 		Share_ValuesArray(tid + p_BLOCKSIZE_BITONIC / 2) = IDRelative + p_BLOCKSIZE_BITONIC/2
@@ -2123,6 +2123,7 @@ module MCLIB_Utilities_GPU
             call Comparetor_toApply_Shared(Share_KeysArray(pos), Share_KeysArray(pos + stride), Share_ValuesArray(pos), Share_ValuesArray(pos + stride), tempDir)
 
             stride = ISHFT(stride,-1)
+
         END DO
 
         I = ISHFT(I,1)
@@ -2135,7 +2136,7 @@ module MCLIB_Utilities_GPU
 
         pos = 2 * (tid -1) - IAND(tid-1,stride - 1) + 1
 
-        call Comparetor_toApply_Shared(Share_KeysArray(pos), Share_KeysArray(pos + stride), Share_ValuesArray(pos), Share_ValuesArray(pos + stride), tempDir)
+        call Comparetor_toApply_Shared(Share_KeysArray(pos), Share_KeysArray(pos + stride), Share_ValuesArray(pos), Share_ValuesArray(pos + stride), dir)
 
         stride = ISHFT(stride,-1)
     END DO
@@ -3125,7 +3126,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 
 	BXShared = p_BLOCKSIZE_BITONIC / 2
 	BYShared = 1
-	NBShared = this%MaxSegmentsNumAllBox;
+	NBShared = this%MaxSegmentsNumAllBox
 	NBXShared = NBShared
 	NBYShared = 1
 	this%blocksShared = dim3(NBXShared, NBYShared, 1)
