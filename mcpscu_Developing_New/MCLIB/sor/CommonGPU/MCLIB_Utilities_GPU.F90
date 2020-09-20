@@ -18,7 +18,7 @@ module MCLIB_Utilities_GPU
   #endif
   implicit none
 
-  integer,private,parameter::p_BLOCKSIZE_BITONIC = 16
+  integer,private,parameter::p_BLOCKSIZE_BITONIC = 256
 
   integer,parameter::p_Sort_Descending = 0
   integer,parameter::p_Sort_Ascending = 1

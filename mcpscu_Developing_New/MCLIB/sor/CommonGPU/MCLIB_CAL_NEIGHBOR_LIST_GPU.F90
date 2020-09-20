@@ -1921,8 +1921,14 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
         END DO
     END DO
 
-
-
+    call DeAllocateArray_Host(HostClusters,"HostClusters")
+    call DeAllocateArray_Host(Host_IDSEArray,"Host_IDSEArray")
+    call DeAllocateArray_Host(Host_KVOIS_MyMethod,"Host_KVOIS_MyMethod")
+    call DeAllocateArray_Host(Host_KVOIS_BeforeMethod,"Host_KVOIS_BeforeMethod")
+    call DeAllocateArray_Host(Host_INDI_MyMethod,"Host_INDI_MyMethod")
+    call DeAllocateArray_Host(Host_INDI_BeforeMethod,"Host_INDI_BeforeMethod")
+    call DeAllocateArray_Host(Host_MinTSteps_MyMethod,"Host_MinTSteps_MyMethod")
+    call DeAllocateArray_Host(Host_MinTSteps_BeforeMethod,"Host_MinTSteps_BeforeMethod")
     return
   end subroutine
 
