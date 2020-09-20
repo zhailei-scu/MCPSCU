@@ -18,7 +18,7 @@ module MCLIB_Utilities_GPU
   #endif
   implicit none
 
-  integer,private,parameter::p_BLOCKSIZE_BITONIC = 1024
+  integer,private,parameter::p_BLOCKSIZE_BITONIC = 16
 
   integer,parameter::p_Sort_Descending = 0
   integer,parameter::p_Sort_Ascending = 1
@@ -1953,11 +1953,11 @@ module MCLIB_Utilities_GPU
   end subroutine Comparetor_toApply_Shared
 
 
-  attributes(device) subroutine Comparetor_toApply_Global(pos,stride,KeyArray,ValueArray,dir)
+  attributes(device) subroutine Comparetor_toApply_Global(posA,posB,KeyArray,ValueArray,dir)
     implicit none
     !---Dummy Vars---
-    integer::pos
-    integer::stride
+    integer::posA
+    integer::posB
     type(ACluster),device::KeyArray(:)
     integer,device::ValueArray(:)
     integer::dir
@@ -1968,14 +1968,14 @@ module MCLIB_Utilities_GPU
     integer::ValueB
     integer::tempValue
     !---Body---
-    ValueA = ValueArray(pos)
-    ValueB = ValueArray(pos+stride)
+    ValueA = ValueArray(posA)
+    ValueB = ValueArray(posB)
     KeyA = KeyArray(ValueA)%m_POS(1)
     KeyB = KeyArray(ValueB)%m_POS(1)
 
     if((KeyA .GT. KeyB) .eq. (dir .eq. p_Sort_Ascending) ) then
-		ValueArray(pos) = ValueB
-        ValueArray(pos+stride) = ValueA
+		ValueArray(posA) = ValueB
+        ValueArray(posB) = ValueA
     end if
 
     return
@@ -2267,6 +2267,10 @@ module MCLIB_Utilities_GPU
 
 	OEFlags(IDSegMap) = IAND(LogicalToInt,FlagsShift)
 
+    if(IBox .eq. 1) then
+        print *,IDSegMap,OEFlags(IDSegMap)
+    end if
+
     return
   end subroutine Kernel_GlobalMerge_Pre_toApply
 
@@ -2317,7 +2321,7 @@ module MCLIB_Utilities_GPU
 !}
 
 
-attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray,ValueArray, dir, OEFlags)
+  attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray,ValueArray, dir, OEFlags)
     implicit none
     !---Dummy Vars----
     integer,value::BlockNumEachBox
@@ -2366,7 +2370,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	ICSegStart = IDStartEnd_ForSort(IDSegMap,1)
 	ICSegEnd = IDStartEnd_ForSort(IDSegMap,2)
 
-	pos = ICSegStart + tid - 1;
+	pos = ICSegStart + tid - 1
 
     ICLevelStart = IDStartEnd_ForSort(IDSegStart,1)
 	ICLevelEnd = IDStartEnd_ForSort(IDSegEnd,2)
@@ -2374,7 +2378,9 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	Stride = (ICLevelEnd - ICLevelStart + 1) / 2 + OEFlags(IDSegMap)
 
 	if (pos .LE. ICSegEnd .AND. (pos + Stride) .LE. ICLevelEnd) then
+
 		call Comparetor_toApply_Global(pos, pos + Stride,KeyArray, ValueArray, tempDir)
+
     end if
 
     return
@@ -2726,6 +2732,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
     integer::LogicalToInt
     real(KINDDF),shared,dimension(p_BLOCKSIZE_BITONIC)::Share_KeyArray
 	integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_ValueArray
+	integer::TheValue
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y -1)*griddim%x + blockidx%x
@@ -2741,13 +2748,15 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	if (ICEnd .GT. 1) then
 
 		if (ICRelative .LE. ICEnd) then
-			Share_KeyArray(tid) = KeyArray(ICRelative)%m_Pos(1)
-			Share_ValueArray(tid) = ValueArray(ICRelative)
+            TheValue = ValueArray(ICRelative)
+			Share_KeyArray(tid) = KeyArray(TheValue)%m_Pos(1)
+            Share_ValueArray(tid) = TheValue
 		end if
 
 		if ((ICRelative + p_BLOCKSIZE_BITONIC/2) .LE. ICEnd) then
-			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2)%m_Pos(1)
-			Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2) = ValueArray(ICRelative + p_BLOCKSIZE_BITONIC/2)
+            TheValue = ValueArray(ICRelative + p_BLOCKSIZE_BITONIC/2)
+			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(TheValue)%m_Pos(1)
+            Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2) = TheValue
 		end if
 
         tempDir = IEOR(mod(IDSegRelative/TheSize,2),dir)
@@ -2771,7 +2780,7 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 
 			tempLevelSeg = LevelSeg * (1-FlagOne) + 2 * FlagOne
 
-			LRFlags = mod(tid/tempLevelSeg,2)
+			LRFlags = mod((tid-1)/tempLevelSeg,2)
 
 			tempAllSize = (LastSegmentSize * IEOR(LRFlags,1) + LastRemindSegmentSize * IAND(LRFlags,1))*(1-FlagOne) + tempAllSize * FlagOne
 
@@ -2793,13 +2802,14 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 
 			OEFlags = IAND(FlagsShift,LogicalToInt)
 
-			pos = tempICStart + tid - (tid / tempLevelSeg)*tempLevelSeg
+			pos = tempICStart + tid - ((tid -1)/ tempLevelSeg)*tempLevelSeg - 1
 
 			stride = tempSegmentSize + OEFlags * (1-FlagOne)
 
 			call syncthreads()
 
 			if (pos .LE. tempICEnd) then
+
 				call Comparetor_toApply_Shared(Share_KeyArray(pos), Share_KeyArray(pos + stride), Share_ValueArray(pos), Share_ValueArray(pos + stride), tempDir)
             end if
 
@@ -3179,6 +3189,68 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
     return
   end subroutine
 
+
+  subroutine CheckSort_Test(MulitBox,MaxSegNumEachBox,IDSEArray_ForSort_Dev,DevClusters,SortedIndex_Dev)
+    implicit none
+    !---Dummy Vars---
+    integer::MulitBox
+    integer::MaxSegNumEachBox
+    integer,device,dimension(:,:),allocatable::IDSEArray_ForSort_Dev
+    type(ACluster),device,dimension(:),allocatable::DevClusters
+    integer,device,dimension(:),allocatable::SortedIndex_Dev
+    !---Local Vars---
+    type(ACluster),dimension(:),allocatable::HostClusters
+    integer,dimension(:,:),allocatable::Host_IDSEArray
+    integer::NSize
+    integer::IBox
+    integer::ICFrom
+    integer::ICTo
+    integer::IC
+    integer::ISeg
+    integer,dimension(:),allocatable::Host_MySortedIndexArray
+    !---Body---
+    NSize = size(DevClusters)
+
+    call AllocateArray_Host(HostClusters,NSize,"HostClusters")
+    HostClusters = DevClusters
+
+    call AllocateArray_Host(Host_IDSEArray,MulitBox*MaxSegNumEachBox,2,"Host_IDSEArray")
+
+    Host_IDSEArray = IDSEArray_ForSort_Dev
+
+    call AllocateArray_Host(Host_MySortedIndexArray,NSize,"Host_MySortedIndexArray")
+    Host_MySortedIndexArray = SortedIndex_Dev
+
+    write(*,*) "MulitBox*MaxSegNumEachBox*2",MulitBox*MaxSegNumEachBox*2
+    write(*,*) size(IDSEArray_ForSort_Dev)
+
+    DO IBox = 1,MulitBox
+
+        if(IBox .eq. 1) then
+            write(*,*) "******************IBox********************",IBox
+            DO ISeg = (IBox-1)*MaxSegNumEachBox +1,IBox*MaxSegNumEachBox
+
+                ICFrom = Host_IDSEArray(ISeg,1)
+                ICTo = Host_IDSEArray(ISeg,2)
+
+                write(*,*) "ISeg: ",ISeg,ICFrom,ICTo
+                if(ICTo .GT. 0) then
+                    DO IC = ICFrom,ICTo
+                        write(*,*) IC,Host_MySortedIndexArray(IC),HostClusters(Host_MySortedIndexArray(IC))%m_POS(1)
+                    END DO
+                end if
+            END DO
+        end if
+
+    END DO
+
+    call DeAllocateArray_Host(HostClusters,"HostClusters")
+    call DeAllocateArray_Host(Host_IDSEArray,"Host_IDSEArray")
+    call DeAllocateArray_Host(Host_MySortedIndexArray,"Host_MySortedIndexArray")
+
+    return
+  end subroutine CheckSort_Test
+
   !**********************************************************************************
   subroutine ArbitraryBitonicSort_toApply(this,NBox, KeyArray)
     implicit none
@@ -3196,6 +3268,13 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
 	else
 		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
 
+
+
+!        write(*,*) "****************Kernel_Shared_Merge_toApply*************************"
+!        call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
+!        pause
+
+
         TheSize = 2
         DO While(TheSize .LE. this%MaxSegmentsNumEachBox)
 
@@ -3205,8 +3284,20 @@ attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize
                     call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev,this%dir,this%OEFlags_Dev)
 
 					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev,this%dir,this%OEFlags_Dev)
+
+
+!					        write(*,*) "****************Kernel_GlobalMerge_toApply*************************",TheSize,Stride
+!                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
+!                            pause
+
+
                 else
                     call Kernel_Shared_Merge_Last_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
+
+
+!                            write(*,*) "****************Kernel_Shared_Merge_Last_toApply*************************",TheSize,Stride
+!                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
+!                            pause
 
                     exit
                 end if

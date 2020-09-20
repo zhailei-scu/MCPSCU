@@ -1729,10 +1729,12 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 !}
 
 
-  subroutine Host_CheckSort_Test(MulitBox,DevClusters,Dev_IDSEArray,SortedIndex_Dev)
+  subroutine Host_CheckSort_Test(MulitBox,MaxSegmentsNumberEachBox,IDSEArray_ForSort,DevClusters,Dev_IDSEArray,SortedIndex_Dev)
     implicit none
     !---Dummy Vars---
     integer::MulitBox
+    integer::MaxSegmentsNumberEachBox
+    integer,dimension(:,:),allocatable::IDSEArray_ForSort
     type(ACluster),device,dimension(:),allocatable::DevClusters
     integer,device,dimension(:,:),allocatable::Dev_IDSEArray
     integer,device,dimension(:),allocatable::SortedIndex_Dev
@@ -1748,6 +1750,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::IC,JC
     integer,dimension(:),allocatable::Host_MySortedIndexArray
     integer,dimension(:),allocatable::Host_OutSortedIndexArray
+    integer::ISegment
     !---Body---
     NSize = size(DevClusters)
 
@@ -1800,6 +1803,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
 
                 write(*,*) "******************My sort method******************"
+                DO ISegment = (IBox - 1)*MaxSegmentsNumberEachBox +1,IBox*MaxSegmentsNumberEachBox
+                    write(*,*) "ISegment",ISegment,IDSEArray_ForSort(ISegment,1),IDSEArray_ForSort(ISegment,2)
+                END DO
                 DO JC = ICFrom,ICTo
                     write(*,*) JC,Host_MySortedIndexArray(JC),HostClusters(Host_MySortedIndexArray(JC))%m_POS(1)
                 END DO
@@ -1944,9 +1950,10 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     blocks  = dim3(NB, 1, 1)
     threads = dim3(BX, BY, 1)
 
+
     call Dev_Boxes%dm_BitionicSort%Sort(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
 
-    !call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
+    call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_BitionicSort%MaxSegmentsNumEachBox,Dev_Boxes%dm_BitionicSort%IDStartEnd_ForSort_Host,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
 
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
