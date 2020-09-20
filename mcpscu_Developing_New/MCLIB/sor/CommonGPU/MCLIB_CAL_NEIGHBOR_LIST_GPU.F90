@@ -1847,6 +1847,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     real(kind=KINDDF),dimension(:),allocatable::Host_MinTSteps_MyMethod
     real(kind=KINDDF),dimension(:),allocatable::Host_MinTSteps_BeforeMethod
     integer::MulitBox
+    real(kind=KINDDF)::Distance
+    real(kind=KINDDF)::reactTime
     !---Body---
     MulitBox = Host_SimuCtrlParam%MultiBox
 
@@ -1885,11 +1887,32 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     DO IBox = 1,MulitBox
         ICFrom = Host_IDSEArray(IBox,1)
         ICTo = Host_IDSEArray(IBox,2)
-        write(*,*) "******************IBox********************",IBox
 
         DO IC = ICFrom,ICTo
             if(Host_INDI_BeforeMethod(IC,1) .ne. Host_INDI_MyMethod(IC,1)) then
+                write(*,*) "******************IBox********************",IBox
+
                 write(*,*) "The neighbor is not true for index: ",IC,Host_INDI_BeforeMethod(IC,1),Host_INDI_MyMethod(IC,1)
+
+                Distance = (HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(1))*(HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(1)) + &
+                           (HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(2))*(HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(2)) + &
+                           (HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(3))*(HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(3))
+
+
+                Distance = DSQRT(Distance) - HostClusters(IC)%m_RAD - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_RAD
+                reactTime = (Distance*Distance)*(1.D0/6.D0)/(HostClusters(IC)%m_DiffCoeff + HostClusters(Host_INDI_BeforeMethod(IC,1))%m_DiffCoeff + 2*SQRT(HostClusters(IC)%m_DiffCoeff*HostClusters(Host_INDI_BeforeMethod(IC,1))%m_DiffCoeff ))
+                write(*,*) "Distance Before method",Distance,"reaction time",reactTime
+
+
+                Distance = (HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(1))*(HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(1)) + &
+                           (HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(2))*(HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(2)) + &
+                           (HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(3))*(HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(3))
+
+
+                Distance = DSQRT(Distance) - HostClusters(IC)%m_RAD - HostClusters(Host_INDI_MyMethod(IC,1))%m_RAD
+                reactTime = (Distance*Distance)*(1.D0/6.D0)/(HostClusters(IC)%m_DiffCoeff + HostClusters(Host_INDI_MyMethod(IC,1))%m_DiffCoeff + 2*SQRT(HostClusters(IC)%m_DiffCoeff*HostClusters(Host_INDI_MyMethod(IC,1))%m_DiffCoeff ))
+                write(*,*) "Distance my method",Distance,"reaction time",reactTime
+
                 write(*,*) Host_MinTSteps_BeforeMethod(IC),Host_MinTSteps_MyMethod(IC)
                 pause
             end if
@@ -1953,7 +1976,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     call Dev_Boxes%dm_BitionicSort%Sort(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
 
-    call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_BitionicSort%MaxSegmentsNumEachBox,Dev_Boxes%dm_BitionicSort%IDStartEnd_ForSort_Host,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
+    !call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_BitionicSort%MaxSegmentsNumEachBox,Dev_Boxes%dm_BitionicSort%IDStartEnd_ForSort_Host,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
 
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -1975,7 +1998,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                                    MaxDiffuse)
     end if
 
-    !call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+    call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
 
 
   end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen

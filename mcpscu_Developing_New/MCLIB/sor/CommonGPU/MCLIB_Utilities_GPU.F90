@@ -2267,10 +2267,6 @@ module MCLIB_Utilities_GPU
 
 	OEFlags(IDSegMap) = IAND(LogicalToInt,FlagsShift)
 
-    if(IBox .eq. 1) then
-        print *,IDSegMap,OEFlags(IDSegMap)
-    end if
-
     return
   end subroutine Kernel_GlobalMerge_Pre_toApply
 
