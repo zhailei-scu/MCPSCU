@@ -2201,7 +2201,6 @@ module MCLIB_Utilities_GPU
 !	OEFlags[IDSegMap] = ((ICLevelEnd - ICLevelStart + 1) % 2 != 0)&FlagsShift;
 !}
 
-
   attributes(global) subroutine Kernel_GlobalMerge_Pre_toApply(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray,ValueArray, dir, OEFlags)
     implicit none
     !---Dummy Vars----
@@ -2255,17 +2254,19 @@ module MCLIB_Utilities_GPU
 	ICLevelRightHalfStart = IDStartEnd_ForSort(IDSegStart + SegmentsStride,1)
 	ICLevelRightHalfEnd = ICLevelEnd
 
-    LogicalToInt = (KeyArray(ValueArray(ICLevelRightHalfEnd))%m_POS(1) .GE. KeyArray(ValueArray(ICLevelRightHalfStart))%m_POS(1))
+    if(ICLevelRightHalfStart.GT. 0 .AND. ICLevelRightHalfEnd .GT. 0) then
+        LogicalToInt = (KeyArray(ValueArray(ICLevelRightHalfEnd))%m_POS(1) .GE. KeyArray(ValueArray(ICLevelRightHalfStart))%m_POS(1))
 
-    LogicalToInt = LogicalToInt*LogicalToInt   ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+        LogicalToInt = LogicalToInt*LogicalToInt   ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
 
-	FlagsShift = IEOR(tempDir,LogicalToInt)
+        FlagsShift = IEOR(tempDir,LogicalToInt)
 
-    LogicalToInt = (mod(ICLevelEnd - ICLevelStart + 1,2) .ne. 0)
+        LogicalToInt = (mod(ICLevelEnd - ICLevelStart + 1,2) .ne. 0)
 
-    LogicalToInt = LogicalToInt*LogicalToInt ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+        LogicalToInt = LogicalToInt*LogicalToInt ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
 
-	OEFlags(IDSegMap) = IAND(LogicalToInt,FlagsShift)
+        OEFlags(IDSegMap) = IAND(LogicalToInt,FlagsShift)
+    END if
 
     return
   end subroutine Kernel_GlobalMerge_Pre_toApply
@@ -2366,19 +2367,21 @@ module MCLIB_Utilities_GPU
 	ICSegStart = IDStartEnd_ForSort(IDSegMap,1)
 	ICSegEnd = IDStartEnd_ForSort(IDSegMap,2)
 
-	pos = ICSegStart + tid - 1
+    if(ICSegEnd .GT. 0) then
 
-    ICLevelStart = IDStartEnd_ForSort(IDSegStart,1)
-	ICLevelEnd = IDStartEnd_ForSort(IDSegEnd,2)
+        pos = ICSegStart + tid - 1
 
-	Stride = (ICLevelEnd - ICLevelStart + 1) / 2 + OEFlags(IDSegMap)
+        ICLevelStart = IDStartEnd_ForSort(IDSegStart,1)
+        ICLevelEnd = IDStartEnd_ForSort(IDSegEnd,2)
 
-	if (pos .LE. ICSegEnd .AND. (pos + Stride) .LE. ICLevelEnd) then
+        Stride = (ICLevelEnd - ICLevelStart + 1) / 2 + OEFlags(IDSegMap)
 
-		call Comparetor_toApply_Global(pos, pos + Stride,KeyArray, ValueArray, tempDir)
+        if (pos .LE. ICSegEnd .AND. (pos + Stride) .LE. ICLevelEnd) then
 
+            call Comparetor_toApply_Global(pos, pos + Stride,KeyArray, ValueArray, tempDir)
+
+        end if
     end if
-
     return
   end subroutine Kernel_GlobalMerge_toApply
 
@@ -3262,9 +3265,12 @@ module MCLIB_Utilities_GPU
 	if (this%MaxClusterNumEachBox .LE. p_BLOCKSIZE_BITONIC) then
 		call Kernel_Shared_ArbitraryBitonicSort_toApply<<<this%blocksShared,this%threadsShared>>>(KeyArray, this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
 	else
+
+        write(*,*) "HHHHHHHHHHHHHHHHHHHH"
+
 		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
 
-
+        write(*,*) "HHHHHHHHHHHHHHHHHHHHH"
 
 !        write(*,*) "****************Kernel_Shared_Merge_toApply*************************"
 !        call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
@@ -3277,7 +3283,13 @@ module MCLIB_Utilities_GPU
             Stride = TheSize/2
             Do While(Stride .GE. 0)
                 if(Stride .GE. 1) then
+
+                    write(*,*) "PPPPPPPPPPPPPPPPPPPPPPP"
+
                     call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev,this%dir,this%OEFlags_Dev)
+
+
+                    write(*,*) "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
 
 					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev,this%dir,this%OEFlags_Dev)
 
@@ -3285,16 +3297,18 @@ module MCLIB_Utilities_GPU
 !					        write(*,*) "****************Kernel_GlobalMerge_toApply*************************",TheSize,Stride
 !                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
 !                            pause
-
+                    write(*,*) "PPPPPPPPPPPPPPPPPPPPPPP"
 
                 else
+                    write(*,*) "YYYYYYYYYYYYYYYYYYYYYYYY"
+
                     call Kernel_Shared_Merge_Last_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
 
 
 !                            write(*,*) "****************Kernel_Shared_Merge_Last_toApply*************************",TheSize,Stride
 !                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
 !                            pause
-
+                    write(*,*) "YYYYYYYYYYYYYYYYYYYYYYYY"
                     exit
                 end if
 

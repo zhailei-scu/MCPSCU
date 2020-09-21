@@ -8,6 +8,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
   implicit none
 
+  integer,private,parameter::p_BLOCKSIZE_MyMethod = 128
+
   !------Vars--------------
   integer,private,parameter::p_MXNEAREST = 2048                                         ! the pre-allocated number for nearest around neighborhood(which is used for
                                                                                         ! the default pre-allocated number in device,actual number for nearest around
@@ -791,12 +793,19 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::NB, NBX, NBY, BX, BY, err
     integer::BlockNumEachBox
     logical::ChangedToUsedIndex
+    type(cudaEvent)::StartEvent
+    type(cudaEvent)::StopEvent
+    integer::IState
+    real::time
     !---Body---
     #ifdef MC_PROFILING
     call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
     N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
     #endif
     !---Body---
+
+    IState = cudaEventCreate(StartEvent)
+    IState = cudaEventCreate(StopEvent)
 
     MULTIBOX = Host_SimuCtrlParam%MultiBox
 
@@ -831,6 +840,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
        write(*,*) "To continue the evolution, the user defined number of nearest neighborhood is changed to:",NNearestNeighbor
     end if
 
+    IState = cudaEventRecord(StartEvent,0)
+
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -848,6 +859,17 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     BlockNumEachBox,                               &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
     end if
+
+    IState = cudaEventRecord(StopEvent,0)
+
+    IState = cudaEventSynchronize(StopEvent)
+
+    IState = cudaEventElapsedTime(time,StartEvent,StopEvent)
+
+    write(*,*) "NeighborCal time is: ",time
+
+    IState = cudaEventDestroy(StartEvent)
+    IState = cudaEventDestroy(StopEvent)
 
 
     #ifdef MC_PROFILING
@@ -1519,7 +1541,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     !---Body---
     tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
     bid = (blockidx%y-1)*griddim%x +  blockidx%x         ! the index of block
-    cid = (bid-1)*p_BLOCKSIZE + tid                      ! the first thread index of this block
+    cid = (bid-1)*p_BLOCKSIZE_MyMethod + tid                      ! the first thread index of this block
 
 	IBox = (bid-1)/BlockNumEachBox + 1
 
@@ -1530,7 +1552,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
 	bid0 = (IBox-1)*BlockNumEachBox + 1
 
-	IC = scid + (cid - (bid0 -1)*p_BLOCKSIZE - 1)
+	IC = scid + (cid - (bid0 -1)*p_BLOCKSIZE_MyMethod - 1)
 
 	MinT = 1.D32
 	minDistance = 1.D32
@@ -1593,10 +1615,11 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                     if(reactTime .LE. MinT ) then
                       MinT = reactTime
                       NNID = MappedJC
-                      minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT)
+                      minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      !minDistance = 24.D0*maxDiffuse*MinT   !(2*SQRT(6.D0*maxDiffuse*MinT))**2
                     end if
 
-				    if (SEP_x .GT. minDistance) then
+				    if (SEP_x .GT. minDistance*minDistance) then
 					  flagRightBreak = .true.
 
 					  if (.true. .eq. flagLeftBreak) then
@@ -1646,10 +1669,11 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                     if(reactTime .LE. MinT ) then
                       MinT = reactTime
                       NNID = MappedJC
-                      minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT)
+                      !minDistance = 24.D0*maxDiffuse*MinT
+                      minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
                     end if
 
-				    if (SEP_x .GT. minDistance) then
+				    if (SEP_x .GT. minDistance*minDistance) then
 					  flagLeftBreak = .true.
 
 					  if (.true. .eq. flagRightBreak) then
@@ -1889,34 +1913,42 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
         ICTo = Host_IDSEArray(IBox,2)
 
         DO IC = ICFrom,ICTo
-            if(Host_INDI_BeforeMethod(IC,1) .ne. Host_INDI_MyMethod(IC,1)) then
-                write(*,*) "******************IBox********************",IBox
+            if(HostClusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. HostClusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+              if(Host_INDI_BeforeMethod(IC,1) .ne. Host_INDI_MyMethod(IC,1)) then
 
-                write(*,*) "The neighbor is not true for index: ",IC,Host_INDI_BeforeMethod(IC,1),Host_INDI_MyMethod(IC,1)
 
                 Distance = (HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(1))*(HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(1)) + &
                            (HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(2))*(HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(2)) + &
                            (HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(3))*(HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_POS(3))
 
-
                 Distance = DSQRT(Distance) - HostClusters(IC)%m_RAD - HostClusters(Host_INDI_BeforeMethod(IC,1))%m_RAD
-                reactTime = (Distance*Distance)*(1.D0/6.D0)/(HostClusters(IC)%m_DiffCoeff + HostClusters(Host_INDI_BeforeMethod(IC,1))%m_DiffCoeff + 2*SQRT(HostClusters(IC)%m_DiffCoeff*HostClusters(Host_INDI_BeforeMethod(IC,1))%m_DiffCoeff ))
-                write(*,*) "Distance Before method",Distance,"reaction time",reactTime
+
+                if(Distance .GT. 0) then
+
+                    write(*,*) "******************IBox********************",IBox
+
+                    write(*,*) "The neighbor is not true for index: ",IC,Host_INDI_BeforeMethod(IC,1),Host_INDI_MyMethod(IC,1)
 
 
-                Distance = (HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(1))*(HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(1)) + &
-                           (HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(2))*(HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(2)) + &
-                           (HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(3))*(HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(3))
+
+                    reactTime = (Distance*Distance)*(1.D0/6.D0)/(HostClusters(IC)%m_DiffCoeff + HostClusters(Host_INDI_BeforeMethod(IC,1))%m_DiffCoeff + 2*SQRT(HostClusters(IC)%m_DiffCoeff*HostClusters(Host_INDI_BeforeMethod(IC,1))%m_DiffCoeff ))
+                    write(*,*) "Distance Before method",Distance,"reaction time",reactTime
 
 
-                Distance = DSQRT(Distance) - HostClusters(IC)%m_RAD - HostClusters(Host_INDI_MyMethod(IC,1))%m_RAD
-                reactTime = (Distance*Distance)*(1.D0/6.D0)/(HostClusters(IC)%m_DiffCoeff + HostClusters(Host_INDI_MyMethod(IC,1))%m_DiffCoeff + 2*SQRT(HostClusters(IC)%m_DiffCoeff*HostClusters(Host_INDI_MyMethod(IC,1))%m_DiffCoeff ))
-                write(*,*) "Distance my method",Distance,"reaction time",reactTime
+                    Distance = (HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(1))*(HostClusters(IC)%m_POS(1) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(1)) + &
+                            (HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(2))*(HostClusters(IC)%m_POS(2) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(2)) + &
+                            (HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(3))*(HostClusters(IC)%m_POS(3) - HostClusters(Host_INDI_MyMethod(IC,1))%m_POS(3))
 
-                write(*,*) Host_MinTSteps_BeforeMethod(IC),Host_MinTSteps_MyMethod(IC)
-                pause
+
+                    Distance = DSQRT(Distance) - HostClusters(IC)%m_RAD - HostClusters(Host_INDI_MyMethod(IC,1))%m_RAD
+                    reactTime = (Distance*Distance)*(1.D0/6.D0)/(HostClusters(IC)%m_DiffCoeff + HostClusters(Host_INDI_MyMethod(IC,1))%m_DiffCoeff + 2*SQRT(HostClusters(IC)%m_DiffCoeff*HostClusters(Host_INDI_MyMethod(IC,1))%m_DiffCoeff ))
+                    write(*,*) "Distance my method",Distance,"reaction time",reactTime
+
+                    write(*,*) Host_MinTSteps_BeforeMethod(IC),Host_MinTSteps_MyMethod(IC)
+                    pause
+                end if
+              end if
             end if
-
 
         END DO
     END DO
@@ -1951,6 +1983,13 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::NB, NBX, NBY, BX, BY
     integer::BlockNumEachBox
     logical::ChangedToUsedIndex
+    type(cudaEvent)::StartEventSort
+    type(cudaEvent)::StopEventSort
+    type(cudaEvent)::StartEventNeighborCal
+    type(cudaEvent)::StopEventNeighborCal
+    integer::IState
+    real::timeSort
+    real::timeNeighborCal
     !---Body---
     #ifdef MC_PROFILING
     call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
@@ -1958,31 +1997,47 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     #endif
     !---Body---
 
+    IState = cudaEventCreate(StartEventSort)
+    IState = cudaEventCreate(StopEventSort)
+    IState = cudaEventCreate(StartEventNeighborCal)
+    IState = cudaEventCreate(StopEventNeighborCal)
+
     MULTIBOX = Host_SimuCtrlParam%MultiBox
 
     ChangedToUsedIndex = .false.
 
     !*** to determine the block size
-    BX = p_BLOCKSIZE
+    BX = p_BLOCKSIZE_MyMethod
     BY = 1
     !*** to determine the dimension of blocks
     if(maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1)) .GE. &
        maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))) then
         ChangedToUsedIndex = .false.
-        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1))/p_BLOCKSIZE + 1
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1))/p_BLOCKSIZE_MyMethod + 1
     else
         ChangedToUsedIndex = .true.
-        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))/p_BLOCKSIZE + 1
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))/p_BLOCKSIZE_MyMethod + 1
     end if
     NB = BlockNumEachBox*MultiBox
 
     blocks  = dim3(NB, 1, 1)
     threads = dim3(BX, BY, 1)
 
+    IState = cudaEventRecord(StartEventSort,0)
 
     call Dev_Boxes%dm_BitionicSort%Sort(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
 
+    IState = cudaEventRecord(StopEventSort,0)
+
+    IState = cudaEventSynchronize(StopEventSort)
+
+    IState = cudaEventElapsedTime(timeSort,StartEventSort,StopEventSort)
+
+    write(*,*) "Sort time is: ",timeSort
+
     !call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_BitionicSort%MaxSegmentsNumEachBox,Dev_Boxes%dm_BitionicSort%IDStartEnd_ForSort_Host,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
+
+    IState = cudaEventRecord(StartEventNeighborCal,0)
 
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -2002,11 +2057,27 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                                    Dev_Boxes%dm_BitionicSort%SortedIndex_Dev,     &
                                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
                                                                                                    MaxDiffuse)
+
     end if
 
-    call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+    IState = cudaEventRecord(StopEventNeighborCal,0)
+
+    IState = cudaEventSynchronize(StopEventNeighborCal)
+
+    IState = cudaEventElapsedTime(timeNeighborCal,StartEventNeighborCal,StopEventNeighborCal)
+
+    write(*,*) "NeighborCal time is for my Method: ",timeNeighborCal
 
 
+    IState = cudaEventDestroy(StartEventSort)
+    IState = cudaEventDestroy(StopEventSort)
+    IState = cudaEventDestroy(StartEventNeighborCal)
+    IState = cudaEventDestroy(StopEventNeighborCal)
+
+    !call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+
+    return
   end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen
 
 
