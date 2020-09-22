@@ -388,7 +388,15 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         logical::HasUpdateStatis
         integer::MultiBox
         integer::NSIZE
+        type(cudaEvent)::StartEvent
+        type(cudaEvent)::StopEvent
+        real::Thetime
+        integer::IState
         !---Body---
+
+
+                IState = cudaEventCreate(StartEvent)
+                IState = cudaEventCreate(StopEvent)
 
         Associate(Host_ClustesInfo=>Host_Boxes%m_ClustersInfo_CPU,Dev_ClustesInfo=>Dev_Boxes%dm_ClusterInfo_GPU, &
               TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral)
@@ -401,7 +409,18 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
             DO WHILE(.TRUE.)
 
+
+                IState = cudaEventRecord(StartEvent,0)
+
                 call For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TSTEP)
+
+                IState = cudaEventRecord(StopEvent,0)
+
+                IState = cudaEventSynchronize(StopEvent)
+
+                IState = cudaEventElapsedTime(Thetime,StartEvent,StopEvent)
+
+                write(*,*) "evolution time is: ",Thetime
 
                 if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
                     if ((Record%GetSimuSteps() - Record%GetLastUpdateStatisTime()) .GE. Host_SimuCtrlParam%TUpdateStatisValue) then

@@ -21,6 +21,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
   integer,private,device,dimension(:,:),allocatable::dm_CumulateSepCount
   integer,private,dimension(:,:),allocatable::m_CumulateSepCount
 
+  integer::TheFlag = 0
+
   contains
   !**********************************************************************************
   subroutine Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly,RMAX,MaxDiffuse)
@@ -1381,6 +1383,281 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
   end subroutine CalSep_Kernel
 
 
+!__global__ void Kernel_MyNeighborListCal_SortX_multipleBox_noshare(int BlockNumEachBox, int **IDStartEnd_Dev, double** Dev_ClustersPosXYZ, int* SortedIndexX, int* Dev_NNearestNeighbor) {
+!	int tid = threadIdx.y*blockDim.x + threadIdx.x;
+!	int bid = blockIdx.y*gridDim.x + blockIdx.x;
+!	int cid = bid * BLOCKSIZE + tid;
+!	double Pos_X;
+!	double Pos_Y;
+!	double Pos_Z;
+!	int MappedJC;
+!	double distance;
+!	double minDistance;
+!	double distanceX;
+!	double distanceY;
+!	double distanceZ;
+!	int NNID;
+!	int MapedIdex;
+!	int IBox;
+!	int scid;
+!	int ecid;
+!	int bid0;
+!	int IC;
+!
+!	IBox = bid / BlockNumEachBox;
+!
+!	scid = IDStartEnd_Dev[IBox][0];
+!	ecid = IDStartEnd_Dev[IBox][1];
+!
+!	bid0 = IBox * BlockNumEachBox;
+!
+!	IC = scid + (cid - bid0 * BLOCKSIZE);
+!
+!	minDistance = 1.E32;
+!
+!	if (IC <= ecid) {
+!
+!		MapedIdex = SortedIndexX[IC];
+!
+!		Pos_X = Dev_ClustersPosXYZ[MapedIdex][0];
+!		Pos_Y = Dev_ClustersPosXYZ[MapedIdex][1];
+!		Pos_Z = Dev_ClustersPosXYZ[MapedIdex][2];
+!
+!		/*Right Hand Searching*/
+!		for (int JC = IC + 1; JC <= ecid; JC++) {
+!
+!			MappedJC = SortedIndexX[JC];
+!
+!			distanceX = Dev_ClustersPosXYZ[MappedJC][0] - Pos_X;
+!			distanceY = Dev_ClustersPosXYZ[MappedJC][1] - Pos_Y;
+!			distanceZ = Dev_ClustersPosXYZ[MappedJC][2] - Pos_Z;
+!
+!			distanceX = distanceX * distanceX;
+!			distanceY = distanceY * distanceY;
+!			distanceZ = distanceZ * distanceZ;
+!
+!			distance = distanceX + distanceY + distanceZ;
+!
+!			if (minDistance > distance) {
+!				minDistance = distance;
+!				NNID = MappedJC;
+!			}
+!
+!			if (distanceX > minDistance) {
+!				break;
+!			}
+!		}
+!
+!		/*Left Hand Searching*/
+!		for (int JC = IC - 1; JC >= scid; JC--) {
+!
+!			MappedJC = SortedIndexX[JC];
+!
+!			distanceX = Dev_ClustersPosXYZ[MappedJC][0] - Pos_X;
+!			distanceY = Dev_ClustersPosXYZ[MappedJC][1] - Pos_Y;
+!			distanceZ = Dev_ClustersPosXYZ[MappedJC][2] - Pos_Z;
+!
+!			distanceX = distanceX * distanceX;
+!			distanceY = distanceY * distanceY;
+!			distanceZ = distanceZ * distanceZ;
+!
+!			distance = distanceX + distanceY + distanceZ;
+!
+!			if (minDistance > distance) {
+!				minDistance = distance;
+!				NNID = MappedJC;
+!			}
+!
+!			if (distanceX > minDistance) {
+!				break;
+!			}
+!		}
+!
+!		Dev_NNearestNeighbor[MapedIdex] = NNID;
+!	}
+!}
+
+  attributes(global) subroutine Kernel_MyNeighborListCal_SortX_multipleBox_noshare(Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,SortedIndexX,MinTSteps,maxDiffuse)
+    implicit none
+    !--Dummy Vars---
+    type(ACluster), device::Dev_Clusters(:)
+    integer, device::Dev_SEExpdIndexBox(:,:)
+    integer,device::KVOIS(:)
+    integer,device::INDI(:,:)
+    integer,value::BlockNumEachBox
+    integer,device::SortedIndexX(:)
+    real(kind=KINDDF),device::MinTSteps(:)
+    real(kind=KINDDF),value::maxDiffuse
+    !---Local Vars---
+    integer::IBox
+    integer::tid
+    integer::bid
+    integer::cid
+    integer::scid
+    integer::ecid
+    integer::bid0
+    integer::IC
+    integer::JC
+    integer::MapedIdex
+    integer::MappedJC
+    integer::STATUIC,STATUJC
+    integer::NClusters
+    integer::Shift
+    real(kind=KINDSF)::Pos_X,Pos_Y,Pos_Z,Sep_x,Sep_y,Sep_z
+    real(kind=KINDSF)::DiffA,DiffB,RADA,RADB
+    real(kind=KINDSF)::DIST2
+    real(kind=KINDDF)::MinT,reactTime
+    real(kind=KINDDF)::minDistance
+    integer::NNID
+    integer::Flag
+    !---Body---
+    tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
+    bid = (blockidx%y-1)*griddim%x +  blockidx%x         ! the index of block
+    cid = (bid-1)*p_BLOCKSIZE_MyMethod + tid                      ! the first thread index of this block
+
+	IBox = (bid-1)/BlockNumEachBox + 1
+
+	scid = Dev_SEExpdIndexBox(IBox,1)
+	ecid = Dev_SEExpdIndexBox(IBox,2)
+
+	NClusters = ecid - scid + 1
+
+	bid0 = (IBox-1)*BlockNumEachBox + 1
+
+	IC = scid + (cid - (bid0 -1)*p_BLOCKSIZE_MyMethod - 1)
+
+	MinT = 1.D32
+	minDistance = 1.D32
+
+	if (IC .LE. ecid) then
+
+		MapedIdex = SortedIndexX(IC)
+
+        STATUIC = Dev_Clusters(MapedIdex)%m_Statu
+
+        IF(STATUIC .EQ. p_ACTIVEFREE_STATU .or. STATUIC .EQ. p_ACTIVEINGB_STATU) THEN
+          Pos_X = Dev_Clusters(MapedIdex)%m_POS(1)
+          Pos_Y = Dev_Clusters(MapedIdex)%m_POS(2)
+          Pos_Z = Dev_Clusters(MapedIdex)%m_POS(3)
+
+          RADA = Dev_Clusters(MapedIdex)%m_RAD
+
+          DiffA = Dev_Clusters(MapedIdex)%m_DiffCoeff
+
+
+          !***********Right hand searching**********************
+          DO Shift=1,NClusters-1
+
+			JC = IC + Shift
+			Flag = (JC .GT. ecid)
+			Flag = Flag*Flag
+            JC = JC - Flag*dm_PERIOD(1)*NClusters  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+                MappedJC = SortedIndexX(JC)
+
+				STATUJC = Dev_Clusters(MappedJC)%m_Statu
+
+				if(STATUJC .eq. p_ACTIVEFREE_STATU .or. STATUJC .eq. p_ACTIVEINGB_STATU) then
+
+                    SEP_x = Pos_X - Dev_Clusters(MappedJC)%m_POS(1)
+                    SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+                    SEP_x = SEP_x*SEP_x
+
+                    SEP_y = Pos_y - Dev_Clusters(MappedJC)%m_POS(2)
+                    SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+                    SEP_y = SEP_y*SEP_y
+
+                    SEP_z = Pos_z - Dev_Clusters(MappedJC)%m_POS(3)
+                    SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+                    SEP_z = SEP_z*SEP_z
+
+                    DIST2 = SEP_x + SEP_y + SEP_z
+
+                    RADB = Dev_Clusters(MappedJC)%m_RAD
+
+                    DiffB = Dev_Clusters(MappedJC)%m_DiffCoeff
+
+                    DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                    reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                    if(reactTime .LE. MinT ) then
+                      MinT = reactTime
+                      NNID = MappedJC
+                      !minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      !minDistance = 24.D0*maxDiffuse*MinT   !(2*SQRT(6.D0*maxDiffuse*MinT))**2
+                      minDistance = 2*SQRT(6.D0*DiffA*MinT) + RADA + RADB
+                    end if
+
+				    if (SEP_x .GT. minDistance*minDistance) then
+                        exit
+				    end if
+
+                end if
+        END DO
+
+        !***********Left hand searching**********************
+        DO Shift=1,NClusters-1
+
+                JC = IC - Shift
+                Flag = (JC .LT. scid)
+                Flag = Flag*Flag
+                JC = JC + Flag*dm_PERIOD(1)*NClusters  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+				MappedJC = SortedIndexX(JC)
+
+				STATUJC = Dev_Clusters(MappedJC)%m_Statu
+
+				if(STATUJC .eq. p_ACTIVEFREE_STATU .or. STATUJC .eq. p_ACTIVEINGB_STATU) then
+
+                    SEP_x = Pos_X - Dev_Clusters(MappedJC)%m_POS(1)
+                    SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+                    SEP_x = SEP_x*SEP_x
+
+                    SEP_y = Pos_y - Dev_Clusters(MappedJC)%m_POS(2)
+                    SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+                    SEP_y = SEP_y*SEP_y
+
+                    SEP_z = Pos_z - Dev_Clusters(MappedJC)%m_POS(3)
+                    SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+                    SEP_z = SEP_z*SEP_z
+
+                    DIST2 = SEP_x + SEP_y + SEP_z
+
+                    RADB = Dev_Clusters(MappedJC)%m_RAD
+
+                    DiffB = Dev_Clusters(MappedJC)%m_DiffCoeff
+
+                    DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                    reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                    if(reactTime .LE. MinT ) then
+                      MinT = reactTime
+                      NNID = MappedJC
+                      !minDistance = 24.D0*DiffA*MinT
+                      !minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      minDistance = 2*SQRT(6.D0*DiffA*MinT) + RADA + RADB
+                    end if
+
+				    if (SEP_x .GT. minDistance*minDistance) then
+					  exit
+				    end if
+
+                end if
+
+          END DO
+
+          KVOIS(MapedIdex) = 1
+		  INDI(MapedIdex,1) = NNID
+		  MinTSteps(MapedIdex) = MinT
+        end if
+	 end if
+
+	 return
+  end subroutine Kernel_MyNeighborListCal_SortX_multipleBox_noshare
+
+
 
 !  __global__ void Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen(int BlockNumEachBox, int **IDStartEnd_Dev, double** Dev_ClustersPosXYZ, int* SortedIndexX, int* Dev_NNearestNeighbor) {
 !	int tid = threadIdx.y*blockDim.x + threadIdx.x;
@@ -1615,8 +1892,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                     if(reactTime .LE. MinT ) then
                       MinT = reactTime
                       NNID = MappedJC
-                      minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      !minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
                       !minDistance = 24.D0*maxDiffuse*MinT   !(2*SQRT(6.D0*maxDiffuse*MinT))**2
+                      minDistance = 2*SQRT(6.D0*DiffA*MinT) + RADA + RADB
                     end if
 
 				    if (SEP_x .GT. minDistance*minDistance) then
@@ -1669,8 +1947,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                     if(reactTime .LE. MinT ) then
                       MinT = reactTime
                       NNID = MappedJC
-                      !minDistance = 24.D0*maxDiffuse*MinT
-                      minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      !minDistance = 24.D0*DiffA*MinT
+                      !minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      minDistance = 2*SQRT(6.D0*DiffA*MinT) + RADA + RADB
                     end if
 
 				    if (SEP_x .GT. minDistance*minDistance) then
@@ -2025,7 +2304,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     IState = cudaEventRecord(StartEventSort,0)
 
-    call Dev_Boxes%dm_BitionicSort%Sort(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
+    call Dev_Boxes%dm_BitionicSort%SortX(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
 
     IState = cudaEventRecord(StopEventSort,0)
 
@@ -2034,6 +2313,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     IState = cudaEventElapsedTime(timeSort,StartEventSort,StopEventSort)
 
     write(*,*) "Sort time is: ",timeSort
+
+    IState = cudaThreadSynchronize()
 
     !call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_BitionicSort%MaxSegmentsNumEachBox,Dev_Boxes%dm_BitionicSort%IDStartEnd_ForSort_Host,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
 
@@ -2045,7 +2326,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                                    BlockNumEachBox,                               &
-                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndex_Dev,     &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexX_Dev,     &
                                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
                                                                                                    MaxDiffuse)
     else
@@ -2054,7 +2335,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                                    BlockNumEachBox,                               &
-                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndex_Dev,     &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexX_Dev,     &
                                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
                                                                                                    MaxDiffuse)
 
@@ -2066,7 +2347,276 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     IState = cudaEventElapsedTime(timeNeighborCal,StartEventNeighborCal,StopEventNeighborCal)
 
-    write(*,*) "NeighborCal time is for my Method: ",timeNeighborCal
+    write(*,*) "NeighborCal time is for my Method noShared_LeftRightCohen : ",timeNeighborCal
+
+
+    IState = cudaEventDestroy(StartEventSort)
+    IState = cudaEventDestroy(StopEventSort)
+    IState = cudaEventDestroy(StartEventNeighborCal)
+    IState = cudaEventDestroy(StopEventNeighborCal)
+
+    IState = cudaThreadSynchronize()
+
+    !call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+
+    IState = cudaThreadSynchronize()
+
+    call Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+
+    IState = cudaThreadSynchronize()
+
+    call Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortXY_multipleBox_noShared(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+
+    IState = cudaThreadSynchronize()
+
+    call Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen_Sweepout(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+
+    IState = cudaThreadSynchronize()
+
+    return
+  end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen
+
+
+
+
+
+  subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen_Sweepout(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+	    !***  PURPOSE:  to update the neighbore list of atoms (GPU version ,NNearest , MultiBox)
+    !     INPUT:  Host_Boxes               , boxes information in host
+    !             Host_SimuCtrlParam
+    !             Dev_Boxes                , boxes information in device
+    implicit none
+    !---Dummy Vars---
+    type(SimulationBoxes), intent(in)::Host_Boxes
+    type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
+    type(SimulationBoxes_GPU)::Dev_Boxes
+    real(kind=KINDDF),intent(in)::MaxDiffuse
+    !---Local Vars---
+    integer::MULTIBOX
+    type(dim3)::blocks
+    type(dim3)::threads
+    integer::NB, NBX, NBY, BX, BY
+    integer::BlockNumEachBox
+    logical::ChangedToUsedIndex
+    type(cudaEvent)::StartEventSort
+    type(cudaEvent)::StopEventSort
+    type(cudaEvent)::StartEventNeighborCal
+    type(cudaEvent)::StopEventNeighborCal
+    integer::IState
+    real::timeSort
+    real::timeNeighborCal
+    !---Body---
+    #ifdef MC_PROFILING
+    call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
+    N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
+    #endif
+    !---Body---
+
+    if(TheFlag .LE. 0) then
+
+        call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam)
+    end if
+
+    TheFlag = TheFlag + 1
+
+    IState = cudaEventCreate(StartEventSort)
+    IState = cudaEventCreate(StopEventSort)
+    IState = cudaEventCreate(StartEventNeighborCal)
+    IState = cudaEventCreate(StopEventNeighborCal)
+
+    MULTIBOX = Host_SimuCtrlParam%MultiBox
+
+    ChangedToUsedIndex = .false.
+
+    !*** to determine the block size
+    BX = p_BLOCKSIZE_MyMethod
+    BY = 1
+    !*** to determine the dimension of blocks
+    if(maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1)) .GE. &
+       maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))) then
+        ChangedToUsedIndex = .false.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1))/p_BLOCKSIZE_MyMethod + 1
+    else
+        ChangedToUsedIndex = .true.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))/p_BLOCKSIZE_MyMethod + 1
+    end if
+    NB = BlockNumEachBox*MultiBox
+
+    blocks  = dim3(NB, 1, 1)
+    threads = dim3(BX, BY, 1)
+
+    IState = cudaEventRecord(StartEventSort,0)
+
+    call Dev_Boxes%dm_BitionicSort%SortX(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
+
+    IState = cudaEventRecord(StopEventSort,0)
+
+    IState = cudaEventSynchronize(StopEventSort)
+
+    IState = cudaEventElapsedTime(timeSort,StartEventSort,StopEventSort)
+
+    write(*,*) "Sort time is: ",timeSort
+
+    IState = cudaThreadSynchronize()
+
+    !call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_BitionicSort%MaxSegmentsNumEachBox,Dev_Boxes%dm_BitionicSort%IDStartEnd_ForSort_Host,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
+
+    IState = cudaEventRecord(StartEventNeighborCal,0)
+
+    if(ChangedToUsedIndex .eq. .false.) then
+        call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                                   Dev_Boxes%dm_SEExpdIndexBox,                   &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                                   BlockNumEachBox,                               &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexX_Dev,     &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                                   MaxDiffuse)
+    else
+        call Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                                   Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                                   BlockNumEachBox,                               &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexX_Dev,     &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                                   MaxDiffuse)
+
+    end if
+
+    IState = cudaEventRecord(StopEventNeighborCal,0)
+
+    IState = cudaEventSynchronize(StopEventNeighborCal)
+
+    IState = cudaEventElapsedTime(timeNeighborCal,StartEventNeighborCal,StopEventNeighborCal)
+
+    write(*,*) "NeighborCal time is for my Method noShared_LeftRightCohen sweep out: ",timeNeighborCal
+
+
+    IState = cudaEventDestroy(StartEventSort)
+    IState = cudaEventDestroy(StopEventSort)
+    IState = cudaEventDestroy(StartEventNeighborCal)
+    IState = cudaEventDestroy(StopEventNeighborCal)
+
+    IState = cudaThreadSynchronize()
+
+    !call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+
+    return
+  end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen_Sweepout
+
+
+
+
+
+
+
+
+  subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+	    !***  PURPOSE:  to update the neighbore list of atoms (GPU version ,NNearest , MultiBox)
+    !     INPUT:  Host_Boxes               , boxes information in host
+    !             Host_SimuCtrlParam
+    !             Dev_Boxes                , boxes information in device
+    implicit none
+    !---Dummy Vars---
+    type(SimulationBoxes), intent(in)::Host_Boxes
+    type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
+    type(SimulationBoxes_GPU)::Dev_Boxes
+    real(kind=KINDDF),intent(in)::MaxDiffuse
+    !---Local Vars---
+    integer::MULTIBOX
+    type(dim3)::blocks
+    type(dim3)::threads
+    integer::NB, NBX, NBY, BX, BY
+    integer::BlockNumEachBox
+    logical::ChangedToUsedIndex
+    type(cudaEvent)::StartEventSort
+    type(cudaEvent)::StopEventSort
+    type(cudaEvent)::StartEventNeighborCal
+    type(cudaEvent)::StopEventNeighborCal
+    integer::IState
+    real::timeSort
+    real::timeNeighborCal
+    !---Body---
+    #ifdef MC_PROFILING
+    call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
+    N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
+    #endif
+    !---Body---
+
+    IState = cudaEventCreate(StartEventSort)
+    IState = cudaEventCreate(StopEventSort)
+    IState = cudaEventCreate(StartEventNeighborCal)
+    IState = cudaEventCreate(StopEventNeighborCal)
+
+    MULTIBOX = Host_SimuCtrlParam%MultiBox
+
+    ChangedToUsedIndex = .false.
+
+    !*** to determine the block size
+    BX = p_BLOCKSIZE_MyMethod
+    BY = 1
+    !*** to determine the dimension of blocks
+    if(maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1)) .GE. &
+       maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))) then
+        ChangedToUsedIndex = .false.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1))/p_BLOCKSIZE_MyMethod + 1
+    else
+        ChangedToUsedIndex = .true.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))/p_BLOCKSIZE_MyMethod + 1
+    end if
+    NB = BlockNumEachBox*MultiBox
+
+    blocks  = dim3(NB, 1, 1)
+    threads = dim3(BX, BY, 1)
+
+    IState = cudaEventRecord(StartEventSort,0)
+
+    call Dev_Boxes%dm_BitionicSort%SortX(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
+
+    IState = cudaEventRecord(StopEventSort,0)
+
+    IState = cudaEventSynchronize(StopEventSort)
+
+    IState = cudaEventElapsedTime(timeSort,StartEventSort,StopEventSort)
+
+    write(*,*) "Sort time is: ",timeSort
+
+    IState = cudaThreadSynchronize()
+
+    !call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_BitionicSort%MaxSegmentsNumEachBox,Dev_Boxes%dm_BitionicSort%IDStartEnd_ForSort_Host,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
+
+    IState = cudaEventRecord(StartEventNeighborCal,0)
+
+    if(ChangedToUsedIndex .eq. .false.) then
+        call Kernel_MyNeighborListCal_SortX_multipleBox_noshare<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                                   Dev_Boxes%dm_SEExpdIndexBox,                   &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                                   BlockNumEachBox,                               &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexX_Dev,     &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                                   MaxDiffuse)
+    else
+        call Kernel_MyNeighborListCal_SortX_multipleBox_noshare<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                                   Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                                   BlockNumEachBox,                               &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexX_Dev,     &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                                   MaxDiffuse)
+
+    end if
+
+    IState = cudaEventRecord(StopEventNeighborCal,0)
+
+    IState = cudaEventSynchronize(StopEventNeighborCal)
+
+    IState = cudaEventElapsedTime(timeNeighborCal,StartEventNeighborCal,StopEventNeighborCal)
+
+    write(*,*) "NeighborCal time is for my Method noShared: ",timeNeighborCal
 
 
     IState = cudaEventDestroy(StartEventSort)
@@ -2075,10 +2625,596 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     IState = cudaEventDestroy(StopEventNeighborCal)
 
     !call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
-    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+
+    IState = cudaThreadSynchronize()
 
     return
-  end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen
+  end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared
+
+
+!  __global__ void Kernel_MyNeighborListCal_SortXY_multipleBox_noshare(int BlockNumEachBox, int **IDStartEnd_Dev, double** Dev_ClustersPosXYZ, int* SortedIndexX,  int* SortedIndexY, int* ReverseMap_SortedIndexX, int* ReverseMap_SortedIndexY, int* Dev_NNearestNeighbor) {
+!	int tid = threadIdx.y*blockDim.x + threadIdx.x;
+!	int bid = blockIdx.y*gridDim.x + blockIdx.x;
+!	int cid = bid * BLOCKSIZE + tid;
+!	double Pos_X;
+!	double Pos_Y;
+!	double Pos_Z;
+!	int MappedJCX;
+!	int MappedJCY;
+!	double distance;
+!	double minDistance;
+!	double distanceX;
+!	double distanceY;
+!	double distanceZ;
+!	int NNID;
+!	int MapedIndex;
+!	int IBox;
+!	int scid;
+!	int ecid;
+!	int bid0;
+!	int ICX;
+!	int JCX;
+!	int ICY;
+!	int JCY;
+!	bool XorY;  // true for x, false for y
+!
+!	IBox = bid / BlockNumEachBox;
+!
+!	scid = IDStartEnd_Dev[IBox][0];
+!	ecid = IDStartEnd_Dev[IBox][1];
+!
+!	bid0 = IBox * BlockNumEachBox;
+!
+!	ICX = scid + (cid - bid0 * BLOCKSIZE);
+!
+!	minDistance = 1.E32;
+!
+!	XorY = true;
+!
+!	if (ICX <= ecid) {
+!
+!		MapedIndex = SortedIndexX[ICX];
+!
+!		Pos_X = Dev_ClustersPosXYZ[MapedIndex][0];
+!		Pos_Y = Dev_ClustersPosXYZ[MapedIndex][1];
+!		Pos_Z = Dev_ClustersPosXYZ[MapedIndex][2];
+!
+!		ICY = ReverseMap_SortedIndexY[MapedIndex];
+!
+!		/*Right Hand Searching*/
+!		for (JCX = ICX + 1; JCX <= ecid; JCX++) {
+!
+!			MappedJCX = SortedIndexX[JCX];
+!
+!			distanceX = Dev_ClustersPosXYZ[MappedJCX][0] - Pos_X;
+!			distanceY = Dev_ClustersPosXYZ[MappedJCX][1] - Pos_Y;
+!			distanceZ = Dev_ClustersPosXYZ[MappedJCX][2] - Pos_Z;
+!
+!			distanceX = distanceX * distanceX;
+!			distanceY = distanceY * distanceY;
+!			distanceZ = distanceZ * distanceZ;
+!
+!			distance = distanceX + distanceY + distanceZ;
+!
+!			if (minDistance > distance) {
+!				minDistance = distance;
+!				NNID = MappedJCX;
+!			}
+!
+!			if (distanceX > minDistance) {
+!				XorY = true;
+!				break;
+!			}
+!
+!			//Y restrict
+!			JCY = ICY + JCX - ICX;
+!			if (JCY < scid) JCY = scid;
+!			if (JCY > ecid) JCY = ecid;
+!
+!			if (JCY != ICY) {
+!
+!				MappedJCY = SortedIndexY[JCY];
+!
+!				distanceX = Dev_ClustersPosXYZ[MappedJCY][0] - Pos_X;
+!				distanceY = Dev_ClustersPosXYZ[MappedJCY][1] - Pos_Y;
+!				distanceZ = Dev_ClustersPosXYZ[MappedJCY][2] - Pos_Z;
+!
+!				distanceX = distanceX * distanceX;
+!				distanceY = distanceY * distanceY;
+!				distanceZ = distanceZ * distanceZ;
+!
+!				distance = distanceX + distanceY + distanceZ;
+!
+!				if (minDistance > distance) {
+!					minDistance = distance;
+!					NNID = MappedJCY;
+!				}
+!
+!				if (distanceY > minDistance) {
+!					XorY = false;
+!					break;
+!				}
+!			}
+!
+!		}
+!
+!
+!		/*Left Hand Searching*/
+!		if (true == XorY) {
+!
+!			for (JCX = ICX - 1; JCX >= scid; JCX--) {
+!
+!				MappedJCX = SortedIndexX[JCX];
+!
+!				distanceX = Dev_ClustersPosXYZ[MappedJCX][0] - Pos_X;
+!				distanceY = Dev_ClustersPosXYZ[MappedJCX][1] - Pos_Y;
+!				distanceZ = Dev_ClustersPosXYZ[MappedJCX][2] - Pos_Z;
+!
+!				distanceX = distanceX * distanceX;
+!				distanceY = distanceY * distanceY;
+!				distanceZ = distanceZ * distanceZ;
+!
+!				distance = distanceX + distanceY + distanceZ;
+!
+!				if (minDistance > distance) {
+!					minDistance = distance;
+!					NNID = MappedJCX;
+!				}
+!
+!				if (distanceX > minDistance) {
+!					break;
+!				}
+!
+!			}
+!
+!		}else{
+!
+!			for (JCY = ICY - 1; JCY >= scid; JCY--) {
+!
+!				MappedJCY = SortedIndexY[JCY];
+!
+!				distanceX = Dev_ClustersPosXYZ[MappedJCY][0] - Pos_X;
+!				distanceY = Dev_ClustersPosXYZ[MappedJCY][1] - Pos_Y;
+!				distanceZ = Dev_ClustersPosXYZ[MappedJCY][2] - Pos_Z;
+!
+!				distanceX = distanceX * distanceX;
+!				distanceY = distanceY * distanceY;
+!				distanceZ = distanceZ * distanceZ;
+!
+!				distance = distanceX + distanceY + distanceZ;
+!
+!				if (minDistance > distance) {
+!					minDistance = distance;
+!					NNID = MappedJCY;
+!				}
+!
+!				if (distanceY > minDistance) {
+!					break;
+!				}
+!
+!			}
+!
+!		}
+!
+!		Dev_NNearestNeighbor[MapedIndex] = NNID;
+!	}
+!}
+
+
+  subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortXY_multipleBox_noShared(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+	    !***  PURPOSE:  to update the neighbore list of atoms (GPU version ,NNearest , MultiBox)
+    !     INPUT:  Host_Boxes               , boxes information in host
+    !             Host_SimuCtrlParam
+    !             Dev_Boxes                , boxes information in device
+    implicit none
+    !---Dummy Vars---
+    type(SimulationBoxes), intent(in)::Host_Boxes
+    type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
+    type(SimulationBoxes_GPU)::Dev_Boxes
+    real(kind=KINDDF),intent(in)::MaxDiffuse
+    !---Local Vars---
+    integer::MULTIBOX
+    type(dim3)::blocks
+    type(dim3)::threads
+    integer::NB, NBX, NBY, BX, BY
+    integer::BlockNumEachBox
+    logical::ChangedToUsedIndex
+    type(cudaEvent)::StartEventSort
+    type(cudaEvent)::StopEventSort
+    type(cudaEvent)::StartEventNeighborCal
+    type(cudaEvent)::StopEventNeighborCal
+    integer::IState
+    real::timeSort
+    real::timeNeighborCal
+    !---Body---
+    #ifdef MC_PROFILING
+    call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
+    N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
+    #endif
+    !---Body---
+
+    IState = cudaEventCreate(StartEventSort)
+    IState = cudaEventCreate(StopEventSort)
+    IState = cudaEventCreate(StartEventNeighborCal)
+    IState = cudaEventCreate(StopEventNeighborCal)
+
+    MULTIBOX = Host_SimuCtrlParam%MultiBox
+
+    ChangedToUsedIndex = .false.
+
+    !*** to determine the block size
+    BX = p_BLOCKSIZE_MyMethod
+    BY = 1
+    !*** to determine the dimension of blocks
+    if(maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1)) .GE. &
+       maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))) then
+        ChangedToUsedIndex = .false.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1))/p_BLOCKSIZE_MyMethod + 1
+    else
+        ChangedToUsedIndex = .true.
+        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))/p_BLOCKSIZE_MyMethod + 1
+    end if
+    NB = BlockNumEachBox*MultiBox
+
+    blocks  = dim3(NB, 1, 1)
+    threads = dim3(BX, BY, 1)
+
+    IState = cudaEventRecord(StartEventSort,0)
+
+    call Dev_Boxes%dm_BitionicSort%SortX(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
+
+    call Dev_Boxes%dm_BitionicSort%SortY(MULTIBOX,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters)
+
+    IState = cudaEventRecord(StopEventSort,0)
+
+    IState = cudaEventSynchronize(StopEventSort)
+
+    IState = cudaEventElapsedTime(timeSort,StartEventSort,StopEventSort)
+
+    write(*,*) "Sort time is: ",timeSort
+
+    IState = cudaThreadSynchronize()
+
+    !call Host_CheckSort_Test(MULTIBOX,Dev_Boxes%dm_BitionicSort%MaxSegmentsNumEachBox,Dev_Boxes%dm_BitionicSort%IDStartEnd_ForSort_Host,Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,Dev_Boxes%dm_SEExpdIndexBox,Dev_Boxes%dm_BitionicSort%SortedIndex_Dev)
+
+    IState = cudaEventRecord(StartEventNeighborCal,0)
+
+    if(ChangedToUsedIndex .eq. .false.) then
+        call Kernel_MyNeighborListCal_SortXY_multipleBox_noshare<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                                   Dev_Boxes%dm_SEExpdIndexBox,                   &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                                   BlockNumEachBox,                               &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexX_Dev,     &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexY_Dev,     &
+                                                                                                   Dev_Boxes%dm_BitionicSort%ReverseSortedIndexY_Dev,     &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                                   MaxDiffuse)
+    else
+        call Kernel_MyNeighborListCal_SortXY_multipleBox_noshare<<<blocks,threads>>>(Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+                                                                                                   Dev_Boxes%dm_SEUsedIndexBox,                   &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+                                                                                                   BlockNumEachBox,                               &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexX_Dev,     &
+                                                                                                   Dev_Boxes%dm_BitionicSort%SortedIndexY_Dev,     &
+                                                                                                   Dev_Boxes%dm_BitionicSort%ReverseSortedIndexY_Dev,     &
+                                                                                                   Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                                   MaxDiffuse)
+
+    end if
+
+    IState = cudaEventRecord(StopEventNeighborCal,0)
+
+    IState = cudaEventSynchronize(StopEventNeighborCal)
+
+    IState = cudaEventElapsedTime(timeNeighborCal,StartEventNeighborCal,StopEventNeighborCal)
+
+    write(*,*) "NeighborCal time is for my Method XY noShared: ",timeNeighborCal
+
+
+    IState = cudaEventDestroy(StartEventSort)
+    IState = cudaEventDestroy(StopEventSort)
+    IState = cudaEventDestroy(StartEventNeighborCal)
+    IState = cudaEventDestroy(StopEventNeighborCal)
+
+    !call CheckNeighborList(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+
+    return
+  end subroutine Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortXY_multipleBox_noShared
+
+
+
+  attributes(global) subroutine Kernel_MyNeighborListCal_SortXY_multipleBox_noshare(Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,SortedIndexX,SortedIndexY,ReverseSortedIndexY,MinTSteps,maxDiffuse)
+    implicit none
+    !--Dummy Vars---
+    type(ACluster), device::Dev_Clusters(:)
+    integer, device::Dev_SEExpdIndexBox(:,:)
+    integer,device::KVOIS(:)
+    integer,device::INDI(:,:)
+    integer,value::BlockNumEachBox
+    integer,device::SortedIndexX(:)
+    integer,device::SortedIndexY(:)
+    integer,device::ReverseSortedIndexY(:)
+    real(kind=KINDDF),device::MinTSteps(:)
+    real(kind=KINDDF),value::maxDiffuse
+    !---Local Vars---
+    integer::IBox
+    integer::tid
+    integer::bid
+    integer::cid
+    integer::scid
+    integer::ecid
+    integer::bid0
+    integer::ICX
+    integer::ICY
+    integer::JCX
+    integer::JCY
+    integer::MapedIdex
+    integer::MappedJC
+    integer::STATUIC,STATUJC
+    integer::NClusters
+    integer::Shift
+    real(kind=KINDSF)::Pos_X,Pos_Y,Pos_Z,Sep_x,Sep_y,Sep_z
+    real(kind=KINDSF)::DiffA,DiffB,RADA,RADB
+    real(kind=KINDSF)::DIST2
+    real(kind=KINDDF)::MinT,reactTime
+    real(kind=KINDDF)::minDistance
+    integer::NNID
+    integer::Flag
+    logical::XorY
+    !---Body---
+    tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
+    bid = (blockidx%y-1)*griddim%x +  blockidx%x         ! the index of block
+    cid = (bid-1)*p_BLOCKSIZE_MyMethod + tid                      ! the first thread index of this block
+
+	IBox = (bid-1)/BlockNumEachBox + 1
+
+	scid = Dev_SEExpdIndexBox(IBox,1)
+	ecid = Dev_SEExpdIndexBox(IBox,2)
+
+	NClusters = ecid - scid + 1
+
+	bid0 = (IBox-1)*BlockNumEachBox + 1
+
+	ICX = scid + (cid - (bid0 -1)*p_BLOCKSIZE_MyMethod - 1)
+
+	MinT = 1.D32
+	minDistance = 1.D32
+
+	if (ICX .LE. ecid) then
+
+		MapedIdex = SortedIndexX(ICX)
+
+        STATUIC = Dev_Clusters(MapedIdex)%m_Statu
+
+        IF(STATUIC .EQ. p_ACTIVEFREE_STATU .or. STATUIC .EQ. p_ACTIVEINGB_STATU) THEN
+          Pos_X = Dev_Clusters(MapedIdex)%m_POS(1)
+          Pos_Y = Dev_Clusters(MapedIdex)%m_POS(2)
+          Pos_Z = Dev_Clusters(MapedIdex)%m_POS(3)
+
+          RADA = Dev_Clusters(MapedIdex)%m_RAD
+
+          DiffA = Dev_Clusters(MapedIdex)%m_DiffCoeff
+
+          ICY = ReverseSortedIndexY(MapedIdex)
+          !***********Right hand searching**********************
+          DO Shift=1,NClusters-1
+
+                JCX = ICX + Shift
+                Flag = (JCX .GT. ecid)
+                Flag = Flag*Flag
+                JCX = JCX - Flag*dm_PERIOD(1)*NClusters  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+                MappedJC = SortedIndexX(JCX)
+
+				STATUJC = Dev_Clusters(MappedJC)%m_Statu
+
+				if(STATUJC .eq. p_ACTIVEFREE_STATU .or. STATUJC .eq. p_ACTIVEINGB_STATU) then
+
+                    SEP_x = Pos_X - Dev_Clusters(MappedJC)%m_POS(1)
+                    SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+                    SEP_x = SEP_x*SEP_x
+
+                    SEP_y = Pos_y - Dev_Clusters(MappedJC)%m_POS(2)
+                    SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+                    SEP_y = SEP_y*SEP_y
+
+                    SEP_z = Pos_z - Dev_Clusters(MappedJC)%m_POS(3)
+                    SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+                    SEP_z = SEP_z*SEP_z
+
+                    DIST2 = SEP_x + SEP_y + SEP_z
+
+                    RADB = Dev_Clusters(MappedJC)%m_RAD
+
+                    DiffB = Dev_Clusters(MappedJC)%m_DiffCoeff
+
+                    DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                    reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                    if(reactTime .LE. MinT ) then
+                      MinT = reactTime
+                      NNID = MappedJC
+                      !minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      !minDistance = 24.D0*maxDiffuse*MinT   !(2*SQRT(6.D0*maxDiffuse*MinT))**2
+                      minDistance = 2*SQRT(6.D0*DiffA*MinT) + RADA + RADB
+                    end if
+
+				    if (SEP_x .GT. minDistance*minDistance) then
+                        XorY = .true.
+                        exit
+				    end if
+
+                end if
+
+                ! Y restrict
+                JCY = ICY + Shift
+                Flag = (JCY .GT. ecid)
+                Flag = Flag*Flag
+                JCY = JCY - Flag*dm_PERIOD(1)*NClusters  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+                MappedJC = SortedIndexY(JCY)
+
+				STATUJC = Dev_Clusters(MappedJC)%m_Statu
+
+				if(STATUJC .eq. p_ACTIVEFREE_STATU .or. STATUJC .eq. p_ACTIVEINGB_STATU) then
+
+                    SEP_x = Pos_X - Dev_Clusters(MappedJC)%m_POS(1)
+                    SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+                    SEP_x = SEP_x*SEP_x
+
+                    SEP_y = Pos_y - Dev_Clusters(MappedJC)%m_POS(2)
+                    SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+                    SEP_y = SEP_y*SEP_y
+
+                    SEP_z = Pos_z - Dev_Clusters(MappedJC)%m_POS(3)
+                    SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+                    SEP_z = SEP_z*SEP_z
+
+                    DIST2 = SEP_x + SEP_y + SEP_z
+
+                    RADB = Dev_Clusters(MappedJC)%m_RAD
+
+                    DiffB = Dev_Clusters(MappedJC)%m_DiffCoeff
+
+                    DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                    reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                    if(reactTime .LE. MinT ) then
+                      MinT = reactTime
+                      NNID = MappedJC
+                      !minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      !minDistance = 24.D0*maxDiffuse*MinT   !(2*SQRT(6.D0*maxDiffuse*MinT))**2
+                      minDistance = 2*SQRT(6.D0*DiffA*MinT) + RADA + RADB
+                    end if
+
+				    if (SEP_y .GT. minDistance*minDistance) then
+                        XorY = .false.
+                        exit
+				    end if
+
+                end if
+        END DO
+
+        !***********Left hand searching**********************
+        if(XorY .eq. .true.) then
+
+          DO Shift=1,NClusters-1
+
+                JCX = ICX - Shift
+                Flag = (JCX .LT. scid)
+                Flag = Flag*Flag
+                JCX = JCX + Flag*dm_PERIOD(1)*NClusters  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+                MappedJC = SortedIndexX(JCX)
+
+				STATUJC = Dev_Clusters(MappedJC)%m_Statu
+
+				if(STATUJC .eq. p_ACTIVEFREE_STATU .or. STATUJC .eq. p_ACTIVEINGB_STATU) then
+
+                    SEP_x = Pos_X - Dev_Clusters(MappedJC)%m_POS(1)
+                    SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+                    SEP_x = SEP_x*SEP_x
+
+                    SEP_y = Pos_y - Dev_Clusters(MappedJC)%m_POS(2)
+                    SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+                    SEP_y = SEP_y*SEP_y
+
+                    SEP_z = Pos_z - Dev_Clusters(MappedJC)%m_POS(3)
+                    SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+                    SEP_z = SEP_z*SEP_z
+
+                    DIST2 = SEP_x + SEP_y + SEP_z
+
+                    RADB = Dev_Clusters(MappedJC)%m_RAD
+
+                    DiffB = Dev_Clusters(MappedJC)%m_DiffCoeff
+
+                    DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                    reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                    if(reactTime .LE. MinT ) then
+                      MinT = reactTime
+                      NNID = MappedJC
+                      !minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      !minDistance = 24.D0*maxDiffuse*MinT   !(2*SQRT(6.D0*maxDiffuse*MinT))**2
+                      minDistance = 2*SQRT(6.D0*DiffA*MinT) + RADA + RADB
+                    end if
+
+				    if (SEP_x .GT. minDistance*minDistance) then
+                        exit
+				    end if
+
+                end if
+          END DO
+
+        else
+
+            DO Shift=1,NClusters-1
+
+                ! Y restrict
+                JCY = ICY - Shift
+                Flag = (JCY .LT. scid)
+                Flag = Flag*Flag
+                JCY = JCY + Flag*dm_PERIOD(1)*NClusters  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+                MappedJC = SortedIndexY(JCY)
+
+				STATUJC = Dev_Clusters(MappedJC)%m_Statu
+
+				if(STATUJC .eq. p_ACTIVEFREE_STATU .or. STATUJC .eq. p_ACTIVEINGB_STATU) then
+
+                    SEP_x = Pos_X - Dev_Clusters(MappedJC)%m_POS(1)
+                    SEP_x = SEP_x - (int(ABS(SEP_x)/dm_HBOXSIZE(1))*dm_PERIOD(1))*SIGN(dm_BOXSIZE(1),SEP_x)
+                    SEP_x = SEP_x*SEP_x
+
+                    SEP_y = Pos_y - Dev_Clusters(MappedJC)%m_POS(2)
+                    SEP_y = SEP_y - (int(ABS(SEP_y)/dm_HBOXSIZE(2))*dm_PERIOD(2))*SIGN(dm_BOXSIZE(2),SEP_y)
+                    SEP_y = SEP_y*SEP_y
+
+                    SEP_z = Pos_z - Dev_Clusters(MappedJC)%m_POS(3)
+                    SEP_z = SEP_z - (int(ABS(SEP_z)/dm_HBOXSIZE(3))*dm_PERIOD(3))*SIGN(dm_BOXSIZE(3),SEP_z)
+                    SEP_z = SEP_z*SEP_z
+
+                    DIST2 = SEP_x + SEP_y + SEP_z
+
+                    RADB = Dev_Clusters(MappedJC)%m_RAD
+
+                    DiffB = Dev_Clusters(MappedJC)%m_DiffCoeff
+
+                    DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
+
+                    reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+
+                    if(reactTime .LE. MinT ) then
+                      MinT = reactTime
+                      NNID = MappedJC
+                      !minDistance = SQRT(6.D0*DiffA*MinT) + SQRT(6.D0*maxDiffuse*MinT) + RADA + RADB
+                      !minDistance = 24.D0*maxDiffuse*MinT   !(2*SQRT(6.D0*maxDiffuse*MinT))**2
+                      minDistance = 2*SQRT(6.D0*DiffA*MinT) + RADA + RADB
+                    end if
+
+				    if (SEP_y .GT. minDistance*minDistance) then
+                        exit
+				    end if
+
+                end if
+            END DO
+
+          end if
+
+          KVOIS(MapedIdex) = 1
+		  INDI(MapedIdex,1) = NNID
+		  MinTSteps(MapedIdex) = MinT
+        end if
+	 end if
+
+	 return
+  end subroutine Kernel_MyNeighborListCal_SortXY_multipleBox_noshare
+
 
 
 end module MCLIB_CAL_NEIGHBOR_LIST_GPU
