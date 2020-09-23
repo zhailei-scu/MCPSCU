@@ -71,6 +71,7 @@ module MCLIB_Utilities_GPU
 	integer,device,dimension(:),allocatable::SortedIndexX_Dev
 	integer,device,dimension(:),allocatable::SortedIndexY_Dev
 	integer,device,dimension(:),allocatable::ReverseSortedIndexY_Dev
+	integer,device,dimension(:),allocatable::SortedCellIndex_Dev
 	integer::MaxSegmentsNumEachBox = 0
 	integer::MaxSegmentsNumAllBox = 0
 	integer::MaxClusterNumEachBox = 0
@@ -86,13 +87,14 @@ module MCLIB_Utilities_GPU
     procedure,public,non_overridable,pass::Init=>InitBitionicSort
     procedure,public,non_overridable,pass::SortX=>ArbitraryBitonicSortX_toApply
     procedure,public,non_overridable,pass::SortY=>ArbitraryBitonicSortY_toApply
+    procedure,public,non_overridable,pass::SortCellID=>ArbitraryBitonicSortCellID_toApply
     procedure,public,non_overridable,pass::Clean=>Clean_BitionicSort
     Final::CleanBitionicSort
   end type BitionicSort
 
   private::ArbitraryBitonicSortX_toApply
   private::ArbitraryBitonicSortY_toApply
-
+  private::ArbitraryBitonicSortCellID_toApply
   contains
 
   attributes(device) subroutine CopyClusterFromOther_Dev(Dist,Source)
@@ -3131,6 +3133,7 @@ module MCLIB_Utilities_GPU
     call AllocateArray_GPU(this%SortedIndexX_Dev,TotalNC,"this%SortedIndexX_Dev")
     call AllocateArray_GPU(this%SortedIndexY_Dev,TotalNC,"this%SortedIndexY_Dev")
     call AllocateArray_GPU(this%ReverseSortedIndexY_Dev,TotalNC,"this%ReverseSortedIndexY_Dev")
+    call AllocateArray_GPU(this%SortedCellIndex_Dev,TotalNC,"this%SortedCellIndex_Dev")
 
 	BXGlobal = p_BLOCKSIZE_BITONIC
 	BYGlobal = 1
@@ -3180,6 +3183,10 @@ module MCLIB_Utilities_GPU
 
     if(allocated(this%ReverseSortedIndexY_Dev)) then
         deallocate(this%ReverseSortedIndexY_Dev)
+    end if
+
+    if(allocated(this%SortedCellIndex_Dev)) then
+        deallocate(this%SortedCellIndex_Dev)
     end if
 
 	this%MaxSegmentsNumEachBox = 0
@@ -3966,6 +3973,583 @@ module MCLIB_Utilities_GPU
 
   end subroutine ArbitraryBitonicSortY_toApply
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  !**********************************************************************************
+  subroutine ArbitraryBitonicSortCellID_toApply(this)
+    implicit none
+    !---Dummy Vars----
+    CLASS(BitionicSort)::this
+    !---Local Vars---
+	integer::TheSize
+	integer::Stride
+    !---Body---
+
+	if (this%MaxClusterNumEachBox .LE. p_BLOCKSIZE_BITONIC) then
+		call Kernel_Shared_ArbitraryBitonicSort_toApply_OnlyKey<<<this%blocksShared,this%threadsShared>>>(this%SortedCellIndex_Dev,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
+	else
+
+		call Kernel_Shared_Merge_toApply_OnlyKey<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,this%SortedCellIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
+
+
+!        write(*,*) "****************Kernel_Shared_Merge_toApply*************************"
+!        call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
+!        pause
+
+
+        TheSize = 2
+        DO While(TheSize .LE. this%MaxSegmentsNumEachBox)
+
+            Stride = TheSize/2
+            Do While(Stride .GE. 0)
+                if(Stride .GE. 1) then
+
+                    call Kernel_GlobalMerge_Pre_toApply_OnlyKey<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,this%SortedCellIndex_Dev,this%dir,this%OEFlags_Dev)
+
+					call Kernel_GlobalMerge_toApply_OnlyKey<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,this%SortedCellIndex_Dev,this%dir,this%OEFlags_Dev)
+
+
+!					        write(*,*) "****************Kernel_GlobalMerge_toApply*************************",TheSize,Stride
+!                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
+!                            pause
+
+                else
+
+                    call Kernel_Shared_Merge_Last_toApply_OnlyKey<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,this%SortedCellIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
+
+
+!                            write(*,*) "****************Kernel_Shared_Merge_Last_toApply*************************",TheSize,Stride
+!                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
+!                            pause
+                    exit
+                end if
+
+                Stride = ISHFT(Stride,-1)
+            End Do
+
+            TheSize = ISHFT(TheSize,1)
+        END DO
+    end if
+
+  end subroutine ArbitraryBitonicSortCellID_toApply
+
+  attributes(device) subroutine Comparetor_toApply_Shared_OnlyKey(KeyA,KeyB,dir)
+    implicit none
+    !---Dummy Vars---
+    integer::KeyA
+    integer::KeyB
+    integer::dir
+    !--Local Vars---
+    real(kind=KINDDF)::tempKey
+    integer::tempValue
+    !---Body---
+    if((KeyA .GT. KeyB) .eq. (dir .eq. p_Sort_Ascending) ) then
+		tempKey = KeyA
+		KeyA = KeyB
+		KeyB = tempKey
+    end if
+
+    return
+  end subroutine Comparetor_toApply_Shared_OnlyKey
+
+
+  attributes(device) subroutine ComparetorX_toApply_Global_OnlyKey(posA,posB,KeyArray,dir)
+    implicit none
+    !---Dummy Vars---
+    integer::posA
+    integer::posB
+    integer,device::KeyArray(:)
+    integer::dir
+    !--Local Vars---
+    integer::KeyA
+    integer::KeyB
+    !---Body---
+    KeyA = KeyArray(posA)
+    KeyB = KeyArray(posB)
+
+    if((KeyA .GT. KeyB) .eq. (dir .eq. p_Sort_Ascending) ) then
+		KeyArray(posA) = KeyB
+        KeyArray(posB) = KeyA
+    end if
+
+    return
+  end subroutine ComparetorX_toApply_Global_OnlyKey
+
+  !/*Used For Array Size less than BLOCKSIZE And is not of power 2*/
+  attributes(global) subroutine Kernel_Shared_ArbitraryBitonicSort_toApply_OnlyKey(KeyArray,IDStartEnd_ForSort,dir,padNum)
+    implicit none
+    !---Dummy Vars---
+    integer,device::KeyArray(:)
+    integer,device::IDStartEnd_ForSort(:,:)
+    integer,value::dir
+    real(kind=KINDDF),value::padNum
+    !---Local Vars---
+    integer::tid
+    integer::bid
+    integer::tempDir
+    integer::pos
+    integer::LastPowerTwo
+    integer::ICStart
+    integer::ICEnd
+    integer::IDRelative
+    integer::SegmentSize
+    integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_KeysArray
+    integer::I
+    integer::stride
+    integer::LeftHalf
+    !---Body---
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y -1)*griddim%x + blockidx%x
+
+    ICStart = IDStartEnd_ForSort(bid,1)
+	ICEnd = IDStartEnd_ForSort(bid,2)
+	IDRelative = ICStart + tid - 1
+
+	Share_KeysArray(tid) = padNum
+	if (IDRelative .LE. ICEnd) then
+		Share_KeysArray(tid) = KeyArray(IDRelative)
+	end if
+
+	Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = padNum
+	if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
+		Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2)
+	end if
+
+	LastPowerTwo = 1
+
+	SegmentSize = ICEnd - ICStart + 1
+
+    I = 2
+    DO While(I .LT. SegmentSize)
+
+        LastPowerTwo = I
+
+        LeftHalf = (IAND(tid-1,I/2) .ne. 0)
+
+        LeftHalf = LeftHalf*LeftHalf  ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+        tempDir = IEOR(dir,LeftHalf)
+
+        stride = I/2
+        DO while(stride .GT. 0)
+            call syncthreads()
+
+            pos = 2 * (tid -1) - IAND(tid-1,stride - 1) + 1
+
+            call Comparetor_toApply_Shared_OnlyKey(Share_KeysArray(pos), Share_KeysArray(pos + stride), tempDir)
+
+            stride = ISHFT(stride,-1)
+
+        END DO
+
+        I = ISHFT(I,1)
+    END DO
+
+    stride = LastPowerTwo
+
+    DO while(stride .GT. 0)
+        call syncthreads()
+
+        pos = 2 * (tid -1) - IAND(tid-1,stride - 1) + 1
+
+        call Comparetor_toApply_Shared_OnlyKey(Share_KeysArray(pos), Share_KeysArray(pos + stride), dir)
+
+        stride = ISHFT(stride,-1)
+    END DO
+
+	call syncthreads()
+
+	if (IDRelative .LE. ICEnd) then
+		KeyArray(IDRelative) = Share_KeysArray(tid)
+	end if
+
+	if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
+		KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2) = Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2)
+	end if
+
+    return
+  end subroutine Kernel_Shared_ArbitraryBitonicSort_toApply_OnlyKey
+
+
+  attributes(global) subroutine Kernel_GlobalMerge_Pre_toApply_OnlyKey(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray, dir, OEFlags)
+    implicit none
+    !---Dummy Vars----
+    integer,value::BlockNumEachBox
+    integer,value::TheSize
+    integer,value::SegmentsStride
+    integer,device::IDStartEnd_ForSort(:,:)
+    integer,device::KeyArray(:)
+    integer,value::dir
+    integer,device::OEFlags(:)
+    !---Local Vars---
+	integer::tid
+	integer::bid
+	integer::cid
+	integer::tempDir
+	integer::IDSegRelative
+	integer::IBox
+	integer::cid0
+	integer::IDSegStartRelative
+	integer::IDLevel
+	integer::IDSegStart
+	integer::IDSegEnd
+	integer::IDSegMap
+	integer::ICLevelStart
+	integer::ICLevelRightHalfStart
+	integer::ICLevelRightHalfEnd
+	integer::ICLevelEnd
+	integer::FlagsShift
+	integer::LogicalToInt
+    !---Body---
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y -1)*griddim%x + blockidx%x
+    cid = (bid -1)*blockdim%x*blockdim%y + tid
+
+	IBox = (cid -1)/BlockNumEachBox + 1
+	cid0 = (IBox-1)*BlockNumEachBox + 1
+	IDSegRelative = cid - cid0
+
+	IDLevel = IDSegRelative/SegmentsStride
+	IDSegStartRelative = IDLevel * 2 * SegmentsStride
+	IDSegStart = 2* (cid0 - 1) + IDSegStartRelative + 1
+	IDSegEnd = 2* (cid0 -1) + (IDLevel + 1) * 2 * SegmentsStride
+	IDSegMap = IDSegStart + mod(IDSegRelative,SegmentsStride)
+
+    tempDir = IEOR(dir,IAND(IDSegStartRelative/TheSize,1))
+
+	ICLevelStart = IDStartEnd_ForSort(IDSegStart,1)
+	ICLevelEnd = IDStartEnd_ForSort(IDSegEnd,2)
+
+	ICLevelRightHalfStart = IDStartEnd_ForSort(IDSegStart + SegmentsStride,1)
+	ICLevelRightHalfEnd = ICLevelEnd
+
+    if(ICLevelRightHalfEnd .GT. 0) then
+        LogicalToInt = (KeyArray(ICLevelRightHalfEnd) .GE. KeyArray(ICLevelRightHalfStart))
+
+        LogicalToInt = LogicalToInt*LogicalToInt   ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+        FlagsShift = IEOR(tempDir,LogicalToInt)
+
+        LogicalToInt = (mod(ICLevelEnd - ICLevelStart + 1,2) .ne. 0)
+
+        LogicalToInt = LogicalToInt*LogicalToInt ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+        OEFlags(IDSegMap) = IAND(LogicalToInt,FlagsShift)
+    END if
+
+    return
+  end subroutine Kernel_GlobalMerge_Pre_toApply_OnlyKey
+
+  attributes(global) subroutine Kernel_GlobalMerge_toApply_OnlyKey(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray, dir, OEFlags)
+    implicit none
+    !---Dummy Vars----
+    integer,value::BlockNumEachBox
+    integer,value::TheSize
+    integer,value::SegmentsStride
+    integer,device::IDStartEnd_ForSort(:,:)
+    integer,device::KeyArray(:)
+    integer,value::dir
+    integer,device::OEFlags(:)
+    !---Local Vars---
+	integer::tid
+	integer::bid
+	integer::tempDir
+	integer::IDSegRelative
+	integer::IBox
+	integer::bid0
+	integer::IDSegStartRelative
+	integer::IDLevel
+	integer::IDSegStart
+	integer::IDSegEnd
+	integer::IDSegMap
+    integer::ICSegStart
+	integer::ICSegEnd
+	integer::ICLevelStart
+	integer::ICLevelEnd
+	integer::FlagsShift
+	integer::LogicalToInt
+	integer::pos
+	integer::Stride
+    !---Body---
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y -1)*griddim%x + blockidx%x
+
+	IBox = (bid -1)/BlockNumEachBox + 1
+	bid0 = (IBox-1)*BlockNumEachBox + 1
+	IDSegRelative = bid - bid0
+    IDLevel = IDSegRelative/SegmentsStride
+	IDSegStartRelative = IDLevel * 2 * SegmentsStride
+	IDSegStart = 2* (bid0 - 1) + IDSegStartRelative + 1
+	IDSegEnd = 2* (bid0 -1) + (IDLevel + 1) * 2 * SegmentsStride
+	IDSegMap = IDSegStart + mod(IDSegRelative,SegmentsStride)
+
+	tempDir = IEOR(dir,IAND(IDSegStartRelative/TheSize,1))
+
+	ICSegStart = IDStartEnd_ForSort(IDSegMap,1)
+	ICSegEnd = IDStartEnd_ForSort(IDSegMap,2)
+
+    if(ICSegEnd .GT. 0) then
+
+        pos = ICSegStart + tid - 1
+
+        ICLevelStart = IDStartEnd_ForSort(IDSegStart,1)
+        ICLevelEnd = IDStartEnd_ForSort(IDSegEnd,2)
+
+        Stride = (ICLevelEnd - ICLevelStart + 1) / 2 + OEFlags(IDSegMap)
+
+        if (pos .LE. ICSegEnd .AND. (pos + Stride) .LE. ICLevelEnd) then
+
+            call ComparetorX_toApply_Global_OnlyKey(pos, pos + Stride,KeyArray, tempDir)
+
+        end if
+    end if
+    return
+  end subroutine Kernel_GlobalMerge_toApply_OnlyKey
+
+  !***********Used For Array Size less than BLOCKSIZE And is not of power 2******************
+  attributes(global) subroutine Kernel_Shared_Merge_toApply_OnlyKey(BlockNumEachBox_Share,KeyArray,IDStartEnd_ForSort,dir,padNum,TheSize)
+    !---Dummy Vars----
+    integer,value::BlockNumEachBox_Share
+    integer,device::KeyArray(:)
+    integer,device::IDStartEnd_ForSort(:,:)
+    integer,value::dir
+    real(kind=KINDDF),value::padNum
+    integer,value::TheSize
+    !---Local Vars---
+    integer::tid
+    integer::bid
+    integer::tempDir
+    integer::pos
+    integer::LastPowerTwo
+    integer::SegmentSize
+    integer::ICStart
+    integer::ICEnd
+    integer::IDRelative
+    real(kind=KINDDF)::tempPadNum
+    integer::IBox
+    integer::bid0
+    integer::IDSegRelative
+    integer::stride
+    integer::I
+    integer::LeftHalf
+    integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_KeyArray
+    !---Body---
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y -1)*griddim%x + blockidx%x
+
+	IBox = (bid -1)/ BlockNumEachBox_Share + 1
+	bid0 = (IBox-1)*BlockNumEachBox_Share + 1
+	IDSegRelative = bid - bid0
+
+	ICStart = IDStartEnd_ForSort(bid,1)
+	ICEnd = IDStartEnd_ForSort(bid,2)
+	IDRelative = ICStart + tid - 1
+	tempPadNum = (1 - 2 * mod(IDSegRelative/TheSize,2))*padNum
+
+	if (ICEnd .GT. 1) then
+		Share_KeyArray(tid) = tempPadNum
+		if (IDRelative .LE. ICEnd) then
+			Share_KeyArray(tid) = KeyArray(IDRelative)
+		end if
+
+		Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = tempPadNum
+		if ((IDRelative + p_BLOCKSIZE_BITONIC/2) .LE. ICEnd) then
+			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2)
+		end if
+
+		LastPowerTwo = 1
+
+		SegmentSize = ICEnd - ICStart + 1
+
+        I = 2
+        DO While(I .LT. SegmentSize)
+
+            LastPowerTwo = I
+
+            LeftHalf = (IAND(tid-1,I/2) .ne. 0)
+            LeftHalf = LeftHalf*LeftHalf   ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+			tempDir = IEOR(mod(IDSegRelative/TheSize,2),IEOR(dir,LeftHalf))
+
+            stride = I/2
+            DO While(stride .GT. 0)
+                call syncthreads()
+
+                pos = 2*(tid - 1) - IAND(tid-1,stride -1) + 1
+
+                call Comparetor_toApply_Shared_OnlyKey(Share_KeyArray(pos), Share_KeyArray(pos + stride),tempDir)
+
+                stride = ISHFT(stride,-1)
+            END DO
+
+            I = ISHFT(I,1)
+        END DO
+
+        tempDir = IEOR(mod(IDSegRelative/TheSize,2),dir)
+
+        stride = LastPowerTwo
+        DO While(stride .GT. 0)
+            call syncthreads()
+
+            pos = 2*(tid - 1) - IAND(tid-1,stride -1) + 1
+
+            call Comparetor_toApply_Shared_OnlyKey(Share_KeyArray(pos), Share_KeyArray(pos + stride),tempDir)
+
+            stride = ISHFT(stride,-1)
+        END DO
+
+		call syncthreads()
+
+		if (IDRelative .LE. ICEnd) then
+			KeyArray(IDRelative) = Share_KeyArray(tid)
+		end if
+
+		if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
+			KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2) = Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2)
+		end if
+
+	end if
+  end subroutine Kernel_Shared_Merge_toApply_OnlyKey
+
+
+  !***********************Used For Array Size less than BLOCKSIZE And is not of power 2*****************************
+  attributes(global) subroutine Kernel_Shared_Merge_Last_toApply_OnlyKey(BlockNumEachBox_Share,KeyArray,IDStartEnd_ForSort,dir,TheSize)
+    !---Dummy Vars----
+    integer,value::BlockNumEachBox_Share
+    integer,device::KeyArray(:)
+    integer,device::IDStartEnd_ForSort(:,:)
+    integer,value::dir
+    integer,value::TheSize
+    !---Local Vars---
+	integer::tid
+	integer::bid
+	integer::tempDir
+	integer::pos
+	integer::ICStart
+	integer::ICEnd
+	integer::ICRelative
+	integer::stride
+	integer::tempSegmentSize
+	integer::tempICStart
+	integer::tempICEnd
+	integer::LastSegmentSize
+	integer::LastRemindSegmentSize
+	integer::tempAllSize
+	integer::FlagsShift
+	integer::OEFlags
+	integer::FlagOne
+	integer::tempLevelSeg
+	integer::LRFlags
+	integer::IBox
+	integer::bid0
+	integer::IDSegRelative
+    integer::LevelSeg
+    integer::LogicalToInt
+    integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_KeyArray
+    !---Body---
+    tid = (threadidx%y - 1)*blockdim%x + threadidx%x
+    bid = (blockidx%y -1)*griddim%x + blockidx%x
+
+	IBox = (bid -1) / BlockNumEachBox_Share + 1
+	bid0 = (IBox -1) * BlockNumEachBox_Share + 1
+	IDSegRelative = bid - bid0
+
+	ICStart = IDStartEnd_ForSort(bid,1)
+	ICEnd = IDStartEnd_ForSort(bid,2)
+	ICRelative = ICStart + tid - 1
+
+	if (ICEnd .GT. 1) then
+
+		if (ICRelative .LE. ICEnd) then
+			Share_KeyArray(tid) = KeyArray(ICRelative)
+		end if
+
+		if ((ICRelative + p_BLOCKSIZE_BITONIC/2) .LE. ICEnd) then
+			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2)
+		end if
+
+        tempDir = IEOR(mod(IDSegRelative/TheSize,2),dir)
+		tempSegmentSize = ICEnd - ICStart + 1
+		tempICStart = 1
+		tempICEnd = tempICStart + tempSegmentSize / 2 - 1
+		LastSegmentSize = tempSegmentSize
+		LastRemindSegmentSize = LastSegmentSize - LastSegmentSize / 2
+		tempAllSize = ICEnd - ICStart + 1
+		OEFlags = 0
+		LRFlags = 0  ! 0 for Left , 1 for Right
+
+        LevelSeg = p_BLOCKSIZE_BITONIC / 2
+        DO While(LevelSeg .GT. 0)
+
+			call syncthreads()
+
+			FlagOne = ((1 .eq. LevelSeg) .AND. (tempAllSize .eq. 3))
+
+			FlagOne = FlagOne*FlagOne   ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+			tempLevelSeg = LevelSeg * (1-FlagOne) + 2 * FlagOne
+
+			LRFlags = mod((tid-1)/tempLevelSeg,2)
+
+			tempAllSize = (LastSegmentSize * IEOR(LRFlags,1) + LastRemindSegmentSize * IAND(LRFlags,1))*(1-FlagOne) + tempAllSize * FlagOne
+
+			tempSegmentSize = tempAllSize / 2
+
+			tempICStart = tempICStart + (LastSegmentSize * IAND(LRFlags,1))*(1-FlagOne) + FlagOne
+			tempICEnd = tempICStart + tempSegmentSize - 1
+
+			LastRemindSegmentSize = tempAllSize - tempAllSize / 2
+
+			LastSegmentSize = tempSegmentSize
+
+            LogicalToInt = (Share_KeyArray(tempICEnd + LastRemindSegmentSize) .GE. Share_KeyArray(tempICEnd + 1))
+            LogicalToInt = LogicalToInt*LogicalToInt ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+			FlagsShift = IEOR(tempDir,LogicalToInt)
+
+            LogicalToInt = (mod(tempAllSize,2) .ne. 0)
+            LogicalToInt = LogicalToInt*LogicalToInt ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+			OEFlags = IAND(FlagsShift,LogicalToInt)
+
+			pos = tempICStart + tid - ((tid -1)/ tempLevelSeg)*tempLevelSeg - 1
+
+			stride = tempSegmentSize + OEFlags * (1-FlagOne)
+
+			call syncthreads()
+
+			if (pos .LE. tempICEnd) then
+
+				call Comparetor_toApply_Shared_OnlyKey(Share_KeyArray(pos), Share_KeyArray(pos + stride), tempDir)
+            end if
+
+            LevelSeg = ISHFT(LevelSeg,-1)
+		END DO
+
+		call syncthreads()
+
+		if (ICRelative .LE. ICEnd) then
+			KeyArray(ICRelative) = Share_KeyArray(tid)
+		end if
+
+		if ((ICRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
+			KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2) = Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2)
+		end if
+
+	end if
+  end subroutine Kernel_Shared_Merge_Last_toApply_OnlyKey
 
 
 
