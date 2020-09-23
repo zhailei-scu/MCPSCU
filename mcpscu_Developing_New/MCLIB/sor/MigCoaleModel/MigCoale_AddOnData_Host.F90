@@ -20,6 +20,9 @@ module MIGCOALE_ADDONDATA_HOST
 
     logical::m_CheckNClusters = .false.
 
+    real(kind=KINDDF)::m_OutRadius = 0.D0
+    real(kind=KINDDF)::m_CascadeCenter(3)
+
     contains
 
     subroutine resolveAddOnData(Host_Boxes,Host_SimuCtrlParam)

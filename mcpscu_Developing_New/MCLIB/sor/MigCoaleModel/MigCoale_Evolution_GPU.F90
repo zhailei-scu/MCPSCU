@@ -160,6 +160,7 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::VectorLen
     integer::RandomSign
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+    real(kind=KINDDF)::DistToCent
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -216,6 +217,17 @@ module MIGCOALE_EVOLUTION_GPU
         end if
 
         tempPos = tempPos + POS
+
+        DistToCent = (tempPos(1) - dm_CascadeCenter(1))*(tempPos(1) - dm_CascadeCenter(1)) + &
+                     (tempPos(2) - dm_CascadeCenter(2))*(tempPos(2) - dm_CascadeCenter(2)) + &
+                     (tempPos(3) - dm_CascadeCenter(3))*(tempPos(3) - dm_CascadeCenter(3))
+
+        if(DistToCent .GE. dm_OutRadius**2) then
+            Dev_Clusters(IC)%m_Statu = p_OUT_DESTROY_STATU
+            Dev_ActiveStatu(IC) = p_OUT_DESTROY_STATU
+            Dev_Clusters(IC)%m_POS = tempPos
+            return
+        end if
 
         if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
             tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
@@ -437,6 +449,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::IJump
     real(kind=KINDDF)::JumpRemind
     real(kind=KINDDF)::LowerLimitLength
+    real(kind=KINDDF)::DistToCent
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -562,6 +575,18 @@ module MIGCOALE_EVOLUTION_GPU
         end if
 
         tempPos = tempPos + POS
+
+
+        DistToCent = (tempPos(1) - dm_CascadeCenter(1))*(tempPos(1) - dm_CascadeCenter(1)) + &
+                     (tempPos(2) - dm_CascadeCenter(2))*(tempPos(2) - dm_CascadeCenter(2)) + &
+                     (tempPos(3) - dm_CascadeCenter(3))*(tempPos(3) - dm_CascadeCenter(3))
+
+        if(DistToCent .GE. dm_OutRadius**2) then
+            Dev_Clusters(IC)%m_Statu = p_OUT_DESTROY_STATU
+            Dev_ActiveStatu(IC) = p_OUT_DESTROY_STATU
+            Dev_Clusters(IC)%m_POS = tempPos
+            return
+        end if
 
         if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
             tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
@@ -945,6 +970,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDSF)::RADA,RADB,DIST,RR
     integer::N_Neighbor,NewNA
     integer::I,J,JC,NN
+    integer::NSIAIC,NVACIC
+    integer::NSIAJC,NVACJC
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -967,6 +994,9 @@ module MIGCOALE_EVOLUTION_GPU
             Pos_X = Dev_Clusters(IC)%m_POS(1)
             Pos_Y = Dev_Clusters(IC)%m_POS(2)
             Pos_Z = Dev_Clusters(IC)%m_POS(3)
+
+            NSIAIC = Dev_Clusters(IC)%m_Atoms(dm_SIA_Index_W)%m_NA
+            NVACIC = Dev_Clusters(IC)%m_Atoms(dm_Vac_Index_W)%m_NA
 
             RADA = Dev_Clusters(IC)%m_RAD
 
@@ -1018,6 +1048,13 @@ module MIGCOALE_EVOLUTION_GPU
                     cycle
                 end if
 
+                NSIAJC = Dev_Clusters(JC)%m_Atoms(dm_SIA_Index_W)%m_NA
+                NVACJC = Dev_Clusters(JC)%m_Atoms(dm_Vac_Index_W)%m_NA
+
+                if(NSIAIC*NVACJC .LE. 0 .AND. NVACIC*NSIAJC .LE. 0) then
+                    cycle
+                end if
+
                 NN = NN + 1
 
                 MergeTable_INDI(IC,NN) = JC
@@ -1059,6 +1096,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::tTemp
     real(kind=KINDDF)::DiffA
     real(kind=KINDDF)::DiffB
+    integer::NSIAIC,NVACIC
+    integer::NSIAJC,NVACJC
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -1086,6 +1125,9 @@ module MIGCOALE_EVOLUTION_GPU
             Pos_X = Dev_Clusters(IC)%m_POS(1)
             Pos_Y = Dev_Clusters(IC)%m_POS(2)
             Pos_Z = Dev_Clusters(IC)%m_POS(3)
+
+            NSIAIC = Dev_Clusters(IC)%m_Atoms(dm_SIA_Index_W)%m_NA
+            NVACIC = Dev_Clusters(IC)%m_Atoms(dm_Vac_Index_W)%m_NA
 
             RADA = Dev_Clusters(IC)%m_RAD
 
@@ -1146,6 +1188,13 @@ module MIGCOALE_EVOLUTION_GPU
                     cycle
                 end if
 
+                NSIAJC = Dev_Clusters(JC)%m_Atoms(dm_SIA_Index_W)%m_NA
+                NVACJC = Dev_Clusters(JC)%m_Atoms(dm_Vac_Index_W)%m_NA
+
+                if(NSIAIC*NVACJC .LE. 0 .AND. NVACIC*NSIAJC .LE. 0) then
+                    cycle
+                end if
+
                 NN = NN + 1
 
                 MergeTable_INDI(IC,NN) = JC
@@ -1201,6 +1250,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::SubjectNANum
     integer::ObjectNANum
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+    integer::temp
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -1248,183 +1298,193 @@ module MIGCOALE_EVOLUTION_GPU
 
           !---Step 3:Do something
 
-          PosA_X = Dev_Clusters(IC)%m_POS(1)
-          PosA_Y = Dev_Clusters(IC)%m_POS(2)
-          PosA_Z = Dev_Clusters(IC)%m_POS(3)
-
-          PosB_X = Dev_Clusters(JC)%m_POS(1)
-          PosB_Y = Dev_Clusters(JC)%m_POS(2)
-          PosB_Z = Dev_Clusters(JC)%m_POS(3)
-
-          Sep_X = PosA_X - PosB_X
-          Sep_Y = PosA_Y - PosB_Y
-          Sep_Z = PosA_Z - PosB_Z
-
-
-          if(ABS(Sep_X).GT.dm_HBOXSIZE(1) .AND. dm_PERIOD(1)) then
-             PosB_X = PosB_X + SIGN(dm_BOXSIZE(1),Sep_X)
-          end if
-
-          if(ABS(Sep_Y).GT.dm_HBOXSIZE(2) .AND. dm_PERIOD(2)) then
-             PosB_Y = PosB_Y + SIGN(dm_BOXSIZE(2),Sep_Y)
-          end if
-
-          if(ABS(Sep_Z).GT.dm_HBOXSIZE(3) .AND. dm_PERIOD(3)) then
-             PosB_Z = PosB_Z + SIGN(dm_BOXSIZE(3),Sep_Z)
-          end if
-
-          tempNA = sum(Dev_Clusters(IC)%m_Atoms(:)%m_NA,dim=1)
-          tempNB = sum(Dev_Clusters(JC)%m_Atoms(:)%m_NA,dim=1)
-
-          NewNA = tempNA + tempNB
-
-          PosA_X = (PosA_X*tempNA + PosB_X*tempNB)/NewNA
-          PosA_Y = (PosA_Y*tempNA + PosB_Y*tempNB)/NewNA
-          PosA_Z = (PosA_Z*tempNA + PosB_Z*tempNB)/NewNA
-
-          if(PosA_X .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
-             PosA_X = PosA_X - dm_BOXSIZE(1)
-          else if(PosA_X .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
-             PosA_X = PosA_X + dm_BOXSIZE(1)
-          end if
-
-          if(PosA_Y .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
-             PosA_Y = PosA_Y - dm_BOXSIZE(2)
-          else if(PosA_Y .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
-             PosA_Y = PosA_Y + dm_BOXSIZE(2)
-          end if
-
-          if(PosA_Z .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
-             PosA_Z = PosA_Z - dm_BOXSIZE(3)
-          else if(PosA_Z .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
-             PosA_Z = PosA_Z + dm_BOXSIZE(3)
-          end if
-
-          Dev_Clusters(IC)%m_POS(1) =  PosA_X
-          Dev_Clusters(IC)%m_POS(2) =  PosA_Y
-          Dev_Clusters(IC)%m_POS(3) =  PosA_Z
-
-          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
-
-          ReactionProp = 0.D0
-          select case(TheReactionValue%ReactionCoefficientType)
-            case(p_ReactionCoefficient_ByValue)
-                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
-            case(p_ReactionCoefficient_ByArrhenius)
-                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
-          end select
+!          PosA_X = Dev_Clusters(IC)%m_POS(1)
+!          PosA_Y = Dev_Clusters(IC)%m_POS(2)
+!          PosA_Z = Dev_Clusters(IC)%m_POS(3)
+!
+!          PosB_X = Dev_Clusters(JC)%m_POS(1)
+!          PosB_Y = Dev_Clusters(JC)%m_POS(2)
+!          PosB_Z = Dev_Clusters(JC)%m_POS(3)
+!
+!          Sep_X = PosA_X - PosB_X
+!          Sep_Y = PosA_Y - PosB_Y
+!          Sep_Z = PosA_Z - PosB_Z
+!
+!
+!          if(ABS(Sep_X).GT.dm_HBOXSIZE(1) .AND. dm_PERIOD(1)) then
+!             PosB_X = PosB_X + SIGN(dm_BOXSIZE(1),Sep_X)
+!          end if
+!
+!          if(ABS(Sep_Y).GT.dm_HBOXSIZE(2) .AND. dm_PERIOD(2)) then
+!             PosB_Y = PosB_Y + SIGN(dm_BOXSIZE(2),Sep_Y)
+!          end if
+!
+!          if(ABS(Sep_Z).GT.dm_HBOXSIZE(3) .AND. dm_PERIOD(3)) then
+!             PosB_Z = PosB_Z + SIGN(dm_BOXSIZE(3),Sep_Z)
+!          end if
+!
+!          tempNA = sum(Dev_Clusters(IC)%m_Atoms(:)%m_NA,dim=1)
+!          tempNB = sum(Dev_Clusters(JC)%m_Atoms(:)%m_NA,dim=1)
+!
+!          NewNA = tempNA + tempNB
+!
+!          PosA_X = (PosA_X*tempNA + PosB_X*tempNB)/NewNA
+!          PosA_Y = (PosA_Y*tempNA + PosB_Y*tempNB)/NewNA
+!          PosA_Z = (PosA_Z*tempNA + PosB_Z*tempNB)/NewNA
+!
+!          if(PosA_X .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+!             PosA_X = PosA_X - dm_BOXSIZE(1)
+!          else if(PosA_X .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+!             PosA_X = PosA_X + dm_BOXSIZE(1)
+!          end if
+!
+!          if(PosA_Y .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+!             PosA_Y = PosA_Y - dm_BOXSIZE(2)
+!          else if(PosA_Y .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+!             PosA_Y = PosA_Y + dm_BOXSIZE(2)
+!          end if
+!
+!          if(PosA_Z .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+!             PosA_Z = PosA_Z - dm_BOXSIZE(3)
+!          else if(PosA_Z .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+!             PosA_Z = PosA_Z + dm_BOXSIZE(3)
+!          end if
+!
+!          Dev_Clusters(IC)%m_POS(1) =  PosA_X
+!          Dev_Clusters(IC)%m_POS(2) =  PosA_Y
+!          Dev_Clusters(IC)%m_POS(3) =  PosA_Z
+!
+!          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
+!
+!          ReactionProp = 0.D0
+!          select case(TheReactionValue%ReactionCoefficientType)
+!            case(p_ReactionCoefficient_ByValue)
+!                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
+!            case(p_ReactionCoefficient_ByArrhenius)
+!                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+!          end select
 
           ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
-          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+!          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+!
+!            select case(TheReactionValue%ProductionType)
+!                case(p_ProductionType_BySimplePlus)
+!                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+!                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!
+!                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!                case(p_ProductionType_BySubtract)
+!
+!                    SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
+!                    ObjectElementIndex = TheReactionValue%ElemetIndex_Object
+!
+!                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+!                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!
+!                    SubjectNANum = Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+!                    ObjectNANum  = Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
+!
+!                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
+!
+!                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
+!
+!                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
+!
+!                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
+!
+!                    if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
+!                        SubjectStatu = p_ANNIHILATE_STATU
+!                        Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
+!                        Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
+!                        Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
+!                    end if
+!
+!            end select
+!
+!            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
+!
+!            if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
+!
+!                select case(TheDiffusorValue%ECRValueType_Free)
+!                    case(p_ECR_ByValue)
+!                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+!                    case default
+!                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
+!                                                                           ATOMS,                                                   &
+!                                                                           dm_TKB,                                                  &
+!                                                                           dm_LatticeLength)
+!                end select
+!
+!                select case(TheDiffusorValue%DiffusorValueType_Free)
+!                    case(p_DiffuseCoefficient_ByValue)
+!                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+!                    case(p_DiffuseCoefficient_ByArrhenius)
+!                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+!                    case(p_DiffuseCoefficient_ByBCluster)
+!                        ! Here we adopt a model that D=D0*(1/R)**Gama
+!                        Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+!                    case(p_DiffuseCoefficient_BySIACluster)
+!                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+!                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+!                    case(p_DiffuseCoefficient_ByVcCluster)
+!                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+!                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+!                end select
+!
+!                Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+!
+!            else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+!
+!                select case(TheDiffusorValue%ECRValueType_InGB)
+!                    case(p_ECR_ByValue)
+!                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+!                    case default
+!                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
+!                                                                           ATOMS,                                                   &
+!                                                                           dm_TKB,                                                  &
+!                                                                           dm_LatticeLength)
+!                end select
+!
+!                select case(TheDiffusorValue%DiffusorValueType_InGB)
+!                    case(p_DiffuseCoefficient_ByValue)
+!                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+!                    case(p_DiffuseCoefficient_ByArrhenius)
+!                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+!                    case(p_DiffuseCoefficient_ByBCluster)
+!                        ! Here we adopt a model that D=D0*(1/R)**Gama
+!                        Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+!
+!                    case(p_DiffuseCoefficient_BySIACluster)
+!                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
+!                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+!                    case(p_DiffuseCoefficient_ByVcCluster)
+!                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+!                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+!                end select
+!            end if
+!
+!            if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
+!                if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
+!                    SubjectStatu = p_EXP_DESTROY_STATU
+!                endif
+!            end if
+!
+!            !Dev_Clusters(JC)%m_RAD = 0.D0
+!            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+!            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+!          end if
 
-            select case(TheReactionValue%ProductionType)
-                case(p_ProductionType_BySimplePlus)
-                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
-                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
 
-                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                case(p_ProductionType_BySubtract)
-
-                    SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
-                    ObjectElementIndex = TheReactionValue%ElemetIndex_Object
-
-                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
-                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-
-                    SubjectNANum = Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
-                    ObjectNANum  = Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
-
-                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
-
-                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
-
-                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
-
-                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
-
-                    if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
-                        SubjectStatu = p_ANNIHILATE_STATU
-                        Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
-                        Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
-                        Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
-                    end if
-
-            end select
-
-            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
-
-            if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
-
-                select case(TheDiffusorValue%ECRValueType_Free)
-                    case(p_ECR_ByValue)
-                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case default
-                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
-                                                                           ATOMS,                                                   &
-                                                                           dm_TKB,                                                  &
-                                                                           dm_LatticeLength)
-                end select
-
-                select case(TheDiffusorValue%DiffusorValueType_Free)
-                    case(p_DiffuseCoefficient_ByValue)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
-                    case(p_DiffuseCoefficient_ByArrhenius)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
-                    case(p_DiffuseCoefficient_ByBCluster)
-                        ! Here we adopt a model that D=D0*(1/R)**Gama
-                        Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-                    case(p_DiffuseCoefficient_BySIACluster)
-                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
-                    case(p_DiffuseCoefficient_ByVcCluster)
-                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
-                end select
-
-                Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-
-            else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
-
-                select case(TheDiffusorValue%ECRValueType_InGB)
-                    case(p_ECR_ByValue)
-                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                    case default
-                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
-                                                                           ATOMS,                                                   &
-                                                                           dm_TKB,                                                  &
-                                                                           dm_LatticeLength)
-                end select
-
-                select case(TheDiffusorValue%DiffusorValueType_InGB)
-                    case(p_DiffuseCoefficient_ByValue)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
-                    case(p_DiffuseCoefficient_ByArrhenius)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
-                    case(p_DiffuseCoefficient_ByBCluster)
-                        ! Here we adopt a model that D=D0*(1/R)**Gama
-                        Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-
-                    case(p_DiffuseCoefficient_BySIACluster)
-                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
-                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
-                    case(p_DiffuseCoefficient_ByVcCluster)
-                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
-                end select
-            end if
-
-            if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
-                if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
-                    SubjectStatu = p_EXP_DESTROY_STATU
-                endif
-            end if
-
-            !Dev_Clusters(JC)%m_RAD = 0.D0
-            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
-            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+          if( Dev_Clusters(IC)%m_Atoms(dm_SIA_Index_W)%m_NA .GT. 0) then
+             temp = JC
+             JC = IC
+             IC = JC
           end if
+
+          Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+          Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
 
           !---Step 4:Release self
           Dev_Clusters(IC)%m_Statu = SubjectStatu
@@ -1476,6 +1536,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::SubjectNANum
     integer::ObjectNANum
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+    integer::temp
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -1523,183 +1584,192 @@ module MIGCOALE_EVOLUTION_GPU
 
           !---Step 3:Do something
 
-          PosA_X = Dev_Clusters(IC)%m_POS(1)
-          PosA_Y = Dev_Clusters(IC)%m_POS(2)
-          PosA_Z = Dev_Clusters(IC)%m_POS(3)
+!          PosA_X = Dev_Clusters(IC)%m_POS(1)
+!          PosA_Y = Dev_Clusters(IC)%m_POS(2)
+!          PosA_Z = Dev_Clusters(IC)%m_POS(3)
+!
+!          PosB_X = Dev_Clusters(JC)%m_POS(1)
+!          PosB_Y = Dev_Clusters(JC)%m_POS(2)
+!          PosB_Z = Dev_Clusters(JC)%m_POS(3)
+!
+!          Sep_X = PosA_X - PosB_X
+!          Sep_Y = PosA_Y - PosB_Y
+!          Sep_Z = PosA_Z - PosB_Z
+!
+!
+!          if(ABS(Sep_X).GT.dm_HBOXSIZE(1) .AND. dm_PERIOD(1)) then
+!             PosB_X = PosB_X + SIGN(dm_BOXSIZE(1),Sep_X)
+!          end if
+!
+!          if(ABS(Sep_Y).GT.dm_HBOXSIZE(2) .AND. dm_PERIOD(2)) then
+!             PosB_Y = PosB_Y + SIGN(dm_BOXSIZE(2),Sep_Y)
+!          end if
+!
+!          if(ABS(Sep_Z).GT.dm_HBOXSIZE(3) .AND. dm_PERIOD(3)) then
+!             PosB_Z = PosB_Z + SIGN(dm_BOXSIZE(3),Sep_Z)
+!          end if
+!
+!          tempNA = sum(Dev_Clusters(IC)%m_Atoms(:)%m_NA,dim=1)
+!          tempNB = sum(Dev_Clusters(JC)%m_Atoms(:)%m_NA,dim=1)
+!
+!          NewNA = tempNA + tempNB
+!
+!          PosA_X = (PosA_X*tempNA + PosB_X*tempNB)/NewNA
+!          PosA_Y = (PosA_Y*tempNA + PosB_Y*tempNB)/NewNA
+!          PosA_Z = (PosA_Z*tempNA + PosB_Z*tempNB)/NewNA
+!
+!          if(PosA_X .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+!             PosA_X = PosA_X - dm_BOXSIZE(1)
+!          else if(PosA_X .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+!             PosA_X = PosA_X + dm_BOXSIZE(1)
+!          end if
+!
+!          if(PosA_Y .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+!             PosA_Y = PosA_Y - dm_BOXSIZE(2)
+!          else if(PosA_Y .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+!             PosA_Y = PosA_Y + dm_BOXSIZE(2)
+!          end if
+!
+!          if(PosA_Z .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+!             PosA_Z = PosA_Z - dm_BOXSIZE(3)
+!          else if(PosA_Z .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+!             PosA_Z = PosA_Z + dm_BOXSIZE(3)
+!          end if
+!
+!          Dev_Clusters(IC)%m_POS(1) =  PosA_X
+!          Dev_Clusters(IC)%m_POS(2) =  PosA_Y
+!          Dev_Clusters(IC)%m_POS(3) =  PosA_Z
+!
+!          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
+!
+!          ReactionProp = 0.D0
+!          select case(TheReactionValue%ReactionCoefficientType)
+!            case(p_ReactionCoefficient_ByValue)
+!                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
+!            case(p_ReactionCoefficient_ByArrhenius)
+!                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+!          end select
+!
+!          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
+!          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
+!
+!            select case(TheReactionValue%ProductionType)
+!                case(p_ProductionType_BySimplePlus)
+!                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+!                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!
+!                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!                case(p_ProductionType_BySubtract)
+!
+!                    SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
+!                    ObjectElementIndex = TheReactionValue%ElemetIndex_Object
+!
+!                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+!                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!
+!                    SubjectNANum = Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
+!                    ObjectNANum  = Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
+!
+!                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
+!
+!                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
+!
+!                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
+!
+!                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
+!
+!                    if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
+!                        SubjectStatu = p_ANNIHILATE_STATU
+!                        Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
+!                        Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
+!                        Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
+!                    end if
+!
+!            end select
+!
+!            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
+!
+!            if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
+!
+!                select case(TheDiffusorValue%ECRValueType_Free)
+!                    case(p_ECR_ByValue)
+!                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+!                    case default
+!                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
+!                                                                           ATOMS,                                                   &
+!                                                                           dm_TKB,                                                  &
+!                                                                           dm_LatticeLength)
+!                end select
+!
+!                select case(TheDiffusorValue%DiffusorValueType_Free)
+!                    case(p_DiffuseCoefficient_ByValue)
+!                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+!                    case(p_DiffuseCoefficient_ByArrhenius)
+!                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+!                    case(p_DiffuseCoefficient_ByBCluster)
+!                        ! Here we adopt a model that D=D0*(1/R)**Gama
+!                        Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+!                    case(p_DiffuseCoefficient_BySIACluster)
+!                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+!                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+!                    case(p_DiffuseCoefficient_ByVcCluster)
+!                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+!                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+!                end select
+!
+!                Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+!
+!            else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
+!
+!                select case(TheDiffusorValue%ECRValueType_InGB)
+!                    case(p_ECR_ByValue)
+!                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+!                    case default
+!                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
+!                                                                           ATOMS,                                                   &
+!                                                                           dm_TKB,                                                  &
+!                                                                           dm_LatticeLength)
+!                end select
+!
+!                select case(TheDiffusorValue%DiffusorValueType_InGB)
+!                    case(p_DiffuseCoefficient_ByValue)
+!                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+!                    case(p_DiffuseCoefficient_ByArrhenius)
+!                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+!                    case(p_DiffuseCoefficient_ByBCluster)
+!                        ! Here we adopt a model that D=D0*(1/R)**Gama
+!                        Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
+!
+!                    case(p_DiffuseCoefficient_BySIACluster)
+!                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
+!                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+!                    case(p_DiffuseCoefficient_ByVcCluster)
+!                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
+!                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+!                end select
+!            end if
+!
+!            if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
+!                if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
+!                    SubjectStatu = p_EXP_DESTROY_STATU
+!                endif
+!            end if
+!
+!            !Dev_Clusters(JC)%m_RAD = 0.D0
+!            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+!            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
+!          end if
 
-          PosB_X = Dev_Clusters(JC)%m_POS(1)
-          PosB_Y = Dev_Clusters(JC)%m_POS(2)
-          PosB_Z = Dev_Clusters(JC)%m_POS(3)
-
-          Sep_X = PosA_X - PosB_X
-          Sep_Y = PosA_Y - PosB_Y
-          Sep_Z = PosA_Z - PosB_Z
-
-
-          if(ABS(Sep_X).GT.dm_HBOXSIZE(1) .AND. dm_PERIOD(1)) then
-             PosB_X = PosB_X + SIGN(dm_BOXSIZE(1),Sep_X)
+         if( Dev_Clusters(IC)%m_Atoms(dm_SIA_Index_W)%m_NA .GT. 0) then
+             temp = JC
+             JC = IC
+             IC = JC
           end if
 
-          if(ABS(Sep_Y).GT.dm_HBOXSIZE(2) .AND. dm_PERIOD(2)) then
-             PosB_Y = PosB_Y + SIGN(dm_BOXSIZE(2),Sep_Y)
-          end if
-
-          if(ABS(Sep_Z).GT.dm_HBOXSIZE(3) .AND. dm_PERIOD(3)) then
-             PosB_Z = PosB_Z + SIGN(dm_BOXSIZE(3),Sep_Z)
-          end if
-
-          tempNA = sum(Dev_Clusters(IC)%m_Atoms(:)%m_NA,dim=1)
-          tempNB = sum(Dev_Clusters(JC)%m_Atoms(:)%m_NA,dim=1)
-
-          NewNA = tempNA + tempNB
-
-          PosA_X = (PosA_X*tempNA + PosB_X*tempNB)/NewNA
-          PosA_Y = (PosA_Y*tempNA + PosB_Y*tempNB)/NewNA
-          PosA_Z = (PosA_Z*tempNA + PosB_Z*tempNB)/NewNA
-
-          if(PosA_X .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
-             PosA_X = PosA_X - dm_BOXSIZE(1)
-          else if(PosA_X .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
-             PosA_X = PosA_X + dm_BOXSIZE(1)
-          end if
-
-          if(PosA_Y .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
-             PosA_Y = PosA_Y - dm_BOXSIZE(2)
-          else if(PosA_Y .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
-             PosA_Y = PosA_Y + dm_BOXSIZE(2)
-          end if
-
-          if(PosA_Z .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
-             PosA_Z = PosA_Z - dm_BOXSIZE(3)
-          else if(PosA_Z .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
-             PosA_Z = PosA_Z + dm_BOXSIZE(3)
-          end if
-
-          Dev_Clusters(IC)%m_POS(1) =  PosA_X
-          Dev_Clusters(IC)%m_POS(2) =  PosA_Y
-          Dev_Clusters(IC)%m_POS(3) =  PosA_Z
-
-          call Dev_GetValueFromReactionsMap(Dev_Clusters(IC),Dev_Clusters(JC),Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,TheReactionValue)
-
-          ReactionProp = 0.D0
-          select case(TheReactionValue%ReactionCoefficientType)
-            case(p_ReactionCoefficient_ByValue)
-                 ReactionProp = TheReactionValue%ReactionCoefficient_Value
-            case(p_ReactionCoefficient_ByArrhenius)
-                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
-          end select
-
-          ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
-          if(ReactionProp .GE. (Dev_RandArran_Reaction(IC) + Dev_RandArran_Reaction(JC))/2.D0) then
-
-            select case(TheReactionValue%ProductionType)
-                case(p_ProductionType_BySimplePlus)
-                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
-                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-
-                    Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                case(p_ProductionType_BySubtract)
-
-                    SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
-                    ObjectElementIndex = TheReactionValue%ElemetIndex_Object
-
-                    Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
-                                                                              Dev_Clusters(JC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-
-                    SubjectNANum = Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA
-                    ObjectNANum  = Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA
-
-                    Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
-
-                    Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
-
-                    Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
-
-                    Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
-
-                    if(sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
-                        SubjectStatu = p_ANNIHILATE_STATU
-                        Dev_Clusters(IC)%m_Atoms(SubjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(ObjectElementIndex)%m_NA
-                        Dev_Clusters(IC)%m_Atoms(ObjectElementIndex)%m_NA = -Dev_Clusters(JC)%m_Atoms(SubjectElementIndex)%m_NA
-                        Dev_Clusters(IC)%m_Record(2) = Dev_Clusters(JC)%m_Record(1) ! record the absorbed of the cluster
-                    end if
-
-            end select
-
-            call Dev_GetValueFromDiffusorsMap(Dev_Clusters(IC),Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays,TheDiffusorValue)
-
-            if(SubjectStatu .eq. p_ACTIVEFREE_STATU) then
-
-                select case(TheDiffusorValue%ECRValueType_Free)
-                    case(p_ECR_ByValue)
-                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case default
-                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_Free,                      &
-                                                                           ATOMS,                                                   &
-                                                                           dm_TKB,                                                  &
-                                                                           dm_LatticeLength)
-                end select
-
-                select case(TheDiffusorValue%DiffusorValueType_Free)
-                    case(p_DiffuseCoefficient_ByValue)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
-                    case(p_DiffuseCoefficient_ByArrhenius)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
-                    case(p_DiffuseCoefficient_ByBCluster)
-                        ! Here we adopt a model that D=D0*(1/R)**Gama
-                        Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-                    case(p_DiffuseCoefficient_BySIACluster)
-                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
-                    case(p_DiffuseCoefficient_ByVcCluster)
-                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
-                end select
-
-                Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-
-            else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
-
-                select case(TheDiffusorValue%ECRValueType_InGB)
-                    case(p_ECR_ByValue)
-                        Dev_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                    case default
-                        ATOMS = Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                        Dev_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase_Dev(TheDiffusorValue%ECRValueType_InGB,                      &
-                                                                           ATOMS,                                                   &
-                                                                           dm_TKB,                                                  &
-                                                                           dm_LatticeLength)
-                end select
-
-                select case(TheDiffusorValue%DiffusorValueType_InGB)
-                    case(p_DiffuseCoefficient_ByValue)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
-                    case(p_DiffuseCoefficient_ByArrhenius)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
-                    case(p_DiffuseCoefficient_ByBCluster)
-                        ! Here we adopt a model that D=D0*(1/R)**Gama
-                        Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
-
-                    case(p_DiffuseCoefficient_BySIACluster)
-                        Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
-                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
-                    case(p_DiffuseCoefficient_ByVcCluster)
-                        Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
-                end select
-            end if
-
-            if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
-                if( (PosA_Z - Dev_Clusters(IC)%m_RAD) .LE. dm_BOXBOUNDARY(3,1)) then
-                    SubjectStatu = p_EXP_DESTROY_STATU
-                endif
-            end if
-
-            !Dev_Clusters(JC)%m_RAD = 0.D0
-            Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
-            Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
-          end if
+          Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
+          Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
 
           !---Step 4:Release self
           Dev_Clusters(IC)%m_Statu = SubjectStatu

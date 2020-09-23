@@ -1386,7 +1386,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
             this%NEIGHBORCALWAY = ISTR(STRNUMB(1))
 
-            if(this%NEIGHBORCALWAY .ne. mp_CalcNeighborList_NNEAREST .and. this%NEIGHBORCALWAY .ne. mp_CalcNeighborList_RCUT .AND. this%NEIGHBORCALWAY .ne. mp_CalcNeighborList_SortX) then
+            if(this%NEIGHBORCALWAY .ne. mp_CalcNeighborList_NNEAREST .and. this%NEIGHBORCALWAY .ne. mp_CalcNeighborList_RCUT) then
                 write(*,*) "MCPSCUERROR: Unkonwn neighbor-list update-strategy."
                 pause
                 stop

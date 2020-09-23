@@ -32,7 +32,6 @@ module MCLIB_CONSTANTS
 
     integer,parameter::mp_CalcNeighborList_NNEAREST = 1
     integer,parameter::mp_CalcNeighborList_RCUT = 2
-    integer,parameter::mp_CalcNeighborList_SortX = 3
 
     integer,parameter::mp_NEIGHBORUPDATEBYSTEP    =  0
     integer,parameter::mp_NEIGHBORUPDATEBYNCREMIND = 1
