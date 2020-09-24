@@ -1,0 +1,10 @@
+!"START" mean start a new session from initial file, restart mean start from previous configure file 
+&START_MIGCOALE_CLUSTER_GPU
+  &BOXF "BoxFile.dat"
+  &CTLF "CtrlFile.dat"
+  &INIF "IniF.dat"
+  &IMPF "ImpF.dat"
+  &CAPCTLF "CaptureBox/CaptureGenerateCtrlFile.dat"
+  &CAPINFOF "CaptureBox/CaptureInfo.dat"
+  &COUT "300K/"
+&END

@@ -6,14 +6,14 @@
 
   &ANALYSUBCTL
     &JOBSEL the start job index = 1, the end job index = 1, the interval of jobs = 1
-    &TSECTIONSEL the start time section index = 0, the end time section = 3, the interval of sections = 1
-    &CFGSEL the start configure index = 0, the end configure index = 100000 , the interval of configure = 1
-    &BOXSEL the start box index = 1, the end of the box index = 64, the interval of box = 1
+    &TSECTIONSEL the start time section index = 0, the end time section = 20, the interval of sections = 1
+    &CFGSEL the start configure index = 0, the end configure index = 1000 , the interval of configure = 1
+    &BOXSEL the start box index = 1, the end of the box index = 800, the interval of box = 1
   &ENDSUBCTL
   
   &SECTSUBCTL #1
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -22,8 +22,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -36,20 +36,21 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-11                 		     ! flag = 0 stans for by steps,flag = 1 by time(s)
 
-	&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused	
+	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-12              ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 100000 , the interval for each box = 100000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -74,7 +75,7 @@
 
   &SECTSUBCTL #2
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -83,8 +84,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -96,19 +97,21 @@
     
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-10				     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
+	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
+                       
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-11              ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -134,7 +137,7 @@
 
   &SECTSUBCTL #3
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -143,8 +146,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -156,19 +159,21 @@
     
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-9					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
+	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
+                       
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-10              ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -193,7 +198,7 @@
 
   &SECTSUBCTL #4
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -202,8 +207,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -215,19 +220,21 @@
     
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-8					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 1                           ! flag = 0 stans for by steps,flag = 1 by time(s)
+	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
+                       
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-9               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -252,7 +259,7 @@
 
   &SECTSUBCTL #5
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -261,8 +268,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -274,19 +281,21 @@
     
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-7					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
+                       
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-8               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -311,7 +320,7 @@
 
   &SECTSUBCTL #6
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -320,8 +329,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -333,19 +342,21 @@
     
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-6					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
+                       
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-7               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -370,7 +381,7 @@
 
   &SECTSUBCTL #7
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -379,8 +390,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -392,19 +403,21 @@
     
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-5					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
+                       
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-6               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -429,7 +442,7 @@
 
   &SECTSUBCTL #8
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -438,8 +451,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -451,19 +464,21 @@
     
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time = 1.0D-4					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
+                       
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-5               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -488,7 +503,7 @@
 
   &SECTSUBCTL #9
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -497,8 +512,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -509,20 +524,20 @@
     &ENDSUBCTL
     
     &TIMESUBCTL
-        &TERMINATE Maxma simulation flag = 1, the time = 1.0D-3					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+        &TERMINATE Maxma simulation flag = 1, the time =5.2400000000e-04					     ! flag = 0 stans for by steps,flag = 1 by time(s)
+        &FOCUSETIME The focused timepoints are = 5.1300100000e-04 ,5.1310000000e-04 ,5.2300000000e-04		     ! give the timepoints that needs to be focused
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -547,7 +562,7 @@
 
   &SECTSUBCTL #10
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -556,8 +571,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -568,20 +583,20 @@
     &ENDSUBCTL
     
     &TIMESUBCTL
-        &TERMINATE Maxma simulation flag = 1, the time = 1.0D-2					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+        &TERMINATE Maxma simulation flag = 1, the time =1.0370000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
+        &FOCUSETIME The focused timepoints are = 1.0260010000e-03 ,1.0261000000e-03 ,1.0360000000e-03		     ! give the timepoints that needs to be focused
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
-        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-3               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -606,7 +621,7 @@
 
   &SECTSUBCTL #11
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -615,8 +630,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -627,79 +642,20 @@
     &ENDSUBCTL
     
     &TIMESUBCTL
-        &TERMINATE Maxma simulation flag = 1, the time = 1.0D-1					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+        &TERMINATE Maxma simulation flag = 1, the time =1.5500000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
+        &FOCUSETIME The focused timepoints are = 1.5390010000e-03 ,1.5391000000e-03 ,1.5490000000e-03		     ! give the timepoints that needs to be focused
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
-        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-2               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-    &ENDSUBCTL
-
-
-    &ADDONDATA
-	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
-	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
-	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
-	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
-	&SIZEPARAM Size dependent parameter Gama =  4.D0
-    &ENDSUBCTL
-
-    &MODELDATA
-	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
-	&BiasFactor = 1.15  
-	&Corrections 0.D0 (cm)
-	&R0 1.37D-8 (cm)
-	&R1 3.D-8 (cm)
-    &ENDSUBCTL	
-
-  &ENDSUBCTL #11
-
-  &SECTSUBCTL #11
-    &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
-    &ENDSUBCTL
-
-    &BOUNDSUBCTL
-        &PERIDIC If use periodic boundary condition: X = 1, Y = 1, Z = 1
-    &ENDSUBCTL
-  
-    &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
-                                                                                         ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
-	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
-                                                                                         ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
-    &ENDSUBCTL
-
-    &IMPLANTSUBCTL
-        &IMPLANTID The used implantation group in current time section = 4
-    &ENDSUBCTL
-    
-    &TIMESUBCTL
-        &TERMINATE Maxma simulation flag = 1, the time = 1.0D0					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
-
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
-  	
-        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-1               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
-												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -724,7 +680,7 @@
 
   &SECTSUBCTL #12
     &TEMPSUBCTL
-        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 1000 (K)
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
     &ENDSUBCTL
 
     &BOUNDSUBCTL
@@ -733,8 +689,8 @@
   
     &NEIGHBSUBCTL   
 	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
-	&MAXNB   maxmun number of neighbore for an diffusor = 100
-	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
 	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
                                                                                          ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
@@ -745,20 +701,20 @@
     &ENDSUBCTL
     
     &TIMESUBCTL
-        &TERMINATE Maxma simulation flag = 1, the time = 1.0D1					     ! flag = 0 stans for by steps,flag = 1 by time(s)
-                       
-        &TSTEPSTRATEGY  The update time-step strategy = 4, the lowlimit time = 2.76D-13, lower limit length = 2.7411D-8 (cm) , lastpassage factor = 5  	! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
-        										 								! flag = 1 is by fixed time-step, correspond value for the step time
-        										 								! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-											 								! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
-											 								! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+        &TERMINATE Maxma simulation flag = 1, the time =2.0630000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
+        &FOCUSETIME The focused timepoints are = 2.0520010000e-03 ,2.0521000000e-03 ,2.0620000000e-03		     ! give the timepoints that needs to be focused
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
-	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
-        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D0               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100      
+        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
@@ -780,4 +736,241 @@
     &ENDSUBCTL	
 
   &ENDSUBCTL #12
+
+  &SECTSUBCTL #13
+    &TEMPSUBCTL
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
+    &ENDSUBCTL
+
+    &BOUNDSUBCTL
+        &PERIDIC If use periodic boundary condition: X = 1, Y = 1, Z = 1
+    &ENDSUBCTL
+  
+    &NEIGHBSUBCTL   
+	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+                                                                                         ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
+	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
+                                                                                         ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
+    &ENDSUBCTL
+
+    &IMPLANTSUBCTL
+        &IMPLANTID The used implantation group in current time section = 4
+    &ENDSUBCTL
+    
+    &TIMESUBCTL
+        &TERMINATE Maxma simulation flag = 1, the time =2.5760000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
+        &FOCUSETIME The focused timepoints are = 2.5650010000e-03 ,2.5651000000e-03 ,2.5750000000e-03		     ! give the timepoints that needs to be focused
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+  	
+        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+
+    &ADDONDATA
+	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
+	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
+	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
+	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
+    &ENDSUBCTL	
+
+  &ENDSUBCTL #13
+
+  &SECTSUBCTL #14
+    &TEMPSUBCTL
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
+    &ENDSUBCTL
+
+    &BOUNDSUBCTL
+        &PERIDIC If use periodic boundary condition: X = 1, Y = 1, Z = 1
+    &ENDSUBCTL
+  
+    &NEIGHBSUBCTL   
+	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+                                                                                         ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
+	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
+                                                                                         ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
+    &ENDSUBCTL
+
+    &IMPLANTSUBCTL
+        &IMPLANTID The used implantation group in current time section = 4
+    &ENDSUBCTL
+    
+    &TIMESUBCTL
+        &TERMINATE Maxma simulation flag = 1, the time =3.0890000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
+        &FOCUSETIME The focused timepoints are = 3.0780010000e-03 ,3.0781000000e-03 ,3.0880000000e-03		     ! give the timepoints that needs to be focused
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+  	
+        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+
+    &ADDONDATA
+	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
+	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
+	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
+	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
+    &ENDSUBCTL	
+
+  &ENDSUBCTL #14
+
+  &SECTSUBCTL #15
+    &TEMPSUBCTL
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
+    &ENDSUBCTL
+
+    &BOUNDSUBCTL
+        &PERIDIC If use periodic boundary condition: X = 1, Y = 1, Z = 1
+    &ENDSUBCTL
+  
+    &NEIGHBSUBCTL   
+	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+                                                                                         ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
+	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
+                                                                                         ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
+    &ENDSUBCTL
+
+    &IMPLANTSUBCTL
+        &IMPLANTID The used implantation group in current time section = 4
+    &ENDSUBCTL
+    
+    &TIMESUBCTL
+        &TERMINATE Maxma simulation flag = 1, the time =3.6020000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
+        &FOCUSETIME The focused timepoints are = 3.5910010000e-03 ,3.5911000000e-03 ,3.6010000000e-03		     ! give the timepoints that needs to be focused
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+  	
+        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+
+    &ADDONDATA
+	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
+	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
+	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
+	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
+    &ENDSUBCTL	
+
+  &ENDSUBCTL #15
+
+  &SECTSUBCTL #16
+    &TEMPSUBCTL
+        &TEMPERATURE SYSTEM SIMULATION TEMPERATURE = 300 (K)
+    &ENDSUBCTL
+
+    &BOUNDSUBCTL
+        &PERIDIC If use periodic boundary condition: X = 1, Y = 1, Z = 1
+    &ENDSUBCTL
+  
+    &NEIGHBSUBCTL   
+	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&MAXNB   maxmun number of neighbore for an diffusor = 1
+	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 1 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
+                                                                                         ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
+	&CUTREGIONEXTEND The cut-off region expand = 4					 ! It is used for neighbor-list cut-off radium way, as the cut-off radium is determined by the average 
+                                                                                         ! seperatment between diffusor, CUTREGIONEXTEND is used to expand the cut-off radium to serval times
+    &ENDSUBCTL
+
+    &IMPLANTSUBCTL
+        &IMPLANTID The used implantation group in current time section = 4
+    &ENDSUBCTL
+    
+    &TIMESUBCTL
+        &TERMINATE Maxma simulation flag = 1, the time =4.1150000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
+        &FOCUSETIME The focused timepoints are = 4.1040010000e-03 ,4.1041000000e-03 ,4.1140000000e-03		     ! give the timepoints that needs to be focused
+        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        											     ! flag = 1 is by fixed time-step, correspond value for the step time
+        											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
+												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
+
+	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
+  	
+        &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+        &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+
+    &ADDONDATA
+	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
+	&CHECKNCLUSTERS  If check cluster number conservation = 0 ! 1 for check cluster number conservation, 0 for not
+	&SURDIF	 THE Surface Diffusion coefficiens, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
+	&GBSURDIF THE Surface Diffusion coefficiens in GB, prefactor (cm^2/s) and ES(ev): 3.7D-4 , 0.92 , 3.7D-4 , 0.92 , 3.7D-4 , 0.92
+	&SIZEPARAM Size dependent parameter Gama =  4.D0
+    &ENDSUBCTL
+
+    &MODELDATA
+	&SURFE THE SURFACE ENERGY OF A BUBBLE (m_SURFE) = 3890             ! (ERG/CM^2))  
+	&BiasFactor = 1.15  
+	&Corrections 0.D0 (cm)
+	&R0 1.37D-8 (cm)
+	&R1 3.D-8 (cm)
+    &ENDSUBCTL	
+
+  &ENDSUBCTL #16
+
 &ENDCTLF

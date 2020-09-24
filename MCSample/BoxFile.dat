@@ -1,6 +1,6 @@
 &BOXF
   &BOXSUBCTL
-    &SIZE   bx(LU)= 200  by(LU) = 200 , bz(LU) = 200
+    &SIZE   bx(LU)= 2000  by(LU) = 2000 , bz(LU) = 2000
     &LATT   latiice constant(nm) = 0.31652
   &ENDSUBCTL
 
@@ -114,30 +114,30 @@
 
 	  &DIFFUSOR  #6
 	  	&SYMBOL The diffusor symbol="He#0@H#0@W#1"
-	  	&DIFFCOEFFVALUE_FREE The type for diffusion value = 2 , The prefactor is = 1.D-3 ,  The active energy =  0.013     ! 1 by fix value,2 by Arrhenius(Prefactor,ActEng),3 by He bubble model,4 by SIA cluster,5 by Vacancy cluster
+	  	&DIFFCOEFFVALUE_FREE The type for diffusion value = 2 , The prefactor is = 7.5D-4 ,  The active energy =  0.013    ! 1 by fix value,2 by Arrhenius(Prefactor,ActEng),3 by He bubble model,4 by SIA cluster,5 by Vacancy cluster
 		!&DIFFDIRECTION_FREE The diffusion direction type = 2 , The direction is < 1 , 1 , 1 >                             ! 1 by Full 3D Diffusion , 2 by 1D Diffusion, and should give direction
 		&DIFFDIRECTION_FREE The diffusion direction type = 1                                                               ! 1 by Full 3D Diffusion , 2 by 1D Diffusion, and should give direction
 	  	&ECR_FREE The effecitive capture radius type = 3                                            			   ! 1 by fix value (LU), >= 2 by  self defined model
-		&DIFFCOEFFVALUE_INGB The type for diffusion value = 2 , The prefactor is = 1.D-3 ,  The active energy =  0.013     ! 1 by fix value , 2 by  Arrhenius(Prefactor,ActEng) ,3 by bubble model 
+		&DIFFCOEFFVALUE_INGB The type for diffusion value = 2 , The prefactor is = 7.5D-4 ,  The active energy =  0.013    ! 1 by fix value , 2 by  Arrhenius(Prefactor,ActEng) ,3 by bubble model 
 	  	&ECR_INGB The effecitive capture radius type = 3                                                                   ! 1 by fix value (LU), >= 2 by  self defined model             
           &ENDSUBCTL
 
 	  &DIFFUSOR  #7
 	  	&SYMBOL The diffusor symbol="He#0@H#0@Vc#1"
-	  	&DIFFCOEFFVALUE_FREE The type for diffusion value = 2 , The prefactor is = 1.D-3 ,  The active energy =  1.66      ! 1 by fix value,2 by Arrhenius(Prefactor,ActEng),3 by He bubble model,4 by SIA cluster,5 by Vacancy cluster
+	  	&DIFFCOEFFVALUE_FREE The type for diffusion value = 2 , The prefactor is = 7.5D-4 ,  The active energy =  1.66     ! 1 by fix value,2 by Arrhenius(Prefactor,ActEng),3 by He bubble model,4 by SIA cluster,5 by Vacancy cluster
 		&DIFFDIRECTION_FREE The diffusion direction type = 1                                                               ! 1 by Full 3D Diffusion , 2 by 1D Diffusion, and should give direction
 	  	&ECR_FREE The effecitive capture radius type = 4                                            			   ! 1 by fix value (LU), >= 2 by  self defined model
-		&DIFFCOEFFVALUE_INGB The type for diffusion value = 2 , The prefactor is = 1.D-3 ,  The active energy =  1.66      ! 1 by fix value , 2 by  Arrhenius(Prefactor,ActEng) ,3 by bubble model 
+		&DIFFCOEFFVALUE_INGB The type for diffusion value = 2 , The prefactor is = 7.5D-4 ,  The active energy =  1.66     ! 1 by fix value , 2 by  Arrhenius(Prefactor,ActEng) ,3 by bubble model 
 	  	&ECR_INGB The effecitive capture radius type = 4                                                                   ! 1 by fix value (LU), >= 2 by  self defined model             
           &ENDSUBCTL
 
 	  &DIFFUSOR  #7
 	  	&SYMBOL The diffusor symbol="He#0@H#0@Vc#2-Inf"
-	  	&DIFFCOEFFVALUE_FREE The type for diffusion value = 5 ,The prefactor is = 1.D-3 ,The prefactor parameter = 1000 ,The active energy =  1.66 
+	  	&DIFFCOEFFVALUE_FREE The type for diffusion value = 5 ,The prefactor is = 7.5D-4 ,The prefactor parameter = 1000 ,The active energy =  1.66 
 																   ! 1 by fix value,2 by Arrhenius(Prefactor,ActEng),3 by He bubble model,4 by SIA cluster,5 by Vacancy cluster
 		&DIFFDIRECTION_FREE The diffusion direction type = 1                                                               ! 1 by Full 3D Diffusion , 2 by 1D Diffusion, and should give direction
 	  	&ECR_FREE The effecitive capture radius type = 4                                                                   ! 1 by fix value (LU), >= 2 by  self defined model
-		&DIFFCOEFFVALUE_INGB The type for diffusion value = 5 , The prefactor is = 1.D-3 ,The prefactor parameter = 1000 ,The active energy =  1.66      
+		&DIFFCOEFFVALUE_INGB The type for diffusion value = 5 , The prefactor is = 7.5D-4 ,The prefactor parameter = 1000 ,The active energy =  1.66      
 																   ! 1 by fix value , 2 by  Arrhenius(Prefactor,ActEng) ,3 by bubble model 
 	  	&ECR_INGB The effecitive capture radius type = 4                                                                   ! 1 by fix value (LU), >= 2 by  self defined model            
           &ENDSUBCTL
@@ -167,7 +167,7 @@
 		InitDiffusor(&Diffusor);
                 strcpy(Diffusor.symbol,"W#2-Inf");
                 Diffusor.DiffusorValueType_Free = 4;
-		Diffusor.PreFactor_Free = 1.0e-3;
+		Diffusor.PreFactor_Free = 7.5e-4;
 		Diffusor.PreFactorParameter_Free = 0.5;
 		Diffusor.ActEnergy_Free = 0.013;
 		Diffusor.DiffuseDirectionType = 1;
@@ -175,7 +175,10 @@
 		//Diffusor.DiffuseDirection[1] = 1;
 		//Diffusor.DiffuseDirection[2] = 1;
                 Diffusor.ECRValueType_Free = 3;   //1 by fix value (LU), >= 2 by  self defined model
-		Diffusor.DiffusorValueType_InGB = 3;
+		Diffusor.DiffusorValueType_InGB = 4;
+		Diffusor.PreFactor_InGB = 7.5e-4;
+		Diffusor.PreFactorParameter_InGB = 0.5;
+		Diffusor.ActEnergy_InGB = 0.013;
                 Diffusor.ECRValueType_InGB = 3;
                 AppendDiffusor(list,&Diffusor);
               }

@@ -1,0 +1,43 @@
+#!/bin/bash
+#set -v on
+
+if [ $# -lt 2 ]; then
+echo "parameter number is too few"
+exit
+fi
+
+THEEXE=$1
+echo "The exe is"   $THEEXE
+
+THEPATH=$2
+echo "The path is"   $THEPATH
+
+cd $THEPATH
+
+mkdir BatchBox
+
+for((i=1;i<8;i++))
+do
+	$THEEXE $THEPATH/SampleSetup.dat  $THEPATH/"CascadeBox/CascadeGenerateCtrlFile_Batch"$i".dat"
+
+	cp $THEPATH/300K/CascadeBox/Config_Job1_Section1_0.dat $THEPATH/BatchBox/"CascadeBatch"$i".dat"
+done
+
+$THEEXE $THEPATH/SampleSetup.dat  $THEPATH/"CascadeBox/CascadeGenerateCtrlFile_Batch9.dat"
+
+cp $THEPATH/300K/CascadeBox/Config_Job1_Section1_0.dat $THEPATH/BatchBox/"CascadeBatch9.dat"
+
+
+#filelist=`ls $THEPATH`
+#for subPath in $filelist
+#do
+#      if [[ $subPath == *NoDump* ]]; then
+#         cd $THEPATH/$subPath
+#
+#         echo $PWD
+#         $THEEXE SampleSetup.dat CascadeBox/CascadeGenerateCtrlFile.dat 
+#      fi
+#      
+# 
+#done
+

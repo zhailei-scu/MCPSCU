@@ -11,6 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
+				<Option parameters="/home/zhail/Development/CalCapture/MCSample/SampleSetup.dat /home/zhail/Development/CalCapture/MCSample/CaptureBox/CaptureGenerateCtrlFile.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
@@ -40,6 +41,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Release/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
+				<Option parameters="/home/zhail/Development/CalCapture/MCSample/SampleSetup.dat /home/zhail/Development/CalCapture/MCSample/CaptureBox/CaptureGenerateCtrlFile.dat" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35,nollvm" />

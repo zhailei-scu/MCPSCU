@@ -49,6 +49,12 @@
 		<Unit filename="../sor/MigCoaleModel/MigCoale_Statistic_GPU.F90">
 			<Option weight="2" />
 		</Unit>
+		<Unit filename="../sor/MigCoaleModel/MigCoale_TYPEDEF_CaptureCal_CPU.F90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="../sor/MigCoaleModel/MigCoale_TYPEDEF_CaptureCal_GPU.F90">
+			<Option weight="0" />
+		</Unit>
 		<Unit filename="../sor/MigCoaleModel/MigCoale_TYPEDEF_SimRecord.F90">
 			<Option weight="0" />
 		</Unit>

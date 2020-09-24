@@ -3,7 +3,7 @@
 &SIASIZE		    the SIA SIZE = 1
 &RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere = 100  ! in Unit of lattice unit (LU)
 &ROUTABSORB		    the out absorb sphere radius (from center) = 200   ! in Unit of lattice unit (LU)
-&MCCFGPATH                  "/scratch/p1/ZhaiLei/CascadeDataBase/20keV/"
+&MCCFGPATH                  "CaptureBox/Config_BeforeConstruct.dat"
 
 
 

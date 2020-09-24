@@ -110,11 +110,11 @@
 	 &ENDSUBCTL
 
 	 &RATESUBCTL
-	   	!&TIMEINTERVAL The time interval between batches = 2.0D-11       ! if batches model is selected, you must special the time interval
-	 	&INSERTTIMEPOINT The batch insert time point = 2.0D-11 , 4.0D-11 , 6.0D-11
+	   	&TIMEINTERVAL The time interval between batches = 5.13D-4       ! if batches model is selected, you must special the time interval
+	 	!&INSERTTIMEPOINT The batch insert time point = 5.13D-4
 
 	 	&INSERTCOUNTMODEL The count model for each batch = 0           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
-	 	&INSERTCOUNT  The count in each batch = 10	       	       	! the count in each batch
+	 	&INSERTCOUNT  The count in each batch = 1	       	       	! the count in each batch
 	 &ENDSUBCTL
         
          &EXTFSUBCTL

@@ -78,14 +78,9 @@
   !       &ENDSUBCTL
   !&ENDSUBCTL
 
-  !&GROUPSUBCTL
-  !       &TYPE The atomical initial type = 1 ! 0 by simple inner way, 1 by from external file, 2 by function
-  !       &INITFILE The init file path = "CascadeBox/Cascade1Box200LU_NBOX800.dat"
-  !&ENDSUBCTL
-
   &GROUPSUBCTL
          &TYPE The atomical initial type = 1 ! 0 by simple inner way, 1 by from external file, 2 by function
-         &INITFILE The init file path = "BatchBox/Cascade1Box200LU_NBox800.dat"
+         &INITFILE The init file path = "BatchBox/CascadeBatch9.dat"
   &ENDSUBCTL
 
 &ENDINITINPUTF

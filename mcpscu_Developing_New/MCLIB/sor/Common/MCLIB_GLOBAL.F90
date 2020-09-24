@@ -33,6 +33,7 @@ module MCLIB_GLOBAL
     integer::LINE
     character*32::KEYWORD
     character*1000::ctlFile,boxFile,initFile,impFile,outPath,restartFile
+    character*1000::capCtrlFile,capInfoFile
     character*1000::STRTMP(5)
     integer::N
     !---Body---
@@ -137,6 +138,46 @@ module MCLIB_GLOBAL
             end if
             impFile = INQUIREFILE(adjustl(trim(STRTMP(1))),CtrlParamList%theSimulationCtrlParam%InputFilePath)
             CtrlParamList%theSimulationCtrlParam%ImpFile = adjustl(trim(impFile))
+
+          case("&CAPCTLF")
+            call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+            if(N .LT. 1) then
+                write(*,*) "MCPSCUERROR: You must special the capture control file name or path"
+                write(*,*) STR
+                write(*,*) "At line: ",LINE
+                pause
+                stop
+            end if
+            capCtrlFile = adjustl(trim(STRTMP(1)))
+            if(IsAbsolutePath(capCtrlFile)) then
+                CtrlParamList%theSimulationCtrlParam%CapCtrlFile = INQUIREFILE(capCtrlFile)
+            else
+                if(LENTRIM(adjustl(CtrlParamList%theSimulationCtrlParam%InputFilePath)) .GT. 0) then
+                    CtrlParamList%theSimulationCtrlParam%CapCtrlFile = INQUIREFILE(adjustl(trim(capCtrlFile)),CtrlParamList%theSimulationCtrlParam%InputFilePath)
+                else
+                    CtrlParamList%theSimulationCtrlParam%CapCtrlFile = INQUIREFILE(adjustl(trim(capCtrlFile)))
+                end if
+            endif
+
+          case("&CAPINFOF")
+            call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+            if(N .LT. 1) then
+                write(*,*) "MCPSCUERROR: You must special the capture info file name or path"
+                write(*,*) STR
+                write(*,*) "At line: ",LINE
+                pause
+                stop
+            end if
+            capInfoFile = adjustl(trim(STRTMP(1)))
+            if(IsAbsolutePath(capInfoFile)) then
+                CtrlParamList%theSimulationCtrlParam%CapInfoFile = INQUIREFILE(capInfoFile)
+            else
+                if(LENTRIM(adjustl(CtrlParamList%theSimulationCtrlParam%InputFilePath)) .GT. 0) then
+                    CtrlParamList%theSimulationCtrlParam%CapInfoFile = INQUIREFILE(adjustl(trim(capInfoFile)),CtrlParamList%theSimulationCtrlParam%InputFilePath)
+                else
+                    CtrlParamList%theSimulationCtrlParam%CapInfoFile = INQUIREFILE(adjustl(trim(capInfoFile)))
+                end if
+            endif
 
           case("&COUT")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
