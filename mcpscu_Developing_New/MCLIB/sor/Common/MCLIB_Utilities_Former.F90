@@ -348,7 +348,7 @@ module MCLIB_UTILITIES_FORMER
     LS = len(STR)
     do while(.true.) !.NOT.EOF(hFile))
         line = line + 1
-        read(hFile,fmt="(A256)",IOSTAT=stat,IOMSG=FMessage)TSTR
+        read(hFile,fmt="(A1000)",IOSTAT=stat,IOMSG=FMessage)TSTR
 
         if(stat .eq. -1) then
             ExitFile = .true.

@@ -114,7 +114,7 @@
 	 	!&INSERTTIMEPOINT The batch insert time point = 5.13D-4
 
 	 	&INSERTCOUNTMODEL The count model for each batch = 0           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
-	 	&INSERTCOUNT  The count in each batch = 1	       	       	! the count in each batch
+	 	&INSERTCOUNT  The count in each batch = 0	       	       	! the count in each batch
 	 &ENDSUBCTL
         
          &EXTFSUBCTL

@@ -80,7 +80,8 @@
 
   &GROUPSUBCTL
          &TYPE The atomical initial type = 1 ! 0 by simple inner way, 1 by from external file, 2 by function
-         &INITFILE The init file path = "BatchBox/CascadeBatch9.dat"
+         !&INITFILE The init file path = "BatchBox/CascadeBatch9.dat"
+	 &INITFILE The init file path = "CaptureBox/CaptureBox.dat"
   &ENDSUBCTL
 
 &ENDINITINPUTF

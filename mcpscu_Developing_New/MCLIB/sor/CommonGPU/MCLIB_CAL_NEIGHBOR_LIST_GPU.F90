@@ -787,19 +787,12 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::NB, NBX, NBY, BX, BY, err
     integer::BlockNumEachBox
     logical::ChangedToUsedIndex
-    type(cudaEvent)::StartEvent
-    type(cudaEvent)::StopEvent
-    integer::IState
-    real::time
     !---Body---
     #ifdef MC_PROFILING
     call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
     N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
     #endif
     !---Body---
-
-    IState = cudaEventCreate(StartEvent)
-    IState = cudaEventCreate(StopEvent)
 
     MULTIBOX = Host_SimuCtrlParam%MultiBox
 
@@ -834,8 +827,6 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
        write(*,*) "To continue the evolution, the user defined number of nearest neighborhood is changed to:",NNearestNeighbor
     end if
 
-    IState = cudaEventRecord(StartEvent,0)
-
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -853,18 +844,6 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     BlockNumEachBox,                               &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
     end if
-
-    IState = cudaEventRecord(StopEvent,0)
-
-    IState = cudaEventSynchronize(StopEvent)
-
-    IState = cudaEventElapsedTime(time,StartEvent,StopEvent)
-
-    write(*,*) "NeighborCal time is: ",time
-
-    IState = cudaEventDestroy(StartEvent)
-    IState = cudaEventDestroy(StopEvent)
-
 
     #ifdef MC_PROFILING
     call Time_Accumulate(T_Cal_Neighbore_Table_GPU_Nearest_Start,T_Cal_Neighbore_Table_GPU_Nearest)

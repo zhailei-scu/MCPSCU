@@ -1,6 +1,6 @@
 &CTLF
   &COMMSUBCTL
-    &BOX box in one test = 800 , total num = 800 , independent = 1
+    &BOX box in one test = 80 , total num = 80 , independent = 1
     &RANDSEED random number seed = 8845, 63879542
   &ENDSUBCTL
 
@@ -48,7 +48,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-12              ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 100000 , the interval for each box = 100000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 100000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -109,7 +109,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-11              ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -171,7 +171,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-10              ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -232,7 +232,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-9               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -293,7 +293,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-8               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -354,7 +354,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-7               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -415,7 +415,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-6               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -476,7 +476,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-5               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -535,7 +535,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -594,7 +594,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -653,7 +653,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -712,7 +712,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -771,7 +771,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -830,7 +830,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -889,7 +889,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
@@ -948,7 +948,7 @@
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
   	
         &OUTPUT_CONF     Output instant configuration flag = 1 , the interval = 1.0D-4               ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
-        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10000 , the interval for each box = 10000      
+        &OUTPUT_SC       Output instant size statistic information flag = 0 , the interval for integral box = 10 , the interval for each box = 10000      
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 10000  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification

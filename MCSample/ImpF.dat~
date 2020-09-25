@@ -1,0 +1,137 @@
+&IMPFINPUTF
+
+  &GROUPSUBCTL   ! #1
+	 &IMPCOMMONSUBCTL
+         	&SOURCETYPE The implantation cluster source type = 0 	        ! 0 by simple inner way, 1 by from external file, 2 by function
+
+		&FEXPAND The expand size factor = 1
+
+         	&FMEMOCCUP The memory occupied factor = 100
+	 &ENDSUBCTL
+
+	 &RATESUBCTL
+	   	&TIMEINTERVAL The time interval between batches = 2.0D-7       	! if batches model is selected, you must special the time interval
+	 	!&INSERTTIMEPOINT The batch insert time point = 2.0D-7 , 2.0D-6 , 2.0D-5 , 2.0D-4 , 2.0D-3
+
+	 	&INSERTCOUNTMODEL The count model for each batch = 1           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
+	 	&INSERTCOUNT  The count in each batch = 10	       	       	! the count in each batch
+	 &ENDSUBCTL
+
+         &SIZESUBCTL
+            &NATOMDIST The atoms number in each cluster distribution as Gauss that central = 1 , distribution half width = 0.0 , left cut = 0.9 , right cut = 1.1
+            &ELEMENTCOMPOSIT The includeed element = "He", "H" ,The includeed element = (1, 0)
+         &ENDSUBCTL
+
+         &DEPTHSUBCTL ! only used the first distribution in below
+            &DEPTH_LAYER THE NUMBER OF DEPTH DISTRIBUTION LAYER = 2,THE THINCKNESS DISTRIBUTION = (0.01,0.99) , THE ENTRIES DISTRIBUTION = (1,0)
+            !&DEPTH_SUBBOX THE SUBOX SHAPE IS THAT: X = 50, Y = 50, Z = 50
+            !&DEPTH_GAUSS THE GAUSS DISTRIBUTION CENTRAL = 50, THE HALF WIDTH = 0
+         &ENDSUBCTL
+  &ENDSUBCTL
+
+  &GROUPSUBCTL  ! #2
+
+	 &IMPCOMMONSUBCTL
+         	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
+
+		&FEXPAND The expand size factor = 1
+
+         	&FMEMOCCUP The memory occupied factor = 100
+	 &ENDSUBCTL
+
+	 &RATESUBCTL
+	   	&TIMEINTERVAL The time interval between batches = 2.0D-7       	! if batches model is selected, you must special the time interval
+	 	!&INSERTTIMEPOINT The batch insert time point = 2.0D-7 , 2.0D-6 , 2.0D-5 , 2.0D-4 , 2.0D-3
+
+	 	&INSERTCOUNTMODEL The count model for each batch = 1           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
+	 	&INSERTCOUNT  The count in each batch = 10	       	       	! the count in each batch
+	 &ENDSUBCTL
+        
+         &EXTFSUBCTL
+	    &DISTFILETYPE The distribution file type = "DISTPANDA" , Implant ion = "He"                       ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+													      ! "BATCHCONFIG"
+								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
+													      ! if the DISTSRIM is speicaled, you should also give layers number you want
+
+	    !&DISTFILETYPE The distribution file type = "DISTSRIM" , Implant ion = "He" , Layer number = 100 
+
+	    !&DISTFILETYPE The distribution file type = "BOXMF18"
+
+	    !&DISTFILETYPE The distribution file type = "BOXSPMF18"	
+	
+            &FOLDER The candiacate batches configurations folder = "PANDA/"
+	    &SELECTSEQUENCE select sequence is by = 0			!  0 stands by file name alphabetical order , 1 stands by random choosen configure file
+         &ENDSUBCTL
+  &ENDSUBCTL
+
+  &GROUPSUBCTL  ! #3
+
+	 &IMPCOMMONSUBCTL
+         	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
+
+		&FEXPAND The expand size factor = 1
+
+        	&FMEMOCCUP The memory occupied factor = 100
+	 &ENDSUBCTL
+
+	 &RATESUBCTL
+	   	&TIMEINTERVAL The time interval between batches = 2.0D-7       	! if batches model is selected, you must special the time interval
+	 	!&INSERTTIMEPOINT The batch insert time point = 2.0D-7 , 2.0D-6 , 2.0D-5 , 2.0D-4 , 2.0D-3
+
+	 	&INSERTCOUNTMODEL The count model for each batch = 1           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
+	 	&INSERTCOUNT  The count in each batch = 10	       	       	! the count in each batch
+	 &ENDSUBCTL
+        
+         &EXTFSUBCTL
+            &DISTFILETYPE The distribution file type = "DISTSRIM" , Implant ion = "He" , Layer number = 100   ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+													      ! "BATCHCONFIG"
+								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
+													      ! if the DISTSRIM is speicaled, you should also give layers number you want
+
+
+
+	    !&DISTFILETYPE The distribution file type = "BOXMF18"
+
+	    !&DISTFILETYPE The distribution file type = "BOXSPMF18"	
+	
+            &FOLDER The candiacate batches configurations folder = "SRIM2003/"
+	    &SELECTSEQUENCE select sequence is by = 0			!  0 stands by file name alphabetical order , 1 stands by random choosen configure file
+         &ENDSUBCTL
+  &ENDSUBCTL
+
+  &GROUPSUBCTL  ! #4
+
+	 &IMPCOMMONSUBCTL
+         	&SOURCETYPE The implantation cluster source type = 1 	        ! 0 by simple inner way, 1 by from external file, 2 by function
+
+		&FEXPAND The expand size factor = 1
+
+        	&FMEMOCCUP The memory occupied factor = 100
+	 &ENDSUBCTL
+
+	 &RATESUBCTL
+	   	&TIMEINTERVAL The time interval between batches = 5.13D-4       ! if batches model is selected, you must special the time interval
+	 	!&INSERTTIMEPOINT The batch insert time point = 5.13D-4
+
+	 	&INSERTCOUNTMODEL The count model for each batch = 0           	! 0 stands for by counts of configuration number, 1 stands for by counts of cluster number
+	 	&INSERTCOUNT  The count in each batch = 0	       	       	! the count in each batch
+	 &ENDSUBCTL
+        
+         &EXTFSUBCTL
+            &DISTFILETYPE The distribution file type = "BATCHCONFIG"                                          ! or "BOXMF18", "BOXSPMF18", "DISTSRIM","DISTPANDA"
+													      ! "BATCHCONFIG"
+								                         		      ! if the DISTPANDA or DISTSRIM is formatted, you should special the ion type
+													      ! if the DISTSRIM is speicaled, you should also give layers number you want
+
+
+	    !&DISTFILETYPE The distribution file type = "BOXMF18"
+
+	    !&DISTFILETYPE The distribution file type = "BOXSPMF18"	
+	
+            &FOLDER The candiacate batches configurations folder = "BatchBox/"
+	    &SELECTSEQUENCE select sequence is by = 0			!  0 stands by file name alphabetical order , 1 stands by random choosen configure file
+         &ENDSUBCTL
+  &ENDSUBCTL
+
+
+&ENDIMPFINPUTF
