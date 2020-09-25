@@ -1,9 +1,10 @@
 &GENERATEWAY                the cascade generate way = 1                  ! (0 by Locally ,center uniform way; 1 by from MC configuration,Directly)
 &SIANUMBER		    the SIA number = 10000
 &SIASIZE		    the SIA SIZE = 1
-&RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere = 100  ! in Unit of lattice unit (LU)
-&ROUTABSORB		    the out absorb sphere radius (from center) = 200   ! in Unit of lattice unit (LU)
+&RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
+&ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 &MCCFGPATH                  "CaptureBox/Config_BeforeConstruct.dat"
+&CAPINFOF 		    "CaptureBox/CaptureInfo.dat"
 
 
 

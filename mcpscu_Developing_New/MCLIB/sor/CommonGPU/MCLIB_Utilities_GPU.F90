@@ -3266,11 +3266,8 @@ module MCLIB_Utilities_GPU
 		call Kernel_Shared_ArbitraryBitonicSort_toApply<<<this%blocksShared,this%threadsShared>>>(KeyArray, this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
 	else
 
-        write(*,*) "HHHHHHHHHHHHHHHHHHHH"
-
 		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
 
-        write(*,*) "HHHHHHHHHHHHHHHHHHHHH"
 
 !        write(*,*) "****************Kernel_Shared_Merge_toApply*************************"
 !        call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
@@ -3284,12 +3281,8 @@ module MCLIB_Utilities_GPU
             Do While(Stride .GE. 0)
                 if(Stride .GE. 1) then
 
-                    write(*,*) "PPPPPPPPPPPPPPPPPPPPPPP"
-
                     call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev,this%dir,this%OEFlags_Dev)
 
-
-                    write(*,*) "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
 
 					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev,this%dir,this%OEFlags_Dev)
 
@@ -3297,10 +3290,8 @@ module MCLIB_Utilities_GPU
 !					        write(*,*) "****************Kernel_GlobalMerge_toApply*************************",TheSize,Stride
 !                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
 !                            pause
-                    write(*,*) "PPPPPPPPPPPPPPPPPPPPPPP"
 
                 else
-                    write(*,*) "YYYYYYYYYYYYYYYYYYYYYYYY"
 
                     call Kernel_Shared_Merge_Last_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
 
@@ -3308,7 +3299,6 @@ module MCLIB_Utilities_GPU
 !                            write(*,*) "****************Kernel_Shared_Merge_Last_toApply*************************",TheSize,Stride
 !                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
 !                            pause
-                    write(*,*) "YYYYYYYYYYYYYYYYYYYYYYYY"
                     exit
                 end if
 

@@ -8,12 +8,25 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
     integer,parameter::CaptureGenWay_ByCentUniform_Locally = 0
     integer,parameter::CaptureGenWay_ByMCConfig_Locally_Directly = 1
 
+    integer,parameter::Capture_RSIADistributeToCent_Type_FixedValue = 0
+    integer,parameter::Capture_RSIADistributeToCent_Type_OutFromMostOutVAC = 1
+
+    integer,parameter::Capture_ROutAbsorbToCent_Type_FixedValue = 0
+    integer,parameter::Capture_ROutAbsorbToCent_Type_OutFromMostOutVAC = 1
+
     type,public::CaptureCal
         integer::CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         integer::NSIA = 0
         integer::SIASIZE = 1
-        real(kind=KINDDF)::RSIADistributeToCent = 0.D0
-        real(kind=KINDDF)::ROutAbsorbToCent = 0.D0
+
+        integer::RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
+        real(kind=KINDDF)::RSIADistributeToCent_Value = 0.D0
+
+        integer::ROutAbsorbToCent_Type = Capture_ROutAbsorbToCent_Type_FixedValue
+        real(kind=KINDDF)::ROutAbsorbToCent_Value = 0.D0
+
+        real(kind=KINDDF),dimension(:),allocatable::m_RSIADistributeToCent
+        real(kind=KINDDF),dimension(:),allocatable::m_ROutAbsorbToCent
         character*1000::MCCfgPath
         real(kind=KINDDF),dimension(:,:),allocatable::m_CascadeCenter
         real(kind=KINDDF),dimension(:),allocatable::m_maxDistance
@@ -50,8 +63,12 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         this%NSIA = 0
         this%SIASIZE = 1
-        this%RSIADistributeToCent = 0.D0
-        this%ROutAbsorbToCent = 0.D0
+
+        this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
+        this%RSIADistributeToCent_Value = 0.D0
+
+        this%ROutAbsorbToCent_Type = Capture_ROutAbsorbToCent_Type_FixedValue
+        this%ROutAbsorbToCent_Value = 0.D0
 
         this%MCCfgPath = ""
 
@@ -63,6 +80,12 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
         call DeAllocateArray_Host(this%m_NVACInEachBox,"m_NVACInEachBox")
         call AllocateArray_Host(this%m_NVACInEachBox,MultiBox,"m_NVACInEachBox")
+
+        call DeAllocateArray_Host(this%m_RSIADistributeToCent,"m_RSIADistributeToCent")
+        call AllocateArray_Host(this%m_RSIADistributeToCent,MultiBox,"m_RSIADistributeToCent")
+
+        call DeAllocateArray_Host(this%m_ROutAbsorbToCent,"m_ROutAbsorbToCent")
+        call AllocateArray_Host(this%m_ROutAbsorbToCent,MultiBox,"m_ROutAbsorbToCent")
 
         return
     end subroutine
@@ -175,6 +198,16 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         logical::Finded
 
         !---Body---
+        if(.not. allocated(this%m_CascadeCenter) .or. &
+           .not. allocated(this%m_maxDistance) .or.   &
+           .not. allocated(this%m_NVACInEachBox) .or. &
+           .not. allocated(this%m_RSIADistributeToCent) .or. &
+           .not. allocated(this%m_ROutAbsorbToCent)) then
+           write(*,*) "MCPSCUERROR: You must initial the CaptureCal object before resolve the capture info file"
+           pause
+           stop
+        end if
+
         LINE = 0
         Finded = .false.
         rewind(hFile)
@@ -279,15 +312,16 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&RSIATOCENTER")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special the distance radius from cascade center to SIA distributed sphere."
+                    call EXTRACT_NUMB(STR,2,N,STRTMP)
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: You must special the distance radius from cascade center to SIA distributed sphere type and value."
                         pause
                         stop
                     end if
-                    this%RSIADistributeToCent = DRSTR(STRTMP(1))*Host_Boxes%LatticeLength
+                    this%RSIADistributeToCent_Type = ISTR(STRTMP(1))
+                    this%RSIADistributeToCent_Value = DRSTR(STRTMP(2))*Host_Boxes%LatticeLength
 
-                    if(this%RSIADistributeToCent .LE. 0) then
+                    if(this%RSIADistributeToCent_Value .LE. 0) then
                         write(*,*) "MCPSCUERROR: The SIA distance radius from cascade center to SIA distributed sphere cannot less than 0"
                         pause
                         stop
@@ -298,7 +332,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         END DO
 
         if(Finded .eq. .false.) then
-           write(*,*) "MCPSCUERROR: You must special the distance radius from cascade center to SIA distributed sphere."
+           write(*,*) "MCPSCUERROR: You must special the distance radius from cascade center to SIA distributed sphere type and value."
            pause
            stop
         end if
@@ -322,15 +356,16 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&ROUTABSORB")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special the out absorb sphere radius (from center)."
+                    call EXTRACT_NUMB(STR,2,N,STRTMP)
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: You must special the out absorb sphere radius (from center) type and value."
                         pause
                         stop
                     end if
-                    this%ROutAbsorbToCent = DRSTR(STRTMP(1))*Host_Boxes%LatticeLength
+                    this%ROutAbsorbToCent_Type = ISTR(STRTMP(1))
+                    this%ROutAbsorbToCent_Value = DRSTR(STRTMP(2))*Host_Boxes%LatticeLength
 
-                    if(this%ROutAbsorbToCent .LE. 0) then
+                    if(this%ROutAbsorbToCent_Value .LE. 0) then
                         write(*,*) "MCPSCUERROR: The out absorb sphere radius (from center) cannot less than 0"
                         pause
                         stop
@@ -341,7 +376,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         END DO
 
         if(Finded .eq. .false.) then
-           write(*,*) "MCPSCUERROR: You must special the out absorb sphere radius (from center)."
+           write(*,*) "MCPSCUERROR: You must special the out absorb sphere radius (from center) type and value."
            pause
            stop
         end if
@@ -395,23 +430,160 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
            stop
         end if
 
-
-        if(this%RSIADistributeToCent .GT. this%ROutAbsorbToCent) then
-            write(*,*) "MCPSCUERROR: The SIA distribution to cascade center distance cannot greater than OutSide Absorb radius",this%RSIADistributeToCent,this%ROutAbsorbToCent
-            pause
-            stop
-        end if
-
-
         close(hFile)
         return
     end subroutine ResolveCapCtrlFile_FormMCConfig
 
-    subroutine ResolveCapInfoFile(this)
+    subroutine ResolveCapInfoFile(this,Host_Boxes,Host_SimuCtrlParam)
         implicit none
         !---Dummy Vars---
         CLASS(CaptureCal)::this
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        !---Local Vars---
+        integer::hFile
+        integer::FindTrueLine
+        character*1000::STR
+        integer::LINE
+        character*100::STRTMP(10)
+        integer::N
+        integer::MultiBox
+        integer::IBox
+        integer::I
+        !---Body---
+        if(.not. allocated(this%m_CascadeCenter) .or. &
+           .not. allocated(this%m_maxDistance) .or.   &
+           .not. allocated(this%m_NVACInEachBox) .or. &
+           .not. allocated(this%m_RSIADistributeToCent) .or. &
+           .not. allocated(this%m_ROutAbsorbToCent)) then
+           write(*,*) "MCPSCUERROR: You must initial the CaptureCal object before resolve the capture info file"
+           pause
+           stop
+        end if
 
+        MultiBox = Host_SimuCtrlParam%MultiBox
+
+        hFile = OpenExistedFile(Host_SimuCtrlParam%CapInfoFile)
+
+        FindTrueLine = 0
+
+        LINE = 0
+        DO while(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+
+            LINE = LINE + 1
+            STR = adjustl(trim(STR))
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(adjustl(STR)) .LE. 0) then
+                cycle
+            end if
+
+            if(ichar(STR(1:1)) .GE. ichar('0') .AND. ichar(STR(1:1)) .LE. ichar('9')) then
+                FindTrueLine = FindTrueLine + 1
+            end if
+
+        END DO
+
+        if(FindTrueLine .LT. MultiBox) then
+            write(*,*) "MCPSCUERROR: The total box info line number is less than box number"
+            write(*,*) "Total line number : ",FindTrueLine
+            write(*,*) "Total box number: ",MultiBox
+            pause
+            stop
+        end if
+
+        rewind(hFile)
+
+        LINE = 0
+
+        DO while(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+
+            LINE = LINE + 1
+            STR = adjustl(trim(STR))
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(adjustl(STR)) .LE. 0) then
+                cycle
+            end if
+
+            if(ichar(STR(1:1)) .GE. ichar('0') .AND. ichar(STR(1:1)) .LE. ichar('9')) then
+                call EXTRACT_NUMB(STR,9,N,STRTMP)
+
+                if(N .LT. 9) then
+                    write(*,*) "MCPSCUERROR: The info number is less than 9 in LINE: ",LINE
+                    write(*,*) STR
+                    write(*,*) "At file: ",Host_SimuCtrlParam%CapInfoFile
+                    pause
+                    stop
+                end if
+
+                IBox = ISTR(STRTMP(1))
+
+                if(IBox .LE. 0 .or. IBox .GT. MultiBox) then
+                    write(*,*) "MCPSCUERROR: The index of Box is out of range: ",IBox
+                    pause
+                    stop
+                end if
+
+                this%m_NVACInEachBox(IBox) = ISTR(STRTMP(3))
+
+                this%m_CascadeCenter(IBox,1) = DRSTR(STRTMP(4))*Host_Boxes%LatticeLength
+                this%m_CascadeCenter(IBox,2) = DRSTR(STRTMP(5))*Host_Boxes%LatticeLength
+                this%m_CascadeCenter(IBox,3) = DRSTR(STRTMP(6))*Host_Boxes%LatticeLength
+
+                this%m_maxDistance(IBox) = DRSTR(STRTMP(7))*Host_Boxes%LatticeLength
+
+                this%m_RSIADistributeToCent(IBox) = DRSTR(STRTMP(8))*Host_Boxes%LatticeLength
+                this%m_ROutAbsorbToCent(IBox) = DRSTR(STRTMP(9))*Host_Boxes%LatticeLength
+
+                DO I = 1,3
+                    if((this%m_CascadeCenter(IBox,I) - this%m_RSIADistributeToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                       (this%m_CascadeCenter(IBox,I) + this%m_RSIADistributeToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
+                        write(*,*) "the SIA distribution sphere had existed the box "
+                        write(*,*) "cascade center: ",this%m_CascadeCenter(IBox,I)
+                        write(*,*) "SIA distribution sphere radius: ",this%m_RSIADistributeToCent(IBox)
+                        write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                        pause
+                        stop
+                    end if
+
+                    if((this%m_CascadeCenter(IBox,I) - this%m_ROutAbsorbToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                       (this%m_CascadeCenter(IBox,I) + this%m_ROutAbsorbToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
+                        write(*,*) "the outer absorb sphere had existed the box "
+                        write(*,*) "cascade center: ",this%m_CascadeCenter(IBox,I)
+                        write(*,*) " outer absorb sphere radius: ",this%m_ROutAbsorbToCent(IBox)
+                        write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                        pause
+                        stop
+                    end if
+                END DO
+
+
+                if(this%m_maxDistance(IBox) .GT. this%m_RSIADistributeToCent(IBox)) then
+                    write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",this%m_maxDistance(IBox),this%m_RSIADistributeToCent(IBox)
+                    pause
+                    stop
+                end if
+
+                if(this%m_maxDistance(IBox) .GT. this%m_ROutAbsorbToCent(IBox)) then
+                    write(*,*) "MCPSCUERROR: The mostly out vac had exist the out absorb",this%m_maxDistance(IBox),this%m_ROutAbsorbToCent(IBox)
+                    pause
+                    stop
+                end if
+
+                if(this%m_RSIADistributeToCent(IBox) .GT. this%m_ROutAbsorbToCent(IBox)) then
+                    write(*,*) "MCPSCUERROR: The SIA distribution radius greater than that for out absorb",this%m_RSIADistributeToCent(IBox),this%m_ROutAbsorbToCent(IBox)
+                    pause
+                    stop
+                end if
+
+            end if
+
+        END DO
+
+
+        close(hFile)
+        return
     end subroutine
 
 
@@ -425,8 +597,12 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = other%CaptureGenerateWay
         this%NSIA = other%NSIA
         this%SIASIZE = other%SIASIZE
-        this%RSIADistributeToCent = other%RSIADistributeToCent
-        this%ROutAbsorbToCent = other%ROutAbsorbToCent
+
+        this%RSIADistributeToCent_Type = other%RSIADistributeToCent_Type
+        this%RSIADistributeToCent_Value = other%RSIADistributeToCent_Value
+
+        this%ROutAbsorbToCent_Type = other%ROutAbsorbToCent_Type
+        this%ROutAbsorbToCent_Value = other%ROutAbsorbToCent_Value
 
         this%MCCfgPath = other%MCCfgPath
 
@@ -442,6 +618,14 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         call AllocateArray_Host(this%m_NVACInEachBox,size(other%m_NVACInEachBox),"m_NVACInEachBox")
         this%m_NVACInEachBox = other%m_NVACInEachBox
 
+        call DeAllocateArray_Host(this%m_RSIADistributeToCent,"m_RSIADistributeToCent")
+        call AllocateArray_Host(this%m_RSIADistributeToCent,size(other%m_RSIADistributeToCent),"m_RSIADistributeToCent")
+        this%m_RSIADistributeToCent = other%m_RSIADistributeToCent
+
+        call DeAllocateArray_Host(this%m_ROutAbsorbToCent,"m_ROutAbsorbToCent")
+        call AllocateArray_Host(this%m_ROutAbsorbToCent,size(other%m_ROutAbsorbToCent),"m_ROutAbsorbToCent")
+        this%m_ROutAbsorbToCent = other%m_ROutAbsorbToCent
+
         return
     end subroutine
 
@@ -455,8 +639,12 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         this%NSIA = 0
         this%SIASIZE = 1
-        this%RSIADistributeToCent = 0.D0
-        this%ROutAbsorbToCent = 0.D0
+
+        this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
+        this%RSIADistributeToCent_Value = 0.D0
+
+        this%ROutAbsorbToCent_Type = Capture_ROutAbsorbToCent_Type_FixedValue
+        this%ROutAbsorbToCent_Value = 0.D0
 
         this%MCCfgPath = ""
 
@@ -465,6 +653,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         call DeAllocateArray_Host(this%m_maxDistance,"m_maxDistance")
 
         call DeAllocateArray_Host(this%m_NVACInEachBox,"m_NVACInEachBox")
+
+        call DeAllocateArray_Host(this%m_RSIADistributeToCent,"m_RSIADistributeToCent")
+
+        call DeAllocateArray_Host(this%m_ROutAbsorbToCent,"m_ROutAbsorbToCent")
 
         return
     end subroutine Clean_CaptureCal

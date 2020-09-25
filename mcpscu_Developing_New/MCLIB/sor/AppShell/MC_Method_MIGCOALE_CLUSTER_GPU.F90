@@ -77,6 +77,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     type(MigCoalClusterRecord)::m_MigCoalClusterRecord
     type(MigCoaleStatInfoWrap),private::m_MigCoaleStatInfoWrap
     type(MigCoale_GVarsDev),private::m_MigCoale_GVarsDev
+    type(CaptureCal),private::m_CapCal
+    type(CaptureCal_Dev),private::m_CapCal_Dev
 
     private::CopyInitBoxSimCfgFromOther
     private::Clean_InitBoxSimCfg
@@ -190,6 +192,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call Initital_Global_Variables_GPU(Host_SimBoxes, cursor%theSimulationCtrlParam,Dev_Boxes)
 
                 call m_MigCoale_GVarsDev%Init(Host_SimBoxes, cursor%theSimulationCtrlParam,m_MigCoalClusterRecord)
+
+                call m_CapCal%Init(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+                call m_CapCal%ResolveCapInfoFile(Host_SimBoxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
+                call m_CapCal_Dev%Init(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox,m_CapCal)
             end if
 
             DO While(.true.)
@@ -210,7 +216,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call m_ImplantList%Init(Host_SimBoxes,cursor%theSimulationCtrlParam)
 
-                call For_One_TimeSect(Host_SimBoxes,cursor%theSimulationCtrlParam,Dev_Boxes,m_MigCoale_GVarsDev,m_ImplantList,m_MigCoaleStatInfoWrap,m_MigCoalClusterRecord)
+                call For_One_TimeSect(Host_SimBoxes,cursor%theSimulationCtrlParam,Dev_Boxes,m_MigCoale_GVarsDev,m_ImplantList,m_MigCoaleStatInfoWrap,m_MigCoalClusterRecord,m_CapCal_Dev)
 
                 call m_MigCoalClusterRecord%SetLastRecordImplantNum(m_MigCoalClusterRecord%GetImplantedEntitiesNum())
 
@@ -231,7 +237,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine For_One_Test
 
     !****************************************************************
-    subroutine For_One_TimeSect(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record)
+    subroutine For_One_TimeSect(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,CapCal_Dev)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_SimBoxes
@@ -241,6 +247,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(ImplantList)::ImplantSectionList
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
+        type(CaptureCal_Dev)::CapCal_Dev
         !---Local Vars---
         integer::TotalSize
         integer:: NCUT, DUP, DUPXYZ(3)
@@ -288,7 +295,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     call GetBoxesMigCoaleStat_Virtual_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record)
                 end if
 
-                call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TotalSize, NCUT)
+                call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TotalSize,CapCal_Dev, NCUT)
 
                 call Record%IncreaseOneRescaleCount()
                 call Host_SimBoxes%PutoutCfg(Host_SimuCtrlParam,Record,RescaleCount=Record%GetRescaleCount())
@@ -356,7 +363,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call GetBoxesMigCoaleStat_Virtual_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record)
             end if
 
-            call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TotalSize)
+            call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TotalSize,CapCal_Dev)
 
         end if
 
@@ -368,7 +375,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine For_One_TimeSect
 
     !*****************************************************
-    subroutine Growth_FixBox(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap, Record, NC0, NCUT)
+    subroutine Growth_FixBox(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap, Record, NC0,CapCal_Dev, NCUT)
         ! To start growth
         implicit none
         !---Dummy vars---
@@ -380,6 +387,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
         integer, intent(in)::NC0
+        type(CaptureCal_Dev)::CapCal_Dev
         integer, optional::NCUT
         !---local vars---
         real(kind=KINDDF):: TSTEP, RCUT
@@ -401,7 +409,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
             DO WHILE(.TRUE.)
 
-                call For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TSTEP)
+                call For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TSTEP,CapCal_Dev)
 
                 if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
                     if ((Record%GetSimuSteps() - Record%GetLastUpdateStatisTime()) .GE. Host_SimuCtrlParam%TUpdateStatisValue) then
@@ -450,7 +458,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine Growth_FixBox
 
     !*********************************************************************
-    subroutine For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TSTEP)
+    subroutine For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TSTEP,CapCal_Dev)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
@@ -461,6 +469,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
+        type(CaptureCal_Dev)::CapCal_Dev
         !---Local Vars---
         type(ImplantList),pointer::curosr=>null()
         integer::I
@@ -477,7 +486,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             curosr=>curosr%next
         END DO
 
-        call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP)
+        call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP,CapCal_Dev)
 
         if(Host_SimuCtrlParam%FreeDiffusion .ne. .true.) then
             call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)

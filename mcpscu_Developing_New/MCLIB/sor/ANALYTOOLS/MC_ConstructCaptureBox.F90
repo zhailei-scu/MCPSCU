@@ -141,6 +141,15 @@ module MC_ConstructCaptureBox
         real(kind=KINDDF)::XDirection
         character*30::TheVersion
         !-----------Body--------------
+        if(.not. allocated(TheCaptureCal%m_CascadeCenter) .or. &
+           .not. allocated(TheCaptureCal%m_maxDistance) .or.   &
+           .not. allocated(TheCaptureCal%m_NVACInEachBox) .or. &
+           .not. allocated(TheCaptureCal%m_RSIADistributeToCent) .or. &
+           .not. allocated(TheCaptureCal%m_ROutAbsorbToCent)) then
+           write(*,*) "MCPSCUERROR: You must initial the CaptureCal object before Generate the capture configuration file"
+           pause
+           stop
+        end if
 
         call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,TheCaptureCal%MCCfgPath,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 
@@ -175,11 +184,7 @@ module MC_ConstructCaptureBox
         call Host_Boxes%SweepUnActiveMemory_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
 
-        !*******Put in SIA ****************************************
-        call AllocateArray_Host(TheCaptureCal%m_maxDistance,MultiBox,"maxDistance")
-        call AllocateArray_Host(TheCaptureCal%m_CascadeCenter,MultiBox,3,"CascadeCenter")
-        call AllocateArray_Host(TheCaptureCal%m_NVACInEachBox,MultiBox,"NVACInEachBox")
-
+        !*******Get Infor mation from configuration ****************************************
         DO IBox = 1,MultiBox
             ICFrom = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTo = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -204,29 +209,6 @@ module MC_ConstructCaptureBox
                 TheCaptureCal%m_CascadeCenter(IBox,1:3) = TheCaptureCal%m_CascadeCenter(IBox,1:3)/TheCaptureCal%m_NVACInEachBox(IBox)
             end if
 
-
-            DO I = 1,3
-                if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%RSIADistributeToCent) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                   (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%RSIADistributeToCent) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
-                    write(*,*) "the SIA distribution sphere had existed the box "
-                    write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
-                    write(*,*) "SIA distribution sphere radius: ",TheCaptureCal%RSIADistributeToCent
-                    write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
-                    pause
-                    stop
-                end if
-
-                if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%ROutAbsorbToCent) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                   (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%ROutAbsorbToCent) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
-                    write(*,*) "the outer absorb sphere had existed the box "
-                    write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
-                    write(*,*) " outer absorb sphere radius: ",TheCaptureCal%ROutAbsorbToCent
-                    write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
-                    pause
-                    stop
-                end if
-            END DO
-
             TheCaptureCal%m_maxDistance(IBox) = -1
             DO IC = ICFrom,ICTo
                 if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
@@ -244,21 +226,73 @@ module MC_ConstructCaptureBox
                 end if
             END DO
 
+            !***************The SIA distribution radius and outer absorb radius**************************************
+            select case(TheCaptureCal%RSIADistributeToCent_Type)
+                case(Capture_RSIADistributeToCent_Type_FixedValue)
+                    TheCaptureCal%m_RSIADistributeToCent(IBox) = TheCaptureCal%RSIADistributeToCent_Value
+                case(Capture_RSIADistributeToCent_Type_OutFromMostOutVAC)
+                    TheCaptureCal%m_RSIADistributeToCent(IBox) = TheCaptureCal%m_maxDistance(IBox) + TheCaptureCal%RSIADistributeToCent_Value
+                case default
+                    write(*,*) "MCPSCUERROR: Unknown SIA distribution to center radius type: ",TheCaptureCal%RSIADistributeToCent_Type
+                    pause
+                    stop
+            end select
 
-            if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%RSIADistributeToCent) then
-                write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%RSIADistributeToCent
+            select case(TheCaptureCal%ROutAbsorbToCent_Type)
+                case(Capture_ROutAbsorbToCent_Type_FixedValue)
+                    TheCaptureCal%m_ROutAbsorbToCent(IBox) = TheCaptureCal%ROutAbsorbToCent_Value
+                case(Capture_ROutAbsorbToCent_Type_OutFromMostOutVAC)
+                    TheCaptureCal%m_ROutAbsorbToCent(IBox) = TheCaptureCal%m_maxDistance(IBox) + TheCaptureCal%ROutAbsorbToCent_Value
+                case default
+                    write(*,*) "MCPSCUERROR: Unknown SIA distribution to center radius type: ",TheCaptureCal%ROutAbsorbToCent_Type
+                    pause
+                    stop
+            end select
+
+            DO I = 1,3
+                if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%m_RSIADistributeToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                   (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
+                    write(*,*) "the SIA distribution sphere had existed the box "
+                    write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
+                    write(*,*) "SIA distribution sphere radius: ",TheCaptureCal%m_RSIADistributeToCent(IBox)
+                    write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                    pause
+                    stop
+                end if
+
+                if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%m_ROutAbsorbToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                   (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_ROutAbsorbToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
+                    write(*,*) "the outer absorb sphere had existed the box "
+                    write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
+                    write(*,*) " outer absorb sphere radius: ",TheCaptureCal%m_ROutAbsorbToCent(IBox)
+                    write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                    pause
+                    stop
+                end if
+            END DO
+
+
+            if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
+                write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%m_RSIADistributeToCent(IBox)
                 pause
                 stop
             end if
 
-            if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%ROutAbsorbToCent) then
-                write(*,*) "MCPSCUERROR: The mostly out vac had exist the out absorb",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%ROutAbsorbToCent
+            if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_ROutAbsorbToCent(IBox)) then
+                write(*,*) "MCPSCUERROR: The mostly out vac had exist the out absorb",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%m_ROutAbsorbToCent(IBox)
+                pause
+                stop
+            end if
+
+            if(TheCaptureCal%m_RSIADistributeToCent(IBox) .GT. TheCaptureCal%m_ROutAbsorbToCent(IBox)) then
+                write(*,*) "MCPSCUERROR: The SIA distribution position had existed the out absorb",TheCaptureCal%m_RSIADistributeToCent(IBox),TheCaptureCal%m_ROutAbsorbToCent(IBox)
                 pause
                 stop
             end if
 
         END DO
 
+        !*******Put in SIA ****************************************
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,TheCaptureCal%NSIA)
 
         DO IBox = 1,MultiBox
@@ -307,9 +341,9 @@ module MC_ConstructCaptureBox
 
                 ZDirection = DRAND32()*CP_PI
                 XDirection = DRAND32()*2*CP_PI
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = TheCaptureCal%m_CascadeCenter(IBox,1) + TheCaptureCal%RSIADistributeToCent*sin(ZDirection)*cos(XDirection)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%m_CascadeCenter(IBox,2) + TheCaptureCal%RSIADistributeToCent*sin(ZDirection)*sin(XDirection)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%m_CascadeCenter(IBox,3) + TheCaptureCal%RSIADistributeToCent*cos(ZDirection)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = TheCaptureCal%m_CascadeCenter(IBox,1) + TheCaptureCal%m_RSIADistributeToCent(IBox)*sin(ZDirection)*cos(XDirection)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%m_CascadeCenter(IBox,2) + TheCaptureCal%m_RSIADistributeToCent(IBox)*sin(ZDirection)*sin(XDirection)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%m_CascadeCenter(IBox,3) + TheCaptureCal%m_RSIADistributeToCent(IBox)*cos(ZDirection)
 
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
@@ -360,20 +394,24 @@ module MC_ConstructCaptureBox
         call Host_Boxes%PutoutToFile(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,hCfgOut)
 
         !************Out the Capture info***************
-        write(hOutInfo, fmt="(130(A30,1x))") "IBox",                      &
-                                             "NSIA",                      &
-                                             "NVAC",                      &
-                                             "CascadeCenter_X(LU)",           &
-                                             "CascadeCenter_Y(LU)",           &
-                                             "CascadeCenter_Z(LU)",           &
-                                             "maxVACDistanceToCent(LU)"
+        write(hOutInfo, fmt="(130(A30,1x))") "IBox",                        &
+                                             "NSIA",                        &
+                                             "NVAC",                        &
+                                             "CascadeCenter_X(LU)",         &
+                                             "CascadeCenter_Y(LU)",         &
+                                             "CascadeCenter_Z(LU)",         &
+                                             "maxVACDistanceToCent(LU)",    &
+                                             "RSIADistributeToCent(LU)",    &
+                                             "ROutAbsorbToCent(LU)"
 
         DO IBox = 1,MultiBox
             write(hOutInfo,fmt="(3(I30,1x),4(1PE30.10,1x))") IBox,                                                              &
                                                              TheCaptureCal%NSIA,                                                &
                                                              TheCaptureCal%m_NVACInEachBox(IBox),                               &
                                                              TheCaptureCal%m_CascadeCenter(IBox,1:3)/Host_Boxes%LatticeLength,  &
-                                                             TheCaptureCal%m_maxDistance(IBox)/Host_Boxes%LatticeLength
+                                                             TheCaptureCal%m_maxDistance(IBox)/Host_Boxes%LatticeLength,        &
+                                                             TheCaptureCal%m_RSIADistributeToCent/Host_Boxes%LatticeLength,     &
+                                                             TheCaptureCal%m_ROutAbsorbToCent/Host_Boxes%LatticeLength
         END DO
 
 

@@ -4,8 +4,6 @@ module MIGCOALE_ADDONDATA_DEV
 
     real(kind=KINDDF),constant::dm_FREESURDIFPRE
     real(kind=KINDDF),constant::dm_GBSURDIFPRE
-    real(kind=KINDDF),constant::dm_OutRadius
-    real(kind=KINDDF),constant::dm_CascadeCenter(3)
 
     contains
 
@@ -15,8 +13,6 @@ module MIGCOALE_ADDONDATA_DEV
         dm_FREESURDIFPRE = m_FREESURDIFPRE
         dm_GBSURDIFPRE = m_GBSURDIFPRE
 
-        dm_OutRadius = m_OutRadius
-        dm_CascadeCenter = m_CascadeCenter
         return
     end subroutine CopyAddOnDataToDev
 

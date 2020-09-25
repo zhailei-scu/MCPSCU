@@ -7,12 +7,13 @@ module MIGCOALE_EVOLUTION_GPU
   use MIGCOALE_ADDONDATA_DEV
   use MCLIB_TYPEDEF_GEOMETRY_GPU
   use MODEL_ECR_GPU
+  use MIGCOALE_TYPEDEF_CAPTURECAL_GPU
   implicit none
 
   contains
 
   !********************************************************
-  subroutine WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP)
+  subroutine WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP,CapCal_Dev)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
@@ -21,6 +22,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
     type(MigCoalClusterRecord)::Record
     real(kind=KINDDF)::TSTEP
+    type(CaptureCal_Dev)::CapCal_Dev
     !---Local Vars---
     integer::MULTIBOX
     integer::IBox
@@ -86,7 +88,9 @@ module MIGCOALE_EVOLUTION_GPU
                                                                     Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
                                                                     TSTEP,                                       &
                                                                     Host_SimuCtrlParam%LowerLimitTime,           &
-                                                                    Host_SimuCtrlParam%LastPassageFactor)
+                                                                    Host_SimuCtrlParam%LastPassageFactor,        &
+                                                                    CapCal_Dev%dm_CascadeCenter,                 &
+                                                                    CapCal_Dev%dm_ROutAbsorbToCent)
         else
             BlockNumEachBox = (maxUsedNC - 1)/p_BLOCKSIZE + 1
             NB = BlockNumEachBox*MultiBox
@@ -116,7 +120,9 @@ module MIGCOALE_EVOLUTION_GPU
                                                         Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
                                                         Dev_DiffusorMap%Dev_TypesEntities,           &
                                                         Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
-                                                        TSTEP)
+                                                        TSTEP,                                       &
+                                                        CapCal_Dev%dm_CascadeCenter,                 &
+                                                        CapCal_Dev%dm_ROutAbsorbToCent)
         end if
 
     END ASSOCIATE
@@ -126,7 +132,8 @@ module MIGCOALE_EVOLUTION_GPU
 
   !********************************************************
   attributes(global) subroutine WalkOneStep_Kernel(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
-                                                   Dev_RandArray,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP)
+                                                   Dev_RandArray,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP, &
+                                                   Dev_CascadeCent,Dev_ROutAbsorbRadius)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -140,6 +147,8 @@ module MIGCOALE_EVOLUTION_GPU
     type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
     integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     real(kind=KINDDF),value::TSTEP
+    real(kind=KINDDF),device::Dev_CascadeCent(:,:)
+    real(kind=KINDDF),device::Dev_ROutAbsorbRadius(:)
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -161,6 +170,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::RandomSign
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     real(kind=KINDDF)::DistToCent
+    real(kind=KINDDF)::CascadeCenter(3)
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -218,11 +228,15 @@ module MIGCOALE_EVOLUTION_GPU
 
         tempPos = tempPos + POS
 
-        DistToCent = (tempPos(1) - dm_CascadeCenter(1))*(tempPos(1) - dm_CascadeCenter(1)) + &
-                     (tempPos(2) - dm_CascadeCenter(2))*(tempPos(2) - dm_CascadeCenter(2)) + &
-                     (tempPos(3) - dm_CascadeCenter(3))*(tempPos(3) - dm_CascadeCenter(3))
+        CascadeCenter(1) = Dev_CascadeCent(IBox,1)
+        CascadeCenter(2) = Dev_CascadeCent(IBox,2)
+        CascadeCenter(3) = Dev_CascadeCent(IBox,3)
 
-        if(DistToCent .GE. dm_OutRadius**2) then
+        DistToCent = (tempPos(1) - CascadeCenter(1))*(tempPos(1) - CascadeCenter(1)) + &
+                     (tempPos(2) - CascadeCenter(2))*(tempPos(2) - CascadeCenter(2)) + &
+                     (tempPos(3) - CascadeCenter(3))*(tempPos(3) - CascadeCenter(3))
+
+        if(DistToCent .GE. Dev_ROutAbsorbRadius(IBox)**2) then
             Dev_Clusters(IC)%m_Statu = p_OUT_DESTROY_STATU
             Dev_ActiveStatu(IC) = p_OUT_DESTROY_STATU
             Dev_Clusters(IC)%m_POS = tempPos
@@ -407,7 +421,10 @@ module MIGCOALE_EVOLUTION_GPU
 
   !********************************************************
   attributes(global) subroutine WalkOneStep_Kernel_NNDR_LastPassage(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
-                                                               DevRandRecord,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP,LowerLimitTime,LastPassageFactor)
+                                                                    DevRandRecord,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,&
+                                                                    Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP,&
+                                                                    LowerLimitTime,LastPassageFactor,&
+                                                                    Dev_CascadeCent,Dev_ROutAbsorbRadius)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -423,6 +440,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF),value::TSTEP
     real(kind=KINDDF),value::LowerLimitTime
     integer,value::LastPassageFactor
+    real(kind=KINDDF),device::Dev_CascadeCent(:,:)
+    real(kind=KINDDF),device::Dev_ROutAbsorbRadius(:)
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -450,6 +469,7 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::JumpRemind
     real(kind=KINDDF)::LowerLimitLength
     real(kind=KINDDF)::DistToCent
+    real(kind=KINDDF)::CascadeCenter(3)
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -577,11 +597,15 @@ module MIGCOALE_EVOLUTION_GPU
         tempPos = tempPos + POS
 
 
-        DistToCent = (tempPos(1) - dm_CascadeCenter(1))*(tempPos(1) - dm_CascadeCenter(1)) + &
-                     (tempPos(2) - dm_CascadeCenter(2))*(tempPos(2) - dm_CascadeCenter(2)) + &
-                     (tempPos(3) - dm_CascadeCenter(3))*(tempPos(3) - dm_CascadeCenter(3))
+        CascadeCenter(1) = Dev_CascadeCent(IBox,1)
+        CascadeCenter(2) = Dev_CascadeCent(IBox,2)
+        CascadeCenter(3) = Dev_CascadeCent(IBox,3)
 
-        if(DistToCent .GE. dm_OutRadius**2) then
+        DistToCent = (tempPos(1) - CascadeCenter(1))*(tempPos(1) - CascadeCenter(1)) + &
+                     (tempPos(2) - CascadeCenter(2))*(tempPos(2) - CascadeCenter(2)) + &
+                     (tempPos(3) - CascadeCenter(3))*(tempPos(3) - CascadeCenter(3))
+
+        if(DistToCent .GE. Dev_ROutAbsorbRadius(IBox)**2) then
             Dev_Clusters(IC)%m_Statu = p_OUT_DESTROY_STATU
             Dev_ActiveStatu(IC) = p_OUT_DESTROY_STATU
             Dev_Clusters(IC)%m_POS = tempPos
