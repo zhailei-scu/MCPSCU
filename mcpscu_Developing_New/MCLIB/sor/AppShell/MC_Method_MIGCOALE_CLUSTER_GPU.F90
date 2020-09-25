@@ -194,6 +194,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call m_MigCoale_GVarsDev%Init(Host_SimBoxes, cursor%theSimulationCtrlParam,m_MigCoalClusterRecord)
 
                 call m_CapCal%Init(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+                call m_CapCal%ResolveCapCtrlFile(Host_SimBoxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
                 call m_CapCal%ResolveCapInfoFile(Host_SimBoxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
                 call m_CapCal_Dev%Init(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox,m_CapCal)
             end if

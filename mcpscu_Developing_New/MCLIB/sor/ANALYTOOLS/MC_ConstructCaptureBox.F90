@@ -12,10 +12,9 @@ module MC_ConstructCaptureBox
     contains
 
    !*****************************************************
-   subroutine Generate_Capture(CaptureCtrlFile,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+   subroutine Generate_Capture(TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
         implicit none
         !---Dummy Vars---
-        character*(*),intent(in)::CaptureCtrlFile
         type(CaptureCal)::TheCaptureCal
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
@@ -23,7 +22,6 @@ module MC_ConstructCaptureBox
         !---Local Vars---
         character*1000::OutFolder
         character*1000::CfgOut
-        character*1000::InfoOut
         character*30::TheVersion
         integer::hOutInfo
         integer::hCfgOut
@@ -52,10 +50,8 @@ module MC_ConstructCaptureBox
         Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath = trim(adjustl(OutFolder))
 
         CfgOut = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"CaptureBox.dat"
-        InfoOut = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"CaptureInfo.dat"
 
         hCfgOut = CreateNewFile(CfgOut)
-        hOutInfo = CreateNewFile(InfoOut)
 
         call Host_Boxes%m_ClustersInfo_CPU%Clean()
 
@@ -65,7 +61,8 @@ module MC_ConstructCaptureBox
 
         call TheCaptureCal%Init(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
-        call TheCaptureCal%ResolveCapCtrlFile(CaptureCtrlFile,Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
+        call TheCaptureCal%ResolveCapCtrlFile(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
+        hOutInfo = CreateNewFile(TheCaptureCal%CapCalInfoPath)
 
         select case(TheCaptureCal%CaptureGenerateWay)
             case(CaptureGenWay_ByCentUniform_Locally)
@@ -92,11 +89,12 @@ module MC_ConstructCaptureBox
 
 
     !*****************************************************
-    subroutine Generate_Capture_Locally_CentUniform(hOutInfo,hCfgOut,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+    subroutine Generate_Capture_Locally_CentUniform(hCfgOut,hOutInfo,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
         implicit none
         !---Dummy Vars---
-        integer,intent(in)::hOutInfo
         integer,intent(in)::hCfgOut
+        integer,intent(in)::hOutInfo
+
         type(CaptureCal)::TheCaptureCal
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
@@ -113,11 +111,11 @@ module MC_ConstructCaptureBox
 
 
     !***************************************************************
-    subroutine Generate_Capture_Locally_FormMCConfig_Directly(hOutInfo,hCfgOut,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+    subroutine Generate_Capture_Locally_FormMCConfig_Directly(hCfgOut,hOutInfo,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
         implicit none
         !---Dummy Vars---
-        integer,intent(in)::hOutInfo
         integer,intent(in)::hCfgOut
+        integer,intent(in)::hOutInfo
         type(CaptureCal)::TheCaptureCal
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
@@ -405,13 +403,13 @@ module MC_ConstructCaptureBox
                                              "ROutAbsorbToCent(LU)"
 
         DO IBox = 1,MultiBox
-            write(hOutInfo,fmt="(3(I30,1x),4(1PE30.10,1x))") IBox,                                                              &
+            write(hOutInfo,fmt="(3(I30,1x),6(1PE30.10,1x))") IBox,                                                              &
                                                              TheCaptureCal%NSIA,                                                &
                                                              TheCaptureCal%m_NVACInEachBox(IBox),                               &
                                                              TheCaptureCal%m_CascadeCenter(IBox,1:3)/Host_Boxes%LatticeLength,  &
                                                              TheCaptureCal%m_maxDistance(IBox)/Host_Boxes%LatticeLength,        &
-                                                             TheCaptureCal%m_RSIADistributeToCent/Host_Boxes%LatticeLength,     &
-                                                             TheCaptureCal%m_ROutAbsorbToCent/Host_Boxes%LatticeLength
+                                                             TheCaptureCal%m_RSIADistributeToCent(IBox)/Host_Boxes%LatticeLength,     &
+                                                             TheCaptureCal%m_ROutAbsorbToCent(IBox)/Host_Boxes%LatticeLength
         END DO
 
 
@@ -434,7 +432,6 @@ program Main_MC_ConstructCaptureBox
     !---Local Vars
     integer::arg_Num
     character*1000::SampleFile
-    character*1000::CaptureCtrlFile
     character*1000::ARG
     type(CaptureCal)::m_CaptureCal
     type(SimulationBoxes)::m_Boxes
@@ -455,12 +452,7 @@ program Main_MC_ConstructCaptureBox
     Read(ARG,fmt="(A256)") SampleFile
     write(*,*) "The Sample file is: ",SampleFile
 
-    call Get_Command_Argument(2,ARG)
-    Read(ARG,fmt="(A256)") CaptureCtrlFile
-    write(*,*) "The capture control file is: ",CaptureCtrlFile
-
-
-    call Generate_Capture(CaptureCtrlFile,m_CaptureCal,m_Boxes,m_SimuCtrlParamList,m_Record)
+    call Generate_Capture(m_CaptureCal,m_Boxes,m_SimuCtrlParamList,m_Record)
 
 
     return

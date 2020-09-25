@@ -159,26 +159,6 @@ module MCLIB_GLOBAL
                 end if
             endif
 
-          case("&CAPINFOF")
-            call EXTRACT_SUBSTR(STR,1,N,STRTMP)
-            if(N .LT. 1) then
-                write(*,*) "MCPSCUERROR: You must special the capture info file name or path"
-                write(*,*) STR
-                write(*,*) "At line: ",LINE
-                pause
-                stop
-            end if
-            capInfoFile = adjustl(trim(STRTMP(1)))
-            if(IsAbsolutePath(capInfoFile)) then
-                CtrlParamList%theSimulationCtrlParam%CapInfoFile = INQUIREFILE(capInfoFile)
-            else
-                if(LENTRIM(adjustl(CtrlParamList%theSimulationCtrlParam%InputFilePath)) .GT. 0) then
-                    CtrlParamList%theSimulationCtrlParam%CapInfoFile = INQUIREFILE(adjustl(trim(capInfoFile)),CtrlParamList%theSimulationCtrlParam%InputFilePath)
-                else
-                    CtrlParamList%theSimulationCtrlParam%CapInfoFile = INQUIREFILE(adjustl(trim(capInfoFile)))
-                end if
-            endif
-
           case("&COUT")
             call EXTRACT_SUBSTR(STR,1,N,STRTMP)
             outPath = STRTMP(1)

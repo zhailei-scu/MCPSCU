@@ -28,6 +28,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         real(kind=KINDDF),dimension(:),allocatable::m_RSIADistributeToCent
         real(kind=KINDDF),dimension(:),allocatable::m_ROutAbsorbToCent
         character*1000::MCCfgPath
+        character*1000::CapCalInfoPath
         real(kind=KINDDF),dimension(:,:),allocatable::m_CascadeCenter
         real(kind=KINDDF),dimension(:),allocatable::m_maxDistance
         integer,dimension(:),allocatable::m_NVACInEachBox
@@ -71,6 +72,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%ROutAbsorbToCent_Value = 0.D0
 
         this%MCCfgPath = ""
+        this%CapCalInfoPath = ""
 
         call DeAllocateArray_Host(this%m_CascadeCenter,"m_CascadeCenter")
         call AllocateArray_Host(this%m_CascadeCenter,MultiBox,3,"m_CascadeCenter")
@@ -91,11 +93,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
     end subroutine
 
 
-    subroutine ResolveCapCtrlFile(this,CtrlFile,Host_Boxes,Host_SimuCtrlParam)
+    subroutine ResolveCapCtrlFile(this,Host_Boxes,Host_SimuCtrlParam)
         implicit none
         !---Dummy Vars---
         CLASS(CaptureCal)::this
-        character*(*),intent(in)::CtrlFile
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Local Vars---
@@ -109,7 +110,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         integer::CaptureGenerateWay
         integer::FinededCaptureGenWay
         !---Body---
-        hFile = OpenExistedFile(CtrlFile)
+        hFile = OpenExistedFile(Host_SimuCtrlParam%CapCtrlFile)
         LINE = 0
 
         FinededCaptureGenWay = 0
@@ -430,6 +431,54 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
            stop
         end if
 
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&CALCAPINFOPATH")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the capture info path."
+                        pause
+                        stop
+                    end if
+                    this%CapCalInfoPath = adjustl(trim(STRTMP(1)))
+
+                    if(IsAbsolutePath(this%CapCalInfoPath)) then
+                        this%CapCalInfoPath = adjustl(trim(this%CapCalInfoPath))
+                    else
+                        if(LENTRIM(adjustl(Host_SimuCtrlParam%InputFilePath)) .GT. 0) then
+                            this%CapCalInfoPath = adjustl(trim(Host_SimuCtrlParam%InputFilePath))//FolderSpe//adjustl(trim(this%CapCalInfoPath))
+                        else
+                            this%CapCalInfoPath = adjustl(trim(this%CapCalInfoPath))
+                        end if
+                    endif
+
+
+                    write(*,*) this%CapCalInfoPath
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the capture info path."
+           pause
+           stop
+        end if
+
         close(hFile)
         return
     end subroutine ResolveCapCtrlFile_FormMCConfig
@@ -463,7 +512,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
         MultiBox = Host_SimuCtrlParam%MultiBox
 
-        hFile = OpenExistedFile(Host_SimuCtrlParam%CapInfoFile)
+        hFile = OpenExistedFile(this%CapCalInfoPath)
 
         FindTrueLine = 0
 
@@ -512,7 +561,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                 if(N .LT. 9) then
                     write(*,*) "MCPSCUERROR: The info number is less than 9 in LINE: ",LINE
                     write(*,*) STR
-                    write(*,*) "At file: ",Host_SimuCtrlParam%CapInfoFile
+                    write(*,*) "At file: ",this%CapCalInfoPath
                     pause
                     stop
                 end if
@@ -605,6 +654,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%ROutAbsorbToCent_Value = other%ROutAbsorbToCent_Value
 
         this%MCCfgPath = other%MCCfgPath
+        this%CapCalInfoPath = other%CapCalInfoPath
 
         call DeAllocateArray_Host(this%m_CascadeCenter,"m_CascadeCenter")
         call AllocateArray_Host(this%m_CascadeCenter,size(other%m_CascadeCenter,dim=1),size(other%m_CascadeCenter,dim=2),"m_CascadeCenter")
@@ -647,6 +697,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%ROutAbsorbToCent_Value = 0.D0
 
         this%MCCfgPath = ""
+        this%CapCalInfoPath = ""
 
         call DeAllocateArray_Host(this%m_CascadeCenter,"m_CascadeCenter")
 

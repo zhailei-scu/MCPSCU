@@ -92,7 +92,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      character*1000::IniConfig = ""
      character*1000::ImpFile = ""
      character*1000::CapCtrlFile = ""
-     character*1000::CapInfoFile = ""
      character*1000::OutFilePath = ""
      character*1000::RestartCfg = ""
 
@@ -744,7 +743,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%IniConfig = otherOne%IniConfig
     this%ImpFile = otherOne%ImpFile
     this%CapCtrlFile = otherOne%CapCtrlFile
-    this%CapInfoFile = otherOne%CapInfoFile
     this%OutFilePath = otherOne%OutFilePath
     this%RestartCfg = otherOne%RestartCfg
 
@@ -846,7 +844,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%IniConfig = ""
      this%ImpFile = ""
      this%CapCtrlFile = ""
-     this%CapInfoFile = ""
      this%OutFilePath = ""
      this%RestartCfg = ""
 
@@ -1005,7 +1002,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%IniConfig = ""
      this%ImpFile = ""
      this%CapCtrlFile = ""
-     this%CapInfoFile = ""
      this%OutFilePath = ""
      this%RestartCfg = ""
 

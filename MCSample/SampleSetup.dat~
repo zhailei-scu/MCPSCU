@@ -4,6 +4,6 @@
   &CTLF "CtrlFile.dat"
   &INIF "IniF.dat"
   &IMPF "ImpF.dat"
-  &CAPINFOF "CaptureBox/CaptureInfo.dat"
+  &CAPCTLF "CaptureBox/CaptureInfo.dat"
   &COUT "300K/"
 &END
