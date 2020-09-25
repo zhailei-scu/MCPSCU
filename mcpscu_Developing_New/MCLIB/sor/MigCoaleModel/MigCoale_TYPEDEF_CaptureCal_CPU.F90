@@ -18,7 +18,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         integer::CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         integer::NSIA = 0
         integer::SIASIZE = 1
-
+        integer::UDef_NVAC = 0
+        integer::UDef_VACSIZE = 1
+        real(kind=KINDDF)::UDef_RVACINCLUDE = 0.D0
+        real(kind=KINDDF)::UDef_CascadeCent(3) = 0.5D0
         integer::RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
         real(kind=KINDDF)::RSIADistributeToCent_Value = 0.D0
 
@@ -64,6 +67,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         this%NSIA = 0
         this%SIASIZE = 1
+        this%UDef_NVAC = 0
+        this%UDef_VACSIZE = 1
+        this%UDef_RVACINCLUDE = 0.D0
+        this%UDef_CascadeCent = 0.5D0
 
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
         this%RSIADistributeToCent_Value = 0.D0
@@ -100,7 +107,6 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         !---Local Vars---
-        character*1000::ARG
         character*1000::STR
         integer::hFile
         integer::LINE
@@ -108,12 +114,23 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         character*1000::STRTMP(10)
         integer::N
         integer::CaptureGenerateWay
-        integer::FinededCaptureGenWay
+        logical::Finded
         !---Body---
-        hFile = OpenExistedFile(Host_SimuCtrlParam%CapCtrlFile)
-        LINE = 0
+        if(.not. allocated(this%m_CascadeCenter) .or. &
+           .not. allocated(this%m_maxDistance) .or.   &
+           .not. allocated(this%m_NVACInEachBox) .or. &
+           .not. allocated(this%m_RSIADistributeToCent) .or. &
+           .not. allocated(this%m_ROutAbsorbToCent)) then
+           write(*,*) "MCPSCUERROR: You must initial the CaptureCal object before resolve the capture info file"
+           pause
+           stop
+        end if
 
-        FinededCaptureGenWay = 0
+        hFile = OpenExistedFile(Host_SimuCtrlParam%CapCtrlFile)
+
+
+        LINE = 0
+        Finded = .false.
         Do while(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
             LINE = LINE + 1
             STR = adjustl(STR)
@@ -136,11 +153,11 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                         stop
                     end if
                     this%CaptureGenerateWay = ISTR(STRTMP(1))
-                    FinededCaptureGenWay = 1
+                    Finded = 1
             end select
         End Do
 
-        if(FinededCaptureGenWay .LE. 0) then
+        if(Finded .LE. 0) then
             write(*,*) "You must special the capture generate way."
             write(*,*) "By the way: '&GENERATEWAY  the capture generate way = "
             write(*,*)  "0 by Locally ,center uniform way; 1 by from MC configuration,Directly)"
@@ -148,66 +165,6 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
             stop
         end if
 
-
-        select case(this%CaptureGenerateWay)
-            case(CaptureGenWay_ByCentUniform_Locally)
-                write(*,*) "The capture generate way is by Locally ,center uniform way"
-
-                call this%ResolveCapCtrlFile_ByCentUniform(hFile,Host_Boxes,Host_SimuCtrlParam)
-
-            case(CaptureGenWay_ByMCConfig_Locally_Directly)
-                write(*,*) "The capture generate way is by MC Configuration, directly"
-
-                call this%ResolveCapCtrlFile_FormMCConfig(hFile,Host_Boxes,Host_SimuCtrlParam)
-
-            case default
-                write(*,*) "MCPSCUERROR: Unknown way to generate capture(0 by uniform way, 1 by from MC configuration,Directly)"
-                write(*,*) this%CaptureGenerateWay
-                pause
-                stop
-        end select
-
-        return
-
-    end subroutine
-
-
-    subroutine ResolveCapCtrlFile_ByCentUniform(this,hFile,Host_Boxes,Host_SimuCtrlParam)
-        implicit none
-        !---Dummy Vars---
-        CLASS(CaptureCal)::this
-        integer,intent(in)::hFile
-        type(SimulationBoxes)::Host_Boxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
-
-    end subroutine ResolveCapCtrlFile_ByCentUniform
-
-
-    subroutine ResolveCapCtrlFile_FormMCConfig(this,hFile,Host_Boxes,Host_SimuCtrlParam)
-        implicit none
-        !---Dummy Vars---
-        CLASS(CaptureCal)::this
-        integer,intent(in)::hFile
-        type(SimulationBoxes)::Host_Boxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
-        !---Local Vars---
-        integer::LINE
-        character*1000::STR
-        character*30::KEYWORD
-        character*200::STRTMP(10)
-        integer::N
-        logical::Finded
-
-        !---Body---
-        if(.not. allocated(this%m_CascadeCenter) .or. &
-           .not. allocated(this%m_maxDistance) .or.   &
-           .not. allocated(this%m_NVACInEachBox) .or. &
-           .not. allocated(this%m_RSIADistributeToCent) .or. &
-           .not. allocated(this%m_ROutAbsorbToCent)) then
-           write(*,*) "MCPSCUERROR: You must initial the CaptureCal object before resolve the capture info file"
-           pause
-           stop
-        end if
 
         LINE = 0
         Finded = .false.
@@ -400,54 +357,6 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
             call UPCASE(KEYWORD)
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
-                case("&MCCFGPATH")
-                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special the MC Configuration path."
-                        pause
-                        stop
-                    end if
-                    this%MCCfgPath = adjustl(trim(STRTMP(1)))
-
-                    if(IsAbsolutePath(this%MCCfgPath)) then
-                        this%MCCfgPath = adjustl(trim(this%MCCfgPath))
-                    else
-                        if(LENTRIM(adjustl(Host_SimuCtrlParam%InputFilePath)) .GT. 0) then
-                            this%MCCfgPath = adjustl(trim(Host_SimuCtrlParam%InputFilePath))//FolderSpe//adjustl(trim(this%MCCfgPath))
-                        else
-                            this%MCCfgPath = adjustl(trim(this%MCCfgPath))
-                        end if
-                    endif
-
-
-                    write(*,*) this%MCCfgPath
-                    Finded = .true.
-            end select
-        END DO
-
-        if(Finded .eq. .false.) then
-           write(*,*) "MCPSCUERROR: You must special the MC Configuration path."
-           pause
-           stop
-        end if
-
-        LINE = 0
-        Finded = .false.
-        rewind(hFile)
-        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
-            LINE = LINE + 1
-            STR = adjustl(STR)
-            call RemoveComments(STR,"!")
-
-            if(LENTRIM(STR) .LE. 0) then
-                cycle
-            end if
-
-            call GETKEYWORD("&",STR,KEYWORD)
-
-            call UPCASE(KEYWORD)
-
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&CALCAPINFOPATH")
                     call EXTRACT_SUBSTR(STR,1,N,STRTMP)
                     if(N .LT. 1) then
@@ -475,6 +384,291 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
         if(Finded .eq. .false.) then
            write(*,*) "MCPSCUERROR: You must special the capture info path."
+           pause
+           stop
+        end if
+
+        select case(this%CaptureGenerateWay)
+            case(CaptureGenWay_ByCentUniform_Locally)
+                write(*,*) "The capture generate way is by Locally ,center uniform way"
+
+                call this%ResolveCapCtrlFile_ByCentUniform(hFile,Host_Boxes,Host_SimuCtrlParam)
+
+            case(CaptureGenWay_ByMCConfig_Locally_Directly)
+                write(*,*) "The capture generate way is by MC Configuration, directly"
+
+                call this%ResolveCapCtrlFile_FormMCConfig(hFile,Host_Boxes,Host_SimuCtrlParam)
+
+            case default
+                write(*,*) "MCPSCUERROR: Unknown way to generate capture(0 by uniform way, 1 by from MC configuration,Directly)"
+                write(*,*) this%CaptureGenerateWay
+                pause
+                stop
+        end select
+
+        return
+
+    end subroutine
+
+
+    subroutine ResolveCapCtrlFile_ByCentUniform(this,hFile,Host_Boxes,Host_SimuCtrlParam)
+        implicit none
+        !---Dummy Vars---
+        CLASS(CaptureCal)::this
+        integer,intent(in)::hFile
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        !---Local Vars---
+        character*1000::STR
+        integer::LINE
+        character*32::KEYWORD
+        character*1000::STRTMP(10)
+        integer::N
+        logical::Finded
+        integer::I
+        !---Body---
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&VACNUMBER")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the VAC number in one box."
+                        pause
+                        stop
+                    end if
+                    this%UDef_NVAC = ISTR(STRTMP(1))
+
+                    if(this%UDef_NVAC .LE. 0) then
+                        write(*,*) "MCPSCUERROR: The VAC number cannot less than 0"
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the VAC number in one box."
+           pause
+           stop
+        end if
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&VACSIZE")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the VAC size in one box."
+                        pause
+                        stop
+                    end if
+                    this%UDef_VACSIZE = ISTR(STRTMP(1))
+
+                    if(this%UDef_VACSIZE .LE. 0) then
+                        write(*,*) "MCPSCUERROR: The VAC size cannot less than 0"
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the VAC number in one box."
+           pause
+           stop
+        end if
+
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&RVACINCLUDE")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the VAC included radius in one box."
+                        pause
+                        stop
+                    end if
+                    this%UDef_RVACINCLUDE = DRSTR(STRTMP(1))
+
+                    if(this%UDef_RVACINCLUDE .LE. 0) then
+                        write(*,*) "MCPSCUERROR: The VAC included radius cannot less than 0"
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the VAC included radius in one box."
+           pause
+           stop
+        end if
+
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&CASCADECENTERPOS")
+                    call EXTRACT_NUMB(STR,3,N,STRTMP)
+                    if(N .LT. 3) then
+                        write(*,*) "MCPSCUERROR: You must special the three position of user defined cascade center."
+                        pause
+                        stop
+                    end if
+                    this%UDef_CascadeCent(1) = Host_Boxes%BOXBOUNDARY(1,1) + DRSTR(STRTMP(1))*Host_Boxes%BOXSIZE(1)
+                    this%UDef_CascadeCent(2) = Host_Boxes%BOXBOUNDARY(2,1) + DRSTR(STRTMP(2))*Host_Boxes%BOXSIZE(2)
+                    this%UDef_CascadeCent(3) = Host_Boxes%BOXBOUNDARY(3,1) + DRSTR(STRTMP(3))*Host_Boxes%BOXSIZE(3)
+
+                    DO I = 1,3
+                        if(this%UDef_CascadeCent(1) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                           this%UDef_CascadeCent(1) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                           write(*,*) "MCPSCUERROR: The user defined cascade center cannot exit the box boundary"
+                           write(*,*) "cascade center: ",this%UDef_CascadeCent(I)
+                           write(*,*) "box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                           pause
+                           stop
+                        end if
+                    END DO
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the three position of user defined cascade center."
+           pause
+           stop
+        end if
+
+
+        return
+    end subroutine ResolveCapCtrlFile_ByCentUniform
+
+
+    subroutine ResolveCapCtrlFile_FormMCConfig(this,hFile,Host_Boxes,Host_SimuCtrlParam)
+        implicit none
+        !---Dummy Vars---
+        CLASS(CaptureCal)::this
+        integer,intent(in)::hFile
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        !---Local Vars---
+        integer::LINE
+        character*1000::STR
+        character*30::KEYWORD
+        character*200::STRTMP(10)
+        integer::N
+        logical::Finded
+
+        !---Body---
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&MCCFGPATH")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the MC Configuration path."
+                        pause
+                        stop
+                    end if
+                    this%MCCfgPath = adjustl(trim(STRTMP(1)))
+
+                    if(IsAbsolutePath(this%MCCfgPath)) then
+                        this%MCCfgPath = adjustl(trim(this%MCCfgPath))
+                    else
+                        if(LENTRIM(adjustl(Host_SimuCtrlParam%InputFilePath)) .GT. 0) then
+                            this%MCCfgPath = adjustl(trim(Host_SimuCtrlParam%InputFilePath))//FolderSpe//adjustl(trim(this%MCCfgPath))
+                        else
+                            this%MCCfgPath = adjustl(trim(this%MCCfgPath))
+                        end if
+                    endif
+
+
+                    write(*,*) this%MCCfgPath
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the MC Configuration path."
            pause
            stop
         end if
@@ -646,6 +840,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = other%CaptureGenerateWay
         this%NSIA = other%NSIA
         this%SIASIZE = other%SIASIZE
+        this%UDef_NVAC = other%UDef_NVAC
+        this%UDef_VACSIZE = other%UDef_VACSIZE
+        this%UDef_RVACINCLUDE = other%UDef_RVACINCLUDE
+        this%UDef_CascadeCent = other%UDef_CascadeCent
 
         this%RSIADistributeToCent_Type = other%RSIADistributeToCent_Type
         this%RSIADistributeToCent_Value = other%RSIADistributeToCent_Value
@@ -689,6 +887,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         this%NSIA = 0
         this%SIASIZE = 1
+        this%UDef_NVAC = 0
+        this%UDef_VACSIZE = 1
+        this%UDef_RVACINCLUDE = 0.D0
+        this%UDef_CascadeCent = 0.5D0
 
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
         this%RSIADistributeToCent_Value = 0.D0
