@@ -1,6 +1,6 @@
 &CTLF
   &COMMSUBCTL
-    &BOX box in one test = 80 , total num = 80 , independent = 1
+    &BOX box in one test = 3 , total num = 3 , independent = 1
     &RANDSEED random number seed = 8845, 63879542
   &ENDSUBCTL
 

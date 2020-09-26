@@ -536,7 +536,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                         pause
                         stop
                     end if
-                    this%UDef_RVACINCLUDE = DRSTR(STRTMP(1))
+                    this%UDef_RVACINCLUDE = DRSTR(STRTMP(1))*Host_Boxes%LatticeLength
 
                     if(this%UDef_RVACINCLUDE .LE. 0) then
                         write(*,*) "MCPSCUERROR: The VAC included radius cannot less than 0"

@@ -109,6 +109,9 @@ program Main_MC_HomogenizeBox
 
     call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
+    call resolveAddOnData(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
+    call resolveModelRelativeData(Host_SimuCtrlParamList%theSimulationCtrlParam%ModelData,Host_Boxes%Atoms_list)
+
     call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,ConfigFile,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 
     write(*,*) "The KMC Configuration version is: ",TheVersion

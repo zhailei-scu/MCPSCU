@@ -108,8 +108,8 @@ module MC_ConstructCaptureBox
         integer::I
         type(DiffusorValue)::TheDiffusorValue
         real(kind=KINDDF)::RR
-        real(kind=KINDDF)::ZDirection
-        real(kind=KINDDF)::XDirection
+        real(kind=KINDDF)::ArrowLen
+        real(kind=KINDDF)::Vector(3)
         integer::IIC
         integer::NCUSed
         integer::RecordIndex
@@ -132,6 +132,9 @@ module MC_ConstructCaptureBox
             stop
         end if
 
+        SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
+        VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
+
         !*******Put in VAC ****************************************
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,TheCaptureCal%UDef_NVAC)
         IC = 0
@@ -144,12 +147,16 @@ module MC_ConstructCaptureBox
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
                 RR = TheCaptureCal%UDef_RVACINCLUDE*DRAND32()
-                ZDirection = DRAND32()*CP_PI
-                XDirection = DRAND32()*2*CP_PI
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = TheCaptureCal%UDef_CascadeCent(1) + RR*sin(ZDirection)*cos(XDirection)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%UDef_CascadeCent(2) + RR*sin(ZDirection)*sin(XDirection)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(3) + RR*cos(ZDirection)
+                ArrowLen = 0.D0
+                DO I = 1,3
+                    Vector(I) = DRAND32() - 0.5D0
+                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                END DO
+                ArrowLen = DSQRT(ArrowLen)
 
+                DO I = 1,3
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(I) + RR*Vector(I)/ArrowLen
+                END DO
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
@@ -350,12 +357,16 @@ module MC_ConstructCaptureBox
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheCaptureCal%SIASIZE
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
-                ZDirection = DRAND32()*CP_PI
-                XDirection = DRAND32()*2*CP_PI
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = TheCaptureCal%m_CascadeCenter(IBox,1) + TheCaptureCal%m_RSIADistributeToCent(IBox)*sin(ZDirection)*cos(XDirection)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%m_CascadeCenter(IBox,2) + TheCaptureCal%m_RSIADistributeToCent(IBox)*sin(ZDirection)*sin(XDirection)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%m_CascadeCenter(IBox,3) + TheCaptureCal%m_RSIADistributeToCent(IBox)*cos(ZDirection)
+                ArrowLen = 0.D0
+                DO I = 1,3
+                    Vector(I) = DRAND32() - 0.5D0
+                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                END DO
+                ArrowLen = DSQRT(ArrowLen)
 
+                DO I = 1,3
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                END DO
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
@@ -468,9 +479,9 @@ module MC_ConstructCaptureBox
         integer::NCUsed
         integer::NC
         integer::RecordIndex
-        real(kind=KINDDF)::ZDirection
-        real(kind=KINDDF)::XDirection
         character*30::TheVersion
+        real(kind=KINDDF)::ArrowLen
+        real(kind=KINDDF)::Vector(3)
         !-----------Body--------------
         if(.not. allocated(TheCaptureCal%m_CascadeCenter) .or. &
            .not. allocated(TheCaptureCal%m_maxDistance) .or.   &
@@ -481,6 +492,9 @@ module MC_ConstructCaptureBox
            pause
            stop
         end if
+
+        call resolveAddOnData(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
+        call resolveModelRelativeData(Host_SimuCtrlParamList%theSimulationCtrlParam%ModelData,Host_Boxes%Atoms_list)
 
         call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,TheCaptureCal%MCCfgPath,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 
@@ -670,11 +684,16 @@ module MC_ConstructCaptureBox
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheCaptureCal%SIASIZE
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
-                ZDirection = DRAND32()*CP_PI
-                XDirection = DRAND32()*2*CP_PI
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) = TheCaptureCal%m_CascadeCenter(IBox,1) + TheCaptureCal%m_RSIADistributeToCent(IBox)*sin(ZDirection)*cos(XDirection)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%m_CascadeCenter(IBox,2) + TheCaptureCal%m_RSIADistributeToCent(IBox)*sin(ZDirection)*sin(XDirection)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%m_CascadeCenter(IBox,3) + TheCaptureCal%m_RSIADistributeToCent(IBox)*cos(ZDirection)
+                ArrowLen = 0.D0
+                DO I = 1,3
+                    Vector(I) = DRAND32() - 0.5D0
+                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                END DO
+                ArrowLen = DSQRT(ArrowLen)
+
+                DO I = 1,3
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,1) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                END DO
 
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
