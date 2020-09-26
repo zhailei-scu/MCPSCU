@@ -61,7 +61,7 @@ $(tgt)$(Segment)MigCoale_AddOnData_Dev.o : $(sor)$(Segment)MigCoale_AddOnData_De
 			      	                             $(tgt)$(Segment)MigCoale_AddOnData_Host.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_TYPEDEF_CaptureCal_CPU.o : $(sor)$(Segment)MigCoale_TYPEDEF_CaptureCal_CPU.F90	\
+$(tgt)$(Segment)MigCoale_TYPEDEF_CaptureCal_CPU.o : $(sor)$(Segment)MigCoale_TYPEDEF_CaptureCal_CPU.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MigCoale_TYPEDEF_CaptureCal_GPU.o : $(sor)$(Segment)MigCoale_TYPEDEF_CaptureCal_GPU.F90	\
