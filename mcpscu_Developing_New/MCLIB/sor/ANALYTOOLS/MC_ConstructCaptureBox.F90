@@ -792,8 +792,8 @@ program Main_MC_ConstructCaptureBox
     !--Body---
     arg_Num = Command_Argument_Count()
 
-    if(arg_Num .LT. 2) then
-        write(*,*) "MCPSCUERROR: You must special the sample file,capture control file"
+    if(arg_Num .LT. 1) then
+        write(*,*) "MCPSCUERROR: You must special the sample file"
         pause
         stop
     end if
