@@ -5,6 +5,7 @@ module MC_StatisticClusters_Offline
     implicit none
 
     logical,private::FirstTimeVist = .true.
+    logical::m_CheckSIAAndVACNum = .false.
 
     contains
 
@@ -901,13 +902,15 @@ module MC_StatisticClusters_Offline
                 NBox_NVAC_GT1 = NBox_NVAC_GT1 + 1
             end if
 
-            if((NAVAEachBox_SIA(p_ACTIVEFREE_STATU) + NAVAEachBox_SIA(p_ACTIVEINGB_STATU)) .ne. (NAVAEachBox_Vac(p_ACTIVEFREE_STATU) + NAVAEachBox_Vac(p_ACTIVEINGB_STATU))) then
-                write(*,*) "MCPSCUERROR: It is impossible that SIA atoms number is not equal with VAC"
-                write(*,*) "In Box: ", IBox
-                write(*,*) "Total SIA atoms number: ",(NAVAEachBox_SIA(p_ACTIVEFREE_STATU) + NAVAEachBox_SIA(p_ACTIVEINGB_STATU))
-                write(*,*) "Total VAC atoms number: ",(NAVAEachBox_Vac(p_ACTIVEFREE_STATU) + NAVAEachBox_Vac(p_ACTIVEINGB_STATU))
-                pause
-                stop
+            if(m_CheckSIAAndVACNum .eq. .true.) then
+                if((NAVAEachBox_SIA(p_ACTIVEFREE_STATU) + NAVAEachBox_SIA(p_ACTIVEINGB_STATU)) .ne. (NAVAEachBox_Vac(p_ACTIVEFREE_STATU) + NAVAEachBox_Vac(p_ACTIVEINGB_STATU))) then
+                    write(*,*) "MCPSCUERROR: It is impossible that SIA atoms number is not equal with VAC"
+                    write(*,*) "In Box: ", IBox
+                    write(*,*) "Total SIA atoms number: ",(NAVAEachBox_SIA(p_ACTIVEFREE_STATU) + NAVAEachBox_SIA(p_ACTIVEINGB_STATU))
+                    write(*,*) "Total VAC atoms number: ",(NAVAEachBox_Vac(p_ACTIVEFREE_STATU) + NAVAEachBox_Vac(p_ACTIVEINGB_STATU))
+                    pause
+                    stop
+                end if
             end if
 
 
@@ -1026,6 +1029,7 @@ program Main_StatisticClusters_Offline
     integer::GTNAtom
     logical::exits
     character*30::TheVersion
+    character*30::WheterCheckSIAAndVACNum
     !-----------Body--------------
     arg_Num = Command_Argument_Count()
 
@@ -1040,6 +1044,26 @@ program Main_StatisticClusters_Offline
     call Get_Command_Argument(1,ARG)
     Read(ARG,fmt="(A256)") SampleFile
     write(*,*) "The sample file is: ",SampleFile
+
+    if(arg_Num .GT. 1) then
+        call Get_Command_Argument(2,ARG)
+        Read(ARG,fmt="(A256)") WheterCheckSIAAndVACNum
+
+        WheterCheckSIAAndVACNum = adjustl(trim(WheterCheckSIAAndVACNum))
+        call UPCASE(WheterCheckSIAAndVACNum)
+
+        select case(WheterCheckSIAAndVACNum(1:LENTRIM(WheterCheckSIAAndVACNum)))
+            case("TRUE")
+                m_CheckSIAAndVACNum = .true.
+            case("FALSE")
+                m_CheckSIAAndVACNum = .false.
+            case default
+                write(*,*) "MCPSCUERROR: You must special true or false for whether Check SIA And VAC Number"
+                write(*,*) ARG
+                pause
+                stop
+        end select
+    end if
 
     !*********Create/Open log file********************
     call OpenLogFile(m_hFILELOG)
