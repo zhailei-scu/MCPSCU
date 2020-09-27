@@ -1052,17 +1052,16 @@ program Main_StatisticClusters_Offline
         WheterCheckSIAAndVACNum = adjustl(trim(WheterCheckSIAAndVACNum))
         call UPCASE(WheterCheckSIAAndVACNum)
 
-        select case(WheterCheckSIAAndVACNum(1:LENTRIM(WheterCheckSIAAndVACNum)))
-            case("TRUE")
-                m_CheckSIAAndVACNum = .true.
-            case("FALSE")
-                m_CheckSIAAndVACNum = .false.
-            case default
-                write(*,*) "MCPSCUERROR: You must special true or false for whether Check SIA And VAC Number"
-                write(*,*) ARG
-                pause
-                stop
-        end select
+        if(IsStrEqual(WheterCheckSIAAndVACNum(1:LENTRIM(WheterCheckSIAAndVACNum)),"TRUE")) then
+            m_CheckSIAAndVACNum = .true.
+        else if(IsStrEqual(WheterCheckSIAAndVACNum(1:LENTRIM(WheterCheckSIAAndVACNum)),"FALSE")) then
+            m_CheckSIAAndVACNum = .true.
+        else
+            write(*,*) "MCPSCUERROR: You must special true or false for whether Check SIA And VAC Number"
+            write(*,*) ARG ,WheterCheckSIAAndVACNum
+            pause
+            stop
+        end if
     end if
 
     !*********Create/Open log file********************
