@@ -5,7 +5,7 @@ module MC_StatisticClusters_Offline
     implicit none
 
     logical,private::FirstTimeVist = .true.
-    logical::m_CheckSIAAndVACNum = .false.
+    logical::m_CheckSIAAndVACNum = .true.
 
     contains
 
