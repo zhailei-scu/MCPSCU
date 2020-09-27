@@ -1047,7 +1047,7 @@ program Main_StatisticClusters_Offline
 
     if(arg_Num .GT. 1) then
         call Get_Command_Argument(2,ARG)
-        Read(ARG,fmt="(A256)") WheterCheckSIAAndVACNum
+        Read(ARG,fmt="(A30)") WheterCheckSIAAndVACNum
 
         WheterCheckSIAAndVACNum = adjustl(trim(WheterCheckSIAAndVACNum))
         call UPCASE(WheterCheckSIAAndVACNum)
