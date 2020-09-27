@@ -1055,7 +1055,7 @@ program Main_StatisticClusters_Offline
         if(IsStrEqual(WheterCheckSIAAndVACNum(1:LENTRIM(WheterCheckSIAAndVACNum)),"TRUE")) then
             m_CheckSIAAndVACNum = .true.
         else if(IsStrEqual(WheterCheckSIAAndVACNum(1:LENTRIM(WheterCheckSIAAndVACNum)),"FALSE")) then
-            m_CheckSIAAndVACNum = .true.
+            m_CheckSIAAndVACNum = .false.
         else
             write(*,*) "MCPSCUERROR: You must special true or false for whether Check SIA And VAC Number"
             write(*,*) ARG ,WheterCheckSIAAndVACNum
