@@ -2377,9 +2377,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     IState = cudaThreadSynchronize()
 
-    !call Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen_Sweepout(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
+    call Cal_Neighbore_Table_GPU_Nearest_ArbitrayBitonicSortX_multipleBox_noShared_LeftRightCohen_Sweepout(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,MaxDiffuse)
 
-    !IState = cudaThreadSynchronize()
+    IState = cudaThreadSynchronize()
 
 
     return
@@ -3313,12 +3313,14 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                          Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
                                                          Dev_Boxes%dm_SEExpdIndexBox,                   &
                                                          Dev_Boxes%dm_BitionicSort%SortedCellIndex_Dev, &
+                                                         Dev_Boxes%dm_BitionicSort%SortedIndex_ForCell_Dev, &
                                                          CellsNumOneDim)
     else
         call ConstructMappedArray_LC<<<blocks,threads>>>(BlockNumEachBox,                               &
                                                          Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
                                                          Dev_Boxes%dm_SEUsedIndexBox,                   &
                                                          Dev_Boxes%dm_BitionicSort%SortedCellIndex_Dev, &
+                                                         Dev_Boxes%dm_BitionicSort%SortedIndex_ForCell_Dev, &
                                                          CellsNumOneDim)
 
     end if
@@ -3403,6 +3405,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                         Dev_Clusters,                 &
                                                         Dev_SEExpdIndexBox_ForBox,    &
                                                         Dev_MappedArray,              &
+                                                        SortedIndex_ForCell_Dev,      &
                                                         CellsNumOneDim)
     implicit none
     !--Dummy Vars---
@@ -3410,6 +3413,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     type(ACluster), device::Dev_Clusters(:)
     integer, device::Dev_SEExpdIndexBox_ForBox(:,:)
     integer,device::Dev_MappedArray(:)
+    integer,device::SortedIndex_ForCell_Dev(:)
     integer,value::CellsNumOneDim
     !---Local Vars---
     integer::IBox
@@ -3448,9 +3452,13 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
         IYCell = int((Pos_Y - dm_BOXBOUNDARY(2,1))/(dm_BOXSIZE(2)/CellsNumOneDim))
         IZCell = int((Pos_Z - dm_BOXBOUNDARY(3,1))/(dm_BOXSIZE(3)/CellsNumOneDim))
 
+
+
         IDCell = ICellStart + IZCell*CellsNumOneDim*CellsNumOneDim + IYCell*CellsNumOneDim + IXCell
 
         Dev_MappedArray(IC) = IDCell
+
+        SortedIndex_ForCell_Dev(IC) = IC
     end if
 
     return
@@ -3705,6 +3713,15 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 !                            write(*,*) IDCell,JDCell,JCFrom,JCTo
 !                        end if
 
+                        if(JCTo .LT. scid) then
+                            write(*,*) "JCFrom JCTo ",JCFrom,JCTo
+                        end if
+
+                        if(JCTo .GT. ecid) then
+                            write(*,*) "JCFrom JCTo ",JCFrom,JCTo
+                        end if
+
+
                         DO JC = JCFrom,JCTo
                             MappedJC = Dev_MappedArray(JC)
 
@@ -3808,6 +3825,16 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 !                        if(IBox .eq. 1) then
 !                            write(*,*) IDCell,JDCell,JCFrom,JCTo
 !                        end if
+
+
+                        if(JCTo .LT. scid) then
+                            write(*,*) "JCFrom JCTo ",JCFrom,JCTo
+                        end if
+
+                        if(JCTo .GT. ecid) then
+                            write(*,*) "JCFrom JCTo ",JCFrom,JCTo
+                        end if
+
 
                         DO JC = JCFrom,JCTo
                             MappedJC = Dev_MappedArray(JC)
@@ -3915,6 +3942,14 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 !                        if(IBox .eq. 1) then
 !                            write(*,*) IDCell,JDCell,JCFrom,JCTo
 !                        end if
+
+                        if(JCTo .LT. scid) then
+                            write(*,*) "JCFrom JCTo ",JCFrom,JCTo
+                        end if
+
+                        if(JCTo .GT. ecid) then
+                            write(*,*) "JCFrom JCTo ",JCFrom,JCTo
+                        end if
 
                         DO JC = JCFrom,JCTo
                             MappedJC = Dev_MappedArray(JC)

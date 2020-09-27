@@ -72,6 +72,7 @@ module MCLIB_Utilities_GPU
 	integer,device,dimension(:),allocatable::SortedIndexY_Dev
 	integer,device,dimension(:),allocatable::ReverseSortedIndexY_Dev
 	integer,device,dimension(:),allocatable::SortedCellIndex_Dev
+	integer,device,dimension(:),allocatable::SortedIndex_ForCell_Dev
 	integer::MaxSegmentsNumEachBox = 0
 	integer::MaxSegmentsNumAllBox = 0
 	integer::MaxClusterNumEachBox = 0
@@ -3134,6 +3135,7 @@ module MCLIB_Utilities_GPU
     call AllocateArray_GPU(this%SortedIndexY_Dev,TotalNC,"this%SortedIndexY_Dev")
     call AllocateArray_GPU(this%ReverseSortedIndexY_Dev,TotalNC,"this%ReverseSortedIndexY_Dev")
     call AllocateArray_GPU(this%SortedCellIndex_Dev,TotalNC,"this%SortedCellIndex_Dev")
+    call AllocateArray_GPU(this%SortedIndex_ForCell_Dev,TotalNC,"this%SortedIndex_ForCell_Dev")
 
 	BXGlobal = p_BLOCKSIZE_BITONIC
 	BYGlobal = 1
@@ -3187,6 +3189,10 @@ module MCLIB_Utilities_GPU
 
     if(allocated(this%SortedCellIndex_Dev)) then
         deallocate(this%SortedCellIndex_Dev)
+    end if
+
+    if(allocated(this%SortedIndex_ForCell_Dev)) then
+        deallocate(this%SortedIndex_ForCell_Dev)
     end if
 
 	this%MaxSegmentsNumEachBox = 0
@@ -3999,10 +4005,10 @@ module MCLIB_Utilities_GPU
     !---Body---
 
 	if (this%MaxClusterNumEachBox .LE. p_BLOCKSIZE_BITONIC) then
-		call Kernel_Shared_ArbitraryBitonicSort_toApply_OnlyKey<<<this%blocksShared,this%threadsShared>>>(this%SortedCellIndex_Dev,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
+		call Kernel_Shared_ArbitraryBitonicSort_toApply_IKey<<<this%blocksShared,this%threadsShared>>>(this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
 	else
 
-		call Kernel_Shared_Merge_toApply_OnlyKey<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,this%SortedCellIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
+		call Kernel_Shared_Merge_toApply_IKey<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
 
 
 !        write(*,*) "****************Kernel_Shared_Merge_toApply*************************"
@@ -4017,9 +4023,9 @@ module MCLIB_Utilities_GPU
             Do While(Stride .GE. 0)
                 if(Stride .GE. 1) then
 
-                    call Kernel_GlobalMerge_Pre_toApply_OnlyKey<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,this%SortedCellIndex_Dev,this%dir,this%OEFlags_Dev)
+                    call Kernel_GlobalMerge_Pre_toApply_IKey<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%dir,this%OEFlags_Dev)
 
-					call Kernel_GlobalMerge_toApply_OnlyKey<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,this%SortedCellIndex_Dev,this%dir,this%OEFlags_Dev)
+					call Kernel_GlobalMerge_toApply_IKey<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%dir,this%OEFlags_Dev)
 
 
 !					        write(*,*) "****************Kernel_GlobalMerge_toApply*************************",TheSize,Stride
@@ -4028,7 +4034,7 @@ module MCLIB_Utilities_GPU
 
                 else
 
-                    call Kernel_Shared_Merge_Last_toApply_OnlyKey<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,this%SortedCellIndex_Dev,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
+                    call Kernel_Shared_Merge_Last_toApply_IKey<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%IDStartEnd_ForSort_Dev,this%dir,TheSize)
 
 
 !                            write(*,*) "****************Kernel_Shared_Merge_Last_toApply*************************",TheSize,Stride
@@ -4046,11 +4052,13 @@ module MCLIB_Utilities_GPU
 
   end subroutine ArbitraryBitonicSortCellID_toApply
 
-  attributes(device) subroutine Comparetor_toApply_Shared_OnlyKey(KeyA,KeyB,dir)
+  attributes(device) subroutine Comparetor_toApply_Shared_IKey(KeyA,KeyB,ValueA,ValueB,dir)
     implicit none
     !---Dummy Vars---
     integer::KeyA
     integer::KeyB
+    integer::ValueA
+    integer::ValueB
     integer::dir
     !--Local Vars---
     real(kind=KINDDF)::tempKey
@@ -4060,22 +4068,29 @@ module MCLIB_Utilities_GPU
 		tempKey = KeyA
 		KeyA = KeyB
 		KeyB = tempKey
+
+		tempValue = ValueA
+		ValueA = ValueB
+        ValueB = ValueA
     end if
 
     return
-  end subroutine Comparetor_toApply_Shared_OnlyKey
+  end subroutine Comparetor_toApply_Shared_IKey
 
 
-  attributes(device) subroutine ComparetorX_toApply_Global_OnlyKey(posA,posB,KeyArray,dir)
+  attributes(device) subroutine ComparetorX_toApply_Global_IKey(posA,posB,KeyArray,ValueArray,dir)
     implicit none
     !---Dummy Vars---
     integer::posA
     integer::posB
     integer,device::KeyArray(:)
+    integer,device::ValueArray(:)
     integer::dir
     !--Local Vars---
     integer::KeyA
     integer::KeyB
+    integer::ValueA
+    integer::ValueB
     !---Body---
     KeyA = KeyArray(posA)
     KeyB = KeyArray(posB)
@@ -4083,16 +4098,22 @@ module MCLIB_Utilities_GPU
     if((KeyA .GT. KeyB) .eq. (dir .eq. p_Sort_Ascending) ) then
 		KeyArray(posA) = KeyB
         KeyArray(posB) = KeyA
+
+        ValueA = ValueArray(posA)
+        ValueB = ValueArray(posB)
+        ValueArray(posA) = ValueB
+        ValueArray(posB) = ValueA
     end if
 
     return
-  end subroutine ComparetorX_toApply_Global_OnlyKey
+  end subroutine ComparetorX_toApply_Global_IKey
 
   !/*Used For Array Size less than BLOCKSIZE And is not of power 2*/
-  attributes(global) subroutine Kernel_Shared_ArbitraryBitonicSort_toApply_OnlyKey(KeyArray,IDStartEnd_ForSort,dir,padNum)
+  attributes(global) subroutine Kernel_Shared_ArbitraryBitonicSort_toApply_IKey(KeyArray,ValueArray,IDStartEnd_ForSort,dir,padNum)
     implicit none
     !---Dummy Vars---
     integer,device::KeyArray(:)
+    integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
     real(kind=KINDDF),value::padNum
@@ -4107,6 +4128,7 @@ module MCLIB_Utilities_GPU
     integer::IDRelative
     integer::SegmentSize
     integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_KeysArray
+    integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_ValueArray
     integer::I
     integer::stride
     integer::LeftHalf
@@ -4121,11 +4143,13 @@ module MCLIB_Utilities_GPU
 	Share_KeysArray(tid) = padNum
 	if (IDRelative .LE. ICEnd) then
 		Share_KeysArray(tid) = KeyArray(IDRelative)
+		Share_ValueArray(tid) = ValueArray(IDRelative)
 	end if
 
 	Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = padNum
 	if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
 		Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2)
+		Share_ValueArray(tid + p_BLOCKSIZE_BITONIC / 2) = ValueArray(IDRelative + p_BLOCKSIZE_BITONIC / 2)
 	end if
 
 	LastPowerTwo = 1
@@ -4149,7 +4173,7 @@ module MCLIB_Utilities_GPU
 
             pos = 2 * (tid -1) - IAND(tid-1,stride - 1) + 1
 
-            call Comparetor_toApply_Shared_OnlyKey(Share_KeysArray(pos), Share_KeysArray(pos + stride), tempDir)
+            call Comparetor_toApply_Shared_IKey(Share_KeysArray(pos), Share_KeysArray(pos + stride),Share_ValueArray(pos),Share_ValueArray(pos + stride), tempDir)
 
             stride = ISHFT(stride,-1)
 
@@ -4165,7 +4189,7 @@ module MCLIB_Utilities_GPU
 
         pos = 2 * (tid -1) - IAND(tid-1,stride - 1) + 1
 
-        call Comparetor_toApply_Shared_OnlyKey(Share_KeysArray(pos), Share_KeysArray(pos + stride), dir)
+        call Comparetor_toApply_Shared_IKey(Share_KeysArray(pos), Share_KeysArray(pos + stride),Share_ValueArray(pos),Share_ValueArray(pos + stride), dir)
 
         stride = ISHFT(stride,-1)
     END DO
@@ -4174,17 +4198,19 @@ module MCLIB_Utilities_GPU
 
 	if (IDRelative .LE. ICEnd) then
 		KeyArray(IDRelative) = Share_KeysArray(tid)
+		ValueArray(IDRelative) = Share_ValueArray(tid)
 	end if
 
 	if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
 		KeyArray(IDRelative + p_BLOCKSIZE_BITONIC / 2) = Share_KeysArray(tid + p_BLOCKSIZE_BITONIC / 2)
+		ValueArray(IDRelative + p_BLOCKSIZE_BITONIC / 2) = Share_ValueArray(tid + p_BLOCKSIZE_BITONIC / 2)
 	end if
 
     return
-  end subroutine Kernel_Shared_ArbitraryBitonicSort_toApply_OnlyKey
+  end subroutine Kernel_Shared_ArbitraryBitonicSort_toApply_IKey
 
 
-  attributes(global) subroutine Kernel_GlobalMerge_Pre_toApply_OnlyKey(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray, dir, OEFlags)
+  attributes(global) subroutine Kernel_GlobalMerge_Pre_toApply_IKey(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray,ValueArray, dir, OEFlags)
     implicit none
     !---Dummy Vars----
     integer,value::BlockNumEachBox
@@ -4192,6 +4218,7 @@ module MCLIB_Utilities_GPU
     integer,value::SegmentsStride
     integer,device::IDStartEnd_ForSort(:,:)
     integer,device::KeyArray(:)
+    integer,device::ValueArray(:)
     integer,value::dir
     integer,device::OEFlags(:)
     !---Local Vars---
@@ -4251,9 +4278,9 @@ module MCLIB_Utilities_GPU
     END if
 
     return
-  end subroutine Kernel_GlobalMerge_Pre_toApply_OnlyKey
+  end subroutine Kernel_GlobalMerge_Pre_toApply_IKey
 
-  attributes(global) subroutine Kernel_GlobalMerge_toApply_OnlyKey(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray, dir, OEFlags)
+  attributes(global) subroutine Kernel_GlobalMerge_toApply_IKey(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray,ValueArray, dir, OEFlags)
     implicit none
     !---Dummy Vars----
     integer,value::BlockNumEachBox
@@ -4261,6 +4288,7 @@ module MCLIB_Utilities_GPU
     integer,value::SegmentsStride
     integer,device::IDStartEnd_ForSort(:,:)
     integer,device::KeyArray(:)
+    integer,device::ValueArray(:)
     integer,value::dir
     integer,device::OEFlags(:)
     !---Local Vars---
@@ -4312,18 +4340,19 @@ module MCLIB_Utilities_GPU
 
         if (pos .LE. ICSegEnd .AND. (pos + Stride) .LE. ICLevelEnd) then
 
-            call ComparetorX_toApply_Global_OnlyKey(pos, pos + Stride,KeyArray, tempDir)
+            call ComparetorX_toApply_Global_IKey(pos, pos + Stride,KeyArray,ValueArray, tempDir)
 
         end if
     end if
     return
-  end subroutine Kernel_GlobalMerge_toApply_OnlyKey
+  end subroutine Kernel_GlobalMerge_toApply_IKey
 
   !***********Used For Array Size less than BLOCKSIZE And is not of power 2******************
-  attributes(global) subroutine Kernel_Shared_Merge_toApply_OnlyKey(BlockNumEachBox_Share,KeyArray,IDStartEnd_ForSort,dir,padNum,TheSize)
+  attributes(global) subroutine Kernel_Shared_Merge_toApply_IKey(BlockNumEachBox_Share,KeyArray,ValueArray,IDStartEnd_ForSort,dir,padNum,TheSize)
     !---Dummy Vars----
     integer,value::BlockNumEachBox_Share
     integer,device::KeyArray(:)
+    integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
     real(kind=KINDDF),value::padNum
@@ -4346,6 +4375,7 @@ module MCLIB_Utilities_GPU
     integer::I
     integer::LeftHalf
     integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_KeyArray
+    integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_ValueArray
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y -1)*griddim%x + blockidx%x
@@ -4363,11 +4393,13 @@ module MCLIB_Utilities_GPU
 		Share_KeyArray(tid) = tempPadNum
 		if (IDRelative .LE. ICEnd) then
 			Share_KeyArray(tid) = KeyArray(IDRelative)
+			Share_ValueArray(tid) = ValueArray(IDRelative)
 		end if
 
 		Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = tempPadNum
 		if ((IDRelative + p_BLOCKSIZE_BITONIC/2) .LE. ICEnd) then
 			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2)
+			Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2) = ValueArray(IDRelative + p_BLOCKSIZE_BITONIC/2)
 		end if
 
 		LastPowerTwo = 1
@@ -4390,7 +4422,7 @@ module MCLIB_Utilities_GPU
 
                 pos = 2*(tid - 1) - IAND(tid-1,stride -1) + 1
 
-                call Comparetor_toApply_Shared_OnlyKey(Share_KeyArray(pos), Share_KeyArray(pos + stride),tempDir)
+                call Comparetor_toApply_Shared_IKey(Share_KeyArray(pos), Share_KeyArray(pos + stride),Share_ValueArray(pos), Share_ValueArray(pos + stride),tempDir)
 
                 stride = ISHFT(stride,-1)
             END DO
@@ -4406,7 +4438,7 @@ module MCLIB_Utilities_GPU
 
             pos = 2*(tid - 1) - IAND(tid-1,stride -1) + 1
 
-            call Comparetor_toApply_Shared_OnlyKey(Share_KeyArray(pos), Share_KeyArray(pos + stride),tempDir)
+            call Comparetor_toApply_Shared_IKey(Share_KeyArray(pos), Share_KeyArray(pos + stride),Share_ValueArray(pos), Share_ValueArray(pos + stride),tempDir)
 
             stride = ISHFT(stride,-1)
         END DO
@@ -4415,21 +4447,24 @@ module MCLIB_Utilities_GPU
 
 		if (IDRelative .LE. ICEnd) then
 			KeyArray(IDRelative) = Share_KeyArray(tid)
+			ValueArray(IDRelative) = Share_ValueArray(tid)
 		end if
 
 		if ((IDRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
 			KeyArray(IDRelative + p_BLOCKSIZE_BITONIC/2) = Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2)
+			ValueArray(IDRelative + p_BLOCKSIZE_BITONIC/2) = Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2)
 		end if
 
 	end if
-  end subroutine Kernel_Shared_Merge_toApply_OnlyKey
+  end subroutine Kernel_Shared_Merge_toApply_IKey
 
 
   !***********************Used For Array Size less than BLOCKSIZE And is not of power 2*****************************
-  attributes(global) subroutine Kernel_Shared_Merge_Last_toApply_OnlyKey(BlockNumEachBox_Share,KeyArray,IDStartEnd_ForSort,dir,TheSize)
+  attributes(global) subroutine Kernel_Shared_Merge_Last_toApply_IKey(BlockNumEachBox_Share,KeyArray,ValueArray,IDStartEnd_ForSort,dir,TheSize)
     !---Dummy Vars----
     integer,value::BlockNumEachBox_Share
     integer,device::KeyArray(:)
+    integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
     integer,value::TheSize
@@ -4459,6 +4494,7 @@ module MCLIB_Utilities_GPU
     integer::LevelSeg
     integer::LogicalToInt
     integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_KeyArray
+    integer,shared,dimension(p_BLOCKSIZE_BITONIC)::Share_ValueArray
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y -1)*griddim%x + blockidx%x
@@ -4475,10 +4511,12 @@ module MCLIB_Utilities_GPU
 
 		if (ICRelative .LE. ICEnd) then
 			Share_KeyArray(tid) = KeyArray(ICRelative)
+			Share_ValueArray(tid) = ValueArray(ICRelative)
 		end if
 
 		if ((ICRelative + p_BLOCKSIZE_BITONIC/2) .LE. ICEnd) then
 			Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2) = KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2)
+			Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2) = ValueArray(ICRelative + p_BLOCKSIZE_BITONIC/2)
 		end if
 
         tempDir = IEOR(mod(IDSegRelative/TheSize,2),dir)
@@ -4532,7 +4570,7 @@ module MCLIB_Utilities_GPU
 
 			if (pos .LE. tempICEnd) then
 
-				call Comparetor_toApply_Shared_OnlyKey(Share_KeyArray(pos), Share_KeyArray(pos + stride), tempDir)
+				call Comparetor_toApply_Shared_IKey(Share_KeyArray(pos), Share_KeyArray(pos + stride),Share_ValueArray(pos), Share_ValueArray(pos + stride), tempDir)
             end if
 
             LevelSeg = ISHFT(LevelSeg,-1)
@@ -4542,14 +4580,16 @@ module MCLIB_Utilities_GPU
 
 		if (ICRelative .LE. ICEnd) then
 			KeyArray(ICRelative) = Share_KeyArray(tid)
+			ValueArray(ICRelative) = Share_ValueArray(tid)
 		end if
 
 		if ((ICRelative + p_BLOCKSIZE_BITONIC / 2) .LE. ICEnd) then
 			KeyArray(ICRelative + p_BLOCKSIZE_BITONIC/2) = Share_KeyArray(tid + p_BLOCKSIZE_BITONIC/2)
+			ValueArray(ICRelative + p_BLOCKSIZE_BITONIC/2) = Share_ValueArray(tid + p_BLOCKSIZE_BITONIC/2)
 		end if
 
 	end if
-  end subroutine Kernel_Shared_Merge_Last_toApply_OnlyKey
+  end subroutine Kernel_Shared_Merge_Last_toApply_IKey
 
 
 
