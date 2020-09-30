@@ -82,6 +82,7 @@ module MCLIB_Utilities_GPU
     type(dim3)::threadsShared
     integer::dir = p_Sort_Ascending
     real(kind=KINDDF)::padNum = 1.D32
+    integer::padNumI = 1E10
     logical::HasInitedFlag = .false.
 
     contains
@@ -3069,8 +3070,10 @@ module MCLIB_Utilities_GPU
     this%dir = dir
 
     this%padNum = 1.D32
+    this%padNumI = 1E10
 	if (p_Sort_Descending .eq. dir) then
 		this%padNum = -1.D32
+		this%padNumI = -1E10
 	end if
 
 	this%MaxClusterNumEachBox = 0
@@ -3200,6 +3203,7 @@ module MCLIB_Utilities_GPU
 	this%MaxClusterNumEachBox = 0
     this%dir = p_Sort_Ascending
     this%padNum = 1.D32
+    this%padNumI = 1E10
     this%HasInitedFlag = .false.
 
     return
@@ -4005,11 +4009,10 @@ module MCLIB_Utilities_GPU
     !---Body---
 
 	if (this%MaxClusterNumEachBox .LE. p_BLOCKSIZE_BITONIC) then
-		call Kernel_Shared_ArbitraryBitonicSort_toApply_IKey<<<this%blocksShared,this%threadsShared>>>(this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%IDStartEnd_ForSort_Dev, this%dir, this%padNum)
+		call Kernel_Shared_ArbitraryBitonicSort_toApply_IKey<<<this%blocksShared,this%threadsShared>>>(this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%IDStartEnd_ForSort_Dev, this%dir, this%padNumI)
 	else
 
-		call Kernel_Shared_Merge_toApply_IKey<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
-
+		call Kernel_Shared_Merge_toApply_IKey<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,this%SortedCellIndex_Dev,this%SortedIndex_ForCell_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNumI,1)
 
 !        write(*,*) "****************Kernel_Shared_Merge_toApply*************************"
 !        call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
@@ -4061,7 +4064,7 @@ module MCLIB_Utilities_GPU
     integer::ValueB
     integer::dir
     !--Local Vars---
-    real(kind=KINDDF)::tempKey
+    integer::tempKey
     integer::tempValue
     !---Body---
     if((KeyA .GT. KeyB) .eq. (dir .eq. p_Sort_Ascending) ) then
@@ -4071,7 +4074,7 @@ module MCLIB_Utilities_GPU
 
 		tempValue = ValueA
 		ValueA = ValueB
-        ValueB = ValueA
+        ValueB = tempValue
     end if
 
     return
@@ -4116,7 +4119,7 @@ module MCLIB_Utilities_GPU
     integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
-    real(kind=KINDDF),value::padNum
+    integer,value::padNum
     !---Local Vars---
     integer::tid
     integer::bid
@@ -4355,7 +4358,7 @@ module MCLIB_Utilities_GPU
     integer,device::ValueArray(:)
     integer,device::IDStartEnd_ForSort(:,:)
     integer,value::dir
-    real(kind=KINDDF),value::padNum
+    integer,value::padNum
     integer,value::TheSize
     !---Local Vars---
     integer::tid
