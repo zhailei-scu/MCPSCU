@@ -9,6 +9,8 @@ module MC_ConstructCaptureBox
     use MIGCOALE_TYPEDEF_CAPTURECAL_CPU
     implicit none
 
+    logical::m_CheckSIARange = .true.
+
     contains
 
    !*****************************************************
@@ -177,9 +179,10 @@ module MC_ConstructCaptureBox
                                                                                                    Host_Boxes%LatticeLength)
                 end select
 
+
                 DO I = 1,3
                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                       (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                        (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                             write(*,*) "MCPSCUERROR: The new added SIA had exited the box boundary"
                             write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
                             write(*,*) "SIA position: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
@@ -289,11 +292,12 @@ module MC_ConstructCaptureBox
                 end if
             END DO
 
-
-            if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
-                write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%m_RSIADistributeToCent(IBox)
-                pause
-                stop
+            if(m_CheckSIARange .eq. .true.) then
+                if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
+                    write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%m_RSIADistributeToCent(IBox)
+                    pause
+                    stop
+                end if
             end if
 
             if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_ROutAbsorbToCent(IBox)) then
@@ -387,9 +391,10 @@ module MC_ConstructCaptureBox
                                                                                                    Host_Boxes%LatticeLength)
                 end select
 
+
                 DO I = 1,3
                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                       (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                        (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                             write(*,*) "MCPSCUERROR: The new added SIA had exited the box boundary"
                             write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
                             write(*,*) "SIA position: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
@@ -398,7 +403,6 @@ module MC_ConstructCaptureBox
                             stop
                     end if
                 END DO
-
 
                 Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
                 Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
@@ -616,11 +620,12 @@ module MC_ConstructCaptureBox
                 end if
             END DO
 
-
-            if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
-                write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%m_RSIADistributeToCent(IBox)
-                pause
-                stop
+            if(m_CheckSIARange .eq. .true.) then
+                if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
+                    write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%m_RSIADistributeToCent(IBox)
+                    pause
+                    stop
+                end if
             end if
 
             if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_ROutAbsorbToCent(IBox)) then
@@ -717,7 +722,7 @@ module MC_ConstructCaptureBox
 
                 DO I = 1,3
                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                       (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                        (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                             write(*,*) "MCPSCUERROR: The new added SIA had exited the box boundary"
                             write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
                             write(*,*) "SIA position: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
@@ -789,6 +794,7 @@ program Main_MC_ConstructCaptureBox
     type(SimulationBoxes)::m_Boxes
     type(SimulationCtrlParamList)::m_SimuCtrlParamList
     type(MigCoalClusterRecord)::m_Record
+    character*30::WheterCheckSIARange
     !--Body---
     arg_Num = Command_Argument_Count()
 
@@ -803,6 +809,28 @@ program Main_MC_ConstructCaptureBox
     call Get_Command_Argument(1,ARG)
     Read(ARG,fmt="(A256)") SampleFile
     write(*,*) "The Sample file is: ",SampleFile
+
+
+    if(arg_Num .GT. 1) then
+        call Get_Command_Argument(2,ARG)
+        Read(ARG,fmt="(A30)") WheterCheckSIARange
+
+        WheterCheckSIARange = adjustl(trim(WheterCheckSIARange))
+        call UPCASE(WheterCheckSIARange)
+
+        if(IsStrEqual(WheterCheckSIARange(1:LENTRIM(WheterCheckSIARange)),"TRUE")) then
+            m_CheckSIARange = .true.
+        else if(IsStrEqual(WheterCheckSIARange(1:LENTRIM(WheterCheckSIARange)),"FALSE")) then
+            m_CheckSIARange = .false.
+        else
+            write(*,*) "MCPSCUERROR: You must special true or false for whether Check SIA And VAC Number"
+            write(*,*) ARG ,WheterCheckSIARange
+            pause
+            stop
+        end if
+    end if
+
+
 
     call Generate_Capture(m_CaptureCal,m_Boxes,m_SimuCtrlParamList,m_Record)
 
