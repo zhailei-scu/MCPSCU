@@ -3,6 +3,7 @@
 &SIASIZE		    the SIA SIZE = 1
 &RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 &ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 200  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
+&CHECKSIARANGE		    whether check SIA Range = "YES"               ! "YES or NO"
 &MCCFGPATH                  "CaptureBox/Config_BeforeConstruct.dat"
 &CALCAPINFOPATH	            "CaptureBox/CaptureInfo.dat"
 
@@ -17,4 +18,5 @@
 !&CASCADECENTERPOS	    the cascade center position = ( 0.5D0 , 0.5D0 , 0.5D0 )  ! as the unit of the ratio of box size length
 !&RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 !&ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 200  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
-!&CALCAPINFOPATH	            "CaptureBox/CaptureInfo.dat"
+!&CHECKSIARANGE		    whether check SIA Range = "YES"               ! "YES or NO"
+!&CALCAPINFOPATH	    "CaptureBox/CaptureInfo.dat"

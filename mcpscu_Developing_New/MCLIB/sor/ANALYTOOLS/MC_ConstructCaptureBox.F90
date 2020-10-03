@@ -9,8 +9,6 @@ module MC_ConstructCaptureBox
     use MIGCOALE_TYPEDEF_CAPTURECAL_CPU
     implicit none
 
-    logical::m_CheckSIARange = .true.
-
     contains
 
    !*****************************************************
@@ -292,7 +290,7 @@ module MC_ConstructCaptureBox
                 end if
             END DO
 
-            if(m_CheckSIARange .eq. .true.) then
+            if(TheCaptureCal%CheckSIARange .eq. .true.) then
                 if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
                     write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%m_RSIADistributeToCent(IBox)
                     pause
@@ -620,7 +618,7 @@ module MC_ConstructCaptureBox
                 end if
             END DO
 
-            if(m_CheckSIARange .eq. .true.) then
+            if(TheCaptureCal%CheckSIARange .eq. .true.) then
                 if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
                     write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",TheCaptureCal%m_maxDistance(IBox),TheCaptureCal%m_RSIADistributeToCent(IBox)
                     pause
@@ -809,28 +807,6 @@ program Main_MC_ConstructCaptureBox
     call Get_Command_Argument(1,ARG)
     Read(ARG,fmt="(A256)") SampleFile
     write(*,*) "The Sample file is: ",SampleFile
-
-
-    if(arg_Num .GT. 1) then
-        call Get_Command_Argument(2,ARG)
-        Read(ARG,fmt="(A30)") WheterCheckSIARange
-
-        WheterCheckSIARange = adjustl(trim(WheterCheckSIARange))
-        call UPCASE(WheterCheckSIARange)
-
-        if(IsStrEqual(WheterCheckSIARange(1:LENTRIM(WheterCheckSIARange)),"TRUE")) then
-            m_CheckSIARange = .true.
-        else if(IsStrEqual(WheterCheckSIARange(1:LENTRIM(WheterCheckSIARange)),"FALSE")) then
-            m_CheckSIARange = .false.
-        else
-            write(*,*) "MCPSCUERROR: You must special true or false for whether Check SIA And VAC Number"
-            write(*,*) ARG ,WheterCheckSIARange
-            pause
-            stop
-        end if
-    end if
-
-
 
     call Generate_Capture(m_CaptureCal,m_Boxes,m_SimuCtrlParamList,m_Record)
 

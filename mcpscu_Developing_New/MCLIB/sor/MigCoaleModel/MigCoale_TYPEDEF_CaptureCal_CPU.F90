@@ -28,6 +28,8 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         integer::ROutAbsorbToCent_Type = Capture_ROutAbsorbToCent_Type_FixedValue
         real(kind=KINDDF)::ROutAbsorbToCent_Value = 0.D0
 
+        logical::CheckSIARange = .true.
+
         real(kind=KINDDF),dimension(:),allocatable::m_RSIADistributeToCent
         real(kind=KINDDF),dimension(:),allocatable::m_ROutAbsorbToCent
         character*1000::MCCfgPath
@@ -77,6 +79,8 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
         this%ROutAbsorbToCent_Type = Capture_ROutAbsorbToCent_Type_FixedValue
         this%ROutAbsorbToCent_Value = 0.D0
+
+        this%CheckSIARange = .true.
 
         this%MCCfgPath = ""
         this%CapCalInfoPath = ""
@@ -335,6 +339,53 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
         if(Finded .eq. .false.) then
            write(*,*) "MCPSCUERROR: You must special the out absorb sphere radius (from center) type and value."
+           pause
+           stop
+        end if
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&CHECKSIARANGE")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special YES or NO for whether Check SIA Range"
+                        pause
+                        stop
+                    end if
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"TRUE")) then
+                        this%CheckSIARange = .true.
+                    else if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"FALSE")) then
+                        this%CheckSIARange = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether Check SIA Range."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special YES or NO for whether Check SIA Range"
            pause
            stop
         end if
@@ -801,11 +852,12 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                     end if
                 END DO
 
-
-                if(this%m_maxDistance(IBox) .GT. this%m_RSIADistributeToCent(IBox)) then
-                    write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",this%m_maxDistance(IBox),this%m_RSIADistributeToCent(IBox)
-                    pause
-                    stop
+                if(this%CheckSIARange .eq. .true.) then
+                    if(this%m_maxDistance(IBox) .GT. this%m_RSIADistributeToCent(IBox)) then
+                        write(*,*) "MCPSCUERROR: The mostly out vac had exist the SIA distribution position",this%m_maxDistance(IBox),this%m_RSIADistributeToCent(IBox)
+                        pause
+                        stop
+                    end if
                 end if
 
                 if(this%m_maxDistance(IBox) .GT. this%m_ROutAbsorbToCent(IBox)) then
@@ -850,6 +902,8 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
         this%ROutAbsorbToCent_Type = other%ROutAbsorbToCent_Type
         this%ROutAbsorbToCent_Value = other%ROutAbsorbToCent_Value
+
+        this%CheckSIARange = other%CheckSIARange
 
         this%MCCfgPath = other%MCCfgPath
         this%CapCalInfoPath = other%CapCalInfoPath
@@ -897,6 +951,8 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
         this%ROutAbsorbToCent_Type = Capture_ROutAbsorbToCent_Type_FixedValue
         this%ROutAbsorbToCent_Value = 0.D0
+
+        this%CheckSIARange = .true.
 
         this%MCCfgPath = ""
         this%CapCalInfoPath = ""
