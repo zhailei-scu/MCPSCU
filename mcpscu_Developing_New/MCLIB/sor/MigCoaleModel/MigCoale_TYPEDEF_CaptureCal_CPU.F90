@@ -369,9 +369,9 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                     end if
                     call UPCASE(STRTMP(1))
 
-                    if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"TRUE")) then
+                    if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"YES")) then
                         this%CheckSIARange = .true.
-                    else if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"FALSE")) then
+                    else if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"NO")) then
                         this%CheckSIARange = .false.
                     else
                         write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether Check SIA Range."
