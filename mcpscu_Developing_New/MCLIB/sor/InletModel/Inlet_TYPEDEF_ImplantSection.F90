@@ -1835,6 +1835,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam)
 
+            call Record%SetLastSweepOutTime(Record%GetSimuTimes())
+
             call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
             if(this%Cal_ExpandSize_ImplantContiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,TSTEP,ImplantNumEachBox_Ceiling,NewAllocateNCEachBox) .eq. .false.) then

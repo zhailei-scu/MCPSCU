@@ -82,6 +82,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      integer::OutPutSwapFlag = mp_OutTimeFlag_ByIntervalSteps           ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), flag = 2 by magnification
      real::OutPutSwapValue = 100                                        ! output swap value interval value
 
+     logical::SweepOutMemory = .false.
+     integer::SweepOutFlag = mp_SweepOutFlag_ByIntervalSteps            ! flag = 0 for sweepout each interval steps,flag = 1 for sweepout each interval time(s)
+     real::SweepOutValue = 0                                            ! sweepout interval value
+
      !*****restored statments for special problem*************
      type(Statementlist),pointer::AddOnData=>null()
      type(Statementlist),pointer::ModelData=>null()
@@ -122,6 +126,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      procedure,non_overridable,pass,private::Load_Ctrl_Temperature
      procedure,non_overridable,pass,private::Load_Ctrl_Boundary
      procedure,non_overridable,pass,private::Load_Ctrl_NeighborList
+     procedure,non_overridable,pass,private::Load_Ctrl_Memory
      procedure,non_overridable,pass,private::Load_Ctrl_Implant
      procedure,non_overridable,pass,private::Load_Ctrl_TimeStep
      procedure,non_overridable,pass,private::Load_AddOnDataStatments
@@ -159,6 +164,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
   private::Load_Ctrl_Temperature
   private::Load_Ctrl_Boundary
   private::Load_Ctrl_NeighborList
+  private::Load_Ctrl_Memory
   private::Load_Ctrl_Implant
   private::Load_Ctrl_TimeStep
   private::Load_AddOnDataStatments
@@ -259,6 +265,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         case default
           write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
           write(*,*) "Please Check Control File at Line: ",LINE
+          pause
           stop
       end select
 
@@ -388,6 +395,18 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Output instant function statistic information flag =, the interval =",cursor%theSimulationCtrlParam%OutPutFuncSFlag,cursor%theSimulationCtrlParam%OutPutFuncSValue
 
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Output instant information for restart flag =,the interval =",cursor%theSimulationCtrlParam%OutPutSwapFlag,cursor%theSimulationCtrlParam%OutPutSwapValue
+
+        !------The Memory Control Information------------------------
+        if(cursor%theSimulationCtrlParam%SweepOutMemory .eq. .true.) then
+            write(hFile,fmt="('!',A70,'!',2x,A10)") "Whether sweep out the memory = ","TRUE"
+        else
+            write(hFile,fmt="('!',A70,'!',2x,A10)") "Whether sweep out the memory = ","FALSE"
+        end if
+
+        write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Sweep out memory flag =, the interval value = ", &
+                                                            cursor%theSimulationCtrlParam%SweepOutFlag,      &
+                                                            cursor%theSimulationCtrlParam%SweepOutValue
+
 
         write(hFile,fmt="('*******************END SubSection #: ',I10)") ISect
 
@@ -736,6 +755,11 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%OutPutSwapFlag = otherOne%OutPutSwapFlag
     this%OutPutSwapValue = otherOne%OutPutSwapValue
 
+    !***Memory Control*****************
+    this%SweepOutMemory = otherOne%SweepOutMemory
+    this%SweepOutFlag = otherOne%SweepOutFlag
+    this%SweepOutValue = otherOne%SweepOutValue
+
     !***File path and name restore*****
     this%InputFilePath = otherOne%InputFilePath
     this%InputFileshortName = otherOne%InputFileshortName
@@ -835,6 +859,11 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      this%OutPutSwapFlag = mp_OutTimeFlag_ByIntervalSteps
      this%OutPutSwapValue = 100
+
+     !*******Memory Control*********************
+     this%SweepOutMemory = .false.
+     this%SweepOutFlag = mp_SweepOutFlag_ByIntervalSteps
+     this%SweepOutValue = 0
 
      !***File path and name restore*****
      this%InputFilePath = ""
@@ -993,6 +1022,11 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%OutPutSwapFlag = mp_OutTimeFlag_ByIntervalSteps
      this%OutPutSwapValue = 100
 
+     !*******Memory Control*********************
+     this%SweepOutMemory = .false.
+     this%SweepOutFlag = mp_SweepOutFlag_ByIntervalSteps
+     this%SweepOutValue = 0
+
      !***File path and name restore*****
      this%InputFilePath = ""
      this%InputFileshortName = ""
@@ -1059,6 +1093,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              write(*,*) "MCPSCU ERROR: Too Few Parameters for MultiBox Setting."
              write(*,*) "At control file line: ",LINE
              write(*,*) "Should be '&BOX box in one test = , total num = , independent ='."
+             pause
              stop
            else
              this%MultiBox = ISTR(STRNUMB(1))
@@ -1095,6 +1130,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         case default
           write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD)),LINE
           write(*,*) "Please Check Control File at Line: ",LINE
+          pause
           stop
       end select
     END DO
@@ -1193,6 +1229,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         case default
           write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD)),LINE
           write(*,*) "Please Check Control File at Line: ",LINE
+          pause
           stop
       end select
     END DO
@@ -1234,6 +1271,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 call this%Load_Ctrl_Boundary(hFile,*100)
             case("&NEIGHBSUBCTL")
                 call this%Load_Ctrl_NeighborList(hFile,*100)
+            case("&MEMORYSUBCTL")
+                call this%Load_Ctrl_Memory(hFile,*100)
             case("&IMPLANTSUBCTL")
                 call this%Load_Ctrl_Implant(hFile,*100)
             case("&TIMESUBCTL")
@@ -1280,6 +1319,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              write(*,*) "MCPSCU ERROR: Too Few Parameters for TEMPERATURE Setting."
              write(*,*) "At control file line: ",LINE
              write(*,*) "Should be '&TEMPERATURE SYSTEM SIMULATION TEMPERATURE = (K)'."
+             pause
              stop
            else
              this%TEMP = DRSTR(STRNUMB(1))
@@ -1287,6 +1327,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
              if(this%TEMP .LE. 0) then
                write(*,*) "MCPSCU ERROR: The absoloute temperature cannot less than 0 .",this%TEMP
+               pause
                stop
              end if
 
@@ -1295,6 +1336,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         case default
           write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
           write(*,*) "Please Check Control File at Line: ",LINE
+          pause
           stop
       end select
     END DO
@@ -1382,6 +1424,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 write(*,*) "MCPSCU ERROR: Too Few Parameters for STRATEGY Setting."
                 write(*,*) "At control file line: ",LINE
                 write(*,*) "Should be '&STRATEGY  The parameter determine the way to update neighbor-List = '."
+                pause
+                stop
             end if
 
             this%NEIGHBORCALWAY = ISTR(STRNUMB(1))
@@ -1419,6 +1463,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 write(*,*) "MCPSCU ERROR: Too Few Parameters for UPDATEFRE Setting."
                 write(*,*) "At control file line: ",LINE
                 write(*,*) "Should be 'The parameter determine when the neighbore list to be updated = '."
+                pause
+                stop
             end if
 
             this%NEIGHBORUPDATE = DRSTR(STRNUMB(1))
@@ -1442,6 +1488,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 write(*,*) "MCPSCU ERROR: Too Few Parameters for CUTREGIONEXTEND Setting."
                 write(*,*) "At control file line: ",LINE
                 write(*,*) "Should be '&CUTREGIONEXTEND The cut-off region expand = '."
+                pause
+                stop
             end if
 
             this%CUTREGIONEXTEND = ISTR(STRNUMB(1))
@@ -1464,6 +1512,105 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
     100 return 1
   end subroutine Load_Ctrl_NeighborList
+
+  !*****************************************
+  subroutine Load_Ctrl_Memory(this,hFile,*)
+    implicit none
+    !---Dummy Vars---
+    CLASS(SimulationCtrlParam)::this
+    integer, intent(in)::hFile
+    !---Local Vars---
+    integer::LINE
+    integer::N
+    character*1000::STR
+    character*32::KEYWORD
+    character*32::STRNUMB(10)
+
+    DO While(.TRUE.)
+      call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
+      call RemoveComments(STR,"!")
+      STR = adjustl(STR)
+      call GETKEYWORD("&", STR, KEYWORD)
+      call UPCASE(KEYWORD)
+
+      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        case("&ENDSUBCTL")
+          exit
+        case("&SWEEPOUT")
+            call EXTRACT_SUBSTR(STR,1,N,STRNUMB)
+
+            if(N .LT. 1) then
+                write(*,*) "MCPSCU ERROR: Too Few Parameters for SWEEPOUT Setting."
+                write(*,*) "At control file line: ",LINE
+                write(*,*) "Should be '&SWEEPOUT	sweep out memory during simulation = ('TRUE or FALSE'), the flag =  , the corresponded value ='."
+                pause
+                stop
+            end if
+
+            STRNUMB(1) = adjustl(trim(STRNUMB(1)))
+
+            call UPCASE(STRNUMB(1))
+
+            if(IsStrEqual(STRNUMB(1)(1:LENTRIM(STRNUMB(1))),"TRUE")) then
+                this%SweepOutMemory = .true.
+            else if(IsStrEqual(STRNUMB(1)(1:LENTRIM(STRNUMB(1))),"FALSE")) then
+                this%SweepOutMemory = .false.
+            else
+                write(*,*) "MCPSCUERROR: You must special true or false for whether sweep out memory"
+                write(*,*) STRNUMB(1)
+                pause
+                stop
+            end if
+
+            call EXTRACT_NUMB(STR,2,N,STRNUMB)
+
+            if(N .LT. 2) then
+                write(*,*) "MCPSCU ERROR: Too Few Parameters for SWEEPOUT Setting."
+                write(*,*) "At control file line: ",LINE
+                write(*,*) "Should be '&SWEEPOUT	sweep out memory during simulation = ('TRUE or FALSE'), the flag =  , the corresponded value ='."
+                pause
+                stop
+            end if
+
+            this%SweepOutFlag = ISTR(STRNUMB(1))
+            select case(this%SweepOutFlag)
+                case(mp_SweepOutFlag_ByIntervalSteps)
+                    this%SweepOutValue = ISTR(STRNUMB(2))
+                    if(this%SweepOutValue .LT. 0) then
+                        write(*,*) "MCPSCUERROR: The sweep out value cannot less than 0"
+                        write(*,*) this%SweepOutValue
+                        pause
+                        stop
+                    end if
+
+                case(mp_SweepOutFlag_ByIntervalRealTime)
+                    this%SweepOutValue = DRSTR(STRNUMB(2))
+
+                    if(this%SweepOutValue .LT. 0.E0) then
+                        write(*,*) "MCPSCUERROR: The sweep out value cannot less than 0"
+                        write(*,*) this%SweepOutValue
+                        pause
+                        stop
+                    end if
+
+                case default
+                    write(*,*) "MCPSCUERROR: the sweep out flag is not defined: ",this%SweepOutFlag
+                    pause
+                    stop
+            end select
+
+        case default
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          write(*,*) "Please Check Control File at Line: ",LINE
+          pause
+          stop
+      end select
+    END DO
+
+    return
+
+    100 return 1
+  end subroutine Load_Ctrl_Memory
 
   !*****************************************
   subroutine Load_Ctrl_Implant(this,hFile,*)

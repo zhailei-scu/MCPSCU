@@ -21,7 +21,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -53,6 +53,11 @@
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
+    &ENDSUBCTL
+
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
@@ -82,7 +87,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -110,6 +115,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -142,7 +152,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -172,6 +182,10 @@
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
     &ENDSUBCTL
 
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
+    &ENDSUBCTL
 
     &ADDONDATA
 	&DUMPLICATEBOX If use the dumplicate box strategy = 0     ! 1 for use dumplicate box strategy while clusters number drop to some percentage, 0 for not
@@ -201,7 +215,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -229,6 +243,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -260,7 +279,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -288,6 +307,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -319,7 +343,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -347,6 +371,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -378,7 +407,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -406,6 +435,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -437,7 +471,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -465,6 +499,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -496,7 +535,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -524,6 +563,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -555,7 +599,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -583,6 +627,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -614,7 +663,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -642,6 +691,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -673,7 +727,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -701,6 +755,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 
@@ -732,7 +791,7 @@
     &ENDSUBCTL
   
     &NEIGHBSUBCTL   
-	&STRATEGY   The parameter determine the way to update neighbor-List = 1         ! 1 for NNearest way, 2 for cut-off radium way
+	&STRATEGY   The parameter determine the way to update neighbor-List = 3          ! 1 for NNearest way, 2 for cut-off radium way, 3 for Sort-X way
 	&MAXNB   maxmun number of neighbore for an diffusor = 100
 	&UPDATEFRE  The parameter determine when the neighbore list to be updated = 10 ! If the value >=1 then the NeighborList would be updated for each UPDATEFRE steps
                                                                                          ! If the value <1 then the NeighborList would be updated while the count rate drop UPDATEFRE
@@ -760,6 +819,11 @@
 												     ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
 	&OUTPUT_FUNCS    Output instant function statistic information flag = 1, the interval = 100  ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
         &SAVE            Output instant information for restart flag = 1,the interval = 100          ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s), 2 by time magnification
+    &ENDSUBCTL
+
+    &MEMORYSUBCTL
+	&SWEEPOUT	sweep out memory during simulation = "TRUE", the flag = 0 , the corresponded value = 100000
+												     ! flag = 0 stans for by steps,flag = 1 by time(s)
     &ENDSUBCTL
 
 

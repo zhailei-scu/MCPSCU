@@ -53,6 +53,9 @@ module MCLIB_CONSTANTS
     integer,parameter::mp_OutTimeFlag_ByIntervalRealTime = 1
     integer,parameter::mp_OutTimeFlag_ByIntervalTimeMagnification = 2
 
+    integer,parameter::mp_SweepOutFlag_ByIntervalSteps = 0
+    integer,parameter::mp_SweepOutFlag_ByIntervalRealTime = 1
+
 
     integer, parameter::p_DEPT_DIS_Layer = 0                            ! uniform distribution in the box
     integer, parameter::p_DEPT_DIS_BOX = 1                              ! boxed uniform distribution. The box is a subbox of simulated box

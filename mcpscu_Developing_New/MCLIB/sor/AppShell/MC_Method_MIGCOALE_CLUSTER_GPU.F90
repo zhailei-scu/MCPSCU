@@ -2169,5 +2169,74 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         return
     end subroutine PutOut_Instance_Statistic_EachBox
 
+    !*************************************************************
+    subroutine SweepOutMemory(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,Record)
+        implicit none
+        !---Dummy Vars---
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationBoxes_GPU)::Dev_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoalClusterRecord)::Record
+        !---Local Vars---
+        integer::MultiBox
+        integer::NC0
+        !---Body---
+
+        MultiBox = Host_SimuCtrlParam%MultiBox
+
+
+        if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(Host_SimuCtrlParam%MultiBox,2) .GT. 0) then
+            NC0 = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(Host_SimuCtrlParam%MultiBox,2) - Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(1,1) + 1
+        else
+            NC0 = 0
+        end if
+
+        if(Host_SimuCtrlParam%SweepOutMemory .eq. .true.) then
+
+            if(Host_SimuCtrlParam%SweepOutFlag .eq. mp_SweepOutFlag_ByIntervalSteps) then
+                if((Record%GetSimuSteps() - Record%GetLastSweepOutTime()) .GE. Host_SimuCtrlParam%SweepOutValue) then
+
+                    call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
+                    call Record%RecordNC_ForSweepOut(MultiBox,Host_Boxes%m_BoxesBasicStatistic)
+
+                    call Record%IncreaseOneSweepOutCount()
+
+                    call Dev_Boxes%dm_ClusterInfo_GPU%CopyOutToHost(Host_Boxes%m_ClustersInfo_CPU,NC0,IfCpyNL=.false.)
+
+                    call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record,SweepOutCount=Record%GetSweepOutCount())
+
+                    call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam)
+
+                    call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
+
+                    call Record%SetLastSweepOutTime(dble(Record%GetSimuSteps()))
+
+                end if
+
+            else if(Host_SimuCtrlParam%SweepOutFlag .eq. mp_SweepOutFlag_ByIntervalRealTime) then
+                if((Record%GetSimuTimes() - Record%GetLastSweepOutTime()) .GE. Host_SimuCtrlParam%SweepOutValue) then
+
+                    call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
+                    call Record%RecordNC_ForSweepOut(MultiBox,Host_Boxes%m_BoxesBasicStatistic)
+
+                    call Record%IncreaseOneSweepOutCount()
+
+                    call Dev_Boxes%dm_ClusterInfo_GPU%CopyOutToHost(Host_Boxes%m_ClustersInfo_CPU,NC0,IfCpyNL=.false.)
+
+                    call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record,SweepOutCount=Record%GetSweepOutCount())
+
+                    call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam)
+
+                    call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
+
+                    call Record%SetLastSweepOutTime(Record%GetSimuTimes())
+                end if
+            end if
+
+        end if
+
+        return
+    end subroutine
+
 
 end module MC_Method_MIGCOALE_CLUSTER_GPU

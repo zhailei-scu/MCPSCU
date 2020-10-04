@@ -16,6 +16,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         logical,private::InsertOneBatchInNextStep = .false.
         integer,private::InsetedBatchNum = 0
 
+        real(kind=KINDDF),private::LastSweepOutTime = 0.D0
         integer,private::SweepOutCount = 0
 
         integer::HSizeStatistic_TotalBox = 0
@@ -54,6 +55,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,non_overridable,public,pass::InCrease_OneInsertBatchNum
         procedure,non_overridable,public,pass::Get_InsertBatchNum
         procedure,non_overridable,public,pass::Set_InsertBatchNum
+        procedure,non_overridable,public,pass::GetLastSweepOutTime=>Get_LastSweepOutTime
+        procedure,non_overridable,public,pass::SetLastSweepOutTime=>Set_LastSweepOutTime
         procedure,non_overridable,public,pass::IncreaseOneSweepOutCount=>Increase_OneSweepOutCount
         procedure,non_overridable,public,pass::GetSweepOutCount=>Get_SweepOutCount
         procedure,non_overridable,public,pass::SetSweepOutCount=>Set_SweepOutCount
@@ -94,6 +97,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::Get_InsertBatchNum
     private::Set_InsertBatchNum
     private::Increase_OneSweepOutCount
+    private::Get_LastSweepOutTime
+    private::Set_LastSweepOutTime
     private::Get_SweepOutCount
     private::Set_SweepOutCount
     private::Add_ImplantedEntitiesNum
@@ -263,6 +268,26 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                             stop
                         end if
 
+                    case("&LASTSWEEPOUTTIME")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: Too few parameters for &LASTSWEEPOUTTIME setting"
+                            write(*,*) "You must special the last sweep out time"
+                            pause
+                            stop
+                        end if
+
+                        call fp_Record%SetLastSweepOutTime(DRSTR(STRTMP(1)))
+
+                        if(fp_Record%GetLastSweepOutTime() .LT. 0) then
+                            write(*,*) "MCPSCUERROR: The last sweep out time cannot less than 0"
+                            write(*,*) fp_Record%GetLastSweepOutTime()
+                            pause
+                            stop
+                        end if
+
+
                     case("&NSWEEPOUT")
                         call EXTRACT_NUMB(STR,1,N,STRTMP)
 
@@ -407,6 +432,9 @@ module MIGCOALE_TYPEDEF_SIMRECORD
             KEYWORD = "&BATCHNUM"
             write(hFile, FMT="(A,1x,A32,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%Get_InsertBatchNum()
 
+            KEYWORD = "&LASTSWEEPOUTTIME"
+            write(hFile, FMT="(A,1x,A32,1x,1PE18.10)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetLastSweepOutTime()
+
             KEYWORD = "&NSWEEPOUT"
             write(hFile, FMT="(A,1x,A32,1x,I15)") "  ",KEYWORD(1:LENTRIM(KEYWORD)),fp_Record%GetSweepOutCount()
 
@@ -491,6 +519,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
         this%rescaleCount = 0
 
+        this%LastSweepOutTime = 0.D0
         this%SweepOutCount = 0
 
         this%LastOutSizeDistTime_IntegralBox = 0.D0
@@ -749,6 +778,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         this%InsertOneBatchInNextStep = .false.
         this%InsetedBatchNum = 0
 
+        this%LastSweepOutTime = 0.D0
         this%SweepOutCount = 0
 
         this%HSizeStatistic_TotalBox = 0
@@ -799,6 +829,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         this%InsertOneBatchInNextStep = Other%InsertOneBatchInNextStep
         this%InsetedBatchNum = Other%InsetedBatchNum
 
+        this%LastSweepOutTime = Other%LastSweepOutTime
         this%SweepOutCount = Other%SweepOutCount
 
         this%HSizeStatistic_TotalBox = Other%HSizeStatistic_TotalBox
@@ -918,6 +949,25 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         TheResult = this%InsetedBatchNum
         return
     end function
+
+    !*************************************************************
+    subroutine Set_LastSweepOutTime(this,TheTime)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+        real(kind=KINDDF)::TheTime
+
+        this%LastSweepOutTime = TheTime
+    end subroutine
+
+    !**************************************************************
+    function Get_LastSweepOutTime(this) result(TheTime)
+        implicit none
+        Class(MigCoalClusterRecord)::this
+        real(kind=KINDDF)::TheTime
+
+        TheTime = this%LastSweepOutTime
+        return
+    end function Get_LastSweepOutTime
 
     !*************************************************************
     subroutine Set_InsertBatchNum(this,TheBatchNum)
