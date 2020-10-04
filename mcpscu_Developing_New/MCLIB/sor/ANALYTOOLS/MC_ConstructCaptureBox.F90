@@ -182,10 +182,10 @@ module MC_ConstructCaptureBox
                 DO I = 1,3
                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
                         (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
-                            write(*,*) "MCPSCUERROR: The new added SIA had exited the box boundary"
+                            write(*,*) "MCPSCUERROR: The new added VAC had exited the box boundary"
                             write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
-                            write(*,*) "SIA position: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
-                            write(*,*) "SIA radius: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+                            write(*,*) "VAC position: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
+                            write(*,*) "VAC radius: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
                             pause
                             stop
                     end if
@@ -364,6 +364,19 @@ module MC_ConstructCaptureBox
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheCaptureCal%SIASIZE
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
+                TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+                !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                !---you should init the distribution by external file---
+                select case(TheDiffusorValue%ECRValueType_Free)
+                    case(p_ECR_ByValue)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                    case default
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,           &
+                                                                                                   Host_Boxes%LatticeLength)
+                end select
+
 
                 select case(TheCaptureCal%SIASPaceModel)
                     case(Capture_SIASPaceModel_Type_UnderSphereFace)
@@ -398,8 +411,8 @@ module MC_ConstructCaptureBox
                             end if
 
                             DO I = 1,3
-                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                                    (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                                     exitFlag = .false.
                                 end if
 
@@ -419,8 +432,8 @@ module MC_ConstructCaptureBox
                             exitFlag = .true.
 
                             DO I = 1,3
-                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                                    (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                                     exitFlag = .false.
                                 end if
 
@@ -438,21 +451,6 @@ module MC_ConstructCaptureBox
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
-
-
-                TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
-                !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
-                !---you should init the distribution by external file---
-                select case(TheDiffusorValue%ECRValueType_Free)
-                    case(p_ECR_ByValue)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case default
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
-                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
-                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,           &
-                                                                                                   Host_Boxes%LatticeLength)
-                end select
-
 
                 DO I = 1,3
                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
@@ -754,6 +752,20 @@ module MC_ConstructCaptureBox
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheCaptureCal%SIASIZE
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
+
+                TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+                !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                !---you should init the distribution by external file---
+                select case(TheDiffusorValue%ECRValueType_Free)
+                    case(p_ECR_ByValue)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                    case default
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,           &
+                                                                                                   Host_Boxes%LatticeLength)
+                end select
+
                 select case(TheCaptureCal%SIASPaceModel)
                     case(Capture_SIASPaceModel_Type_UnderSphereFace)
                         ArrowLen = 0.D0
@@ -787,8 +799,8 @@ module MC_ConstructCaptureBox
                             end if
 
                             DO I = 1,3
-                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                                    (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                                     exitFlag = .false.
                                 end if
 
@@ -808,8 +820,8 @@ module MC_ConstructCaptureBox
                             exitFlag = .true.
 
                             DO I = 1,3
-                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                                    (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                                     exitFlag = .false.
                                 end if
 
@@ -828,20 +840,6 @@ module MC_ConstructCaptureBox
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
-
-
-                TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
-                !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
-                !---you should init the distribution by external file---
-                select case(TheDiffusorValue%ECRValueType_Free)
-                    case(p_ECR_ByValue)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case default
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
-                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
-                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,           &
-                                                                                                   Host_Boxes%LatticeLength)
-                end select
 
                 DO I = 1,3
                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
