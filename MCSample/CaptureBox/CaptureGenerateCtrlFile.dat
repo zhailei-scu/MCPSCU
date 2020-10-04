@@ -1,22 +1,26 @@
 &GENERATEWAY                the cascade generate way = 1                  ! (0 by Locally ,center uniform way; 1 by from MC configuration,Directly)
 &SIANUMBER		    the SIA number = 1
 &SIASIZE		    the SIA SIZE = 1
+&SIASPACEMODEL		    the SIA distribution space model = 0          ! 0 for in speicaled RSIATOCENTER sphere face , 1 for distribute uniform in box but out the RSIATOCENTER, 2 for uniform in whole box  
 &RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 &ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 200  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 &CHECKSIARANGE		    whether check SIA Range = "YES"               ! "YES or NO"
+&CHECKOUTABSORB		    whether check out absorb Range = "YES"        ! "YES or NO"
 &MCCFGPATH                  "CaptureBox/Config_BeforeConstruct.dat"
 &CALCAPINFOPATH	            "CaptureBox/CaptureInfo.dat"
 
 
 
-!&GENERATEWAY                the cascade generate way = 0                  ! (0 by Locally ,center uniform way; 1 by from MC configuration,Directly)
+!&GENERATEWAY               the cascade generate way = 0                  ! (0 by Locally ,center uniform way; 1 by from MC configuration,Directly)
 !&SIANUMBER		    the SIA number = 10000
 !&SIASIZE		    the SIA SIZE = 1
 !&VACNUMBER		    the VAC number = 50
 !&VACSIZE		    the VAC SIZE = 1
 !&RVACINCLUDE		    the VAC included radius = 20   		             ! in Unit of lattice unit (LU)
 !&CASCADECENTERPOS	    the cascade center position = ( 0.5D0 , 0.5D0 , 0.5D0 )  ! as the unit of the ratio of box size length
+!&SIASPACEMODEL		    the SIA distribution space model = 0          ! 0 for in speicaled RSIATOCENTER sphere face , 1 for distribute uniform in box but out the RSIATOCENTER, 2 for uniform in whole box  
 !&RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 !&ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 200  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 !&CHECKSIARANGE		    whether check SIA Range = "YES"               ! "YES or NO"
+!&CHECKOUTABSORB	    whether check out absorb Range = "YES"        ! "YES or NO"
 !&CALCAPINFOPATH	    "CaptureBox/CaptureInfo.dat"

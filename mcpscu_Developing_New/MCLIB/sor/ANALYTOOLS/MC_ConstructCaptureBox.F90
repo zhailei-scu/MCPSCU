@@ -114,6 +114,7 @@ module MC_ConstructCaptureBox
         integer::NCUSed
         integer::RecordIndex
         integer::NC
+        logical::exitFlag
         !-----------Body--------------
         if(.not. allocated(TheCaptureCal%m_CascadeCenter) .or. &
            .not. allocated(TheCaptureCal%m_maxDistance) .or.   &
@@ -268,9 +269,10 @@ module MC_ConstructCaptureBox
                     stop
             end select
 
+
             DO I = 1,3
                 if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%m_RSIADistributeToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                   (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
+                    (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
                     write(*,*) "the SIA distribution sphere had existed the box "
                     write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
                     write(*,*) "SIA distribution sphere radius: ",TheCaptureCal%m_RSIADistributeToCent(IBox)
@@ -279,16 +281,19 @@ module MC_ConstructCaptureBox
                     stop
                 end if
 
-                if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%m_ROutAbsorbToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                   (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_ROutAbsorbToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
-                    write(*,*) "the outer absorb sphere had existed the box "
-                    write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
-                    write(*,*) " outer absorb sphere radius: ",TheCaptureCal%m_ROutAbsorbToCent(IBox)
-                    write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
-                    pause
-                    stop
+                if(TheCaptureCal%CheckOutAbsorb .eq. .true.) then
+                    if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%m_ROutAbsorbToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                        (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_ROutAbsorbToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
+                        write(*,*) "the outer absorb sphere had existed the box "
+                        write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
+                        write(*,*) " outer absorb sphere radius: ",TheCaptureCal%m_ROutAbsorbToCent(IBox)
+                        write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                        pause
+                        stop
+                    end if
                 end if
             END DO
+
 
             if(TheCaptureCal%CheckSIARange .eq. .true.) then
                 if(TheCaptureCal%m_maxDistance(IBox) .GT. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
@@ -359,16 +364,75 @@ module MC_ConstructCaptureBox
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheCaptureCal%SIASIZE
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
-                ArrowLen = 0.D0
-                DO I = 1,3
-                    Vector(I) = DRAND32() - 0.5D0
-                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
-                END DO
-                ArrowLen = DSQRT(ArrowLen)
 
-                DO I = 1,3
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
-                END DO
+                select case(TheCaptureCal%SIASPaceModel)
+                    case(Capture_SIASPaceModel_Type_UnderSphereFace)
+                        ArrowLen = 0.D0
+                        DO I = 1,3
+                            Vector(I) = DRAND32() - 0.5D0
+                            ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                        END DO
+                        ArrowLen = DSQRT(ArrowLen)
+
+                        DO I = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                        END DO
+
+                    case(Capture_SIASPaceModel_Type_UniformOutRSIA)
+
+                        exitFlag = .false.
+                        DO While(exitFlag .eq. .false.)
+                            DO I = 1,3
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + Host_Boxes%BOXSIZE(I)*DRAND32()
+                            END DO
+
+                            SEP = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - TheCaptureCal%m_CascadeCenter(IBox,1:3)
+
+                            Distance = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
+                            Distance = DSQRT(Distance)
+
+                            exitFlag = .true.
+
+                            if(Distance .LE. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
+                                exitFlag = .false.
+                            end if
+
+                            DO I = 1,3
+                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                    exitFlag = .false.
+                                end if
+
+                            END DO
+
+                        END DO
+
+
+                    case(Capture_SIASPaceModel_Type_UniformWholeBox)
+
+                        exitFlag = .false.
+                        DO While(exitFlag .eq. .false.)
+                            DO I = 1,3
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + Host_Boxes%BOXSIZE(I)*DRAND32()
+                            END DO
+
+                            exitFlag = .true.
+
+                            DO I = 1,3
+                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                    exitFlag = .false.
+                                end if
+
+                            END DO
+
+                        END DO
+
+                    case default
+                        write(*,*) "MCPSCUERROR: Unknown SIA space distribution model: ",TheCaptureCal%SIASPaceModel
+                        pause
+                        stop
+                end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
@@ -484,6 +548,7 @@ module MC_ConstructCaptureBox
         character*30::TheVersion
         real(kind=KINDDF)::ArrowLen
         real(kind=KINDDF)::Vector(3)
+        logical::exitFlag
         !-----------Body--------------
         if(.not. allocated(TheCaptureCal%m_CascadeCenter) .or. &
            .not. allocated(TheCaptureCal%m_maxDistance) .or.   &
@@ -607,14 +672,16 @@ module MC_ConstructCaptureBox
                     stop
                 end if
 
-                if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%m_ROutAbsorbToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                   (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_ROutAbsorbToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
-                    write(*,*) "the outer absorb sphere had existed the box "
-                    write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
-                    write(*,*) " outer absorb sphere radius: ",TheCaptureCal%m_ROutAbsorbToCent(IBox)
-                    write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
-                    pause
-                    stop
+                if(TheCaptureCal%CheckOutAbsorb .eq. .true.) then
+                    if((TheCaptureCal%m_CascadeCenter(IBox,I) - TheCaptureCal%m_ROutAbsorbToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                        (TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_ROutAbsorbToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
+                        write(*,*) "the outer absorb sphere had existed the box "
+                        write(*,*) "cascade center: ",TheCaptureCal%m_CascadeCenter(IBox,I)
+                        write(*,*) " outer absorb sphere radius: ",TheCaptureCal%m_ROutAbsorbToCent(IBox)
+                        write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                        pause
+                        stop
+                    end if
                 end if
             END DO
 
@@ -687,16 +754,74 @@ module MC_ConstructCaptureBox
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA = TheCaptureCal%SIASIZE
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
-                ArrowLen = 0.D0
-                DO I = 1,3
-                    Vector(I) = DRAND32() - 0.5D0
-                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
-                END DO
-                ArrowLen = DSQRT(ArrowLen)
+                select case(TheCaptureCal%SIASPaceModel)
+                    case(Capture_SIASPaceModel_Type_UnderSphereFace)
+                        ArrowLen = 0.D0
+                        DO I = 1,3
+                            Vector(I) = DRAND32() - 0.5D0
+                            ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                        END DO
+                        ArrowLen = DSQRT(ArrowLen)
 
-                DO I = 1,3
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,1) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
-                END DO
+                        DO I = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                        END DO
+
+                    case(Capture_SIASPaceModel_Type_UniformOutRSIA)
+
+                        exitFlag = .false.
+                        DO While(exitFlag .eq. .false.)
+                            DO I = 1,3
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + Host_Boxes%BOXSIZE(I)*DRAND32()
+                            END DO
+
+                            SEP = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - TheCaptureCal%m_CascadeCenter(IBox,1:3)
+
+                            Distance = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
+                            Distance = DSQRT(Distance)
+
+                            exitFlag = .true.
+
+                            if(Distance .LE. TheCaptureCal%m_RSIADistributeToCent(IBox)) then
+                                exitFlag = .false.
+                            end if
+
+                            DO I = 1,3
+                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                    exitFlag = .false.
+                                end if
+
+                            END DO
+
+                        END DO
+
+
+                    case(Capture_SIASPaceModel_Type_UniformWholeBox)
+
+                        exitFlag = .false.
+                        DO While(exitFlag .eq. .false.)
+                            DO I = 1,3
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = Host_Boxes%BOXBOUNDARY(I,1) + Host_Boxes%BOXSIZE(I)*DRAND32()
+                            END DO
+
+                            exitFlag = .true.
+
+                            DO I = 1,3
+                                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                    exitFlag = .false.
+                                end if
+
+                            END DO
+
+                        END DO
+
+                    case default
+                        write(*,*) "MCPSCUERROR: Unknown SIA space distribution model: ",TheCaptureCal%SIASPaceModel
+                        pause
+                        stop
+                end select
 
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
@@ -792,7 +917,6 @@ program Main_MC_ConstructCaptureBox
     type(SimulationBoxes)::m_Boxes
     type(SimulationCtrlParamList)::m_SimuCtrlParamList
     type(MigCoalClusterRecord)::m_Record
-    character*30::WheterCheckSIARange
     !--Body---
     arg_Num = Command_Argument_Count()
 

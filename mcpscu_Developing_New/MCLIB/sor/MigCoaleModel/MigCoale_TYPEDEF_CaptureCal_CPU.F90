@@ -8,6 +8,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
     integer,parameter::CaptureGenWay_ByCentUniform_Locally = 0
     integer,parameter::CaptureGenWay_ByMCConfig_Locally_Directly = 1
 
+    integer,parameter::Capture_SIASPaceModel_Type_UnderSphereFace = 0
+    integer,parameter::Capture_SIASPaceModel_Type_UniformOutRSIA = 1
+    integer,parameter::Capture_SIASPaceModel_Type_UniformWholeBox = 2
+
     integer,parameter::Capture_RSIADistributeToCent_Type_FixedValue = 0
     integer,parameter::Capture_RSIADistributeToCent_Type_OutFromMostOutVAC = 1
 
@@ -22,13 +26,18 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         integer::UDef_VACSIZE = 1
         real(kind=KINDDF)::UDef_RVACINCLUDE = 0.D0
         real(kind=KINDDF)::UDef_CascadeCent(3) = 0.5D0
+
+        integer::SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
+
         integer::RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
         real(kind=KINDDF)::RSIADistributeToCent_Value = 0.D0
+
 
         integer::ROutAbsorbToCent_Type = Capture_ROutAbsorbToCent_Type_FixedValue
         real(kind=KINDDF)::ROutAbsorbToCent_Value = 0.D0
 
         logical::CheckSIARange = .true.
+        logical::CheckOutAbsorb = .true.
 
         real(kind=KINDDF),dimension(:),allocatable::m_RSIADistributeToCent
         real(kind=KINDDF),dimension(:),allocatable::m_ROutAbsorbToCent
@@ -74,6 +83,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%UDef_RVACINCLUDE = 0.D0
         this%UDef_CascadeCent = 0.5D0
 
+        this%SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
         this%RSIADistributeToCent_Value = 0.D0
 
@@ -81,6 +91,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%ROutAbsorbToCent_Value = 0.D0
 
         this%CheckSIARange = .true.
+        this%CheckOutAbsorb = .true.
 
         this%MCCfgPath = ""
         this%CapCalInfoPath = ""
@@ -273,6 +284,54 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
             call UPCASE(KEYWORD)
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&SIASPACEMODEL")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the SIA distribution space model."
+                        pause
+                        stop
+                    end if
+                    this%SIASPACEMODEL = ISTR(STRTMP(1))
+
+                    if(this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UnderSphereFace .AND. &
+                       this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UniformOutRSIA .AND.  &
+                       this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UniformWholeBox) then
+                        write(*,*) "MCPSCUERROR: Unknown SIA distribution space model: ",this%SIASPACEMODEL
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the SIA distribution space model."
+           pause
+           stop
+        end if
+
+
+
+
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&RSIATOCENTER")
                     call EXTRACT_NUMB(STR,2,N,STRTMP)
                     if(N .LT. 2) then
@@ -389,6 +448,55 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
            pause
            stop
         end if
+
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&CHECKOUTABSORB")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special YES or NO for whether Check out absorb range"
+                        pause
+                        stop
+                    end if
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"YES")) then
+                        this%CheckOutAbsorb = .true.
+                    else if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"NO")) then
+                        this%CheckOutAbsorb = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether Check out absorb range."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special YES or NO for whether Check out absorb range."
+           pause
+           stop
+        end if
+
 
 
         LINE = 0
@@ -841,14 +949,16 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                         stop
                     end if
 
-                    if((this%m_CascadeCenter(IBox,I) - this%m_ROutAbsorbToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                       (this%m_CascadeCenter(IBox,I) + this%m_ROutAbsorbToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
-                        write(*,*) "the outer absorb sphere had existed the box "
-                        write(*,*) "cascade center: ",this%m_CascadeCenter(IBox,I)
-                        write(*,*) " outer absorb sphere radius: ",this%m_ROutAbsorbToCent(IBox)
-                        write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
-                        pause
-                        stop
+                    if(this%CheckOutAbsorb .eq. .true.) then
+                        if((this%m_CascadeCenter(IBox,I) - this%m_ROutAbsorbToCent(IBox)) .LE. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                            (this%m_CascadeCenter(IBox,I) + this%m_ROutAbsorbToCent(IBox)) .GE. Host_Boxes%BOXBOUNDARY(I,2)) then
+                            write(*,*) "the outer absorb sphere had existed the box "
+                            write(*,*) "cascade center: ",this%m_CascadeCenter(IBox,I)
+                            write(*,*) " outer absorb sphere radius: ",this%m_ROutAbsorbToCent(IBox)
+                            write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                            pause
+                            stop
+                        end if
                     end if
                 END DO
 
@@ -897,6 +1007,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%UDef_RVACINCLUDE = other%UDef_RVACINCLUDE
         this%UDef_CascadeCent = other%UDef_CascadeCent
 
+        this%SIASPaceModel = other%SIASPaceModel
         this%RSIADistributeToCent_Type = other%RSIADistributeToCent_Type
         this%RSIADistributeToCent_Value = other%RSIADistributeToCent_Value
 
@@ -904,6 +1015,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%ROutAbsorbToCent_Value = other%ROutAbsorbToCent_Value
 
         this%CheckSIARange = other%CheckSIARange
+        this%CheckOutAbsorb = other%CheckOutAbsorb
 
         this%MCCfgPath = other%MCCfgPath
         this%CapCalInfoPath = other%CapCalInfoPath
@@ -946,6 +1058,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%UDef_RVACINCLUDE = 0.D0
         this%UDef_CascadeCent = 0.5D0
 
+        this%SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
         this%RSIADistributeToCent_Value = 0.D0
 
@@ -953,6 +1066,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%ROutAbsorbToCent_Value = 0.D0
 
         this%CheckSIARange = .true.
+        this%CheckOutAbsorb = .true.
 
         this%MCCfgPath = ""
         this%CapCalInfoPath = ""
