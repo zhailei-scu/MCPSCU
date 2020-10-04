@@ -423,6 +423,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call OutPutCurrent(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
 
+                call SweepOutMemory(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record)
+
                 NAct = TBasicInfo%NC(p_ACTIVEFREE_STATU)+TBasicInfo%NC(p_ACTIVEINGB_STATU)
 
                 call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.false.,RMAX= &
@@ -2170,12 +2172,13 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine PutOut_Instance_Statistic_EachBox
 
     !*************************************************************
-    subroutine SweepOutMemory(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,Record)
+    subroutine SweepOutMemory(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationBoxes_GPU)::Dev_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
+        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
         !---Local Vars---
         integer::MultiBox
@@ -2211,6 +2214,13 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                     call Record%SetLastSweepOutTime(dble(Record%GetSimuSteps()))
 
+
+                    call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
+                                      max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                          MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                         TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+
                 end if
 
             else if(Host_SimuCtrlParam%SweepOutFlag .eq. mp_SweepOutFlag_ByIntervalRealTime) then
@@ -2230,6 +2240,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
                     call Record%SetLastSweepOutTime(Record%GetSimuTimes())
+
+                    call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
+                                      max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                          MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                         TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
                 end if
             end if
 
