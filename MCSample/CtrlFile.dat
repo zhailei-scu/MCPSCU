@@ -38,10 +38,10 @@
 
 	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 
@@ -100,10 +100,10 @@
 
 	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -162,10 +162,10 @@
 
 	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -223,10 +223,10 @@
 
 	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 10000                           ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -284,10 +284,10 @@
 
 	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -345,10 +345,10 @@
 
 	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -406,10 +406,10 @@
 
 	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -467,10 +467,10 @@
 
 	!&FOCUSETIME The focused timepoints are = 1.2D-12 , 2.6D-12 , 4.7D-12 , 9.9D-12		     ! give the timepoints that needs to be focused
                        
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -526,10 +526,10 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time =5.2400000000e-04					     ! flag = 0 stans for by steps,flag = 1 by time(s)
         &FOCUSETIME The focused timepoints are = 5.1300100000e-04 ,5.1310000000e-04 ,5.2300000000e-04		     ! give the timepoints that needs to be focused
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -585,10 +585,10 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time =1.0370000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
         &FOCUSETIME The focused timepoints are = 1.0260010000e-03 ,1.0261000000e-03 ,1.0360000000e-03		     ! give the timepoints that needs to be focused
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -644,10 +644,10 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time =1.5500000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
         &FOCUSETIME The focused timepoints are = 1.5390010000e-03 ,1.5391000000e-03 ,1.5490000000e-03		     ! give the timepoints that needs to be focused
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -703,10 +703,10 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time =2.0630000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
         &FOCUSETIME The focused timepoints are = 2.0520010000e-03 ,2.0521000000e-03 ,2.0620000000e-03		     ! give the timepoints that needs to be focused
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -762,10 +762,10 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time =2.5760000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
         &FOCUSETIME The focused timepoints are = 2.5650010000e-03 ,2.5651000000e-03 ,2.5750000000e-03		     ! give the timepoints that needs to be focused
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -821,10 +821,10 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time =3.0890000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
         &FOCUSETIME The focused timepoints are = 3.0780010000e-03 ,3.0781000000e-03 ,3.0880000000e-03		     ! give the timepoints that needs to be focused
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -880,10 +880,10 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time =3.6020000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
         &FOCUSETIME The focused timepoints are = 3.5910010000e-03 ,3.5911000000e-03 ,3.6010000000e-03		     ! give the timepoints that needs to be focused
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)
@@ -939,10 +939,10 @@
     &TIMESUBCTL
         &TERMINATE Maxma simulation flag = 1, the time =4.1150000000e-03					     ! flag = 0 stans for by steps,flag = 1 by time(s)
         &FOCUSETIME The focused timepoints are = 4.1040010000e-03 ,4.1041000000e-03 ,4.1140000000e-03		     ! give the timepoints that needs to be focused
-        &TSTEPSTRATEGY  The update time-step strategy = 3, the correspond value = 2.76D-13           ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
+        &TSTEPSTRATEGY  The update time-step strategy = 5, the correspond value = 2.74D-8            ! flag = 0 the time step is determined by average distance of nearest cluster,correspond value for enlarge-scale
         											     ! flag = 1 is by fixed time-step, correspond value for the step time
         											     ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute
-												     ! flag = 3 the time step is determined by NNDR algorithm, the corresponded value is the lower limit
+												     ! flag = 5 the time step is determined by NNDR algorithm, the corresponded value is the lower limit length
 											 	     ! flag = 4 the time step is determined by NNDR algorithm lastpassage Integer lowerlimit stragegy, the corresponded value is the lower limit time
 
 	&UPDATESTATISTIC  Use fixd step flag = 0, the correspond value = 100000                          ! flag = 0 stans for by steps,flag = 1 by time(s)

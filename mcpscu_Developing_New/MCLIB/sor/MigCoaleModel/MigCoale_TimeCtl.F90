@@ -33,6 +33,7 @@ module MIGCOALE_TIMECTL
         integer::NCActGB
         real(kind=KINDDF)::TSTEPFREE,TSTEPGB
         integer::I
+        real(kind=KINDDF)::LowerLimitTime
         !---Body---
 
         TSTEPFREE = 1.D32
@@ -124,16 +125,20 @@ module MIGCOALE_TIMECTL
                     TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue/100.D0)
                 end if
 
-                TSTEP = max(TSTEP,dble(Host_SimuCtrlParam%LowerLimitTime))
+                LowerLimitTime = dble(Host_SimuCtrlParam%LowerLimitLength*Host_SimuCtrlParam%LowerLimitLength/(6.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU)))
+
+                TSTEP = max(TSTEP,LowerLimitTime)
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                TSTEP = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/dble(Host_SimuCtrlParam%LowerLimitTime))*dble(Host_SimuCtrlParam%LowerLimitTime)
+                LowerLimitTime = dble(Host_SimuCtrlParam%LowerLimitLength*Host_SimuCtrlParam%LowerLimitLength/(6.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU)))
+
+                TSTEP = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/LowerLimitTime)*LowerLimitTime
 
                 if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
                     TSTEP = min(TSTEP,Host_SimuCtrlParam%TermTValue/100.D0)
                 end if
 
-                TSTEP = max(TSTEP,dble(Host_SimuCtrlParam%LowerLimitTime))
+                TSTEP = max(TSTEP,LowerLimitTime)
 
             case default
                 write(*,*) "MCPSCUERROR: Unknown strategy to update time step :",Host_SimuCtrlParam%UPDATETSTEPSTRATEGY
@@ -179,6 +184,7 @@ module MIGCOALE_TIMECTL
         real(kind=KINDDF)::TSTEPFREE,TSTEPGB
         integer::MultiBox
         integer::I
+        real(kind=KINDDF)::LowerLimitTime
         !---Body---
 
         TSTEPFREE = 1.D32
@@ -272,16 +278,20 @@ module MIGCOALE_TIMECTL
                     TheVerifyTime = min(TheVerifyTime,Host_SimuCtrlParam%TermTValue/100.D0)
                 end if
 
-                TheVerifyTime = max(TheVerifyTime,dble(Host_SimuCtrlParam%LowerLimitTime))
+                LowerLimitTime = dble(Host_SimuCtrlParam%LowerLimitLength*Host_SimuCtrlParam%LowerLimitLength/(6.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU)))
+
+                TheVerifyTime = max(TheVerifyTime,LowerLimitTime)
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                TheVerifyTime = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/dble(Host_SimuCtrlParam%LowerLimitTime))*dble(Host_SimuCtrlParam%LowerLimitTime)
+                TheVerifyTime = floor(minval(Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)/LowerLimitTime)*LowerLimitTime
 
                 if(Host_SimuCtrlParam%TermTFlag .eq. mp_TermTimeFlag_ByRealTime) then
                     TheVerifyTime = min(TheVerifyTime,Host_SimuCtrlParam%TermTValue/100.D0)
                 end if
 
-                TheVerifyTime = max(TheVerifyTime,dble(Host_SimuCtrlParam%LowerLimitTime))
+                LowerLimitTime = dble(Host_SimuCtrlParam%LowerLimitLength*Host_SimuCtrlParam%LowerLimitLength/(6.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU)))
+
+                TheVerifyTime = max(TheVerifyTime,LowerLimitTime)
 
             case default
                 write(*,*) "MCPSCUERROR: Unknown strategy to update time step :",Host_SimuCtrlParam%UPDATETSTEPSTRATEGY

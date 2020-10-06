@@ -58,8 +58,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                         ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute uniform in the box
      real::FixedTimeStepValue = 1                                       ! Fixed step time length for mp_FixedTimeStep strategy
      real::EnlageTStepScale = 0.01                                      ! adjustl time-step enlarge-scale mp_SelfAdjustlStep_NearestSep strategy and mp_SelfAdjustlStep_AveSep
-     real(kind=KINDDF)::LowerLimitTime = 3.68D-13                                    ! The lower limit time of NDDR algorithm
-     real::LowerLimitLength = 2.74D-8                                   ! The lower limit length of NDDR_S4 algorithm
+     real(kind=KINDDF)::LowerLimitLength = 2.74D-8                      ! The lower limit length of NDDR_S4 algorithm
      integer::LastPassageFactor = 5                                     ! The last passage factor
 
      integer::TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps   ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s)
@@ -354,12 +353,11 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
             case(mp_SelfAdjustlStep_NNDR)
                 write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%LowerLimitTime
+                                                                    cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%LowerLimitLength
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,1PE16.8,2x,I10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = . the corresponded value three = ", &
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,I10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = .", &
                                                                               cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY, &
-                                                                              cursor%theSimulationCtrlParam%LowerLimitTime, &
                                                                               cursor%theSimulationCtrlParam%LowerLimitLength, &
                                                                               cursor%theSimulationCtrlParam%LastPassageFactor
         end select
@@ -714,7 +712,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%UPDATETSTEPSTRATEGY = otherOne%UPDATETSTEPSTRATEGY
     this%FixedTimeStepValue = otherOne%FixedTimeStepValue
     this%EnlageTStepScale = otherOne%EnlageTStepScale
-    this%LowerLimitTime = otherOne%LowerLimitTime
     this%LowerLimitLength = otherOne%LowerLimitLength
     this%LastPassageFactor = otherOne%LastPassageFactor
 
@@ -815,7 +812,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
      this%FixedTimeStepValue = 1
      this%EnlageTStepScale = 0.01
-     this%LowerLimitTime = 3.68D-13
      this%LowerLimitLength = 2.74D-8
      this%LastPassageFactor = 5
 
@@ -973,7 +969,6 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep
      this%FixedTimeStepValue = 1
      this%EnlageTStepScale = 0.01
-     this%LowerLimitTime = 3.68D-13
      this%LowerLimitLength = 2.74D-8
      this%LastPassageFactor = 5
 
@@ -1685,39 +1680,32 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    this%LowerLimitTime = DRSTR(STRNUMB(2))
-                    if(this%LowerLimitTime .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
+                    this%LowerLimitLength = DRSTR(STRNUMB(2))
+                    if(this%LowerLimitLength .LT. 0) then
+                        write(*,*) "MCPSCU ERROR: The lower jump length limit cannot less than 0.",this%LowerLimitLength
                         pause
                         stop
                     end if
 
                 case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                    call EXTRACT_NUMB(STR,4,N,STRNUMB)
+                    call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
-                    if(N .LT. 4) then
+                    if(N .LT. 3) then
                         write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
                         write(*,*) "At control file line: ",LINE
-                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the low limit time  =  , the  LowerLimit Length = , the last passage factor = '."
+                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the  LowerLimit Length = , the last passage factor = '."
                         pause
                         stop
                     end if
 
-                    this%LowerLimitTime = DRSTR(STRNUMB(2))
-                    if(this%LowerLimitTime .LT. 0) then
-                        write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
-                        pause
-                        stop
-                    end if
-
-                    this%LowerLimitLength = DRSTR(STRNUMB(3))
+                    this%LowerLimitLength = DRSTR(STRNUMB(2))
                     if(this%LowerLimitLength .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitLength
                         pause
                         stop
                     end if
 
-                    this%LastPassageFactor = ISTR(STRNUMB(4))
+                    this%LastPassageFactor = ISTR(STRNUMB(3))
                     if(this%LastPassageFactor .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The last passage factor cannot less than 0.",this%LastPassageFactor
                         pause

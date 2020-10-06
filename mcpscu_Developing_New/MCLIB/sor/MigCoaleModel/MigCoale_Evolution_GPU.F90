@@ -87,7 +87,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                                     Dev_DiffusorMap%Dev_TypesEntities,           &
                                                                     Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
                                                                     TSTEP,                                       &
-                                                                    Host_SimuCtrlParam%LowerLimitTime,           &
+                                                                    Host_SimuCtrlParam%LowerLimitLength,         &
                                                                     Host_SimuCtrlParam%LastPassageFactor,        &
                                                                     CapCal_Dev%dm_CascadeCenter,                 &
                                                                     CapCal_Dev%dm_ROutAbsorbToCent)
@@ -423,7 +423,7 @@ module MIGCOALE_EVOLUTION_GPU
   attributes(global) subroutine WalkOneStep_Kernel_NNDR_LastPassage(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
                                                                     DevRandRecord,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,&
                                                                     Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP,&
-                                                                    LowerLimitTime,LastPassageFactor,&
+                                                                    LowerLimitLength,LastPassageFactor,&
                                                                     Dev_CascadeCent,Dev_ROutAbsorbRadius)
     implicit none
     !---Dummy Vars---
@@ -438,7 +438,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(DiffusorTypeEntity),device::Dev_TypesEntities(:)
     integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     real(kind=KINDDF),value::TSTEP
-    real(kind=KINDDF),value::LowerLimitTime
+    real(kind=KINDDF),value::LowerLimitLength
     integer,value::LastPassageFactor
     real(kind=KINDDF),device::Dev_CascadeCent(:,:)
     real(kind=KINDDF),device::Dev_ROutAbsorbRadius(:)
@@ -467,7 +467,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::NJump
     integer::IJump
     real(kind=KINDDF)::JumpRemind
-    real(kind=KINDDF)::LowerLimitLength
+    real(kind=KINDDF)::LowerLimitTime
     real(kind=KINDDF)::DistToCent
     real(kind=KINDDF)::CascadeCenter(3)
     !---Body---
@@ -502,7 +502,7 @@ module MIGCOALE_EVOLUTION_GPU
         !The average displacement:by using the Einstein Relation
         RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
 
-        LowerLimitLength = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*LowerLimitTime)
+        LowerLimitTime = LowerLimitLength*LowerLimitLength/(6.D0*Dev_Clusters(IC)%m_DiffCoeff)
 
         VectorLen = Dev_Clusters(IC)%m_DiffuseDirection(1)*Dev_Clusters(IC)%m_DiffuseDirection(1) + &
                     Dev_Clusters(IC)%m_DiffuseDirection(2)*Dev_Clusters(IC)%m_DiffuseDirection(2) + &
@@ -720,7 +720,7 @@ module MIGCOALE_EVOLUTION_GPU
         normVector = Seed1Pos - Seed2Pos
 
         !The average displacement:by using the Einstein Relation
-        LowerLimitLength = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*LowerLimitTime)
+        LowerLimitTime = LowerLimitLength*LowerLimitLength/(4.D0*Dev_Clusters(IC)%m_DiffCoeff)
 
         JumpHead = TSTEP - LowerLimitTime*LastPassageFactor
 
