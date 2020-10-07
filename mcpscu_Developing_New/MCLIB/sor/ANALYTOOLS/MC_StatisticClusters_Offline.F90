@@ -1136,6 +1136,9 @@ program Main_StatisticClusters_Offline
                         call StatisticClusters_SIAAndVAC_Ver2019_08_20(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam,Record,hFileOutEachBox,hFileOutTotalBox)
                 end select
 
+                call flush(hFileOutEachBox)
+                call flush(hFileOutTotalBox)
+
                 call Host_Boxes%Clean()
 
             END DO
