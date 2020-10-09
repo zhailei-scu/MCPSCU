@@ -783,6 +783,108 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     return
   end subroutine Kernel_NeighborList_Nearest_WithOutActiveIndex
 
+!  !**********************************************************************************
+!  subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+!    implicit none
+!    !---Dummy Vars---
+!    type(SimulationBoxes), intent(in)::Host_Boxes
+!    type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
+!    type(SimulationBoxes_GPU)::Dev_Boxes
+!    !---Local Vars---
+!    integer::MULTIBOX
+!    integer::NNearestNeighbor
+!    type(dim3)::blocks
+!    type(dim3)::threads
+!    integer::NB, NBX, NBY, BX, BY, err
+!    integer::BlockNumEachBox
+!    logical::ChangedToUsedIndex
+!    type(cudaEvent)::StartEvent
+!    type(cudaEvent)::StopEvent
+!    integer::IState
+!    real::time
+!    !---Body---
+!    #ifdef MC_PROFILING
+!    call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
+!    N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
+!    #endif
+!    !---Body---
+!
+!    IState = cudaEventCreate(StartEvent)
+!    IState = cudaEventCreate(StopEvent)
+!
+!    MULTIBOX = Host_SimuCtrlParam%MultiBox
+!
+!    ChangedToUsedIndex = .false.
+!
+!    NNearestNeighbor = Host_SimuCtrlParam%MAXNEIGHBORNUM
+!
+!    !*** to determine the block size
+!    BX = p_BLOCKSIZE
+!    BY = 1
+!    !*** to determine the dimension of blocks
+!    if(maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1)) .GE. &
+!       maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))) then
+!        ChangedToUsedIndex = .false.
+!        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEExpdIndexBox(:,1))/p_BLOCKSIZE + 1
+!    else
+!        ChangedToUsedIndex = .true.
+!        BlockNumEachBox = maxval(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,2)-Host_Boxes%m_BoxesInfo%SEUsedIndexBox(:,1))/p_BLOCKSIZE + 1
+!    end if
+!    NB = BlockNumEachBox*MultiBox
+!
+!    blocks  = dim3(NB, 1, 1)
+!    threads = dim3(BX, BY, 1)
+!
+!    if(NNearestNeighbor .GT. p_MXNEAREST) then
+!       write(*,*) "Warning! The user defined number of nearest neighborhood is too large:",NNearestNeighbor,p_MXNEAREST
+!       NNearestNeighbor = p_MXNEAREST
+!       write(*,*) "To continue the evolution, the user defined number of nearest neighborhood is changed to:",NNearestNeighbor
+!    else if(NNearestNeighbor .LE. 0) then
+!       write(*,*) "Warning! The user defined number of nearest neighborhood is ZERO:",NNearestNeighbor
+!       NNearestNeighbor = p_MXNEAREST
+!       write(*,*) "To continue the evolution, the user defined number of nearest neighborhood is changed to:",NNearestNeighbor
+!    end if
+!
+!    IState = cudaEventRecord(StartEvent,0)
+!
+!    if(ChangedToUsedIndex .eq. .false.) then
+!        call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
+!                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+!                                                                                    Dev_Boxes%dm_SEExpdIndexBox,                  &
+!                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+!                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+!                                                                                    BlockNumEachBox,                               &
+!                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
+!    else
+!        call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
+!                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
+!                                                                                    Dev_Boxes%dm_SEUsedIndexBox,                   &
+!                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
+!                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
+!                                                                                    BlockNumEachBox,                               &
+!                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
+!    end if
+!
+!    IState = cudaEventRecord(StopEvent,0)
+!
+!    IState = cudaEventSynchronize(StopEvent)
+!
+!    IState = cudaEventElapsedTime(time,StartEvent,StopEvent)
+!
+!    write(*,*) "NeighborCal time is: ",time
+!
+!    IState = cudaEventDestroy(StartEvent)
+!    IState = cudaEventDestroy(StopEvent)
+!
+!
+!    #ifdef MC_PROFILING
+!    call Time_Accumulate(T_Cal_Neighbore_Table_GPU_Nearest_Start,T_Cal_Neighbore_Table_GPU_Nearest)
+!    #endif
+!
+!    return
+!  end subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex
+
+
   !**********************************************************************************
   subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
     implicit none
@@ -798,19 +900,12 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::NB, NBX, NBY, BX, BY, err
     integer::BlockNumEachBox
     logical::ChangedToUsedIndex
-    type(cudaEvent)::StartEvent
-    type(cudaEvent)::StopEvent
-    integer::IState
-    real::time
     !---Body---
     #ifdef MC_PROFILING
     call Time_Start(T_Cal_Neighbore_Table_GPU_Nearest_Start)
     N_Invoke_Cal_Neighbor_GPU = N_Invoke_Cal_Neighbor_GPU + 1
     #endif
     !---Body---
-
-    IState = cudaEventCreate(StartEvent)
-    IState = cudaEventCreate(StopEvent)
 
     MULTIBOX = Host_SimuCtrlParam%MultiBox
 
@@ -845,8 +940,6 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
        write(*,*) "To continue the evolution, the user defined number of nearest neighborhood is changed to:",NNearestNeighbor
     end if
 
-    IState = cudaEventRecord(StartEvent,0)
-
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -865,24 +958,13 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
     end if
 
-    IState = cudaEventRecord(StopEvent,0)
-
-    IState = cudaEventSynchronize(StopEvent)
-
-    IState = cudaEventElapsedTime(time,StartEvent,StopEvent)
-
-    write(*,*) "NeighborCal time is: ",time
-
-    IState = cudaEventDestroy(StartEvent)
-    IState = cudaEventDestroy(StopEvent)
-
-
     #ifdef MC_PROFILING
     call Time_Accumulate(T_Cal_Neighbore_Table_GPU_Nearest_Start,T_Cal_Neighbore_Table_GPU_Nearest)
     #endif
 
     return
   end subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex
+
 
   !******************************************************************************************
   attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps)
