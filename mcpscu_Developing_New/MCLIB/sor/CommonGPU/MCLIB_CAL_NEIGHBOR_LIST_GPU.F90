@@ -1736,7 +1736,6 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 	 return
   end subroutine Kernel_MyNeighborListCal_SortX_multipleBox_noshare_LeftRightCohen
 
-
 !  attributes(global) subroutine Kernel_MyNeighborListCal_SortX_multipleBox_noshare(Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,SortedIndexX,MinTSteps,maxDiffuse)
 !    implicit none
 !    !--Dummy Vars---
