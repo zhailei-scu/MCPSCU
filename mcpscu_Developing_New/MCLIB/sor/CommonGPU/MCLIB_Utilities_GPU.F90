@@ -2326,6 +2326,104 @@ module MCLIB_Utilities_GPU
 !	}
 !}
 
+  !*****************************************
+  subroutine CPU_GlobalMerge_toApply(TheSize,TotalSegments,SegmentsStride,MaxNCEachSegments,IDStartEnd_ForSort_Host,KeyArray,ValueArray,dir,OEFlagArray)
+    !---Dummy Vars---
+    integer::TheSize
+    integer::TotalSegments
+    integer::SegmentsStride
+    integer::MaxNCEachSegments
+    integer,dimension(:,:),allocatable::IDStartEnd_ForSort_Host
+    type(ACluster),device,dimension(:),allocatable::KeyArray
+    integer,device,dimension(:),allocatable::ValueArray
+    integer::dir
+    integer,device,dimension(:),allocatable::OEFlagArray
+    !---Local Vars---
+    integer::NSize
+    type(ACluster),dimension(:),allocatable::KeyArray_Host
+    integer,dimension(:),allocatable::ValueArray_Host
+    integer,dimension(:),allocatable::OEFlagArray_Host
+    integer::bid
+    integer::tempDir
+    integer::ICStart
+    integer::ICEnd
+    integer::Loop
+    integer::cid
+	integer::pos
+	integer::Left
+	integer::Right
+	integer::IDSeg
+	integer::IDLevel
+	integer::IDSegStart
+	integer::IDSegEnd
+	integer::IDSegMap
+	integer::ICSegStart
+	integer::ICSegEnd
+	integer::ICLevelStart
+	integer::ICLevelEnd
+	integer::ICLevelRightHalfStart
+	integer::ICLevelRightHalfEnd
+	integer::LogicalToInt
+	integer::FlagsShift
+	integer::Stride
+    integer::tid
+    !---Body---
+    NSize = size(KeyArray)
+
+    call AllocateArray_Host(KeyArray_Host,NSize,"KeyArray_Host")
+    KeyArray_Host = KeyArray
+    call AllocateArray_Host(ValueArray_Host,NSize,"ValueArray_Host")
+    ValueArray_Host = ValueArray
+
+    NSize = size(OEFlagArray)
+    call AllocateArray_Host(OEFlagArray_Host,NSize,"OEFlagArray_Host")
+    OEFlagArray_Host = OEFlagArray
+
+    DO IDSeg = 1,TotalSegments/2
+        IDLevel = (IDSeg-1)/SegmentsStride
+        IDSegStart = IDLevel * 2 * SegmentsStride + 1
+        IDSegEnd = (IDLevel + 1) * 2 * SegmentsStride
+		IDSegMap = IDSegStart + mod(IDSeg-1,SegmentsStride)
+
+        tempDir = IEOR(dir,IAND((IDSegStart -1)/TheSize,1))
+
+        ICSegStart = IDStartEnd_ForSort_Host(IDSegMap,1)
+        ICSegEnd = IDStartEnd_ForSort_Host(IDSegMap,2)
+
+        ICLevelStart = IDStartEnd_ForSort_Host(IDSegStart,1)
+        ICLevelEnd = IDStartEnd_ForSort_Host(IDSegEnd,2)
+
+        ICLevelRightHalfStart = IDStartEnd_ForSort_Host(IDSegStart + SegmentsStride,1)
+        ICLevelRightHalfEnd = ICLevelEnd
+
+
+        if(ICLevelRightHalfEnd .GT. 0) then
+
+            Stride = (ICLevelEnd - ICLevelStart + 1) / 2 + OEFlagArray_Host(IDSegMap)
+
+            DO tid = 0,MaxNCEachSegments-1
+                pos = ICSegStart + tid
+
+                if (pos .LE. ICSegEnd .AND. (pos + Stride) .LE. ICLevelEnd) then
+
+                    call ComparetorX_toApply_Global_Host(pos,pos + Stride,KeyArray_Host,ValueArray_Host,tempDir)
+
+                end if
+
+            END DO
+
+        end if
+
+    END DO
+
+    ValueArray = ValueArray_Host
+
+    call DeAllocateArray_Host(KeyArray_Host,"KeyArray_Host")
+    call DeAllocateArray_Host(ValueArray_Host,"ValueArray_Host")
+    call DeAllocateArray_Host(OEFlagArray_Host,"OEFlagArray_Host")
+    return
+  end subroutine CPU_GlobalMerge_toApply
+
 
   attributes(global) subroutine Kernel_GlobalMerge_toApply(BlockNumEachBox,TheSize, SegmentsStride, IDStartEnd_ForSort, KeyArray,ValueArray, dir, OEFlags)
     implicit none
@@ -2376,7 +2474,7 @@ module MCLIB_Utilities_GPU
 	ICSegStart = IDStartEnd_ForSort(IDSegMap,1)
 	ICSegEnd = IDStartEnd_ForSort(IDSegMap,2)
 
-    if(ICSegEnd .GT. 0) then
+    if(ICLevelEnd .GT. 0) then
 
         pos = ICSegStart + tid - 1
 
@@ -2480,6 +2578,124 @@ module MCLIB_Utilities_GPU
 !
 !	}
 !}
+
+
+!void CPU_Shared_Merge_toApply(double* Host_TestArray, int** IDStartEnd_ForSort, int dir, int Size, int TotalSegments) {
+!
+!	for (int bid = 0; bid < TotalSegments; bid++) {
+!		int tempDir = ((bid / Size) % 2) ^ dir;
+!
+!		int SegmentSize;
+!		int ICStart = IDStartEnd_ForSort[bid][0];
+!		int ICEnd = IDStartEnd_ForSort[bid][1];
+!
+!		for (int Loop = ICStart; Loop <= ICEnd; Loop++) {
+!			for (int cid = ICStart; cid < ICEnd; cid++) {
+!				Comparetor_Host_toApply(Host_TestArray[cid], Host_TestArray[cid + 1], tempDir);
+!			}
+!		}
+!
+!	}
+!}
+
+  subroutine ComparetorX_toApply_Global_Host(posA,posB,KeyArray,ValueArray,dir)
+    implicit none
+    !---Dummy Vars---
+    integer::posA
+    integer::posB
+    type(ACluster),dimension(:),allocatable::KeyArray(:)
+    integer,dimension(:),allocatable::ValueArray(:)
+    integer::dir
+    !--Local Vars---
+    real(kind=KINDDF)::KeyA
+    real(kind=KINDDF)::KeyB
+    type(ACluster)::tempCluster
+    integer::ValueA
+    integer::ValueB
+    integer::tempValue
+    !---Body---
+    ValueA = ValueArray(posA)
+    ValueB = ValueArray(posB)
+    KeyA = KeyArray(posA)%m_POS(1)
+    KeyB = KeyArray(posB)%m_POS(1)
+
+    if((KeyA .GT. KeyB) .eq. (dir .eq. p_Sort_Ascending) ) then
+        tempCluster = KeyArray(posA)
+
+        KeyArray(posA) = KeyArray(posB)
+
+        KeyArray(posB) = tempCluster
+
+		ValueArray(posA) = ValueB
+        ValueArray(posB) = ValueA
+    end if
+
+    return
+  end subroutine ComparetorX_toApply_Global_Host
+
+  subroutine CPU_Shared_Merge_toApply(TotalSegments,KeyArray,ValueArray,IDStartEnd_ForSort_Host,dir,TheSize)
+    implicit none
+    !---Dummy Vars---
+    integer::TotalSegments
+    type(ACluster),device,dimension(:),allocatable::KeyArray
+    integer,device,dimension(:),allocatable::ValueArray
+    integer,dimension(:,:),allocatable::IDStartEnd_ForSort_Host
+    integer::dir
+    integer::TheSize
+    !---Local Vars---
+    integer::NSize
+    type(ACluster),dimension(:),allocatable::KeyArray_Host
+    integer,dimension(:),allocatable::ValueArray_Host
+    integer::bid
+    integer::tempDir
+    integer::ICStart
+    integer::ICEnd
+    integer::Loop
+    integer::cid
+    !---Body---
+    NSize = size(KeyArray)
+
+    call AllocateArray_Host(KeyArray_Host,NSize,"KeyArray_Host")
+    KeyArray_Host = KeyArray
+    call AllocateArray_Host(ValueArray_Host,NSize,"ValueArray_Host")
+    ValueArray_Host = ValueArray
+
+    DO bid = 1,-1
+        write(*,*) "OOOOOO"
+    END DO
+
+
+    DO bid = 1,TotalSegments
+
+        tempDir = IEOR(mod((bid-1)/TheSize,2),dir)
+
+        ICStart = IDStartEnd_ForSort_Host(bid,1)
+        ICEnd = IDStartEnd_ForSort_Host(bid,2)
+
+        if(ICEnd .GT. 1) then
+
+            DO cid=ICStart,ICEnd
+                ValueArray_Host(cid) = cid
+            END DO
+
+            DO Loop=ICStart,ICEnd
+
+                DO cid=ICStart,ICEnd-1
+                    call ComparetorX_toApply_Global_Host(cid,cid+1,KeyArray_Host,ValueArray_Host,tempDir)
+                END DO
+
+            END DO
+        end if
+    END DO
+
+    ValueArray = ValueArray_Host
+
+    call DeAllocateArray_Host(KeyArray_Host,"KeyArray_Host")
+    call DeAllocateArray_Host(ValueArray_Host,"ValueArray_Host")
+
+  end subroutine CPU_Shared_Merge_toApply
+
+
 
   !***********Used For Array Size less than BLOCKSIZE And is not of power 2******************
   attributes(global) subroutine Kernel_Shared_Merge_toApply(BlockNumEachBox_Share,KeyArray,ValueArray,IDStartEnd_ForSort,dir,padNum,TheSize)
@@ -3282,6 +3498,175 @@ module MCLIB_Utilities_GPU
     return
   end subroutine CheckSort_Test
 
+
+!  extern "C" void CPU_GlobalMerge(int Size, int TotalSegments, int SegmentsStride, int MaxSegments, int** IDStartEnd, double* Host_TestArray, int dir) {
+!	int tempDir;
+!	int pos;
+!	double Left;
+!	double Right;
+!
+!	for (int IDSeg = 0; IDSeg < TotalSegments/2; IDSeg++) {
+!		int IDLevel = IDSeg / SegmentsStride;
+!		int IDSegStart = IDLevel * 2 * SegmentsStride;
+!		int IDSegEnd = (IDLevel + 1) * 2 * SegmentsStride - 1;
+!		int IDSegMap = IDSegStart + IDSeg % SegmentsStride;
+!		int ICSegStart;
+!		int ICSegEnd;
+!		int ICLevelStart;
+!		int ICLevelRightHalfStart;
+!		int ICLevelRightHalfEnd;
+!		int ICLevelEnd;
+!		int FlagsShift;
+!		int Stride;
+!		int OEFlag; // odd or Even within size;
+!
+!		tempDir = dir ^ ((IDSegStart / Size) & 1);
+!
+!		ICSegStart = *(*(IDStartEnd + IDSegMap) + 0);
+!		ICSegEnd = *(*(IDStartEnd + IDSegMap) + 1);
+!
+!
+!		ICLevelStart = *(*(IDStartEnd + IDSegStart) + 0);
+!		ICLevelEnd = *(*(IDStartEnd + IDSegEnd) + 1);
+!
+!		ICLevelRightHalfStart = *(*(IDStartEnd + IDSegStart + SegmentsStride) + 0);
+!		ICLevelRightHalfEnd = ICLevelEnd;
+!
+!		FlagsShift = tempDir ^ (Host_TestArray[ICLevelRightHalfEnd] >= Host_TestArray[ICLevelRightHalfStart]);
+!
+!		OEFlag = ((ICLevelEnd - ICLevelStart + 1) % 2 != 0)&FlagsShift;
+!
+!		Stride = (ICLevelEnd - ICLevelStart + 1) / 2 + OEFlag;
+!
+!		for (int tid = 0; tid < MaxSegments; tid++) {
+!			pos = ICSegStart + tid;
+!
+!
+!
+!			if (pos <= ICSegEnd && (pos + Stride) <= ICLevelEnd) {
+!
+!				Left = Host_TestArray[pos];
+!				Right = Host_TestArray[pos + Stride];
+!
+!				Comparetor_Host(Left, Right, tempDir);
+!
+!				Host_TestArray[pos] = Left;
+!				Host_TestArray[pos + Stride] = Right;
+!
+!			}
+!
+!		}
+!
+!	}
+!}
+
+
+  subroutine CPU_GlobalMerge(TheSize,TotalSegments,SegmentsStride,MaxNCEachSegments,IDStartEnd_ForSort_Host,KeyArray,ValueArray,dir)
+    !---Dummy Vars---
+    integer::TheSize
+    integer::TotalSegments
+    integer::SegmentsStride
+    integer::MaxNCEachSegments
+    integer,dimension(:,:),allocatable::IDStartEnd_ForSort_Host
+    type(ACluster),device,dimension(:),allocatable::KeyArray
+    integer,device,dimension(:),allocatable::ValueArray
+    integer::dir
+    !---Local Vars---
+    integer::NSize
+    type(ACluster),dimension(:),allocatable::KeyArray_Host
+    integer,dimension(:),allocatable::ValueArray_Host
+    integer::bid
+    integer::tempDir
+    integer::ICStart
+    integer::ICEnd
+    integer::Loop
+    integer::cid
+	integer::pos
+	integer::Left
+	integer::Right
+	integer::IDSeg
+	integer::IDLevel
+	integer::IDSegStart
+	integer::IDSegEnd
+	integer::IDSegMap
+	integer::ICSegStart
+	integer::ICSegEnd
+	integer::ICLevelStart
+	integer::ICLevelEnd
+	integer::ICLevelRightHalfStart
+	integer::ICLevelRightHalfEnd
+	integer::LogicalToInt
+	integer::FlagsShift
+	integer::OEFlag
+	integer::Stride
+    integer::tid
+    !---Body---
+    NSize = size(KeyArray)
+
+    call AllocateArray_Host(KeyArray_Host,NSize,"KeyArray_Host")
+    KeyArray_Host = KeyArray
+    call AllocateArray_Host(ValueArray_Host,NSize,"ValueArray_Host")
+    ValueArray_Host = ValueArray
+
+
+    DO IDSeg = 1,TotalSegments/2
+        IDLevel = (IDSeg-1)/SegmentsStride
+        IDSegStart = IDLevel * 2 * SegmentsStride + 1
+        IDSegEnd = (IDLevel + 1) * 2 * SegmentsStride
+		IDSegMap = IDSegStart + mod(IDSeg-1,SegmentsStride)
+
+        tempDir = IEOR(dir,IAND((IDSegStart -1)/TheSize,1))
+
+        ICSegStart = IDStartEnd_ForSort_Host(IDSegMap,1)
+        ICSegEnd = IDStartEnd_ForSort_Host(IDSegMap,2)
+
+        ICLevelStart = IDStartEnd_ForSort_Host(IDSegStart,1)
+        ICLevelEnd = IDStartEnd_ForSort_Host(IDSegEnd,2)
+
+        ICLevelRightHalfStart = IDStartEnd_ForSort_Host(IDSegStart + SegmentsStride,1)
+        ICLevelRightHalfEnd = ICLevelEnd
+
+
+        if(ICLevelRightHalfEnd .GT. 0) then
+            LogicalToInt = (KeyArray_Host(ValueArray(ICLevelRightHalfEnd))%m_POS(1) .GE. KeyArray_Host(ValueArray(ICLevelRightHalfStart))%m_POS(1))
+
+            LogicalToInt = LogicalToInt*LogicalToInt   ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+            FlagsShift = IEOR(tempDir,LogicalToInt)
+
+
+            LogicalToInt = (mod(ICLevelEnd - ICLevelStart + 1,2) .ne. 0)
+
+            LogicalToInt = LogicalToInt*LogicalToInt ! in PGI compiler the .true. is -1 in integer form,false is 0 in integer form
+
+            OEFlag = IAND(LogicalToInt,FlagsShift)
+
+            Stride = (ICLevelEnd - ICLevelStart + 1) / 2 + OEFlag
+
+
+            DO tid = 0,MaxNCEachSegments-1
+                pos = ICSegStart + tid
+
+                if (pos .LE. ICSegEnd .AND. (pos + Stride) .LE. ICLevelEnd) then
+
+                    call ComparetorX_toApply_Global_Host(pos,pos + Stride,KeyArray_Host,ValueArray_Host,tempDir)
+
+                end if
+
+            END DO
+
+        end if
+
+    END DO
+
+    ValueArray = ValueArray_Host
+
+    call DeAllocateArray_Host(KeyArray_Host,"KeyArray_Host")
+    call DeAllocateArray_Host(ValueArray_Host,"ValueArray_Host")
+
+    return
+  end subroutine CPU_GlobalMerge
+
   !**********************************************************************************
   subroutine ArbitraryBitonicSortX_toApply(this,NBox, KeyArray)
     implicit none
@@ -3299,7 +3684,7 @@ module MCLIB_Utilities_GPU
 	else
 
 		call Kernel_Shared_Merge_toApply<<<this%blocksShared,this%threadsShared>>>(this%MaxSegmentsNumEachBox,KeyArray,this%SortedIndexX_Dev,this%IDStartEnd_ForSort_Dev,this%dir,this%padNum,1)
-
+        !call CPU_Shared_Merge_toApply(this%MaxSegmentsNumAllBox,KeyArray,this%SortedIndexX_Dev,this%IDStartEnd_ForSort_Host,this%dir,1)
 
 !        write(*,*) "****************Kernel_Shared_Merge_toApply*************************"
 !        call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
@@ -3314,9 +3699,9 @@ module MCLIB_Utilities_GPU
                 if(Stride .GE. 1) then
 
                     call Kernel_GlobalMerge_Pre_toApply<<<this%blocksGlobal,1>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride, this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndexX_Dev,this%dir,this%OEFlags_Dev)
-
+                    !call CPU_GlobalMerge_toApply(TheSize,this%MaxSegmentsNumAllBox,Stride,p_BLOCKSIZE_BITONIC,this%IDStartEnd_ForSort_Host,KeyArray,this%SortedIndexX_Dev,this%dir,this%OEFlags_Dev)
 					call Kernel_GlobalMerge_toApply<<<this%blocksGlobal,this%threadsGlobal>>>(this%MaxSegmentsNumEachBox/2,TheSize, Stride,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndexX_Dev,this%dir,this%OEFlags_Dev)
-
+                    !call CPU_GlobalMerge(TheSize,this%MaxSegmentsNumAllBox,Stride,p_BLOCKSIZE_BITONIC,this%IDStartEnd_ForSort_Host,KeyArray,this%SortedIndexX_Dev,this%dir)
 
 !					        write(*,*) "****************Kernel_GlobalMerge_toApply*************************",TheSize,Stride
 !                            call CheckSort_Test(NBox,this%MaxSegmentsNumEachBox,this%IDStartEnd_ForSort_Dev,KeyArray,this%SortedIndex_Dev)
