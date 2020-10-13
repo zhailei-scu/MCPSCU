@@ -4040,7 +4040,7 @@ module MCLIB_Utilities_GPU
 	ICSegStart = IDStartEnd_ForSort(IDSegMap,1)
 	ICSegEnd = IDStartEnd_ForSort(IDSegMap,2)
 
-    if(ICSegEnd .GT. 0) then
+    if(ICLevelEnd .GT. 0) then
 
         pos = ICSegStart + tid - 1
 
