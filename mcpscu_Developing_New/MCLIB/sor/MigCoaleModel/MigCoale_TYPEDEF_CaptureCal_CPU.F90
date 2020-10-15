@@ -22,10 +22,11 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         integer::CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         integer::NSIA = 0
         integer::SIASIZE = 1
-        integer::UDef_NVAC = 0
-        integer::UDef_VACSIZE = 1
-        real(kind=KINDDF)::UDef_RVACINCLUDE = 0.D0
-        real(kind=KINDDF)::UDef_CascadeCent(3) = 0.5D0
+        integer::NCascade = 1
+        integer,dimension(:),allocatable::UDef_NVAC
+        integer,dimension(:),allocatable::UDef_VACSIZE
+        real(kind=KINDDF),dimension(:),allocatable::UDef_RVACINCLUDE
+        real(kind=KINDDF),dimension(:,:),allocatable::UDef_CascadeCent
 
         integer::SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
 
@@ -78,10 +79,12 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         this%NSIA = 0
         this%SIASIZE = 1
-        this%UDef_NVAC = 0
-        this%UDef_VACSIZE = 1
-        this%UDef_RVACINCLUDE = 0.D0
-        this%UDef_CascadeCent = 0.5D0
+        this%NCascade = 0
+
+        call DeAllocateArray_Host(this%UDef_NVAC,"UDef_NVAC")
+        call DeAllocateArray_Host(this%UDef_VACSIZE,"UDef_NVAC")
+        call DeAllocateArray_Host(this%UDef_RVACINCLUDE,"UDef_RVACINCLUDE")
+        call DeAllocateArray_Host(this%UDef_CascadeCent,"UDef_CascadeCent")
 
         this%SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
@@ -584,8 +587,56 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         character*1000::STRTMP(10)
         integer::N
         logical::Finded
-        integer::I
+        integer::ICase
+        integer::J
         !---Body---
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        DO while(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&NCASCADE")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the Cascade number in one box."
+                        pause
+                        stop
+                    end if
+                    this%NCascade = ISTR(STRTMP(1))
+
+                    if(this%NCascade .LE. 0) then
+                        write(*,*) "MCPSCUERROR: the cascade number cannot less than 1."
+                        write(*,*) this%NCascade
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the Cascade number in one box."
+           pause
+           stop
+        end if
+
+
+
         LINE = 0
         Finded = .false.
         rewind(hFile)
@@ -604,19 +655,23 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&VACNUMBER")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special the VAC number in one box."
+                    call EXTRACT_NUMB(STR,this%NCascade,N,STRTMP)
+                    if(N .LT. this%NCascade) then
+                        write(*,*) "MCPSCUERROR: You must special ",this%NCascade," Cascades VAC number in one box."
                         pause
                         stop
                     end if
-                    this%UDef_NVAC = ISTR(STRTMP(1))
+                    call AllocateArray_Host(this%UDef_NVAC,this%NCascade,"this%NCascade")
 
-                    if(this%UDef_NVAC .LE. 0) then
-                        write(*,*) "MCPSCUERROR: The VAC number cannot less than 0"
-                        pause
-                        stop
-                    end if
+                    DO ICase=1,this%NCascade
+                        this%UDef_NVAC(ICase) = ISTR(STRTMP(ICase))
+
+                        if(this%UDef_NVAC(ICase) .LE. 0) then
+                            write(*,*) "MCPSCUERROR: The VAC number cannot less than 0"
+                            pause
+                            stop
+                        end if
+                    END DO
 
                     Finded = .true.
             end select
@@ -646,19 +701,23 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&VACSIZE")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special the VAC size in one box."
+                    call EXTRACT_NUMB(STR,this%NCascade,N,STRTMP)
+                    if(N .LT. this%NCascade) then
+                        write(*,*) "MCPSCUERROR: You must special ",this%NCascade," Cascades VAC size in one box."
                         pause
                         stop
                     end if
-                    this%UDef_VACSIZE = ISTR(STRTMP(1))
+                    call AllocateArray_Host(this%UDef_VACSIZE,this%NCascade,"this%NCascade")
 
-                    if(this%UDef_VACSIZE .LE. 0) then
-                        write(*,*) "MCPSCUERROR: The VAC size cannot less than 0"
-                        pause
-                        stop
-                    end if
+                    DO ICase = 1,this%NCascade
+                        this%UDef_VACSIZE(ICase) = ISTR(STRTMP(ICase))
+
+                        if(this%UDef_VACSIZE(ICase) .LE. 0) then
+                            write(*,*) "MCPSCUERROR: The VAC size cannot less than 0"
+                            pause
+                            stop
+                        end if
+                    END DO
 
                     Finded = .true.
             end select
@@ -689,19 +748,24 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&RVACINCLUDE")
-                    call EXTRACT_NUMB(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special the VAC included radius in one box."
+                    call EXTRACT_NUMB(STR,this%NCascade,N,STRTMP)
+                    if(N .LT. this%NCascade) then
+                        write(*,*) "MCPSCUERROR: You must special number of ",this%NCascade," VAC included radius in one box."
                         pause
                         stop
                     end if
-                    this%UDef_RVACINCLUDE = DRSTR(STRTMP(1))*Host_Boxes%LatticeLength
+                    call AllocateArray_Host(this%UDef_RVACINCLUDE,this%NCascade,"this%UDef_RVACINCLUDE")
 
-                    if(this%UDef_RVACINCLUDE .LE. 0) then
-                        write(*,*) "MCPSCUERROR: The VAC included radius cannot less than 0"
-                        pause
-                        stop
-                    end if
+                    DO ICase = 1,this%NCascade
+
+                        this%UDef_RVACINCLUDE(ICase) = DRSTR(STRTMP(ICase))*Host_Boxes%LatticeLength
+
+                        if(this%UDef_RVACINCLUDE(ICase) .LE. 0) then
+                            write(*,*) "MCPSCUERROR: The VAC included radius cannot less than 0"
+                            pause
+                            stop
+                        end if
+                    END DO
 
                     Finded = .true.
             end select
@@ -732,27 +796,31 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&CASCADECENTERPOS")
-                    call EXTRACT_NUMB(STR,3,N,STRTMP)
-                    if(N .LT. 3) then
-                        write(*,*) "MCPSCUERROR: You must special the three position of user defined cascade center."
+                    call EXTRACT_NUMB(STR,3*this%NCascade,N,STRTMP)
+                    if(N .LT. 3*this%NCascade) then
+                        write(*,*) "MCPSCUERROR: You must special 3*",this%NCascade," position of user defined cascade center."
                         pause
                         stop
                     end if
-                    this%UDef_CascadeCent(1) = Host_Boxes%BOXBOUNDARY(1,1) + DRSTR(STRTMP(1))*Host_Boxes%BOXSIZE(1)
-                    this%UDef_CascadeCent(2) = Host_Boxes%BOXBOUNDARY(2,1) + DRSTR(STRTMP(2))*Host_Boxes%BOXSIZE(2)
-                    this%UDef_CascadeCent(3) = Host_Boxes%BOXBOUNDARY(3,1) + DRSTR(STRTMP(3))*Host_Boxes%BOXSIZE(3)
+                    call AllocateArray_Host(this%UDef_CascadeCent,this%NCascade,3,"this%UDef_CascadeCent")
 
-                    DO I = 1,3
-                        if(this%UDef_CascadeCent(1) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                           this%UDef_CascadeCent(1) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
-                           write(*,*) "MCPSCUERROR: The user defined cascade center cannot exit the box boundary"
-                           write(*,*) "cascade center: ",this%UDef_CascadeCent(I)
-                           write(*,*) "box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
-                           pause
-                           stop
-                        end if
+                    DO ICase = 1,this%NCascade
+
+                        this%UDef_CascadeCent(ICase,1) = Host_Boxes%BOXBOUNDARY(1,1) + DRSTR(STRTMP((ICase-1)*3 + 1))*Host_Boxes%BOXSIZE(1)
+                        this%UDef_CascadeCent(ICase,2) = Host_Boxes%BOXBOUNDARY(2,1) + DRSTR(STRTMP((ICase-1)*3 + 2))*Host_Boxes%BOXSIZE(2)
+                        this%UDef_CascadeCent(ICase,3) = Host_Boxes%BOXBOUNDARY(3,1) + DRSTR(STRTMP((ICase-1)*3 + 3))*Host_Boxes%BOXSIZE(3)
+
+                        DO J = 1,3
+                            if(this%UDef_CascadeCent(ICase,J) .LT. Host_Boxes%BOXBOUNDARY(J,1) .or. &
+                               this%UDef_CascadeCent(ICase,J) .GT. Host_Boxes%BOXBOUNDARY(J,2)) then
+                                write(*,*) "MCPSCUERROR: The user defined cascade center cannot exit the box boundary"
+                                write(*,*) "cascade center: ",this%UDef_CascadeCent(ICase,J)
+                                write(*,*) "box boundary: ",Host_Boxes%BOXBOUNDARY(J,1),Host_Boxes%BOXBOUNDARY(J,2)
+                                pause
+                                stop
+                            end if
+                        END DO
                     END DO
-
                     Finded = .true.
             end select
         END DO
@@ -1002,9 +1070,23 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = other%CaptureGenerateWay
         this%NSIA = other%NSIA
         this%SIASIZE = other%SIASIZE
+
+        this%NCascade = other%NCascade
+
+        call DeAllocateArray_Host(this%UDef_NVAC,"this%UDef_NVAC")
+        call AllocateArray_Host(this%UDef_NVAC,size(other%UDef_NVAC),"this%UDef_NVAC")
         this%UDef_NVAC = other%UDef_NVAC
+
+        call DeAllocateArray_Host(this%UDef_VACSIZE,"this%UDef_VACSIZE")
+        call AllocateArray_Host(this%UDef_VACSIZE,size(other%UDef_VACSIZE),"this%UDef_VACSIZE")
         this%UDef_VACSIZE = other%UDef_VACSIZE
+
+        call DeAllocateArray_Host(this%UDef_RVACINCLUDE,"this%UDef_RVACINCLUDE")
+        call AllocateArray_Host(this%UDef_RVACINCLUDE,size(other%UDef_RVACINCLUDE),"this%UDef_RVACINCLUDE")
         this%UDef_RVACINCLUDE = other%UDef_RVACINCLUDE
+
+        call DeAllocateArray_Host(this%UDef_CascadeCent,"this%UDef_CascadeCent")
+        call AllocateArray_Host(this%UDef_CascadeCent,size(other%UDef_CascadeCent,dim=1),size(other%UDef_CascadeCent,dim=2),"this%UDef_CascadeCent")
         this%UDef_CascadeCent = other%UDef_CascadeCent
 
         this%SIASPaceModel = other%SIASPaceModel
@@ -1053,10 +1135,11 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CaptureGenerateWay = CaptureGenWay_ByMCConfig_Locally_Directly
         this%NSIA = 0
         this%SIASIZE = 1
-        this%UDef_NVAC = 0
-        this%UDef_VACSIZE = 1
-        this%UDef_RVACINCLUDE = 0.D0
-        this%UDef_CascadeCent = 0.5D0
+        this%NCascade = 0
+        call DeAllocateArray_Host(this%UDef_NVAC,"UDef_NVAC")
+        call DeAllocateArray_Host(this%UDef_VACSIZE,"UDef_NVAC")
+        call DeAllocateArray_Host(this%UDef_RVACINCLUDE,"UDef_RVACINCLUDE")
+        call DeAllocateArray_Host(this%UDef_CascadeCent,"UDef_CascadeCent")
 
         this%SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue

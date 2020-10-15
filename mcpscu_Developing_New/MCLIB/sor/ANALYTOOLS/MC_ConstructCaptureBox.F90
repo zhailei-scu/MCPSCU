@@ -115,6 +115,7 @@ module MC_ConstructCaptureBox
         integer::RecordIndex
         integer::NC
         logical::exitFlag
+        integer::ICase
         !-----------Body--------------
         if(.not. allocated(TheCaptureCal%m_CascadeCenter) .or. &
            .not. allocated(TheCaptureCal%m_maxDistance) .or.   &
@@ -137,71 +138,72 @@ module MC_ConstructCaptureBox
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
 
         !*******Put in VAC ****************************************
-        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,TheCaptureCal%UDef_NVAC)
+        call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,sum(TheCaptureCal%UDef_NVAC))
         IC = 0
         DO IBox = 1,MultiBox
             !---VAC---
-            DO IIC = 1,TheCaptureCal%UDef_NVAC
-                IC = IC + 1
-                call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = TheCaptureCal%UDef_VACSIZE
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
+            DO ICase = 1,TheCaptureCal%NCascade
+                DO IIC = 1,TheCaptureCal%UDef_NVAC(ICase)
+                    IC = IC + 1
+                    call Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA = TheCaptureCal%UDef_VACSIZE(ICase)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ACTIVEFREE_STATU
 
-                RR = TheCaptureCal%UDef_RVACINCLUDE*DRAND32()
-                ArrowLen = 0.D0
-                DO I = 1,3
-                    Vector(I) = DRAND32() - 0.5D0
-                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                    RR = TheCaptureCal%UDef_RVACINCLUDE(ICase)*DRAND32()
+                    ArrowLen = 0.D0
+                    DO I = 1,3
+                        Vector(I) = DRAND32() - 0.5D0
+                        ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                    END DO
+                    ArrowLen = DSQRT(ArrowLen)
+
+                    DO I = 1,3
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + RR*Vector(I)/ArrowLen
+                    END DO
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                       Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                       Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,           &
+                                                                                                       Host_Boxes%LatticeLength)
+                    end select
+
+
+                    DO I = 1,3
+                        if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
+                           (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
+                                write(*,*) "MCPSCUERROR: The new added VAC had exited the box boundary"
+                                write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
+                                write(*,*) "VAC position: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
+                                write(*,*) "VAC radius: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+                                pause
+                                stop
+                        end if
+                    END DO
+
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) + 1
+                    Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) + 1
+
+                    Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + 1
+                    Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) + 1
                 END DO
-                ArrowLen = DSQRT(ArrowLen)
-
-                DO I = 1,3
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(I) + RR*Vector(I)/ArrowLen
-                END DO
-
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
-
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
-
-
-                TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
-                !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
-                !---you should init the distribution by external file---
-                select case(TheDiffusorValue%ECRValueType_Free)
-                    case(p_ECR_ByValue)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                    case default
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
-                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
-                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,           &
-                                                                                                   Host_Boxes%LatticeLength)
-                end select
-
-
-                DO I = 1,3
-                    if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
-                        (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
-                            write(*,*) "MCPSCUERROR: The new added VAC had exited the box boundary"
-                            write(*,*) "Box boundary: ",Host_Boxes%BOXBOUNDARY(I,1),Host_Boxes%BOXBOUNDARY(I,2)
-                            write(*,*) "VAC position: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
-                            write(*,*) "VAC radius: ",Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
-                            pause
-                            stop
-                    end if
-                END DO
-
-
-                Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(p_ACTIVEFREE_STATU) + 1
-                Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + 1
-
-                Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(p_ACTIVEFREE_STATU) + 1
-                Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(p_ACTIVEFREE_STATU) + 1
-
-                Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + 1
-                Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2) + 1
             END DO
-
         END DO
 
         !*******Get Infor mation from configuration ****************************************
