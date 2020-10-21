@@ -28,6 +28,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         real(kind=KINDDF),dimension(:),allocatable::UDef_RVACINCLUDE
         real(kind=KINDDF),dimension(:,:),allocatable::UDef_CascadeCent
 
+        logical::SIADistSameBetweenBoxes = .false.
+        logical::VACDistSameBetweenBoxes = .false.
+        logical::VACDistSameBetweenCasese = .false.
+
         integer::SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
 
         integer::RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
@@ -405,6 +409,57 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
            stop
         end if
 
+
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&SIASAMEBETWEENBOX")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special YES or NO for whether SIA dist same between different boxes"
+                        pause
+                        stop
+                    end if
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"YES")) then
+                        this%SIADistSameBetweenBoxes = .true.
+                    else if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"NO")) then
+                        this%SIADistSameBetweenBoxes = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether SIA dist same between different boxes."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special YES or NO for whether SIA dist same between different boxes"
+           pause
+           stop
+        end if
+
+
+
         LINE = 0
         Finded = .false.
         rewind(hFile)
@@ -635,6 +690,52 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
            stop
         end if
 
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&VACSAMEBETWEENCASES")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special YES or NO for whether VAC dist same between different cascades"
+                        pause
+                        stop
+                    end if
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"YES")) then
+                        this%VACDistSameBetweenCasese = .true.
+                    else if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"NO")) then
+                        this%VACDistSameBetweenCasese = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether VAC dist same between different cascades."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special YES or NO for whether VAC dist same between different cascades"
+           pause
+           stop
+        end if
 
 
         LINE = 0
@@ -670,6 +771,16 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                             write(*,*) "MCPSCUERROR: The VAC number cannot less than 0"
                             pause
                             stop
+                        end if
+
+                        if(ICase .GT. 1) then
+                            if(this%UDef_NVAC(ICase) .ne. this%UDef_NVAC(ICase-1)) then
+                                write(*,*) "MCPSCUERROR: Cascade number is different between Case: ",ICase-1,ICase
+                                write(*,*) this%UDef_NVAC(ICase-1),this%UDef_NVAC(ICase)
+                                write(*,*) "However ,you had set that cascades are same in on box"
+                                pause
+                                stop
+                            end if
                         end if
                     END DO
 
@@ -716,6 +827,17 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                             write(*,*) "MCPSCUERROR: The VAC size cannot less than 0"
                             pause
                             stop
+                        end if
+
+
+                        if(ICase .GT. 1) then
+                            if(this%UDef_VACSIZE(ICase) .ne. this%UDef_VACSIZE(ICase-1)) then
+                                write(*,*) "MCPSCUERROR: Cascade size is different between Case: ",ICase-1,ICase
+                                write(*,*) this%UDef_VACSIZE(ICase-1),this%UDef_VACSIZE(ICase)
+                                write(*,*) "However ,you had set that cascades are same in on box"
+                                pause
+                                stop
+                            end if
                         end if
                     END DO
 
@@ -827,6 +949,56 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
         if(Finded .eq. .false.) then
            write(*,*) "MCPSCUERROR: You must special the three position of user defined cascade center."
+           pause
+           stop
+        end if
+
+
+
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&VACSAMEBETWEENBOX")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special YES or NO for whether VAC dist same between different boxes"
+                        pause
+                        stop
+                    end if
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"YES")) then
+                        this%VACDistSameBetweenBoxes = .true.
+                    else if(IsStrEqual(STRTMP(1)(1:LENTRIM(STRTMP(1))),"NO")) then
+                        this%VACDistSameBetweenBoxes = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether VAC dist same between different boxes."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special YES or NO for whether VAC dist same between different boxes"
            pause
            stop
         end if
@@ -1089,6 +1261,11 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         call AllocateArray_Host(this%UDef_CascadeCent,size(other%UDef_CascadeCent,dim=1),size(other%UDef_CascadeCent,dim=2),"this%UDef_CascadeCent")
         this%UDef_CascadeCent = other%UDef_CascadeCent
 
+
+        this%SIADistSameBetweenBoxes = other%SIADistSameBetweenBoxes
+        this%VACDistSameBetweenBoxes = other%VACDistSameBetweenBoxes
+        this%VACDistSameBetweenCasese = other%VACDistSameBetweenCasese
+
         this%SIASPaceModel = other%SIASPaceModel
         this%RSIADistributeToCent_Type = other%RSIADistributeToCent_Type
         this%RSIADistributeToCent_Value = other%RSIADistributeToCent_Value
@@ -1140,6 +1317,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         call DeAllocateArray_Host(this%UDef_VACSIZE,"UDef_NVAC")
         call DeAllocateArray_Host(this%UDef_RVACINCLUDE,"UDef_RVACINCLUDE")
         call DeAllocateArray_Host(this%UDef_CascadeCent,"UDef_CascadeCent")
+
+        this%SIADistSameBetweenBoxes = .false.
+        this%VACDistSameBetweenBoxes = .false.
+        this%VACDistSameBetweenCasese = .false.
 
         this%SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue

@@ -16,7 +16,6 @@
 !&NCASCADE		    the cascade number = 2    ! Only for cascade generate way 0
 !&SIANUMBER		    the SIA number = 10000
 !&SIASIZE		    the SIA SIZE = 1
-!&VACSAMEBETWEENCASES       whether VAC distribution same between different cascades in one box = "NO"   ! "YES or NO"
 !&VACNUMBER		    the VAC number = 50 , 40
 !&VACSIZE		    the VAC SIZE = 1 , 1
 !&RVACINCLUDE		    the VAC included radius = 20   		             ! in Unit of lattice unit (LU)
