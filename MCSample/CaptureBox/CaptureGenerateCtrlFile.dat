@@ -12,7 +12,7 @@
 
 
 
-!&GENERATEWAY               the cascade generate way = 0                  ! (0 by Locally ,center uniform way; 1 by from MC configuration,Directly)
+!&GENERATEWAY               the cascade generate way = 0                  ! (0 by Locally ,center uniform way; 1 by from MC configuration,Directly,2 by some specialed VAC distribution shape)
 !&NCASCADE		    the cascade number = 2    ! Only for cascade generate way 0
 !&SIANUMBER		    the SIA number = 10000
 !&SIASIZE		    the SIA SIZE = 1
@@ -24,6 +24,10 @@
 !&SIASPACEMODEL		    the SIA distribution space model = 0          ! 0 for in speicaled RSIATOCENTER sphere face , 1 for distribute uniform in box but out the RSIATOCENTER, 2 for uniform in whole box  
 !&RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 !&ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 200  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
+!&VACSPECIALSHAPE	    the specialed VAC distribution shape is "LINE"            ! only need for generateway 2, you can special "LINE" or "CYLINDER" or "ELLIPSOID"
+!&VACSPECIALSHAPEDATA       the relative data for the specialed VAC distribution shape = 1 (LU)  ! for "LINE" , you need to special the distance between two VACs, 
+												 ! for "CYLINDER" , you need to special the high and bottom radius
+												 ! for "ELLIPSOID" , you need to special the  a,b,c for x ,y and z axis
 !&SIASAMEBETWEENBOX         whether SIA distribution same between different boxes = "NO"   ! "YES or NO"
 !&VACSAMEBETWEENBOX         whether VAC distribution same between different boxes = "NO"   ! "YES or NO"
 !&CHECKSIARANGE		    whether check SIA Range = "YES"               ! "YES or NO"
