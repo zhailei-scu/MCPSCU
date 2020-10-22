@@ -26,7 +26,7 @@
 !&ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 200  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 !&VACSPECIALSHAPE	    the specialed VAC distribution shape is "LINE"            ! only need for generateway 2, you can special "LINE" or "CYLINDER" or "ELLIPSOID"
 !&VACSPECIALSHAPEDATA       the relative data for the specialed VAC distribution shape = 1 (LU)  ! for "LINE" , you need to special the distance between two VACs, 
-												 ! for "CYLINDER" , you need to special the bottom radius and high 
+												 ! for "CYLINDER" , you need to special the bottom radius and  high 
 												 ! for "ELLIPSOID" , you need to special the  a,b,c for x ,y and z axis
 !&SIASAMEBETWEENBOX         whether SIA distribution same between different boxes = "NO"   ! "YES or NO"
 !&VACSAMEBETWEENBOX         whether VAC distribution same between different boxes = "NO"   ! "YES or NO"

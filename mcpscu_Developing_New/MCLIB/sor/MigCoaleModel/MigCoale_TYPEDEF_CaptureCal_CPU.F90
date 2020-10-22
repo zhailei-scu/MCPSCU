@@ -7,6 +7,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
     integer,parameter::CaptureGenWay_ByCentUniform_Locally = 0
     integer,parameter::CaptureGenWay_ByMCConfig_Locally_Directly = 1
+    integer,parameter::CaptureGenWay_Speicaled_Shape = 2
 
     integer,parameter::Capture_SIASPaceModel_Type_UnderSphereFace = 0
     integer,parameter::Capture_SIASPaceModel_Type_UniformOutRSIA = 1
@@ -27,6 +28,9 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         integer,dimension(:),allocatable::UDef_VACSIZE
         real(kind=KINDDF),dimension(:),allocatable::UDef_RVACINCLUDE
         real(kind=KINDDF),dimension(:,:),allocatable::UDef_CascadeCent
+
+        character*20::VACDist_Shape
+        real(kind=KINDDF),dimension(:),allocatable::Shape_Data
 
         logical::SIADistSameBetweenBoxes = .false.
         logical::VACDistSameBetweenBoxes = .false.
@@ -57,6 +61,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         procedure,public,non_overridable,pass::ResolveCapCtrlFile
         procedure,public,non_overridable,pass::ResolveCapCtrlFile_ByCentUniform
         procedure,public,non_overridable,pass::ResolveCapCtrlFile_FormMCConfig
+        procedure,public,non_overridable,pass::ResolveCapCtrlFile_Special_Shape
         procedure,public,non_overridable,pass::ResolveCapInfoFile
         procedure,public,non_overridable,pass::copyCaptureCalFromOther
         procedure,public,non_overridable,pass::Clean=>Clean_CaptureCal
@@ -67,6 +72,9 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
     private::InitCaptureCal
     private::ResolveCapCtrlFile
+    private::ResolveCapCtrlFile_ByCentUniform
+    private::ResolveCapCtrlFile_FormMCConfig
+    private::ResolveCapCtrlFile_Special_Shape
     private::ResolveCapInfoFile
     private::copyCaptureCalFromOther
     private::Clean_CaptureCal
@@ -89,6 +97,9 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         call DeAllocateArray_Host(this%UDef_VACSIZE,"UDef_NVAC")
         call DeAllocateArray_Host(this%UDef_RVACINCLUDE,"UDef_RVACINCLUDE")
         call DeAllocateArray_Host(this%UDef_CascadeCent,"UDef_CascadeCent")
+
+        this%VACDist_Shape = ""
+        call DeAllocateArray_Host(this%Shape_Data,"this%Shape_Data")
 
         this%SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
@@ -182,7 +193,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         if(Finded .LE. 0) then
             write(*,*) "You must special the capture generate way."
             write(*,*) "By the way: '&GENERATEWAY  the capture generate way = "
-            write(*,*)  "0 by Locally ,center uniform way; 1 by from MC configuration,Directly)"
+            write(*,*)  "0 by Locally ,center uniform way; 1 by from MC configuration,Directly,2 by special shape)"
             pause
             stop
         end if
@@ -616,8 +627,13 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
                 call this%ResolveCapCtrlFile_FormMCConfig(hFile,Host_Boxes,Host_SimuCtrlParam)
 
+            case(CaptureGenWay_Speicaled_Shape)
+                write(*,*) "The capture generate way is by special shape"
+
+                call this%ResolveCapCtrlFile_Special_Shape(hFile,Host_Boxes,Host_SimuCtrlParam)
+
             case default
-                write(*,*) "MCPSCUERROR: Unknown way to generate capture(0 by uniform way, 1 by from MC configuration,Directly)"
+                write(*,*) "MCPSCUERROR: Unknown way to generate capture(0 by uniform way, 1 by from MC configuration,Directly, 2 by special shape)"
                 write(*,*) this%CaptureGenerateWay
                 pause
                 stop
@@ -1007,6 +1023,143 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         return
     end subroutine ResolveCapCtrlFile_ByCentUniform
 
+    subroutine ResolveCapCtrlFile_Special_Shape(this,hFile,Host_Boxes,Host_SimuCtrlParam)
+        implicit none
+        !---Dummy Vars---
+        CLASS(CaptureCal)::this
+        integer,intent(in)::hFile
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParam)::Host_SimuCtrlParam
+        !---Local Vars---
+        integer::LINE
+        character*1000::STR
+        character*30::KEYWORD
+        character*200::STRTMP(10)
+        integer::N
+        logical::Finded
+        !---Body---
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do while(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&VACSPECIALSHAPE")
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special the shape of VAC dist if you chosen the mode: ",this%CaptureGenerateWay
+                        write(*,*) "You can choose LINE or CYLINDER or ELLIPSOID "
+                        pause
+                        stop
+                    end if
+
+                    call UPCASE(STRTMP(1))
+
+                    this%VACDist_Shape = adjustl(trim(STRTMP(1)))
+
+                    Finded = .true.
+            end select
+        End Do
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the shape of VAC dist if you chosen the mode: ",this%CaptureGenerateWay
+           pause
+           stop
+        end if
+
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do while(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&VACSPECIALSHAPEDATA")
+
+                    call DeAllocateArray_Host(this%Shape_Data,"this%Shape_Data")
+
+                    select case(this%VACDist_Shape(1:LENTRIM(this%VACDist_Shape)))
+                        case("LINE")
+                            call AllocateArray_Host(this%Shape_Data,1,"this%Shape_Data")
+                            call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                            if(N .LT. 1) then
+                                write(*,*) "MCPSCUERROR: You must special the distance between VACs when the LINE shape is chosen."
+                                write(*,*) "By the way: &VACSPECIALSHAPEDATA       the relative data for the special VAC distribution shape = (LU)"
+                                pause
+                                stop
+                            end if
+                            this%Shape_Data(1) = DRSTR(STRTMP(1))*Host_Boxes%LatticeLength
+
+                        case("CYLINDER")
+                            call AllocateArray_Host(this%Shape_Data,2,"this%Shape_Data")
+                            call EXTRACT_NUMB(STR,2,N,STRTMP)
+
+                            if(N .LT. 2) then
+                                write(*,*) "MCPSCUERROR: You must special the high and bottom radius when the CYLINDER shape is chosen."
+                                write(*,*) "By the way: &VACSPECIALSHAPEDATA       the relative data for the special VAC distribution shape = (LU) for bottom radius ,  = (LU) for high"
+                                pause
+                                stop
+                            end if
+                            this%Shape_Data(1) = DRSTR(STRTMP(1))*Host_Boxes%LatticeLength
+                            this%Shape_Data(2) = DRSTR(STRTMP(2))*Host_Boxes%LatticeLength
+
+                        case("ELLIPSOID")
+                            call AllocateArray_Host(this%Shape_Data,3,"this%Shape_Data")
+                            call EXTRACT_NUMB(STR,3,N,STRTMP)
+
+                            if(N .LT. 3) then
+                                write(*,*) "MCPSCUERROR: You must special the  a,b,c for x ,y and z axis when the ELLIPSOID shape is chosen."
+                                write(*,*) "By the way: &VACSPECIALSHAPEDATA       the relative data for the special VAC distribution shape = (LU) ,  = (LU), = (LU)"
+                                pause
+                                stop
+                            end if
+
+                            this%Shape_Data(1) = DRSTR(STRTMP(1))*Host_Boxes%LatticeLength
+                            this%Shape_Data(2) = DRSTR(STRTMP(2))*Host_Boxes%LatticeLength
+                            this%Shape_Data(3) = DRSTR(STRTMP(3))*Host_Boxes%LatticeLength
+
+                        case default
+                            write(*,*) "MCPSCUERROR:Unknown VAC dist shape: ",this%VACDist_Shape(1:LENTRIM(this%VACDist_Shape))
+                            write(*,*) "You can choose LINE or CYLINDER or ELLIPSOID "
+                            pause
+                            stop
+                    end select
+
+                    Finded = .true.
+            end select
+        End Do
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the shape data of VAC dist if you chosen the mode: ",this%CaptureGenerateWay
+           pause
+           stop
+        end if
+
+        return
+    end subroutine
+
 
     subroutine ResolveCapCtrlFile_FormMCConfig(this,hFile,Host_Boxes,Host_SimuCtrlParam)
         implicit none
@@ -1261,6 +1414,11 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         call AllocateArray_Host(this%UDef_CascadeCent,size(other%UDef_CascadeCent,dim=1),size(other%UDef_CascadeCent,dim=2),"this%UDef_CascadeCent")
         this%UDef_CascadeCent = other%UDef_CascadeCent
 
+        this%VACDist_Shape = other%VACDist_Shape
+        call DeAllocateArray_Host(this%Shape_Data,"this%Shape_Data")
+        call AllocateArray_Host(this%Shape_Data,size(other%Shape_Data),"this%Shape_Data")
+        this%Shape_Data = other%Shape_Data
+
 
         this%SIADistSameBetweenBoxes = other%SIADistSameBetweenBoxes
         this%VACDistSameBetweenBoxes = other%VACDistSameBetweenBoxes
@@ -1317,6 +1475,9 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         call DeAllocateArray_Host(this%UDef_VACSIZE,"UDef_NVAC")
         call DeAllocateArray_Host(this%UDef_RVACINCLUDE,"UDef_RVACINCLUDE")
         call DeAllocateArray_Host(this%UDef_CascadeCent,"UDef_CascadeCent")
+
+        this%VACDist_Shape = ""
+        call DeAllocateArray_Host(this%Shape_Data,"this%Shape_Data")
 
         this%SIADistSameBetweenBoxes = .false.
         this%VACDistSameBetweenBoxes = .false.
