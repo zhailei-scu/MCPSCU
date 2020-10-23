@@ -11,7 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/Development/CalCapture/MCSample/SampleSetup.dat /home/zhail/Development/CalCapture/MCSample/CaptureBox/CaptureGenerateCtrlFile.dat" />
+				<Option parameters="/scratch/110doc01/ZhaiLei/CalCapture/300K/50KeV/FromMD/SIASIZE1/LPMethod/SpecialShape/LINE/VACLocally/EXporeSIADist30LU/ExporeROut1600LU/Sep1.2/Case1_NBox10_NSIA10000/SampleSetup.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
