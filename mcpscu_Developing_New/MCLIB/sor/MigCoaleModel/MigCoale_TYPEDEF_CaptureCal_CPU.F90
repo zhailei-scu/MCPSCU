@@ -881,7 +881,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
 
                     if(N .LT. 1) then
                         write(*,*) "MCPSCUERROR: You must special the shape of VAC dist if you chosen the mode: ",this%CaptureGenerateWay
-                        write(*,*) "You can choose SPHERE LINE or CYLINDER or ELLIPSOID "
+                        write(*,*) "You can choose SPHERE or LINE or ROUND or SQUARE or CYLINDER or ELLIPSOID "
                         pause
                         stop
                     end if
@@ -979,6 +979,69 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                                         stop
                                     end if
                                 end if
+
+                            END DO
+
+                        case("ROUND")
+                            call EXTRACT_NUMB(STR,this%NCascade,N,STRTMP)
+                            if(N .LT. this%NCascade) then
+                                write(*,*) "MCPSCUERROR: You must special ",this%NCascade," Cascades VAC distribution round surface radius for ROUND shape in one box."
+                                pause
+                                stop
+                            end if
+                            call AllocateArray_Host(this%UDef_Shape_Data,this%NCascade,1,"this%UDef_Shape_Data")
+
+                            DO ICase = 1,this%NCascade
+                                this%UDef_Shape_Data(ICase,1) = DRSTR(STRTMP(ICase))*Host_Boxes%LatticeLength
+
+                                if(this%UDef_Shape_Data(ICase,1) .LE. 0) then
+                                    write(*,*) "MCPSCUERROR: The VAC distribution radius cannot less than 0"
+                                    pause
+                                    stop
+                                end if
+
+                                if(ICase .GT. 1) then
+                                    if(this%UDef_Shape_Data(ICase,1) .ne. this%UDef_Shape_Data(ICase-1,1) .AND. this%VACDistSameBetweenCasese .eq. .true.) then
+                                        write(*,*) "MCPSCUERROR:VAC distribution round surface radius for ROUND shape are different between Cases: ",ICase-1,ICase
+                                        write(*,*) this%UDef_Shape_Data(ICase-1,1),this%UDef_Shape_Data(ICase,1)
+                                        write(*,*) "However ,you had set that cascades are same in on box"
+                                        pause
+                                        stop
+                                    end if
+                                end if
+
+                            END DO
+
+                        case("SQUARE")
+                            call EXTRACT_NUMB(STR,this%NCascade*2,N,STRTMP)
+                            if(N .LT. this%NCascade) then
+                                write(*,*) "MCPSCUERROR: You must special ",this%NCascade," Cascades VAC distribution two sides length for SQUARE shape in one box."
+                                pause
+                                stop
+                            end if
+                            call AllocateArray_Host(this%UDef_Shape_Data,this%NCascade,2,"this%UDef_Shape_Data")
+
+                            DO ICase = 1,this%NCascade
+                                this%UDef_Shape_Data(ICase,1) = DRSTR(STRTMP((ICase-1)*2+1))*Host_Boxes%LatticeLength
+                                this%UDef_Shape_Data(ICase,2) = DRSTR(STRTMP((ICase-1)*2+2))*Host_Boxes%LatticeLength
+
+                                DO I = 1,2
+                                    if(this%UDef_Shape_Data(ICase,I) .LE. 0) then
+                                        write(*,*) "MCPSCUERROR: The VAC distribution side length cannot less than 0"
+                                        pause
+                                        stop
+                                    end if
+
+                                    if(ICase .GT. 1) then
+                                        if(this%UDef_Shape_Data(ICase,I) .ne. this%UDef_Shape_Data(ICase-1,I) .AND. this%VACDistSameBetweenCasese .eq. .true.) then
+                                            write(*,*) "MCPSCUERROR: Cascades VAC distribution two sides length for SQUARE shape data are different between Cases: ",ICase-1,ICase
+                                            write(*,*) this%UDef_Shape_Data(ICase-1,I),this%UDef_Shape_Data(ICase,I)
+                                            write(*,*) "However ,you had set that cascades are same in on box"
+                                            pause
+                                            stop
+                                        end if
+                                    end if
+                                END DO
 
                             END DO
 

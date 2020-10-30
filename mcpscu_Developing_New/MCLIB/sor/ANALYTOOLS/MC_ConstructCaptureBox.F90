@@ -1048,9 +1048,30 @@ module MC_ConstructCaptureBox
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%UDef_CascadeCent(ICase,2)
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3) + ((-1)**mod(IIC,2))*TheCaptureCal%UDef_Shape_Data(ICase,1)*(0.5D0 + (IIC-1)/2)
 
+                        case("ROUND")
+                            RRXY = TheCaptureCal%UDef_Shape_Data(ICase,1)*DRAND32()
+                            ArrowLen = 0.D0
+                            DO I = 1,2
+                                Vector(I) = DRAND32() - 0.5D0
+                                ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                            END DO
+                            ArrowLen = DSQRT(ArrowLen)
+
+                            DO I = 1,2
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + RRXY*Vector(I)/ArrowLen
+                            END DO
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3)
+
+                        case("SQUARE")
+                            DO I = 1,2
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + TheCaptureCal%UDef_Shape_Data(ICase,I)*(DRAND32() - 0.5D0)
+                            END DO
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3)
+
                         case("CYLINDER")
 
                             RRXY = TheCaptureCal%UDef_Shape_Data(ICase,1)*DRAND32()
+                            ArrowLen = 0.D0
                             DO I = 1,2
                                 Vector(I) = DRAND32() - 0.5D0
                                 ArrowLen = ArrowLen + Vector(I)*Vector(I)
@@ -1088,7 +1109,7 @@ module MC_ConstructCaptureBox
 
                         case default
                             write(*,*) "MCPSCUERROR:Unknown VAC dist shape: ",TheCaptureCal%VACDist_Shape(1:LENTRIM(TheCaptureCal%VACDist_Shape))
-                            write(*,*) "You can choose LINE or CYLINDER or ELLIPSOID "
+                            write(*,*) "You can choose SPHERE or LINE or ROUND or SQUARE or CYLINDER or ELLIPSOID "
                             pause
                             stop
                     end select
@@ -1179,9 +1200,30 @@ module MC_ConstructCaptureBox
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%UDef_CascadeCent(ICase,2)
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3) + ((-1)**mod(IIC,2))*TheCaptureCal%UDef_Shape_Data(ICase,1)*(0.5D0 + (IIC-1)/2)
 
+                            case("ROUND")
+                                RRXY = TheCaptureCal%UDef_Shape_Data(ICase,1)*DRAND32()
+                                ArrowLen = 0.D0
+                                DO I = 1,2
+                                    Vector(I) = DRAND32() - 0.5D0
+                                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                                END DO
+                                ArrowLen = DSQRT(ArrowLen)
+
+                                DO I = 1,2
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + RRXY*Vector(I)/ArrowLen
+                                END DO
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3)
+
+                            case("SQUARE")
+                                DO I = 1,2
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + TheCaptureCal%UDef_Shape_Data(ICase,I)*(DRAND32() - 0.5D0)
+                                END DO
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3)
+
                             case("CYLINDER")
 
                                 RRXY = TheCaptureCal%UDef_Shape_Data(ICase,1)*DRAND32()
+                                ArrowLen = 0.D0
                                 DO I = 1,2
                                     Vector(I) = DRAND32() - 0.5D0
                                     ArrowLen = ArrowLen + Vector(I)*Vector(I)
@@ -1219,7 +1261,7 @@ module MC_ConstructCaptureBox
 
                             case default
                                 write(*,*) "MCPSCUERROR:Unknown VAC dist shape: ",TheCaptureCal%VACDist_Shape(1:LENTRIM(TheCaptureCal%VACDist_Shape))
-                                write(*,*) "You can choose LINE or CYLINDER or ELLIPSOID "
+                                write(*,*) "You can choose SPHERE or LINE or ROUND or SQUARE or CYLINDER or ELLIPSOID "
                                 pause
                                 stop
                         end select
@@ -1329,9 +1371,30 @@ module MC_ConstructCaptureBox
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%UDef_CascadeCent(ICase,2)
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3) + ((-1)**mod(IIC,2))*TheCaptureCal%UDef_Shape_Data(ICase,1)*(0.5D0 + (IIC-1)/2)
 
+                            case("ROUND")
+                                RRXY = TheCaptureCal%UDef_Shape_Data(ICase,1)*DRAND32()
+                                ArrowLen = 0.D0
+                                DO I = 1,2
+                                    Vector(I) = DRAND32() - 0.5D0
+                                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                                END DO
+                                ArrowLen = DSQRT(ArrowLen)
+
+                                DO I = 1,2
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + RRXY*Vector(I)/ArrowLen
+                                END DO
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3)
+
+                            case("SQUARE")
+                                DO I = 1,2
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + TheCaptureCal%UDef_Shape_Data(ICase,I)*(DRAND32() - 0.5D0)
+                                END DO
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3)
+
                             case("CYLINDER")
 
                                 RRXY = TheCaptureCal%UDef_Shape_Data(ICase,1)*DRAND32()
+                                ArrowLen = 0.D0
                                 DO I = 1,2
                                     Vector(I) = DRAND32() - 0.5D0
                                     ArrowLen = ArrowLen + Vector(I)*Vector(I)
@@ -1369,7 +1432,7 @@ module MC_ConstructCaptureBox
 
                             case default
                                 write(*,*) "MCPSCUERROR:Unknown VAC dist shape: ",TheCaptureCal%VACDist_Shape(1:LENTRIM(TheCaptureCal%VACDist_Shape))
-                                write(*,*) "You can choose LINE or CYLINDER or ELLIPSOID "
+                                write(*,*) "You can choose SPHERE or LINE or ROUND or SQUARE or CYLINDER or ELLIPSOID "
                                 pause
                                 stop
                         end select
@@ -1461,9 +1524,30 @@ module MC_ConstructCaptureBox
                                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) = TheCaptureCal%UDef_CascadeCent(ICase,2)
                                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3) + ((-1)**mod(IIC,2))*TheCaptureCal%UDef_Shape_Data(ICase,1)*(0.5D0 + (IIC-1)/2)
 
+                                case("ROUND")
+                                    RRXY = TheCaptureCal%UDef_Shape_Data(ICase,1)*DRAND32()
+                                    ArrowLen = 0.D0
+                                    DO I = 1,2
+                                        Vector(I) = DRAND32() - 0.5D0
+                                        ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                                    END DO
+                                    ArrowLen = DSQRT(ArrowLen)
+
+                                    DO I = 1,2
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + RRXY*Vector(I)/ArrowLen
+                                    END DO
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3)
+
+                                case("SQUARE")
+                                    DO I = 1,2
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%UDef_CascadeCent(ICase,I) + TheCaptureCal%UDef_Shape_Data(ICase,I)*(DRAND32() - 0.5D0)
+                                    END DO
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) = TheCaptureCal%UDef_CascadeCent(ICase,3)
+
                                 case("CYLINDER")
 
                                     RRXY = TheCaptureCal%UDef_Shape_Data(ICase,1)*DRAND32()
+                                    ArrowLen = 0.D0
                                     DO I = 1,2
                                         Vector(I) = DRAND32() - 0.5D0
                                         ArrowLen = ArrowLen + Vector(I)*Vector(I)
@@ -1501,7 +1585,7 @@ module MC_ConstructCaptureBox
 
                                 case default
                                     write(*,*) "MCPSCUERROR:Unknown VAC dist shape: ",TheCaptureCal%VACDist_Shape(1:LENTRIM(TheCaptureCal%VACDist_Shape))
-                                    write(*,*) "You can choose LINE or CYLINDER or ELLIPSOID "
+                                    write(*,*) "You can choose SPHERE or LINE or ROUND or SQUARE or CYLINDER or ELLIPSOID "
                                     pause
                                     stop
                             end select

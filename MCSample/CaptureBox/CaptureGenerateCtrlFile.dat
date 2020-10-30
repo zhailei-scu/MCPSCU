@@ -19,9 +19,11 @@
 !&VACSAMEBETWEENCASES       whether VAC distribution same between different cascades in one box = "NO"   ! "YES or NO"
 !&VACNUMBER		    the VAC number = 50 , 40
 !&VACSIZE		    the VAC SIZE = 1 , 1
-!&VACSPECIALSHAPE	    the specialed VAC distribution shape is "SPHERE"                     ! only need for generateway 0, you can special "SPHERE" "LINE" or "CYLINDER" or "ELLIPSOID"
+!&VACSPECIALSHAPE	    the specialed VAC distribution shape is "SPHERE"                     ! only need for generateway 0, you can special "SPHERE" or "LINE" "ROUND" or "SQUARE" or  or "CYLINDER" or "ELLIPSOID"
 !&VACSPECIALSHAPEDATA       the relative data for the specialed VAC distribution shape = 20 (LU) ! for "SPHERE" , you need to special the VAC included radius
 												 ! for "LINE" , you need to special the distance between two VACs
+												 ! for "ROUND" , you need to speical the VAC included radius for round surface
+												 ! for "SQUARE" , you need to special the two side length
 												 ! for "CYLINDER" , you need to special the bottom radius and high 
 												 ! for "ELLIPSOID" , you need to special the  a,b,c for x ,y and z axis
 !&CASCADECENTERPOS	    the cascade center position = ( 0.25D0 , 0.5D0 , 0.5D0 ) , ( 0.75D0 , 0.5D0 , 0.5D0 ) ! as the unit of the ratio of box size length
