@@ -162,6 +162,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     integer::Mask(3)
     integer::I
+    integer::TheCondition
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -265,14 +266,17 @@ module MIGCOALE_EVOLUTION_GPU
                 Mask(3) = 1
             end if
 
-            if(sum(Mask,dim=1) .GT. 2) then
-                tempPos(3) = dm_BOXBOUNDARY(3,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I)
-            else
-                DO I = 1,3
-                    tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I))
-                END DO
-            end if
+            TheCondition = Mask(1) + Mask(2) + Mask(3)
 
+            if(TheCondition .GT. 0) then
+                if(TheCondition .GT. 2) then
+                    tempPos(3) = dm_BOXBOUNDARY(3,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I)
+                else
+                    DO I = 1,3
+                        tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I))
+                    END DO
+                end if
+            end if
         end if
 
 
@@ -480,6 +484,7 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::LowerLimitLength
     integer::Mask(3)
     integer::I
+    integer::TheCondition
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -652,12 +657,16 @@ module MIGCOALE_EVOLUTION_GPU
                 Mask(3) = 1
             end if
 
-            if(sum(Mask,dim=1) .GT. 2) then
-                tempPos(3) = dm_BOXBOUNDARY(3,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I)
-            else
-                DO I = 1,3
-                    tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I))
-                END DO
+            TheCondition = Mask(1) + Mask(2) + Mask(3)
+
+            if(TheCondition .GT. 0) then
+                if(TheCondition .GT. 2) then
+                    tempPos(3) = dm_BOXBOUNDARY(3,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I)
+                else
+                    DO I = 1,3
+                        tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I))
+                    END DO
+                end if
             end if
         end if
 
