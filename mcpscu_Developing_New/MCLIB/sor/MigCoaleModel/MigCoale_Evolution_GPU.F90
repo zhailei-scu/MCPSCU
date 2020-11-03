@@ -160,6 +160,8 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::VectorLen
     integer::RandomSign
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+    integer::Mask(3)
+    integer::I
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -207,33 +209,72 @@ module MIGCOALE_EVOLUTION_GPU
             tempPos(1) = RR*tempPos(1)/ArrowLen
             tempPos(2) = RR*tempPos(2)/ArrowLen
             tempPos(3) = RR*tempPos(3)/ArrowLen
+
+            tempPos = tempPos + POS
+
+            if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+                tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
+            else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+                tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
+            end if
+
+            if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+                tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
+            else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+                tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
+            end if
+
+            if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+                tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
+            else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+                tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
+            end if
+
         else
             RandomSign = 1
             if(Dev_RandArray(IC) .GT. 0.5D0) then
                 RandomSign = -1
             end if
             tempPos = RandomSign*RR*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+
+            tempPos = tempPos + POS
+
+            Mask = 0
+
+            if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+                tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
+                Mask(1) = 1
+            else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+                tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
+                Mask(1) = 1
+            end if
+
+            if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+                tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
+                Mask(2) = 1
+            else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+                tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
+                Mask(2) = 1
+            end if
+
+            if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+                tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
+                Mask(3) = 1
+            else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+                tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
+                Mask(3) = 1
+            end if
+
+            if(sum(Mask,dim=1) .GT. 2) then
+                tempPos(3) = dm_BOXBOUNDARY(3,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I)
+            else
+                DO I = 1,3
+                    tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I))
+                END DO
+            end if
+
         end if
 
-        tempPos = tempPos + POS
-
-        if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
-            tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
-        else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
-            tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
-        end if
-
-        if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
-            tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
-        else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
-            tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
-        end if
-
-        if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
-            tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
-        else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
-            tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
-        end if
 
         SeedID = GrainBelongsTo_Dev(NSeeds,Dev_GrainSeeds,tempPos)
 
@@ -437,6 +478,8 @@ module MIGCOALE_EVOLUTION_GPU
     integer::IJump
     real(kind=KINDDF)::JumpRemind
     real(kind=KINDDF)::LowerLimitLength
+    integer::Mask(3)
+    integer::I
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -563,22 +606,59 @@ module MIGCOALE_EVOLUTION_GPU
 
         tempPos = tempPos + POS
 
-        if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
-            tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
-        else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
-            tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
-        end if
+        if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
 
-        if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
-            tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
-        else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
-            tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
-        end if
+            if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+                tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
+            else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+                tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
+            end if
 
-        if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
-            tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
-        else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
-            tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
+            if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+                tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
+            else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+                tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
+            end if
+
+            if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+                tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
+            else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+                tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
+            end if
+        else    ! for one-dimension-diffusion
+            Mask = 0
+
+            if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
+                tempPos(1) = tempPos(1) - dm_BOXSIZE(1)
+                Mask(1) = 1
+            else if(tempPos(1) .LT. dm_BOXBOUNDARY(1,1) .and. dm_PERIOD(1)) then
+                tempPos(1) = tempPos(1) + dm_BOXSIZE(1)
+                Mask(1) = 1
+            end if
+
+            if(tempPos(2) .GT. dm_BOXBOUNDARY(2,2) .and. dm_PERIOD(2)) then
+                tempPos(2) = tempPos(2) - dm_BOXSIZE(2)
+                Mask(2) = 1
+            else if(tempPos(2) .LT. dm_BOXBOUNDARY(2,1) .and. dm_PERIOD(2)) then
+                tempPos(2) = tempPos(2) + dm_BOXSIZE(2)
+                Mask(2) = 1
+            end if
+
+            if(tempPos(3) .GT. dm_BOXBOUNDARY(3,2) .and. dm_PERIOD(3)) then
+                tempPos(3) = tempPos(3) - dm_BOXSIZE(3)
+                Mask(3) = 1
+            else if(tempPos(3) .LT. dm_BOXBOUNDARY(3,1) .and. dm_PERIOD(3)) then
+                tempPos(3) = tempPos(3) + dm_BOXSIZE(3)
+                Mask(3) = 1
+            end if
+
+            if(sum(Mask,dim=1) .GT. 2) then
+                tempPos(3) = dm_BOXBOUNDARY(3,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I)
+            else
+                DO I = 1,3
+                    tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I))
+                END DO
+            end if
         end if
 
         SeedID = GrainBelongsTo_Dev(NSeeds,Dev_GrainSeeds,tempPos)
