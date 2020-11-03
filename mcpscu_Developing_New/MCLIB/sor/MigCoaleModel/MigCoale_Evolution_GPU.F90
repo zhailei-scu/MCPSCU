@@ -163,6 +163,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::Mask(3)
     integer::I
     integer::TheCondition
+    integer::SelectDir
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -270,13 +271,19 @@ module MIGCOALE_EVOLUTION_GPU
 
             if(TheCondition .GT. 0) then
                 if(TheCondition .GT. 2) then
-                    tempPos(3) = dm_BOXBOUNDARY(3,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I)
+                    tempPos(3) = dm_BOXBOUNDARY(3,1) + Dev_RandArray(IC + TotalNC)*dm_BOXSIZE(I)
                 else
                     DO I = 1,3
                         tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I))
                     END DO
                 end if
             end if
+
+            if(Dev_Clusters(IC)%m_DiffuseRotateCoeff .GT. Dev_RandArray(IC + TotalNC)) then
+                SelectDir = floor(Dev_RandArray(IC + TotalNC*2)*3.D0) + 1
+                Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
+            end if
+
         end if
 
 
@@ -485,6 +492,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::Mask(3)
     integer::I
     integer::TheCondition
+    integer::SelectDir
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -667,6 +675,11 @@ module MIGCOALE_EVOLUTION_GPU
                         tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I))
                     END DO
                 end if
+            end if
+
+            if(Dev_Clusters(IC)%m_DiffuseRotateCoeff .GT. curand_uniform(DevRandRecord(IC))) then
+                SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
+                Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
             end if
         end if
 
@@ -1472,6 +1485,7 @@ module MIGCOALE_EVOLUTION_GPU
                 end select
 
                 Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
@@ -1747,6 +1761,7 @@ module MIGCOALE_EVOLUTION_GPU
                 end select
 
                 Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 

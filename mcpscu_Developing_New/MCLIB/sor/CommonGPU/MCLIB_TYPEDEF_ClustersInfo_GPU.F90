@@ -75,6 +75,7 @@ module MCLIB_TYPEDEF_ClustersInfo_GPU
         TheCluster%m_GrainID(2) = 0
         TheCluster%m_DiffCoeff = 0.D0
         TheCluster%m_DiffuseDirection = 0.D0
+        TheCluster%m_DiffuseRotateCoeff = 0.D0
 
         return
     end subroutine Clean_Cluster_Dev

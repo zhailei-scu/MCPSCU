@@ -1645,6 +1645,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -1752,6 +1753,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             end select
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -1866,6 +1868,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0

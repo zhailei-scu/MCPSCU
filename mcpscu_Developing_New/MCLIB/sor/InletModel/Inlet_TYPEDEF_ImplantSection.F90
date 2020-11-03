@@ -997,6 +997,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+        ImplantIon%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
@@ -1234,6 +1235,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+        ImplantIon%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
@@ -2320,6 +2322,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 end select
 
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                             else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
@@ -2588,6 +2591,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         end select
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
 
@@ -2734,6 +2738,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             end select
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
 
@@ -2882,6 +2887,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
 
@@ -3403,6 +3409,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !            end select
 !
 !            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+!            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
 !            Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
 !                                               Dev_SEVirtualIndexBox(IBox,2)
@@ -3604,6 +3611,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !            end select
 !
 !            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+!            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
 !            Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
 !                                               Dev_SEVirtualIndexBox(IBox,2)
@@ -3802,6 +3810,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !                            end select
 !
 !                            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+!                            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
 !                        else if(Dev_Clusters(ICTRUE)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 !

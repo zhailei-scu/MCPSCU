@@ -24,6 +24,7 @@ void copyCDiffusorDef(CDiffusorDef *Dest,CDiffusorDef *Source){
 
   Dest->DiffuseDirectionType = Source->DiffuseDirectionType;
   memcpy(Dest->DiffuseDirection,Source->DiffuseDirection,sizeof(Dest->DiffuseDirection)); // it is OK because DiffuseDirection is fix array
+  Dest->DiffuseRotateEnerg = Source->DiffuseRotateEnerg;
 
   Dest->ECRValueType_Free = Source->ECRValueType_Free;
   Dest->ECR_Free = Source->ECR_Free;
@@ -49,6 +50,7 @@ void InitDiffusor(CDiffusorDef *DiffusorDef){
 
   DiffusorDef->DiffuseDirectionType = 1;
   memset(DiffusorDef->DiffuseDirection,0,sizeof(DiffusorDef->DiffuseDirection)); // it is OK because DiffuseDirection is fix array
+  DiffusorDef->DiffuseRotateEnerg = 0;
 
   DiffusorDef->ECRValueType_Free = 1;
   DiffusorDef->ECR_Free = 0;

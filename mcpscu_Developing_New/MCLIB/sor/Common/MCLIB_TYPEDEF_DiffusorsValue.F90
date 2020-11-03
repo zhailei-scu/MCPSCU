@@ -27,6 +27,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         integer(c_int)::DiffuseDirectionType = p_DiffuseDirection_ThreeDim
         real(c_double),dimension(3)::DiffuseDirection = 0.D0
+        real(c_double)::DiffuseRotateEnerg = 0.D0
 
         integer(c_int)::ECRValueType_Free = p_ECR_ByValue
 
@@ -83,6 +84,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         integer::DiffuseDirectionType PREASSIGN p_DiffuseDirection_ThreeDim
         real(kind=KINDDF),dimension(3)::DiffuseDirection PREASSIGN 0.D0
+        real(kind=KINDDF)::DiffuseRotateEnerg PREASSIGN 0.D0
 
         integer::ECRValueType_Free PREASSIGN p_ECR_ByValue
 
@@ -206,6 +208,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         this%DiffuseDirectionType = Others%DiffuseDirectionType
         this%DiffuseDirection = Others%DiffuseDirection
+        this%DiffuseRotateEnerg = Others%DiffuseRotateEnerg
 
         this%ECRValueType_Free = Others%ECRValueType_Free
 
@@ -245,6 +248,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         TheDiffusorValue%DiffuseDirectionType = this%DiffuseDirectionType
         TheDiffusorValue%DiffuseDirection = this%DiffuseDirection
+        TheDiffusorValue%DiffuseRotateEnerg = this%DiffuseRotateEnerg
 
         TheDiffusorValue%ECRValueType_Free = this%ECRValueType_Free
 
@@ -281,6 +285,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         this%DiffuseDirectionType = p_DiffuseDirection_ThreeDim
         this%DiffuseDirection = 0.D0
+        this%DiffuseRotateEnerg = 0.D0
 
         this%ECRValueType_Free = p_ECR_ByValue
         this%ECR_Free = 0.D0
@@ -314,6 +319,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         this%DiffuseDirectionType = Others%DiffuseDirectionType
         this%DiffuseDirection = Others%DiffuseDirection
+        this%DiffuseRotateEnerg = Others%DiffuseRotateEnerg
 
         this%ECRValueType_Free = Others%ECRValueType_Free
 
@@ -350,6 +356,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
 
         this%DiffuseDirectionType = p_DiffuseDirection_ThreeDim
         this%DiffuseDirection = 0.D0
+        this%DiffuseRotateEnerg = 0.D0
 
         this%ECRValueType_Free = p_ECR_ByValue
         this%ECR_Free = 0.D0
