@@ -60,7 +60,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      real::EnlageTStepScale = 0.01                                      ! adjustl time-step enlarge-scale mp_SelfAdjustlStep_NearestSep strategy and mp_SelfAdjustlStep_AveSep
      real(kind=KINDDF)::LowerLimitTime = 3.68D-13                                    ! The lower limit time of NDDR algorithm
      real::LowerLimitLength = 2.74D-8                                   ! The lower limit length of NDDR_S4 algorithm
-     integer::LastPassageFactor = 5                                     ! The last passage factor
+     integer::LastPassageFactor = 0                                     ! The last passage factor
 
      integer::TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps   ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s)
      real::TUpdateStatisValue = 10                                      ! the time interval to update statistic
@@ -839,7 +839,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%EnlageTStepScale = 0.01
      this%LowerLimitTime = 3.68D-13
      this%LowerLimitLength = 2.74D-8
-     this%LastPassageFactor = 5
+     this%LastPassageFactor = 0
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -1001,7 +1001,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%EnlageTStepScale = 0.01
      this%LowerLimitTime = 3.68D-13
      this%LowerLimitLength = 2.74D-8
-     this%LastPassageFactor = 5
+     this%LastPassageFactor = 0
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10

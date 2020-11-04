@@ -337,6 +337,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                               '!','ActEnergy in free matrix = ',1PE16.8,2x, &
                               '!','Diffuse direction way = ',I1,2x, &
                               '!','Diffuse direction = ',3(1PE16.8,2x), &
+                              '!','Rotation attemp frequence = ',1PE16.8,2x, &
                               '!','Rotation energy = ',1PE16.8,2x, &
                               '!','ECR Generate way in free matrix = ',I1,2x, &
                               '!','ECR Value in free matrix = ',1PE16.8,&
@@ -354,6 +355,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                                diffusorListCursor%Diffusor%ActEnergy_Free, &
                                                                                diffusorListCursor%Diffusor%DiffuseDirectionType,&
                                                                                diffusorListCursor%Diffusor%DiffuseDirection,&
+                                                                               diffusorListCursor%Diffusor%DiffuseRotateAttempFrequence,&
                                                                                diffusorListCursor%Diffusor%DiffuseRotateEnerg,&
                                                                                diffusorListCursor%Diffusor%ECRValueType_Free, &
                                                                                diffusorListCursor%Diffusor%ECR_Free,&
@@ -869,10 +871,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         newDiffusor%DiffuseDirection = 0.D0
                     case(p_DiffuseDirection_OneDim)
 
-                        call EXTRACT_NUMB(STR,5,N,STRNUMB)
+                        call EXTRACT_NUMB(STR,6,N,STRNUMB)
 
-                        if(N .LT. 5) then
-                            write(*,*) "MCPSCUERROR: You must special the direction(vector) for diffusion if yous chose One dimension diffuse in free matrix and the rotation energy."
+                        if(N .LT. 6) then
+                            write(*,*) "MCPSCUERROR: You must special the direction(vector) for diffusion if yous chose One dimension diffuse in free matrix and the rotation attemp frequence and  energy."
                             write(*,*) "At Line: ",LINE
                             pause
                             stop
@@ -893,7 +895,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                         newDiffusor%DiffuseDirection = newDiffusor%DiffuseDirection/DSQRT(VectorLen)
 
-                        newDiffusor%DiffuseRotateEnerg = DRSTR(STRNUMB(5))
+                        newDiffusor%DiffuseRotateAttempFrequence = DRSTR(STRNUMB(5))
+                        newDiffusor%DiffuseRotateEnerg = DRSTR(STRNUMB(6))
 
                     case default
                         write(*,*) "MCPSCUERROR: unknown diffuse direction type :",newDiffusor%DiffuseDirectionType
@@ -2467,11 +2470,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     KEYWORD = "&TYPE"
     CFormat = ""
-    CFormat = "(A,1x,10(A15,1x),"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
-    write(hFile,FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),"IBox", "Layer","GBSeed1","GBSeed2","Statu","Record1","Record2","x(LU)","y(LU)","z(LU)",AtomsStr(1:ElementsKind)
+    CFormat = "(A,1x,10(A15,1x),"//CNUM(1:LENTRIM(CNUM))//"(A15,1x),"//"3(A15,1x))"
+    write(hFile,FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),"IBox", "Layer","GBSeed1","GBSeed2","Statu","Record1","Record2","x(LU)","y(LU)","z(LU)",AtomsStr(1:ElementsKind),"Direct(x)","Direct(y)","Direct(z)"
 
     CFormat = ""
-    CFormat = "(A,1x,7(I15, 1x),3(1PE16.8, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x))"
+    CFormat = "(A,1x,7(I15, 1x),3(1PE16.8, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x)"//",3(1PE16.8, 1x))"
     DO IBox = 1,MultiBox
         ICFROM = this%m_BoxesInfo%SEUsedIndexBox(IBox,1)
         ICTO   = this%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -2490,7 +2493,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu,                       &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1:2),                 &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)/this%LatticeLength, &
-                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(1:ElementsKind)%m_NA
+                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(1:ElementsKind)%m_NA,  &
+                                                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(1:3)
             end if
         END DO
     END DO
@@ -2763,6 +2767,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::I
     integer::STA
     integer::RecordIndex
+    real(kind=KINDDF)::VectorLen
     !---Body---
 
     MultiBox = Host_SimuCtrlParam%MultiBox
@@ -3018,7 +3023,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             exit
         end if
 
-        call EXTRACT_NUMB(STR,10+p_ATOMS_GROUPS_NUMBER,N,STRTMP)
+        call EXTRACT_NUMB(STR,10+p_ATOMS_GROUPS_NUMBER+3,N,STRTMP)
         atomsInfo = 0
 
         IBox = ISTR(STRTMP(1))
@@ -3077,7 +3082,27 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)*this%LatticeLength
 
+        DO I = 1,3
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(I) = DRSTR(STRTMP(10+NATomsUsed+I))
+        END DO
+
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
+
+        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+            VectorLen = 0.D0
+            DO I = 1,3
+                VectorLen = VectorLen + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(I)**2
+            END DO
+
+            if(VectorLen*TENPOWEIGHT .LT. 1) then
+                write(*,*) "MCPSCUERROR: The one-dimension diffusion vector cannot less than 0"
+                write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection
+                pause
+                stop
+            end if
+
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection/DSQRT(VectorLen)
+        end if
 
         if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
             select case(TheDiffusorValue%ECRValueType_Free)
@@ -3106,8 +3131,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                           TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
 
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
@@ -3451,7 +3476,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         end select
 
         ClustersSample(1,NClustersGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-        ClustersSample(1,NClustersGroup)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+        ClustersSample(1,NClustersGroup)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+        ClustersSample(1,NClustersGroup)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ClustersSample(1,NClustersGroup)%m_Statu = p_ACTIVEFREE_STATU  ! the GB and interface would not be considered in MF , they would be considered SPMF
 
@@ -3864,7 +3891,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             end select
 
             ClustersSample(ILayer,IGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-            ClustersSample(ILayer,IGroup)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+            ClustersSample(ILayer,IGroup)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            ClustersSample(ILayer,IGroup)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         else if(ClustersSample(ILayer,IGroup)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
@@ -3942,6 +3971,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     logical::exitFlag
     type(DiffusorValue)::TheDiffusorValue
     integer::RecordIndex
+    integer::TheDim
     !---Body---
 
     LayerNum = size(LayerThick)
@@ -4032,7 +4062,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         end select
 
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+                        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                            DO TheDim = 1,3
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                            END DO
+                        end if
+
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                     else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
@@ -4158,7 +4196,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             end select
 
                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+                            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                                DO TheDim = 1,3
+                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                                END DO
+                            end if
+
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 

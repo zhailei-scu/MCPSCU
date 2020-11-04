@@ -997,7 +997,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-        ImplantIon%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+        ImplantIon%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+        ImplantIon%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
@@ -1235,7 +1237,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-        ImplantIon%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+        ImplantIon%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+        ImplantIon%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
@@ -1654,7 +1658,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
 
-            call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
+            if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
+                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
+            else
+                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
+            end if
 
             call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeReactionRandNum(NewTotalSize)
 
@@ -1861,7 +1871,15 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeImplantRandNum(MultiBox*NewAllocateNCEachBox)
-                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
+
+                if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
+                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                    ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
+                else
+                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                    ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
+                end if
+
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeReactionRandNum(NewTotalSize)
 
                 call this%DoImplantTillVirtualBoundary_CPUTOGPU_ImplantContiune(Host_Boxes,Host_SimuCtrlParam,Record,Dev_Boxes,NewAllocateNCEachBox)
@@ -2197,6 +2215,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         logical::exitFlag
         integer::LayerNum
         integer::RecordIndex
+        integer::TheDim
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2322,7 +2341,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                 end select
 
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                                if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                                    DO TheDim = 1,3
+                                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                                    END DO
+                                end if
+
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                             else if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
@@ -2477,6 +2503,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       logical::exitFlag
       integer::LayerNum
       integer::RecordIndex
+      integer::TheDim
       !---Body---
       MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2591,7 +2618,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         end select
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                            DO TheDim = 1,3
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                            END DO
+                        end if
+
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
 
@@ -2635,6 +2669,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       integer::IElement
       type(DiffusorValue)::TheDiffusorValue
       integer::RecordIndex
+      integer::TheDim
       !---Body---
       MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2738,7 +2773,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
             end select
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                DO TheDim = 1,3
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                END DO
+            end if
+
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
 
@@ -2776,6 +2818,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::IElement
         type(DiffusorValue)::TheDiffusorValue
         integer::RecordIndex
+        integer::TheDim
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
         BOXBOUNDARY = Host_Boxes%BOXBOUNDARY
@@ -2887,7 +2930,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                    DO TheDim = 1,3
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                    END DO
+                end if
+
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
 
@@ -3118,6 +3168,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(DiffusorValue)::TheDiffusorValue
 !        real(kind=KINDDF)::randSize
 !        integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+!        integer::TheDim
 !        !---Body---
 !        tid = (threadidx%y - 1)*blockdim%x + threadidx%x
 !        bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3203,6 +3254,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !                        end select
 !
 !                        Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+!                        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+!                            DO TheDim = 1,3
+!                                Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim) = Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim)*sign(1.D0,Dev_RandArray_SpaceDist(cid + TotalAllocateNC*TheDim) - 0.5D0)
+!                            END DO
+!                        end if
+!                        Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+!                        Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
 !                        Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
 !                                                           Dev_SEVirtualIndexBox(IBox,2)
@@ -3339,6 +3397,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(DiffusorValue)::TheDiffusorValue
 !        real(kind=KINDDF)::randSize
 !        integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+!        integer::TheDim
 !        !---Body---
 !        tid = (threadidx%y - 1)*blockdim%x + threadidx%x
 !        bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3409,7 +3468,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !            end select
 !
 !            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-!            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+!            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+!            DO TheDim = 1,3
+!                   Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim) = Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim)*sign(1.D0,Dev_RandArray_SpaceDist(cid + TotalAllocateNC*TheDim) - 0.5D0)
+!               END DO
+!            end if
+!            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+!            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
 !            Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
 !                                               Dev_SEVirtualIndexBox(IBox,2)
@@ -3533,6 +3598,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        real(kind=KINDDF)::randSize
 !        real(kind=KINDDF)::randDepth
 !        integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+!        integer::TheDim
 !        !---Body---
 !        tid = (threadidx%y - 1)*blockdim%x + threadidx%x
 !        bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3611,7 +3677,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !            end select
 !
 !            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-!            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+!            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+!               DO TheDim = 1,3
+!                   Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim) = Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim)*sign(1.D0,Dev_RandArray_SpaceDist(cid + TotalAllocateNC*TheDim) - 0.5D0)
+!               END DO
+!            end if
+!            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+!            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
 !            Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &
 !                                               Dev_SEVirtualIndexBox(IBox,2)
@@ -3733,6 +3805,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        real(kind=KINDDF)::GroupRateTemp
 !        type(DiffusorValue)::TheDiffusorValue
 !        integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+!        integer::TheDim
 !        !---Body---
 !        tid = (threadidx%y - 1)*blockdim%x + threadidx%x
 !        bid = (blockidx%y - 1)*griddim%x + blockidx%x
@@ -3810,7 +3883,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !                            end select
 !
 !                            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-!                            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+!                            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+!                               DO TheDim = 1,3
+!                                   Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim) = Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim)*sign(1,Dev_RandArray_SpaceDist(cid + TotalAllocateNC*TheDim) - 0.5D0)
+!                               END DO
+!                            end if
+!                            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+!                            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
 !                        else if(Dev_Clusters(ICTRUE)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 !

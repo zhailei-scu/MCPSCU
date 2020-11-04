@@ -320,7 +320,15 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end if
 
                 if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_DevRandRecord)) then
-                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
+                    if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
+                        call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                        ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
+                    else
+                        call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                        ! 3 is for three random boundary condition for 1-D diffusion ,2 is for the random 1-D direction for new generated cluster in pre and back merge
+                    end if
+
+
                 end if
 
                 if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_RandArray_Reaction)) then
@@ -483,7 +491,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP)
 
         if(Host_SimuCtrlParam%FreeDiffusion .ne. .true.) then
-            call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+            call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP)
         end if
 
         call Record%IncreaseOneSimuStep()
@@ -1561,6 +1569,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
       integer::LayerNum
       integer::NAtoms
       type(DiffusorValue)::TheDiffusorValue
+      integer::TheDim
       !---Body---
       MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -1645,7 +1654,14 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                    DO TheDim = 1,3
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                    END DO
+                end if
+
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -1685,6 +1701,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
       integer::I
       integer::NAtoms
       type(DiffusorValue)::TheDiffusorValue
+      integer::TheDim
       !---Body---
       MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -1753,7 +1770,14 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             end select
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                DO TheDim = 1,3
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                END DO
+            end if
+
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -1792,6 +1816,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::SNC0
         integer::NAtoms
         type(DiffusorValue)::TheDiffusorValue
+        integer::TheDim
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
         BOXBOUNDARY = Host_Boxes%BOXBOUNDARY
@@ -1868,7 +1893,14 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                    DO TheDim = 1,3
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                    END DO
+                end if
+
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0

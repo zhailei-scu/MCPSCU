@@ -1085,7 +1085,9 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-        ImplantIon%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+        ImplantIon%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+        ImplantIon%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
@@ -1323,7 +1325,9 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-        ImplantIon%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+        ImplantIon%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+        ImplantIon%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 

@@ -650,6 +650,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                               '!','ActEnergy in free matrix = ',1PE16.8,2x, &
                               '!','Diffuse direction way = ',I1,2x, &
                               '!','Diffuse direction = ',3(1PE16.8,2x), &
+                              '!','Rotation attemp frequence = ',1PE16.8,2x, &
                               '!','Rotation energy = ',1PE16.8,2x, &
                               '!','ECR Generate way in free matrix =',I1,2x, &
                               '!','ECR Value in free matrix =',1PE16.8, &
@@ -667,6 +668,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                                                       cursor%Diffusor%ActEnergy_Free, &
                                                                       cursor%Diffusor%DiffuseDirectionType, &
                                                                       cursor%Diffusor%DiffuseDirection, &
+                                                                      cursor%Diffusor%DiffuseRotateAttempFrequence, &
                                                                       cursor%Diffusor%DiffuseRotateEnerg, &
                                                                       cursor%Diffusor%ECRValueType_Free, &
                                                                       cursor%Diffusor%ECR_Free,         &
@@ -707,6 +709,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                       '!','ActEnergy in free matrix = ',1PE16.8,2x, &
                                       '!','Diffuse direction way = ',I1,2x, &
                                       '!','Diffuse direction = ',3(1PE16.8,2x), &
+                                      '!','Rotation attemp frequence = ',1PE16.8,2x, &
                                       '!','Rotation energy = ',1PE16.8,2x, &
                                       '!','ECR Generate way in free matrix =',I1,2x, &
                                       '!','ECR Value in free matrix =',1PE16.8,&
@@ -724,6 +727,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
                                                                                TheValue%ActEnergy_Free,                 &
                                                                                TheValue%DiffuseDirectionType,           &
                                                                                TheValue%DiffuseDirection,               &
+                                                                               TheValue%DiffuseRotateAttempFrequence,   &
                                                                                TheValue%DiffuseRotateEnerg,             &
                                                                                TheValue%ECRValueType_Free,              &
                                                                                TheValue%ECR_Free,                       &

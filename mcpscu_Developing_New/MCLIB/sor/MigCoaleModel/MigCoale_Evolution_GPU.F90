@@ -71,7 +71,8 @@ module MIGCOALE_EVOLUTION_GPU
             threads = dim3(BX, BY, 1)
 
             if(TotalNC .GT. size(Dev_Rand%dm_DevRandRecord)) then
-                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*3*(Host_SimuCtrlParam%LastPassageFactor+2))
+                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             end if
 
             call WalkOneStep_Kernel_NNDR_LastPassage<<<blocks,threads>>>(BlockNumEachBox,                        &
@@ -104,6 +105,11 @@ module MIGCOALE_EVOLUTION_GPU
                 call Dev_Rand%ReSizeWalkRandNum(TotalNC)
             end if
 
+            if(TotalNC .GT. size(Dev_Rand%dm_DevRandRecord)) then
+                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
+            end if
+
             err = curandGenerateUniformDouble(Dev_Rand%m_ranGen_ClustersRandomWalk,Dev_Rand%dm_RandArray_Walk,TotalNC*3) !Async in multiple streams
 
             call WalkOneStep_Kernel<<<blocks,threads>>>(BlockNumEachBox,                             &
@@ -111,6 +117,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                         Dev_ClusterInfo_GPU%dm_Clusters,             &
                                                         Dev_Boxes%dm_SEUsedIndexBox,                 &
                                                         Dev_Rand%dm_RandArray_Walk,                  &
+                                                        Dev_Rand%dm_DevRandRecord,                   &
                                                         Dev_ClusterInfo_GPU%dm_ActiveStatus,         &
                                                         Host_Boxes%m_GrainBoundary%GrainNum,         &
                                                         Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
@@ -126,7 +133,8 @@ module MIGCOALE_EVOLUTION_GPU
 
   !********************************************************
   attributes(global) subroutine WalkOneStep_Kernel(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
-                                                   Dev_RandArray,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP)
+                                                   Dev_RandArray,DevRandRecord,Dev_ActiveStatu,NSeeds,&
+                                                   Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -134,6 +142,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(Acluster),device::Dev_Clusters(:)
     integer,device::Dev_SEUsedIndexBox(:,:)
     real(kind=KINDDF),device::Dev_RandArray(:)
+    type(curandStateXORWOW),device::DevRandRecord(:)
     integer,device::Dev_ActiveStatu(:)
     integer,value::NSeeds
     type(GrainSeed),device::Dev_GrainSeeds(:)
@@ -164,6 +173,8 @@ module MIGCOALE_EVOLUTION_GPU
     integer::I
     integer::TheCondition
     integer::SelectDir
+    integer::attempNum
+    real(kind=KINDDF)::ChangeDirProbality
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -241,6 +252,14 @@ module MIGCOALE_EVOLUTION_GPU
 
             tempPos = tempPos + POS
 
+            ! Change direction
+            attempNum = ceiling(TSTEP*Dev_Clusters(IC)%m_DiffuseRotateCoeff(1))
+            ChangeDirProbality = attempNum*(1-Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)**attempNum)*Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)
+            if(ChangeDirProbality .GT. Dev_RandArray(IC + TotalNC)) then
+                SelectDir = floor(Dev_RandArray(IC + TotalNC*2)*3.D0) + 1
+                Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
+            end if
+
             Mask = 0
 
             if(tempPos(1) .GT. dm_BOXBOUNDARY(1,2) .and. dm_PERIOD(1)) then
@@ -271,21 +290,15 @@ module MIGCOALE_EVOLUTION_GPU
 
             if(TheCondition .GT. 0) then
                 if(TheCondition .GT. 2) then
-                    tempPos(3) = dm_BOXBOUNDARY(3,1) + Dev_RandArray(IC + TotalNC)*dm_BOXSIZE(I)
+                    tempPos(3) = dm_BOXBOUNDARY(3,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I)
                 else
                     DO I = 1,3
-                        tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + Dev_RandArray(IC + TotalNC*(I-1))*dm_BOXSIZE(I))
+                        tempPos(I) = tempPos(I)*Mask(I) + (1 - Mask(I))*(dm_BOXBOUNDARY(I,1) + curand_uniform(DevRandRecord(IC))*dm_BOXSIZE(I))
                     END DO
                 end if
             end if
 
-            if(Dev_Clusters(IC)%m_DiffuseRotateCoeff .GT. Dev_RandArray(IC + TotalNC)) then
-                SelectDir = floor(Dev_RandArray(IC + TotalNC*2)*3.D0) + 1
-                Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
-            end if
-
         end if
-
 
         SeedID = GrainBelongsTo_Dev(NSeeds,Dev_GrainSeeds,tempPos)
 
@@ -397,7 +410,7 @@ module MIGCOALE_EVOLUTION_GPU
         ArrowLen = DSQRT(tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3))
 
         !The average displacement:by using the Einstein Relation
-        RR  = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
+        RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
 
         tempPos(1) = RR*tempPos(1)/ArrowLen
         tempPos(2) = RR*tempPos(2)/ArrowLen
@@ -447,7 +460,7 @@ module MIGCOALE_EVOLUTION_GPU
 
   !********************************************************
   attributes(global) subroutine WalkOneStep_Kernel_NNDR_LastPassage(BlockNumEachBox,TotalNC,Dev_Clusters,Dev_SEUsedIndexBox, &
-                                                               DevRandRecord,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP,LowerLimitTime,LastPassageFactor)
+                                                                    DevRandRecord,Dev_ActiveStatu,NSeeds,Dev_GrainSeeds,Dev_TypesEntities,Dev_SingleAtomsDivideArrays,TSTEP,LowerLimitTime,LastPassageFactor)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -473,7 +486,6 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::crossPos(3)
     real(kind=KINDDF)::normVector(3)
     real(kind=KINDDF)::ArrowLen
-    real(kind=KINDDF)::RR
     real(kind=KINDDF)::POS(3)
     real(kind=KINDSF)::SEP(3)
     real(kind=KINDDF)::Seed1Pos(3)
@@ -493,6 +505,9 @@ module MIGCOALE_EVOLUTION_GPU
     integer::I
     integer::TheCondition
     integer::SelectDir
+    real(kind=KINDDF)::RR
+    integer::attempNum
+    real(kind=KINDDF)::ChangeDirProbality
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -523,7 +538,6 @@ module MIGCOALE_EVOLUTION_GPU
         POS = Dev_Clusters(IC)%m_POS
 
         !The average displacement:by using the Einstein Relation
-        RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
 
         LowerLimitLength = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*LowerLimitTime)
 
@@ -546,9 +560,10 @@ module MIGCOALE_EVOLUTION_GPU
 
                 ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
 
-                movePos(1) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(1)/ArrowLen
-                movePos(2) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(2)/ArrowLen
-                movePos(3) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(3)/ArrowLen
+                RR = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)
+                movePos(1) = RR*movePos(1)/ArrowLen
+                movePos(2) = RR*movePos(2)/ArrowLen
+                movePos(3) = RR*movePos(3)/ArrowLen
             else
                 RandomSign = 1
                 if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
@@ -603,9 +618,10 @@ module MIGCOALE_EVOLUTION_GPU
 
                 ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
 
-                movePos(1) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(1)/ArrowLen
-                movePos(2) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(2)/ArrowLen
-                movePos(3) = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(3)/ArrowLen
+                RR = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)
+                movePos(1) = RR*movePos(1)/ArrowLen
+                movePos(2) = RR*movePos(2)/ArrowLen
+                movePos(3) = RR*movePos(3)/ArrowLen
             else
                 RandomSign = 1
                 if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
@@ -677,7 +693,9 @@ module MIGCOALE_EVOLUTION_GPU
                 end if
             end if
 
-            if(Dev_Clusters(IC)%m_DiffuseRotateCoeff .GT. curand_uniform(DevRandRecord(IC))) then
+            attempNum = ceiling(TSTEP*Dev_Clusters(IC)%m_DiffuseRotateCoeff(1))
+            ChangeDirProbality = attempNum*(1-Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)**attempNum)*Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)  ! Poisson Distribution
+            if(ChangeDirProbality .GT. curand_uniform(DevRandRecord(IC))) then
                 SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
                 Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
             end if
@@ -773,7 +791,7 @@ module MIGCOALE_EVOLUTION_GPU
         normVector = Seed1Pos - Seed2Pos
 
         !The average displacement:by using the Einstein Relation
-        LowerLimitLength = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*LowerLimitTime)
+        LowerLimitLength = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*LowerLimitTime)
 
         JumpHead = TSTEP - LowerLimitTime*LastPassageFactor
 
@@ -803,9 +821,10 @@ module MIGCOALE_EVOLUTION_GPU
 
             ArrowLen = DSQRT(tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3))
 
-            movePos(1) = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(1)/ArrowLen
-            movePos(2) = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(2)/ArrowLen
-            movePos(3) = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*movePos(3)/ArrowLen
+            RR = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)
+            movePos(1) = RR*movePos(1)/ArrowLen
+            movePos(2) = RR*movePos(2)/ArrowLen
+            movePos(3) = RR*movePos(3)/ArrowLen
 
             tempPos = tempPos + movePos
         end if
@@ -871,9 +890,10 @@ module MIGCOALE_EVOLUTION_GPU
 
             ArrowLen = DSQRT(tempPos(1)*tempPos(1) + tempPos(2)*tempPos(2) + tempPos(3)*tempPos(3))
 
-            movePos(1) = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(1)/ArrowLen
-            movePos(2) = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(2)/ArrowLen
-            movePos(3) = DSQRT(4.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*movePos(3)/ArrowLen
+            RR = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)
+            movePos(1) = RR*movePos(1)/ArrowLen
+            movePos(2) = RR*movePos(2)/ArrowLen
+            movePos(3) = RR*movePos(3)/ArrowLen
 
             tempPos = tempPos + movePos
         end if
@@ -921,13 +941,14 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine WalkOneStep_Kernel_NNDR_LastPassage
 
   !********************************************************
-  subroutine MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+  subroutine MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
     type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+    type(MigCoalClusterRecord)::Record
     real(kind=KINDDF)::TSTEP
     !---Local Vars---
     integer::MULTIBOX
@@ -974,6 +995,17 @@ module MIGCOALE_EVOLUTION_GPU
         err = curandGenerateUniformDouble(Dev_Rand%m_ranGen_ClustersReaction,Dev_Rand%dm_RandArray_Reaction,TotalNC) !Async in multiple streams
 
 
+        if(TotalNC .GT. size(Dev_Rand%dm_DevRandRecord)) then
+            if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
+                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
+            else
+                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
+            end if
+        end if
+
+
         if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR .or. &
            Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
 
@@ -1005,6 +1037,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                  Dev_ReactionsMap%Dev_RecordsEntities,          &
                                                  Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
                                                  Dev_Rand%dm_RandArray_Reaction,                &
+                                                 Dev_Rand%dm_DevRandRecord,                     &
                                                  Dev_ClusterInfo_GPU%dm_MergeINDI,              &
                                                  Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
                                                  Dev_ClusterInfo_GPU%dm_ActiveStatus)
@@ -1017,6 +1050,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                  Dev_ReactionsMap%Dev_RecordsEntities,          &
                                                  Dev_ReactionsMap%Dev_SingleAtomsDivideArrays,  &
                                                  Dev_Rand%dm_RandArray_Reaction,                &
+                                                 Dev_Rand%dm_DevRandRecord,                     &
                                                  Dev_ClusterInfo_GPU%dm_MergeINDI,              &
                                                  Dev_ClusterInfo_GPU%dm_MergeKVOIS,             &
                                                  Dev_ClusterInfo_GPU%dm_ActiveStatus)
@@ -1267,7 +1301,7 @@ module MIGCOALE_EVOLUTION_GPU
 
   !************************************************************************
   attributes(global) subroutine MergePre_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays, &
-                                                Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
+                                                Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction,DevRandRecord, &
                                                 Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu)
     implicit none
     !---Dummy Vars---
@@ -1279,6 +1313,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
     integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
+    type(curandStateXORWOW),device::DevRandRecord(:)
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
     integer,device::Dev_ActiveStatu(:)
@@ -1288,7 +1323,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::IBox
     integer::scid,ecid
     integer::JC
-    integer::I,K,S,NewNA
+    integer::I,S,NewNA
     integer::N_Merge
     real::PosA_X,PosA_Y,PosA_Z,PosB_X,PosB_Y,PosB_Z
     real::Sep_X,Sep_Y,Sep_Z
@@ -1303,6 +1338,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::SubjectNANum
     integer::ObjectNANum
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+    integer::TheDim
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -1485,7 +1521,14 @@ module MIGCOALE_EVOLUTION_GPU
                 end select
 
                 Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                    DO TheDim = 1,3
+                        Dev_Clusters(IC)%m_DiffuseDirection(TheDim) = Dev_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,curand_uniform(DevRandRecord(IC)) - 0.5D0)
+                    END DO
+                end if
+
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
@@ -1543,7 +1586,7 @@ module MIGCOALE_EVOLUTION_GPU
 
   !************************************************************************
   attributes(global) subroutine MergeBack_Kernel(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,Dev_DiffuTypesEntities,Dev_DiffuSingleAtomsDivideArrays, &
-                                                Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction, &
+                                                Dev_ReactRecordsEntities,Dev_ReactSingleAtomsDivideArrays,Dev_RandArran_Reaction,DevRandRecord, &
                                                 Dev_MergeINDI,Dev_MergeKVOIS,Dev_ActiveStatu)
     implicit none
     !---Dummy Vars---
@@ -1555,6 +1598,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(ReactionEntity),device::Dev_ReactRecordsEntities(:)
     integer,device::Dev_ReactSingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! If the two dimension array would be delivered to attributes(device), the first dimension must be known
     real(kind=KINDDF),device::Dev_RandArran_Reaction(:)
+    type(curandStateXORWOW),device::DevRandRecord(:)
     integer,device::Dev_MergeINDI(:,:)
     integer,device::Dev_MergeKVOIS(:)
     integer,device::Dev_ActiveStatu(:)
@@ -1564,7 +1608,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::IBox
     integer::scid,ecid
     integer::JC
-    integer::I,K,S,NewNA
+    integer::I,S,NewNA
     integer::N_Merge
     real::PosA_X,PosA_Y,PosA_Z,PosB_X,PosB_Y,PosB_Z
     real::Sep_X,Sep_Y,Sep_Z
@@ -1579,6 +1623,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::SubjectNANum
     integer::ObjectNANum
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
+    integer::TheDim
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -1761,7 +1806,15 @@ module MIGCOALE_EVOLUTION_GPU
                 end select
 
                 Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+
+                if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                    DO TheDim = 1,3
+                        Dev_Clusters(IC)%m_DiffuseDirection(TheDim) = Dev_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,curand_uniform(DevRandRecord(IC)) - 0.5D0)
+                    END DO
+                end if
+
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 

@@ -1206,6 +1206,8 @@ module MCLIB_UTILITIES
             zero_Cluster%m_Layer = 1
             zero_Cluster%m_RAD = 0
             zero_Cluster%m_DiffCoeff = 0.D0
+            zero_Cluster%m_DiffuseDirection = 0.D0
+            zero_Cluster%m_DiffuseRotateCoeff = 0.D0
             ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
             !       the tempArray need not need to be allocated, the compiler would
             !       allocate the array automatic that is marked as "allocatable" based on the

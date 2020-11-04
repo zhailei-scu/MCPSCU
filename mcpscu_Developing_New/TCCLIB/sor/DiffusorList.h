@@ -19,6 +19,7 @@ typedef struct{
 
   int DiffuseDirectionType;
   double DiffuseDirection[3];
+  double DiffuseRotateAttempFrequence;
   double DiffuseRotateEnerg;
 
   int ECRValueType_Free;

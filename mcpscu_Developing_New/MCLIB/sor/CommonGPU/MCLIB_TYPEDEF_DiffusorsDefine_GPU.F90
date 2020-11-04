@@ -64,6 +64,7 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
 
         Dist%DiffuseDirectionType = Source%DiffuseDirectionType
         Dist%DiffuseDirection = Source%DiffuseDirection
+        Dist%DiffuseRotateAttempFrequence = Source%DiffuseRotateAttempFrequence
         Dist%DiffuseRotateEnerg = Source%DiffuseRotateEnerg
 
         Dist%ECRValueType_Free = Source%ECRValueType_Free
