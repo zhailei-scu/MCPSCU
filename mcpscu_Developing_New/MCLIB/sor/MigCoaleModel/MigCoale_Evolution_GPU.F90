@@ -252,7 +252,7 @@ module MIGCOALE_EVOLUTION_GPU
             tempPos = tempPos + POS
 
             ! Change direction
-            attempTime = -1.D0*log(Dev_RandArray(IC + TotalNC))/Dev_Clusters(IC)%m_DiffuseRotateCoeff
+            attempTime = -1.D0*log(Dev_RandArray(IC + TotalNC))/(Dev_Clusters(IC)%m_DiffuseRotateCoeff + 1.0D-32)
             if(attempTime .LT. TSTEP) then
                 SelectDir = floor(Dev_RandArray(IC + TotalNC*2)*3.D0) + 1
                 Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
@@ -690,7 +690,7 @@ module MIGCOALE_EVOLUTION_GPU
                 end if
             end if
 
-            attempTime = -1.D0*log(curand_uniform(DevRandRecord(IC)))/Dev_Clusters(IC)%m_DiffuseRotateCoeff
+            attempTime = -1.D0*log(curand_uniform(DevRandRecord(IC)))/(Dev_Clusters(IC)%m_DiffuseRotateCoeff + 1.0D-32)
             if(attempTime .LT. TSTEP) then
                 SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
                 Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
