@@ -254,7 +254,7 @@ module MIGCOALE_EVOLUTION_GPU
 
             ! Change direction
             attempNum = ceiling(TSTEP*Dev_Clusters(IC)%m_DiffuseRotateCoeff(1))
-            ChangeDirProbality = attempNum*(1-Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)**attempNum)*Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)
+            ChangeDirProbality = attempNum*((1-Dev_Clusters(IC)%m_DiffuseRotateCoeff(2))**attempNum)*Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)
             if(ChangeDirProbality .GT. Dev_RandArray(IC + TotalNC)) then
                 SelectDir = floor(Dev_RandArray(IC + TotalNC*2)*3.D0) + 1
                 Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
@@ -694,7 +694,7 @@ module MIGCOALE_EVOLUTION_GPU
             end if
 
             attempNum = ceiling(TSTEP*Dev_Clusters(IC)%m_DiffuseRotateCoeff(1))
-            ChangeDirProbality = attempNum*(1-Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)**attempNum)*Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)  ! Poisson Distribution
+            ChangeDirProbality = attempNum*((1-Dev_Clusters(IC)%m_DiffuseRotateCoeff(2))**attempNum)*Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)  ! Poisson Distribution
             if(ChangeDirProbality .GT. curand_uniform(DevRandRecord(IC))) then
                 SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
                 Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
