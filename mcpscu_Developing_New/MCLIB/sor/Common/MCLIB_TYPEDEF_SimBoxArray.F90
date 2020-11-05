@@ -3131,8 +3131,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                           TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
 
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
@@ -3477,8 +3476,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         ClustersSample(1,NClustersGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
-        ClustersSample(1,NClustersGroup)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-        ClustersSample(1,NClustersGroup)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+        ClustersSample(1,NClustersGroup)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ClustersSample(1,NClustersGroup)%m_Statu = p_ACTIVEFREE_STATU  ! the GB and interface would not be considered in MF , they would be considered SPMF
 
@@ -3892,8 +3890,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             ClustersSample(ILayer,IGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
-            ClustersSample(ILayer,IGroup)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-            ClustersSample(ILayer,IGroup)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            ClustersSample(ILayer,IGroup)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         else if(ClustersSample(ILayer,IGroup)%m_Statu .eq. p_ACTIVEINGB_STATU) then
             select case(TheDiffusorValue%ECRValueType_InGB)
@@ -4069,8 +4066,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             END DO
                         end if
 
-                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                     else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
@@ -4203,8 +4199,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                 END DO
                             end if
 
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 

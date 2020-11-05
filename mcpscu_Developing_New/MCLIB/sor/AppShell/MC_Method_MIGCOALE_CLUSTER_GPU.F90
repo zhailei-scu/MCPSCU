@@ -1660,8 +1660,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     END DO
                 end if
 
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -1776,8 +1775,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 END DO
             end if
 
-            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -1899,8 +1897,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     END DO
                 end if
 
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0

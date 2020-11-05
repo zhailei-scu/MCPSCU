@@ -41,7 +41,7 @@ module MCLIB_TYPEDEF_ACLUSTER
          integer,dimension(2)::m_GrainID PREASSIGN 0
          real(kind=KINDDF)::m_DiffCoeff PREASSIGN 0.D0
          real(kind=KINDDF),dimension(3)::m_DiffuseDirection PREASSIGN 0.D0
-         real(kind=KINDDF),dimension(2)::m_DiffuseRotateCoeff PREASSIGN 0.D0   ! frequence and probalitity
+         real(kind=KINDDF)::m_DiffuseRotateCoeff PREASSIGN 0.D0   ! frequence
          integer,dimension(2)::m_Record PREASSIGN 0
 
          contains

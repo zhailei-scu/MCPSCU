@@ -173,8 +173,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::I
     integer::TheCondition
     integer::SelectDir
-    integer::attempNum
-    real(kind=KINDDF)::ChangeDirProbality
+    real(kind=KINDDF)::attempTime
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -253,9 +252,8 @@ module MIGCOALE_EVOLUTION_GPU
             tempPos = tempPos + POS
 
             ! Change direction
-            attempNum = ceiling(TSTEP*Dev_Clusters(IC)%m_DiffuseRotateCoeff(1))
-            ChangeDirProbality = attempNum*((1-Dev_Clusters(IC)%m_DiffuseRotateCoeff(2))**attempNum)*Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)
-            if(ChangeDirProbality .GT. Dev_RandArray(IC + TotalNC)) then
+            attempTime = -1.D0*log(Dev_RandArray(IC + TotalNC))/Dev_Clusters(IC)%m_DiffuseRotateCoeff
+            if(attempTime .LT. TSTEP) then
                 SelectDir = floor(Dev_RandArray(IC + TotalNC*2)*3.D0) + 1
                 Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
             end if
@@ -506,8 +504,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer::TheCondition
     integer::SelectDir
     real(kind=KINDDF)::RR
-    integer::attempNum
-    real(kind=KINDDF)::ChangeDirProbality
+    real(kind=KINDDF)::attempTime
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -693,9 +690,8 @@ module MIGCOALE_EVOLUTION_GPU
                 end if
             end if
 
-            attempNum = ceiling(TSTEP*Dev_Clusters(IC)%m_DiffuseRotateCoeff(1))
-            ChangeDirProbality = attempNum*((1-Dev_Clusters(IC)%m_DiffuseRotateCoeff(2))**attempNum)*Dev_Clusters(IC)%m_DiffuseRotateCoeff(2)  ! Poisson Distribution
-            if(ChangeDirProbality .GT. curand_uniform(DevRandRecord(IC))) then
+            attempTime = -1.D0*log(curand_uniform(DevRandRecord(IC)))/Dev_Clusters(IC)%m_DiffuseRotateCoeff
+            if(attempTime .LT. TSTEP) then
                 SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
                 Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
             end if
@@ -1527,8 +1523,7 @@ module MIGCOALE_EVOLUTION_GPU
                     END DO
                 end if
 
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
@@ -1813,8 +1808,7 @@ module MIGCOALE_EVOLUTION_GPU
                     END DO
                 end if
 
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff(1) = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff(2) = exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
