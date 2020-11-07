@@ -1658,7 +1658,6 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     DO TheDim = 1,3
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
                     END DO
-
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
                 end if
 
