@@ -61,7 +61,7 @@ module MIGCOALE_TIMECTL
 
                 NCActGB = TBasicInfo%NC(p_ACTIVEINGB_STATU)
                 if(NCActGB .GT. 0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU) .GT. 0.D0) then
-                    TSTEPGB = (TBasicInfo%AveNearestSpeGBClusters**2)/(4.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU))*Host_SimuCtrlParam%EnlageTStepScale
+                    TSTEPGB = (TBasicInfo%AveNearestSpeGBClusters**2)/(6.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU))*Host_SimuCtrlParam%EnlageTStepScale
                 end if
 
                 if((NCActFree .GT. 0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .GT. 0.D0) &
@@ -100,7 +100,7 @@ module MIGCOALE_TIMECTL
                     SEP = SEP**(0.5D0)
                     SEP = SEP - 2.D0*TMigStatInfo%RAVA(p_ACTIVEINGB_STATU)
 
-                    TSTEPGB = SEP*SEP/(4.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU))*Host_SimuCtrlParam%EnlageTStepScale
+                    TSTEPGB = SEP*SEP/(6.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU))*Host_SimuCtrlParam%EnlageTStepScale
                 end if
 
                 if((NCActFree .GT. 0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .GT. 0.D0) &
@@ -209,7 +209,7 @@ module MIGCOALE_TIMECTL
 
                 NCActGB = TBasicInfo%NC(p_ACTIVEINGB_STATU) + MultiBox*ImplantedNumEachBox
                 if(NCActGB .GT. 0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU) .GT. 0.D0) then
-                    TSTEPGB = (TBasicInfo%AveNearestSpeGBClusters**2)/(4.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU))*Host_SimuCtrlParam%EnlageTStepScale
+                    TSTEPGB = (TBasicInfo%AveNearestSpeGBClusters**2)/(6.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU))*Host_SimuCtrlParam%EnlageTStepScale
                 end if
 
                 if((NCActFree .GT. 0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .GT. 0.D0) &
@@ -248,7 +248,7 @@ module MIGCOALE_TIMECTL
                     SEP = SEP**(0.5D0)
                     SEP = SEP - 2.D0*TMigStatInfo%RAVA(p_ACTIVEINGB_STATU)
 
-                    TSTEPGB = SEP*SEP/(4.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU))*Host_SimuCtrlParam%EnlageTStepScale
+                    TSTEPGB = SEP*SEP/(6.D0*TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU))*Host_SimuCtrlParam%EnlageTStepScale
                 end if
 
                 if((NCActFree .GT. 0 .AND. TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU) .GT. 0.D0) &

@@ -1086,6 +1086,10 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
+        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+            ImplantIon%m_DiffCoeff =  ImplantIon%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
+        end if
+
         ImplantIon%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
@@ -1324,6 +1328,10 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
+        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+            ImplantIon%m_DiffCoeff =  ImplantIon%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
+        end if
 
         ImplantIon%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 

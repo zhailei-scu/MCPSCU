@@ -996,6 +996,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
 
+        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+            ImplantIon%m_DiffCoeff = ImplantIon%m_DiffCoeff*1.0/3.D0         ! All Diffusion coeff would be changed to 3-D formation
+        end if
+
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
         ImplantIon%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
@@ -1234,6 +1238,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 ImplantIon%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ImplantIon%m_Atoms(:)%m_NA)))* &
                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
+
+        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+            ImplantIon%m_DiffCoeff = ImplantIon%m_DiffCoeff*1.0/3.D0         ! All Diffusion coeff would be changed to 3-D formation
+        end if
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
@@ -2343,6 +2351,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                     DO TheDim = 1,3
                                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
                                     END DO
+
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff =  Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
                                 end if
 
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
@@ -2392,6 +2402,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
                                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
                                 end select
+
+
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = 0.D0
+
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff =  Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*2.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
+
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
                             end if
 
                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
@@ -2619,6 +2637,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             DO TheDim = 1,3
                                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
                             END DO
+
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff =  Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
                         end if
 
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
@@ -2773,6 +2793,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 DO TheDim = 1,3
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
                 END DO
+
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff =  Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
             end if
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
@@ -2929,6 +2951,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     DO TheDim = 1,3
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
                     END DO
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff =  Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
                 end if
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
@@ -3252,6 +3276,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !                            DO TheDim = 1,3
 !                                Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim) = Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim)*sign(1.D0,Dev_RandArray_SpaceDist(cid + TotalAllocateNC*TheDim) - 0.5D0)
 !                            END DO
+!                            Dev_Clusters(ICTRUE)%m_DiffCoeff =  Dev_Clusters(ICTRUE)%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
 !                        end if
 !                        Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
@@ -3462,9 +3487,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !
 !            Dev_Clusters(ICTRUE)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 !            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
-!            DO TheDim = 1,3
+!               DO TheDim = 1,3
 !                   Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim) = Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim)*sign(1.D0,Dev_RandArray_SpaceDist(cid + TotalAllocateNC*TheDim) - 0.5D0)
 !               END DO
+!               Dev_Clusters(ICTRUE)%m_DiffCoeff =  Dev_Clusters(ICTRUE)%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
 !            end if
 !            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
@@ -3673,6 +3699,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !               DO TheDim = 1,3
 !                   Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim) = Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim)*sign(1.D0,Dev_RandArray_SpaceDist(cid + TotalAllocateNC*TheDim) - 0.5D0)
 !               END DO
+!               Dev_Clusters(ICTRUE)%m_DiffCoeff =  Dev_Clusters(ICTRUE)%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
 !            end if
 !            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
@@ -3878,6 +3905,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !                               DO TheDim = 1,3
 !                                   Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim) = Dev_Clusters(ICTRUE)%m_DiffuseDirection(TheDim)*sign(1,Dev_RandArray_SpaceDist(cid + TotalAllocateNC*TheDim) - 0.5D0)
 !                               END DO
+!                               Dev_Clusters(ICTRUE)%m_DiffCoeff =  Dev_Clusters(ICTRUE)%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
 !                            end if
 !                            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !
@@ -3911,6 +3939,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !                                    Dev_Clusters(ICTRUE)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(ICTRUE)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
 !                                                                       TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
 !                            end select
+!                            Dev_Clusters(ICTRUE)%m_DiffuseDirection = 0.D0
+!                            Dev_Clusters(ICTRUE)%m_DiffCoeff =  Dev_Clusters(ICTRUE)%m_DiffCoeff*2.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
+!                            Dev_Clusters(ICTRUE)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 !                        end if
 !
 !                        Dev_Clusters(ICTRUE)%m_Record(1) = cid + sum(Dev_RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU),dim=1) + &

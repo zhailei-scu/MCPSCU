@@ -167,13 +167,16 @@ module MIGCOALE_EVOLUTION_GPU
     integer::Statu
     type(DiffusorValue)::TheDiffusorValue
     real(kind=KINDDF)::VectorLen
-    integer::RandomSign
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     integer::Mask(3)
     integer::I
     integer::TheCondition
     integer::SelectDir
     real(kind=KINDDF)::attempTime
+    real(kind=KINDDF)::tempDiffuseCoeff
+    real(kind=KINDDF)::tempDirection(3)
+    real(kind=KINDDF)::tempDiffuseRotateCoeff
+    real(kind=KINDDF)::RemindTSTEP
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -189,6 +192,8 @@ module MIGCOALE_EVOLUTION_GPU
 
     IC = scid + (cid - bid0*p_BlockSize -1)
 
+    tempPos = 0.D0
+
     if(IC .LE. ecid) then
 
       Statu = Dev_Clusters(IC)%m_Statu
@@ -203,15 +208,14 @@ module MIGCOALE_EVOLUTION_GPU
 
         POS = Dev_Clusters(IC)%m_POS
 
-        !The average displacement:by using the Einstein Relation
-        RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
-
-
         VectorLen = Dev_Clusters(IC)%m_DiffuseDirection(1)*Dev_Clusters(IC)%m_DiffuseDirection(1) + &
                     Dev_Clusters(IC)%m_DiffuseDirection(2)*Dev_Clusters(IC)%m_DiffuseDirection(2) + &
                     Dev_Clusters(IC)%m_DiffuseDirection(3)*Dev_Clusters(IC)%m_DiffuseDirection(3)
 
         if(VectorLen*TENPOWFIVE .LT. 1) then   ! for three-dimension-diffusion
+            !The average displacement:by using the Einstein Relation
+            RR  = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*TSTEP)
+
             tempPos(1) =  Dev_RandArray(IC)-0.5D0
             tempPos(2) =  Dev_RandArray(IC + TotalNC)-0.5D0
             tempPos(3) =  Dev_RandArray(IC + 2*TotalNC)-0.5D0
@@ -243,20 +247,29 @@ module MIGCOALE_EVOLUTION_GPU
             end if
 
         else
-            RandomSign = 1
-            if(Dev_RandArray(IC) .GT. 0.5D0) then
-                RandomSign = -1
-            end if
-            tempPos = RandomSign*RR*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+            tempDiffuseCoeff = Dev_Clusters(IC)%m_DiffCoeff
+            tempDirection = Dev_Clusters(IC)%m_DiffuseDirection
+            tempDiffuseRotateCoeff = Dev_Clusters(IC)%m_DiffuseRotateCoeff
+            RemindTSTEP = TSTEP
+            DO While(RemindTSTEP .GT. 0.D0)
+                ! Change direction
+                attempTime = -1.D0*log(curand_uniform(DevRandRecord(IC)))/(tempDiffuseRotateCoeff + 1.0D-32)
+
+                RR  = DSQRT(6.D0*tempDiffuseCoeff*RemindTSTEP)
+                if(attempTime .LT. RemindTSTEP) then
+                    SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
+                    tempDirection(SelectDir) = -1*tempDirection(SelectDir)
+                    RR  = DSQRT(6.D0*tempDiffuseCoeff*attempTime)
+                end if
+
+                tempPos = tempPos + sign(1.D0,curand_uniform(DevRandRecord(IC)) - 0.5D0)*RR*tempDirection  ! for one-dimension-diffusion
+
+                RemindTSTEP = RemindTSTEP - attempTime
+            END DO
+
+            Dev_Clusters(IC)%m_DiffuseDirection = tempDirection
 
             tempPos = tempPos + POS
-
-            ! Change direction
-            attempTime = -1.D0*log(Dev_RandArray(IC + TotalNC))/(Dev_Clusters(IC)%m_DiffuseRotateCoeff + 1.0D-32)
-            if(attempTime .LT. TSTEP) then
-                SelectDir = floor(Dev_RandArray(IC + TotalNC*2)*3.D0) + 1
-                Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
-            end if
 
             Mask = 0
 
@@ -337,7 +350,11 @@ module MIGCOALE_EVOLUTION_GPU
                                                     TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
             end select
 
+            Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*2.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
+
             Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
+
+            Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
         end if
 
@@ -492,7 +509,6 @@ module MIGCOALE_EVOLUTION_GPU
     integer::Statu
     type(DiffusorValue)::TheDiffusorValue
     real(kind=KINDDF)::VectorLen
-    integer::RandomSign
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     real(kind=KINDDF)::JumpHead
     integer::NJump
@@ -505,6 +521,10 @@ module MIGCOALE_EVOLUTION_GPU
     integer::SelectDir
     real(kind=KINDDF)::RR
     real(kind=KINDDF)::attempTime
+    real(kind=KINDDF)::tempDiffuseCoeff
+    real(kind=KINDDF)::tempDirection(3)
+    real(kind=KINDDF)::tempDiffuseRotateCoeff
+    real(kind=KINDDF)::RemindTSTEP
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -534,13 +554,17 @@ module MIGCOALE_EVOLUTION_GPU
 
         POS = Dev_Clusters(IC)%m_POS
 
+        tempDiffuseCoeff = Dev_Clusters(IC)%m_DiffCoeff
+        tempDirection = Dev_Clusters(IC)%m_DiffuseDirection
+        tempDiffuseRotateCoeff = Dev_Clusters(IC)%m_DiffuseRotateCoeff
+
         !The average displacement:by using the Einstein Relation
 
-        LowerLimitLength = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*LowerLimitTime)
+        LowerLimitLength = DSQRT(6.D0*tempDiffuseCoeff*LowerLimitTime)
 
-        VectorLen = Dev_Clusters(IC)%m_DiffuseDirection(1)*Dev_Clusters(IC)%m_DiffuseDirection(1) + &
-                    Dev_Clusters(IC)%m_DiffuseDirection(2)*Dev_Clusters(IC)%m_DiffuseDirection(2) + &
-                    Dev_Clusters(IC)%m_DiffuseDirection(3)*Dev_Clusters(IC)%m_DiffuseDirection(3)
+        VectorLen = tempDirection(1)*tempDirection(1) + &
+                    tempDirection(2)*tempDirection(2) + &
+                    tempDirection(3)*tempDirection(3)
 
         JumpHead = TSTEP - LowerLimitTime*LastPassageFactor
 
@@ -557,16 +581,27 @@ module MIGCOALE_EVOLUTION_GPU
 
                 ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
 
-                RR = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)
+                RR = DSQRT(6.D0*tempDiffuseCoeff*JumpHead)
                 movePos(1) = RR*movePos(1)/ArrowLen
                 movePos(2) = RR*movePos(2)/ArrowLen
                 movePos(3) = RR*movePos(3)/ArrowLen
             else
-                RandomSign = 1
-                if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
-                    RandomSign = -1
-                end if
-                movePos = RandomSign*DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpHead)*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+                RemindTSTEP = JumpHead
+                DO While(RemindTSTEP .GT. 0.D0)
+                    ! Change direction
+                    attempTime = -1.D0*log(curand_uniform(DevRandRecord(IC)))/(tempDiffuseRotateCoeff + 1.0D-32)
+
+                    RR  = DSQRT(6.D0*tempDiffuseCoeff*RemindTSTEP)
+                    if(attempTime .LT. RemindTSTEP) then
+                        SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
+                        tempDirection(SelectDir) = -1*tempDirection(SelectDir)
+                        RR  = DSQRT(6.D0*tempDiffuseCoeff*attempTime)
+                    end if
+
+                    movePos = sign(1.D0,curand_uniform(DevRandRecord(IC)) - 0.5D0)*RR*tempDirection  ! for one-dimension-diffusion
+
+                    RemindTSTEP = RemindTSTEP - attempTime
+                END DO
             end if
 
             tempPos = tempPos + movePos
@@ -592,11 +627,14 @@ module MIGCOALE_EVOLUTION_GPU
                 movePos(2) = LowerLimitLength*movePos(2)/ArrowLen
                 movePos(3) = LowerLimitLength*movePos(3)/ArrowLen
             else
-                RandomSign = 1
-                if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
-                    RandomSign = -1
+                attempTime = -1.D0*log(curand_uniform(DevRandRecord(IC)))/(tempDiffuseRotateCoeff + 1.0D-32)
+
+                if(attempTime .LT. LowerLimitTime) then
+                    SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
+                    tempDirection(SelectDir) = -1*tempDirection(SelectDir)
                 end if
-                movePos = RandomSign*LowerLimitLength*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+
+                movePos = sign(1.D0,curand_uniform(DevRandRecord(IC)) - 0.5D0)*LowerLimitLength*tempDirection  ! for one-dimension-diffusion
             end if
 
             tempPos = tempPos + movePos
@@ -615,20 +653,34 @@ module MIGCOALE_EVOLUTION_GPU
 
                 ArrowLen = DSQRT(movePos(1)*movePos(1) + movePos(2)*movePos(2) + movePos(3)*movePos(3))
 
-                RR = DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)
+                RR = DSQRT(6.D0*tempDiffuseCoeff*JumpRemind)
                 movePos(1) = RR*movePos(1)/ArrowLen
                 movePos(2) = RR*movePos(2)/ArrowLen
                 movePos(3) = RR*movePos(3)/ArrowLen
             else
-                RandomSign = 1
-                if(curand_uniform(DevRandRecord(IC)) .GT. 0.5D0) then
-                    RandomSign = -1
-                end if
-                movePos = RandomSign*DSQRT(6.D0*Dev_Clusters(IC)%m_DiffCoeff*JumpRemind)*Dev_Clusters(IC)%m_DiffuseDirection  ! for one-dimension-diffusion
+                RemindTSTEP = JumpRemind
+                DO While(RemindTSTEP .GT. 0.D0)
+                    ! Change direction
+                    attempTime = -1.D0*log(curand_uniform(DevRandRecord(IC)))/(tempDiffuseRotateCoeff + 1.0D-32)
+
+                    RR  = DSQRT(6.D0*tempDiffuseCoeff*RemindTSTEP)
+                    if(attempTime .LT. RemindTSTEP) then
+                        SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
+                        tempDirection(SelectDir) = -1*tempDirection(SelectDir)
+                        RR  = DSQRT(6.D0*tempDiffuseCoeff*attempTime)
+                    end if
+
+                    movePos = sign(1.D0,curand_uniform(DevRandRecord(IC)) - 0.5D0)*RR*tempDirection  ! for one-dimension-diffusion
+
+                    RemindTSTEP = RemindTSTEP - attempTime
+                END DO
+
             end if
 
             tempPos = tempPos + movePos
         end if
+
+        Dev_Clusters(IC)%m_DiffuseDirection = tempDirection
 
         tempPos = tempPos + POS
 
@@ -690,11 +742,6 @@ module MIGCOALE_EVOLUTION_GPU
                 end if
             end if
 
-            attempTime = -1.D0*log(curand_uniform(DevRandRecord(IC)))/(Dev_Clusters(IC)%m_DiffuseRotateCoeff + 1.0D-32)
-            if(attempTime .LT. TSTEP) then
-                SelectDir = floor(curand_uniform(DevRandRecord(IC))*3.D0) + 1
-                Dev_Clusters(IC)%m_DiffuseDirection(SelectDir) = -1*Dev_Clusters(IC)%m_DiffuseDirection(SelectDir)
-            end if
         end if
 
         SeedID = GrainBelongsTo_Dev(NSeeds,Dev_GrainSeeds,tempPos)
@@ -736,7 +783,11 @@ module MIGCOALE_EVOLUTION_GPU
                                                     TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
             end select
 
+            Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*2.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+
             Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
+
+            Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
         end if
 
@@ -1521,6 +1572,8 @@ module MIGCOALE_EVOLUTION_GPU
                     DO TheDim = 1,3
                         Dev_Clusters(IC)%m_DiffuseDirection(TheDim) = Dev_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,curand_uniform(DevRandRecord(IC)) - 0.5D0)
                     END DO
+
+                    Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
                 end if
 
                 Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
@@ -1554,6 +1607,12 @@ module MIGCOALE_EVOLUTION_GPU
                         Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
                                                         TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 end select
+
+                Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*2.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+
+                Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
             end if
 
             if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface
@@ -1806,6 +1865,8 @@ module MIGCOALE_EVOLUTION_GPU
                     DO TheDim = 1,3
                         Dev_Clusters(IC)%m_DiffuseDirection(TheDim) = Dev_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,curand_uniform(DevRandRecord(IC)) - 0.5D0)
                     END DO
+
+                    Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
                 end if
 
                 Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
@@ -1839,6 +1900,12 @@ module MIGCOALE_EVOLUTION_GPU
                         Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
                                                         TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 end select
+
+                Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*2.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+
+                Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
             end if
 
             if(dm_PERIOD(3) .EQ. 0) THEN  !We have surface

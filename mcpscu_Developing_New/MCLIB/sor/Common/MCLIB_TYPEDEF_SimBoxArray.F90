@@ -3131,6 +3131,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                           TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
 
+            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
+            end if
+
             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
@@ -3159,6 +3163,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                           TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
             end select
+
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = 0.D0
+
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*2.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
+
+            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
         end if
 
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1)
@@ -3473,6 +3483,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 ClustersSample(1,NClustersGroup)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ClustersSample(1,NClustersGroup)%m_Atoms(:)%m_NA)))* &
                                                                  TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
+
+        if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+            ClustersSample(1,NClustersGroup)%m_DiffCoeff = ClustersSample(1,NClustersGroup)%m_DiffCoeff*1.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
+        end if
 
         ClustersSample(1,NClustersGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
@@ -3888,6 +3902,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                                                   TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
 
+            if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                ClustersSample(ILayer,IGroup)%m_DiffCoeff = ClustersSample(ILayer,IGroup)%m_DiffCoeff*1.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
+            end if
+
             ClustersSample(ILayer,IGroup)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
             ClustersSample(ILayer,IGroup)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
@@ -3918,6 +3936,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     ClustersSample(ILayer,IGroup)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(ClustersSample(ILayer,IGroup)%m_Atoms(:)%m_NA)))* &
                                                                 TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
             end select
+
+            ClustersSample(ILayer,IGroup)%m_DiffCoeff = ClustersSample(ILayer,IGroup)%m_DiffCoeff*2.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
+
+            ClustersSample(ILayer,IGroup)%m_DiffuseDirection = 0.D0
+
+            ClustersSample(ILayer,IGroup)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
         end if
 
         ClustersSample(ILayer,IGroup)%m_Layer = ILayer
@@ -4064,6 +4088,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             DO TheDim = 1,3
                                 this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
                             END DO
+
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
                         end if
 
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
@@ -4113,6 +4139,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                 this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                                      TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
                         end select
+
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*2.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
+
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = 0.D0
+
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
                     end if
 
                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
@@ -4197,6 +4229,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                 DO TheDim = 1,3
                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
                                 END DO
+
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
                             end if
 
                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
@@ -4244,6 +4278,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
                                                                                          TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
                             end select
+
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*2.D0/3.D0        ! All Diffusion coeff would be changed to 3-D formation
+
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = 0.D0
+
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
                         end if
 
                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
