@@ -9,7 +9,7 @@ TINYCCPATH=$PWD/tcc-0.9.27/
 
 
 #------------------------------
-VER=CalCapture_2020_10_23
+VER=CalCapture_2020_11_09
 FULLNAME=mcpscu_$VER 
 tar -xvf $FULLNAME.tar.bz2
 
