@@ -84,7 +84,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     procedure,non_overridable,public,pass::PutoutCfg=>Puout_Instance_Config_SimBoxArray
     procedure,non_overridable,public,pass::PutinCfg=>Putin_Instance_Config_SimBoxArray
     procedure,non_overridable,public,pass::Putin_OKMC_OUTCFG_FORMAT18_SimRecord
-    procedure,non_overridable,private,pass::Putin_OKMC_OUTCFG_FORMAT18
+    procedure,non_overridable,public,pass::Putin_OKMC_OUTCFG_FORMAT18
     procedure,non_overridable,private,pass::Putin_MF_OUTCFG_FORMAT18
     procedure,non_overridable,public,pass::Putin_MF_OUTCFG_FORMAT18_Distribution
     procedure,non_overridable,private,pass::Putin_SPMF_OUTCFG_FORMAT18
@@ -2713,7 +2713,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   end subroutine Putin_OKMC_OUTCFG_FORMAT18_SimRecord
 
   !*************************************************************
-  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
+  subroutine Putin_OKMC_OUTCFG_FORMAT18(this,cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial,CheckBoxSize,TargetTotalBoxNum,ChooseBoxStartIdx,ChooseBoxEndIdx)
     implicit none
     !---Dummy Vars---
     CLASS(SimulationBoxes)::this
@@ -2724,6 +2724,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
     real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
     logical,intent(in)::AsInitial
+    logical,optional::CheckBoxSize
+    integer,optional::TargetTotalBoxNum
+    integer,optional::ChooseBoxStartIdx
+    integer,optional::ChooseBoxEndIdx
     !---Local Vars---
     integer::hFile
     integer::LINE
@@ -2759,9 +2763,53 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::I
     integer::STA
     integer::RecordIndex
+    logical::DoCheckBoxSize
+    integer::TheTargetTotalBoxNum
+    integer::TheChooseBoxStartIdx
+    integer::TheChooseBoxEndIdx
+    integer::NBoxUsed
+    integer::IBoxMap
+    integer::TotalLoop
+    integer::ILoop
     !---Body---
 
     MultiBox = Host_SimuCtrlParam%MultiBox
+
+    DoCheckBoxSize = .true.
+    if(present(CheckBoxSize)) then
+        DoCheckBoxSize = CheckBoxSize
+    end if
+
+    TheTargetTotalBoxNum = Host_SimuCtrlParam%MultiBox
+    if(present(TargetTotalBoxNum)) then
+        TheTargetTotalBoxNum = TargetTotalBoxNum
+    end if
+
+    TheChooseBoxStartIdx = 1
+    TheChooseBoxEndIdx = MultiBox
+    if(present(ChooseBoxStartIdx) .AND. present(ChooseBoxEndIdx)) then
+        TheChooseBoxStartIdx = ChooseBoxStartIdx
+        TheChooseBoxEndIdx = ChooseBoxEndIdx
+
+        if(TheChooseBoxStartIdx .LE. 0) then
+            write(*,*) "MCPSCUERROR: The chosen start box index cannot less than 1 :",TheChooseBoxStartIdx
+            pause
+            stop
+        end if
+
+        if(TheChooseBoxEndIdx .GT. TheTargetTotalBoxNum) then
+            write(*,*) "MCPSCUERROR: The chosen end box index cannot greater than total Target box number: ",TheTargetTotalBoxNum
+            pause
+            stop
+        end if
+    end if
+    NBoxUsed = TheChooseBoxEndIdx - TheChooseBoxStartIdx + 1
+
+    if(NBoxUsed .LE. 0) then
+        write(*,*) "MCPSCUERROR: The chosen box number cannot less than 1: ",TheChooseBoxStartIdx,TheChooseBoxEndIdx,NBoxUsed
+        pause
+        stop
+    end if
 
     NATomsUsed = 0
 
@@ -2821,81 +2869,90 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             case("&BOXLOW")
                 call EXTRACT_NUMB(STR,3,N,STRTMP)
-                DO K = 1,3
-                    if( ABS(this%BOXBOUNDARY(K,1) - DRSTR(STRTMP(K))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
-                        write(*,*) "MCPSCUERROR: The read-in configure is not match with box below size."
-                        write(*,*) this%BOXBOUNDARY(K,1)
-                        write(*,*) DRSTR(STRTMP(K))*this%LatticeLength
-                        pause
-                        stop
-                    end if
-                END DO
 
-            case("&BOXSIZE")
-                call EXTRACT_NUMB(STR,3,N,STRTMP)
-                DO K = 1,3
-                    if( ABS(this%BOXSIZE(K) - DRSTR(STRTMP(K))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
-                        write(*,*) "MCPSCUERROR: The read-in configure is not match with box size."
-                        write(*,*) this%BOXSIZE(K)
-                        write(*,*) DRSTR(STRTMP(K))*this%LatticeLength
-                        pause
-                        stop
-                    end if
-                END DO
-
-            case("&NGRAIN")
-                call EXTRACT_NUMB(STR,1,N,STRTMP)
-                if(this%m_GrainBoundary%GrainNum .ne. ISTR(STRTMP(1))) then
-                    write(*,*) "MCPSCUERROR: The read-in configure is not match with grain seeds number."
-                    write(*,*) this%m_GrainBoundary%GrainNum
-                    write(*,*) ISTR(STRTMP(1))
-                    pause
-                    stop
-                end if
-                DO ISeed = 1,this%m_GrainBoundary%GrainNum
-                    call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
-                    call RemoveComments(STR,"!")
-                    STR = adjustl(STR)
-                    call GETKEYWORD("&",STR,KEYWORD)
-                    call UPCASE(KEYWORD)
-
-                    if(.not. ISSTREQUAL(KEYWORD,"&SEEDDATA")) then
-                        write(*,*) "MCPSCUERROR: The grain seeds number is less than the recorded one."
-                        write(*,*) KEYWORD
-                        pause
-                        stop
-                    end if
-
-                    call EXTRACT_NUMB(STR,4,N,STRTMP)
-
-                    if(N .LT. 4) then
-                        write(*,*) "MCPSCUERROR: The grain seeds configuration is not right."
-                        write(*,*) "It should be '&SEEDDATA SeedID Pos_x Pos_y Pos_z' "
-                        write(*,*) STR
-                        pause
-                        stop
-                    end if
-
-                    ISeedTemp = ISTR(STRTMP(1))
-
-                    if(ISeedTemp .ne. ISeed) then
-                        write(*,*) "MCPSCUERROR: The grain seeds index is not correct: ",ISeed
-                        pause
-                        stop
-                    end if
-
-                    DO I = 1,3
-                        if( ABS(this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I) - DRSTR(STRTMP(I+1))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
-                            write(*,*) "MCPSCUERROR: The read-in configure is not match with box grain position."
-                            write(*,*) "For grain seed ID: ",ISeedTemp
-                            write(*,*) this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I)
-                            write(*,*) DRSTR(STRTMP(I+1))*this%LatticeLength
-                                pause
+                if(DoCheckBoxSize .eq. .true.) then
+                    DO K = 1,3
+                        if( ABS(this%BOXBOUNDARY(K,1) - DRSTR(STRTMP(K))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
+                            write(*,*) "MCPSCUERROR: The read-in configure is not match with box below size."
+                            write(*,*) this%BOXBOUNDARY(K,1)
+                            write(*,*) DRSTR(STRTMP(K))*this%LatticeLength
+                            pause
                             stop
                         end if
                     END DO
+                end if
 
-                END DO
+            case("&BOXSIZE")
+                call EXTRACT_NUMB(STR,3,N,STRTMP)
+
+                if(DoCheckBoxSize .eq. .true.) then
+                    DO K = 1,3
+                        if( ABS(this%BOXSIZE(K) - DRSTR(STRTMP(K))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
+                            write(*,*) "MCPSCUERROR: The read-in configure is not match with box size."
+                            write(*,*) this%BOXSIZE(K)
+                            write(*,*) DRSTR(STRTMP(K))*this%LatticeLength
+                            pause
+                            stop
+                        end if
+                    END DO
+                end if
+
+            case("&NGRAIN")
+                call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                if(DoCheckBoxSize .eq. .true.) then
+                    if(this%m_GrainBoundary%GrainNum .ne. ISTR(STRTMP(1))) then
+                        write(*,*) "MCPSCUERROR: The read-in configure is not match with grain seeds number."
+                        write(*,*) this%m_GrainBoundary%GrainNum
+                        write(*,*) ISTR(STRTMP(1))
+                        pause
+                        stop
+                    end if
+                    DO ISeed = 1,this%m_GrainBoundary%GrainNum
+                        call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
+                        call RemoveComments(STR,"!")
+                        STR = adjustl(STR)
+                        call GETKEYWORD("&",STR,KEYWORD)
+                        call UPCASE(KEYWORD)
+
+                        if(.not. ISSTREQUAL(KEYWORD,"&SEEDDATA")) then
+                            write(*,*) "MCPSCUERROR: The grain seeds number is less than the recorded one."
+                            write(*,*) KEYWORD
+                            pause
+                            stop
+                        end if
+
+                        call EXTRACT_NUMB(STR,4,N,STRTMP)
+
+                        if(N .LT. 4) then
+                            write(*,*) "MCPSCUERROR: The grain seeds configuration is not right."
+                            write(*,*) "It should be '&SEEDDATA SeedID Pos_x Pos_y Pos_z' "
+                            write(*,*) STR
+                            pause
+                            stop
+                        end if
+
+                        ISeedTemp = ISTR(STRTMP(1))
+
+                        if(ISeedTemp .ne. ISeed) then
+                            write(*,*) "MCPSCUERROR: The grain seeds index is not correct: ",ISeed
+                            pause
+                            stop
+                        end if
+
+                        DO I = 1,3
+                            if( ABS(this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I) - DRSTR(STRTMP(I+1))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
+                                write(*,*) "MCPSCUERROR: The read-in configure is not match with box grain position."
+                                write(*,*) "For grain seed ID: ",ISeedTemp
+                                write(*,*) this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I)
+                                write(*,*) DRSTR(STRTMP(I+1))*this%LatticeLength
+                                pause
+                                stop
+                            end if
+                        END DO
+
+                    END DO
+                end if
 
             case("&NCLUSTERS")
                 write(*,*) "MCPSCUInfo: the key word &NCLUSTERS is not used anymore."
@@ -2903,19 +2960,19 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 write(CNUM,*) p_NUMBER_OF_STATU
                 CFormat = ""
                 CFormat = "(A20,1x,I20,1x,"//CNUM(1:LENTRIM(CNUM))//"(I20,1x))"
-                DO IBox = 1,MultiBox
+                DO IBox = 1,TheTargetTotalBoxNum
                     call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
                     call RemoveComments(STR,"!")
                     ! Do nothing
                 END DO
 
             case("&BOXSEINDEX")
-                call tempBoxesInfo%Init(MultiBox)
+                call tempBoxesInfo%Init(TheTargetTotalBoxNum)
 
                 CFormat = ""
                 write(CNUM,*) p_NUMBER_OF_STATU
                 CFormat = "(A20,1x,I20,1x,"//CNUM(1:LENTRIM(CNUM))//"(I20,1x))"
-                DO IBox = 1,MultiBox
+                DO IBox = 1,TheTargetTotalBoxNum
                     call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
                     call RemoveComments(STR,"!")
                     read(STR,fmt=CFormat(1:LENTRIM(CFormat)),ERR=100)   CEmpty,                                  &
@@ -2992,10 +3049,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     ExpandSizeArray = 0
 
     DO IBox = 1,MultiBox
-        if(tempBoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
+        IBoxMap = TheChooseBoxStartIdx + mod(IBox-1,NBoxUsed)
+
+        if(tempBoxesInfo%SEVirtualIndexBox(IBoxMap,2) .LE. 0) then
             ExpandSizeArray(IBox) = 0
         else
-            ExpandSizeArray(IBox) = tempBoxesInfo%SEVirtualIndexBox(IBox,2) - tempBoxesInfo%SEVirtualIndexBox(IBox,1) + 1
+            ExpandSizeArray(IBox) = tempBoxesInfo%SEVirtualIndexBox(IBoxMap,2) - tempBoxesInfo%SEVirtualIndexBox(IBoxMap,1) + 1
         end if
     END DO
 
@@ -3006,145 +3065,158 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     call AllocateArray_Host(NCEachBox,MultiBox,"NCEachBox")
     NCEachBox = 0
 
-    DO While(.true.)
-
-        read(hFile,fmt="(A)",ERR=100,IOSTAT=STA) STR
-
-        if(STA .LT. 0) then
-            exit
-        end if
+    TotalLoop = (MultiBox-1)/NBoxUsed + 1
+    DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
 
         call EXTRACT_NUMB(STR,10+p_ATOMS_GROUPS_NUMBER,N,STRTMP)
         atomsInfo = 0
 
-        IBox = ISTR(STRTMP(1))
+        IBoxMap = ISTR(STRTMP(1))
 
-        NCEachBox(IBox) = NCEachBox(IBox) + 1
+        if(IBoxMap .GE. TheChooseBoxStartIdx .AND. IBoxMap .LE. TheChooseBoxEndIdx) then
 
-        IC = this%m_BoxesInfo%SEUsedIndexBox(IBox,2) + NCEachBox(IBox)
+            DO ILoop = 1,TotalLoop
 
-        RecordIndex = 0
-        if(this%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GE. this%m_BoxesInfo%SEUsedIndexBox(IBox,1) .AND. &
-           this%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GT. 0) then
-           RecordIndex = this%m_ClustersInfo_CPU%m_Clusters(this%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
-        end if
+                IBox = 1 + NBoxUsed*(ILoop-1) + mod(IBoxMap - TheChooseBoxStartIdx,NBoxUsed)
 
+                if(IBox .LE. MultiBox) then
 
-        call this%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
+                    NCEachBox(IBox) = NCEachBox(IBox) + 1
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ISTR(STRTMP(2))
+                    IC = this%m_BoxesInfo%SEUsedIndexBox(IBox,2) + NCEachBox(IBox)
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ISTR(STRTMP(3))
+                    RecordIndex = 0
+                    if(this%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GE. this%m_BoxesInfo%SEUsedIndexBox(IBox,1) .AND. &
+                        this%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GT. 0) then
+                        RecordIndex = this%m_ClustersInfo_CPU%m_Clusters(this%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
+                    end if
 
-        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) .GT. this%m_GrainBoundary%GrainNum) then
-            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
-            write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1)
-            pause
-            stop
-        end if
+                    call this%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) = ISTR(STRTMP(4))
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ISTR(STRTMP(2))
 
-        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) .GT. this%m_GrainBoundary%GrainNum) then
-            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
-            write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2)
-            pause
-            stop
-        end if
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ISTR(STRTMP(3))
 
-        IStatu = ISTR(STRTMP(5))
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = IStatu
+                    if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) .GT. this%m_GrainBoundary%GrainNum) then
+                        if(DoCheckBoxSize) then
+                            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+                            write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1)
+                            pause
+                            stop
+                        else
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = 0
+                        end if
+                    end if
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ISTR(STRTMP(6))
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = ISTR(STRTMP(7))
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) = ISTR(STRTMP(4))
 
-        DO I = 1,3
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = DRSTR(STRTMP(7+I))
-        END DO
+                    if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) .GT. this%m_GrainBoundary%GrainNum) then
+                        if(DoCheckBoxSize) then
+                            write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
+                            write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2)
+                            pause
+                            stop
+                        else
+                            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) = 0
+                        end if
+                    end if
 
-        DO I = 1,NATomsUsed
-            atomsInfo(I) = DRSTR(STRTMP(7+3+I))
-        END DO
+                    IStatu = ISTR(STRTMP(5))
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = IStatu
 
-        Do IElement = 1,NATomsUsed
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(AtomsIndex(IElement))%m_ID = AtomsIndex(IElement)
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(AtomsIndex(IElement))%m_NA = atomsInfo(IElement)
-        End Do
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ISTR(STRTMP(6))
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = ISTR(STRTMP(7))
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)*this%LatticeLength
+                    DO I = 1,3
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = DRSTR(STRTMP(7+I))
+                    END DO
 
-        TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
+                    DO I = 1,NATomsUsed
+                        atomsInfo(I) = DRSTR(STRTMP(7+3+I))
+                    END DO
 
-        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
-            select case(TheDiffusorValue%ECRValueType_Free)
-                case(p_ECR_ByValue)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
-                case default
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                    &
-                                                                                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
-                                                                                         Host_SimuCtrlParam%TKB,                                &
-                                                                                         this%LatticeLength)
-            end select
+                    Do IElement = 1,NATomsUsed
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(AtomsIndex(IElement))%m_ID = AtomsIndex(IElement)
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(AtomsIndex(IElement))%m_NA = atomsInfo(IElement)
+                    End Do
 
-            select case(TheDiffusorValue%DiffusorValueType_Free)
-                case(p_DiffuseCoefficient_ByValue)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
-                case(p_DiffuseCoefficient_ByArrhenius)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
-                case(p_DiffuseCoefficient_ByBCluster)
-                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_FREE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
-                case(p_DiffuseCoefficient_BySIACluster)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
-                case(p_DiffuseCoefficient_ByVcCluster)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
-                                                                          TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
-            end select
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)*this%LatticeLength
 
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
 
-        else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
-            select case(TheDiffusorValue%ECRValueType_InGB)
-                case(p_ECR_ByValue)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
-                case default
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_InGB,                    &
-                                                                                         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
-                                                                                         Host_SimuCtrlParam%TKB,                                &
-                                                                                         this%LatticeLength)
-            end select
+                    if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU) then
+                        select case(TheDiffusorValue%ECRValueType_Free)
+                            case(p_ECR_ByValue)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                            case default
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                    &
+                                                                                                     this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                     Host_SimuCtrlParam%TKB,                                &
+                                                                                                     this%LatticeLength)
+                        end select
 
-            select case(TheDiffusorValue%DiffusorValueType_InGB)
-                case(p_DiffuseCoefficient_ByValue)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
-                case(p_DiffuseCoefficient_ByArrhenius)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
-                case(p_DiffuseCoefficient_ByBCluster)
-                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_INGB*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
-                case(p_DiffuseCoefficient_BySIACluster)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
-                                                                          TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
-                case(p_DiffuseCoefficient_ByVcCluster)
-                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
-                                                                          TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
-            end select
-        end if
+                        select case(TheDiffusorValue%DiffusorValueType_Free)
+                            case(p_DiffuseCoefficient_ByValue)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                            case(p_DiffuseCoefficient_ByArrhenius)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                            case(p_DiffuseCoefficient_ByBCluster)
+                                ! Here we adopt a model that D=D0*(1/R)**Gama
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_FREE*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                            case(p_DiffuseCoefficient_BySIACluster)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                            case(p_DiffuseCoefficient_ByVcCluster)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                        end select
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1)
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
 
-        if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .GT. 0) then
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = RecordIndex + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2)
-        end if
+                    else if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+                        select case(TheDiffusorValue%ECRValueType_InGB)
+                            case(p_ECR_ByValue)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_InGB
+                            case default
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_InGB,                    &
+                                                                                                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                    Host_SimuCtrlParam%TKB,                                &
+                                                                                                    this%LatticeLength)
+                        end select
 
+                        select case(TheDiffusorValue%DiffusorValueType_InGB)
+                            case(p_DiffuseCoefficient_ByValue)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
+                            case(p_DiffuseCoefficient_ByArrhenius)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
+                            case(p_DiffuseCoefficient_ByBCluster)
+                                ! Here we adopt a model that D=D0*(1/R)**Gama
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = SURDIFPRE_INGB*(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                            case(p_DiffuseCoefficient_BySIACluster)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
+                                                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
+                            case(p_DiffuseCoefficient_ByVcCluster)
+                                this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/Host_SimuCtrlParam%TKB)
+                        end select
+                    end if
 
-        this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) + 1
-        this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) + 1
+                    this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1)
 
-        if(AsInitial .eq. .true.) then
-            this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(IStatu) + 1
-            this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(IStatu) + 1
+                    if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) .GT. 0) then
+                        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = RecordIndex + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2)
+                    end if
+
+                    this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu) + 1
+                    this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu) + 1
+
+                    if(AsInitial .eq. .true.) then
+                        this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC0(IStatu) + 1
+                        this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(IStatu) = this%m_BoxesBasicStatistic%BoxesStatis_Integral%NC0(IStatu) + 1
+                    end if
+                end if
+            END DO
+
         end if
 
     END DO

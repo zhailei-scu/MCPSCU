@@ -50,6 +50,9 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         real(kind=KINDDF),dimension(:),allocatable::m_RSIADistributeToCent
         real(kind=KINDDF),dimension(:),allocatable::m_ROutAbsorbToCent
         character*1000::MCCfgPath
+        integer::TargetTotalBoxNum
+        integer::StartBoxIdx
+        Integer::EndBoxIdx
         character*1000::CapCalInfoPath
         real(kind=KINDDF),dimension(:,:),allocatable::m_CascadeCenter
         real(kind=KINDDF),dimension(:),allocatable::m_maxDistance
@@ -108,6 +111,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CheckOutAbsorb = .true.
 
         this%MCCfgPath = ""
+        this%TargetTotalBoxNum = 1
+        this%StartBoxIdx = 1
+        this%EndBoxIdx = 1
+
         this%CapCalInfoPath = ""
 
         call DeAllocateArray_Host(this%m_CascadeCenter,"m_CascadeCenter")
@@ -1301,6 +1308,83 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
            stop
         end if
 
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&TARGETBOXNUM")
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special total box number in MC configuration used to construct captureBox."
+                        pause
+                        stop
+                    end if
+
+                    this%TargetTotalBoxNum = ISTR(STRTMP(1))
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special total box number in MC configuration used to construct captureBox."
+           pause
+           stop
+        end if
+
+
+        LINE = 0
+        Finded = .false.
+        rewind(hFile)
+        Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            LINE = LINE + 1
+            STR = adjustl(STR)
+            call RemoveComments(STR,"!")
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&SEIDUSEDBOX")
+                    call EXTRACT_NUMB(STR,2,N,STRTMP)
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: You must special the start and end box index in MC configuration used to construct captureBox."
+                        pause
+                        stop
+                    end if
+
+                    this%StartBoxIdx = ISTR(STRTMP(1))
+                    this%EndBoxIdx = ISTR(STRTMP(2))
+
+                    Finded = .true.
+            end select
+        END DO
+
+        if(Finded .eq. .false.) then
+           write(*,*) "MCPSCUERROR: You must special the start and end box index in MC configuration used to construct captureBox."
+           pause
+           stop
+        end if
+
         close(hFile)
         return
     end subroutine ResolveCapCtrlFile_FormMCConfig
@@ -1507,6 +1591,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CheckOutAbsorb = other%CheckOutAbsorb
 
         this%MCCfgPath = other%MCCfgPath
+        this%TargetTotalBoxNum = other%TargetTotalBoxNum
+        this%StartBoxIdx = other%StartBoxIdx
+        this%EndBoxIdx = other%EndBoxIdx
+
         this%CapCalInfoPath = other%CapCalInfoPath
 
         call DeAllocateArray_Host(this%m_CascadeCenter,"m_CascadeCenter")
@@ -1565,6 +1653,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%CheckOutAbsorb = .true.
 
         this%MCCfgPath = ""
+        this%TargetTotalBoxNum = 1
+        this%StartBoxIdx = 1
+        this%EndBoxIdx = 1
+
         this%CapCalInfoPath = ""
 
         call DeAllocateArray_Host(this%m_CascadeCenter,"m_CascadeCenter")

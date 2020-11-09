@@ -2164,7 +2164,11 @@ module MC_ConstructCaptureBox
         call resolveAddOnData(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
         call resolveModelRelativeData(Host_SimuCtrlParamList%theSimulationCtrlParam%ModelData,Host_Boxes%Atoms_list)
 
-        call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,TheCaptureCal%MCCfgPath,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
+        call Host_Boxes%Putin_OKMC_OUTCFG_FORMAT18(TheCaptureCal%MCCfgPath,Host_SimuCtrlParamList%theSimulationCtrlParam,Record,TheVersion,m_FREESURDIFPRE,m_GBSURDIFPRE,AsInitial=.true.,&
+                                                   CheckBoxSize = .false., &
+                                                   TargetTotalBoxNum = TheCaptureCal%TargetTotalBoxNum, &
+                                                   ChooseBoxStartIdx = TheCaptureCal%StartBoxIdx,  &
+                                                   ChooseBoxEndIdx = TheCaptureCal%EndBoxIdx)
 
         write(*,*) "The KMC Configuration version is: ",TheVersion
 
@@ -2197,7 +2201,7 @@ module MC_ConstructCaptureBox
         call Host_Boxes%SweepUnActiveMemory_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
 
-        !*******Get Infor mation from configuration ****************************************
+        !*******Get Information from configuration ****************************************
         DO IBox = 1,MultiBox
             ICFrom = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTo = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
