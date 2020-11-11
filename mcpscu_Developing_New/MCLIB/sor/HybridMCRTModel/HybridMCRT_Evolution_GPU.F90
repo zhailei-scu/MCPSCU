@@ -1,0 +1,13 @@
+module HYBRIDMCRT_EVOLUTION_GPU
+  use cudafor
+  use MCLIB_CONSTANTS
+  use MCLIB_TYPEDEF_ACLUSTER
+  use MCLIB_GLOBAL_GPU
+  use MCLIB_TYPEDEF_GEOMETRY_GPU
+  use MODEL_ECR_GPU
+  implicit none
+
+
+  contains
+
+end module HYBRIDMCRT_EVOLUTION_GPU
