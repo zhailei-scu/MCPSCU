@@ -9,8 +9,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 
   integer,private,device,dimension(:,:),allocatable::dm_CountsNCArray
   integer,private,dimension(:,:),allocatable::m_CountsNCArray
-  integer(kind=KMCLINT),private,device,dimension(:,:),allocatable::dm_CountsNAArray
-  integer(kind=KMCLINT),private,dimension(:,:),allocatable::m_CountsNAArray
+  integer(kind=KINDINT8),private,device,dimension(:,:),allocatable::dm_CountsNAArray
+  integer(kind=KINDINT8),private,dimension(:,:),allocatable::m_CountsNAArray
 
   type,public::SimulationBoxes_GPU
 
@@ -618,7 +618,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
         type(ACluster),device::DevArray(:)
         integer,device::Dev_SEIndexBox(:,:)
         integer,device::ResultCountsNCArray(p_NUMBER_OF_STATU,*)
-        integer(kind=KMCLINT),device::ResultCountsNAArray(p_NUMBER_OF_STATU,*)
+        integer(kind=KINDINT8),device::ResultCountsNAArray(p_NUMBER_OF_STATU,*)
         !---Local Vars---
         integer::tid
         integer::bid
@@ -629,7 +629,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
         integer::ecid
         integer::IC
         integer,shared::Share_CountsNCOneStatu(p_Reduce_BLOCKSIZE)
-        integer(kind=KMCLINT),shared::Share_CountsNAOneStatu(p_Reduce_BLOCKSIZE)
+        integer(kind=KINDINT8),shared::Share_CountsNAOneStatu(p_Reduce_BLOCKSIZE)
         integer::I
         integer::IAtomsGroup
         integer::IStatu

@@ -8,7 +8,7 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     type,public::BoxStatis
         integer::NC0(p_NUMBER_OF_STATU) = 0                            ! initial number of clusters
         integer::NC(p_NUMBER_OF_STATU)  = 0                            ! the number of all status clusters at current time intervale
-        integer(kind=KMCLINT)::NA(p_NUMBER_OF_STATU) = 0               ! the number of all status atomics at current time intervale
+        integer(kind=KINDINT8)::NA(p_NUMBER_OF_STATU) = 0              ! the number of all status atomics at current time intervale
         integer::NCDumpAdded = 0
 
         real(kind=KINDDF)::AveNearestSpeFreeClusters = 0.D0

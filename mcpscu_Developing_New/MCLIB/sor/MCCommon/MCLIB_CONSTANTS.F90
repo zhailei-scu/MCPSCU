@@ -1,5 +1,5 @@
 module MCLIB_CONSTANTS
-    use MSM_CONSTANTS
+    use COMMONLIB_CONSTANTS
     implicit none
 
     !---This macro function used to translate the symbol x to string (but not unfold the macro)
@@ -22,12 +22,6 @@ module MCLIB_CONSTANTS
     character(len=10),parameter::OKMC_OUTCFG_FORMAT18 = "&BOXOKMC18"
     character(len=8),parameter::MF_OUTCFG_FORMAT18 = "&BOXMF18"
     character(len=10),parameter::SPMF_OUTCFG_FORMAT18 = "&BOXSPMF18"
-
-    ! Data type
-    integer,parameter::KMCLINT = 8
-
-    integer,parameter::KINDDF_SIZE_PGI = 8             ! 8 bit for a KINDDF kind
-    integer,parameter::DEFAULT_SIZE_PGI = 4
 
 
     integer,parameter::mp_CalcNeighborList_NNEAREST = 1
@@ -122,56 +116,6 @@ module MCLIB_CONSTANTS
 
 
     real(kind=KINDDF),parameter::p_GAMMA = 4.D0                          ! the parameter for cluster diffusion
-
-    !--- numbers
-    real(kind=KINDDF), parameter::ZERO=0
-    real(kind=KINDDF), parameter::ONE=1
-    real(kind=KINDDF), parameter::TWO=2
-    real(kind=KINDDF), parameter::THREE=3
-    real(kind=KINDDF), parameter::TEN=10
-    real(kind=KINDDF), parameter::HUNDRED=100
-    integer(kind=KINDINT), parameter::IHUNDRED=100
-    integer(kind=KMCLINT),parameter::TENPOWTHREE = 1*10**3
-    integer(kind=KMCLINT),parameter::TENPOWFOUR = 1*10**4
-    integer(kind=KMCLINT),parameter::TENPOWFIVE = 1*10**5
-    integer(kind=KMCLINT),parameter::TENPOWSIX = 1*10**6
-    integer(kind=KMCLINT),parameter::TENPOWSEVEN = 1*10**7
-    integer(kind=KMCLINT),parameter::TENPOWEIGHT = 1*10**8
-
-
-    !*** Math. and  Phys. constants used
-    real(kind=KINDDF), parameter::A0B=5.29177249D-9, &      !BOHR RADIU
-                              AVOG=6.0221367D23            !Avigado constants
-
-    real(kind=KINDDF), parameter::C_FOURBYTHREE = 4.D0/3.D0
-
-    real(kind=KINDDF), parameter::C_UM2CM = 1.D-4
-    real(kind=KINDDF), parameter::C_CM2UM = 1.D4
-    real(kind=KINDDF), parameter::C_NM2CM = 1.D-7
-    real(kind=KINDDF), parameter::C_CM2NM = 1.D7
-    real(kind=KINDDF), parameter::C_AM2CM = 1.D-8
-    real(kind=KINDDF), parameter::C_CM2AM = 1.D8
-    real(kind=KINDDF), parameter::C_JPERM2_TO_ERGPERCM2 = 1.D3
-    real(kind=KINDDF), parameter::C_KB      =  1.38054D-16              !Boltzmann constant, in ERG/K
-    real(kind=KINDDF), parameter::C_EV2ERG   = 1.60219D-12
-
-    !*** Memory management *****************
-    integer, parameter::C_BYTE = 8    ! (8 bits)
-    integer, parameter::C_KBYTES = 1024*C_BYTE
-    integer, parameter::C_MBYTES = 1024*C_KBYTES
-    integer, parameter::C_GBYTES = 1024*C_MBYTES
-
-    !***The directory associated parameters*************
-    ! "/"  In fact, the "/" and "\" is same in windows and in cygwin bash or command windows, but in linux, should be "/",
-    ! and in cygwin environment, if we call the system(mkdir ) command in fortran program, we cannot use the "/", it should be "\"
-    ! so, in fortran program, it is necessary to use "/" in linux and use "\" in windows(cygwin)
-    #ifdef CYGWIN
-    character(len=1), parameter::FolderSpe = achar(92)   ! "\"
-    #else
-    character(len=1), parameter::FolderSpe = achar(47)   ! "/"
-    #endif
-
-    character(len=1), parameter::RelativeHead = achar(46) ! "."
 
 
 end module MCLIB_CONSTANTS

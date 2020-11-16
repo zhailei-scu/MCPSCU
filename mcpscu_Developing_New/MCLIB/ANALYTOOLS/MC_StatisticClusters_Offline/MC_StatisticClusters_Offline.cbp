@@ -22,8 +22,8 @@
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libAppShell.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libInletModel.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMigCoaleModel.a" />
-					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
-					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommonGPU.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMCCommon.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMCCommonGPU.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libTCCLIB.a" />
 					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
 					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc.a" />
@@ -33,6 +33,7 @@
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCudaRanGenerator.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRandGenerators.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRunningProfile.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
 					<Add directory="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug" />
 				</Linker>
 			</Target>
@@ -52,8 +53,8 @@
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libAppShell.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libInletModel.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMigCoaleModel.a" />
-					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />
-					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommonGPU.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMCCommon.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMCCommonGPU.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libTCCLIB.a" />
 					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
 					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc.a" />

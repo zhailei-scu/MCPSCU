@@ -63,8 +63,8 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
     end type ReactionValue
 
     type,public::ReactionEntity
-        integer(kind=KMCLINT)::SubjectCode PREASSIGN 0
-        integer(kind=KMCLINT)::ObjectCode PREASSIGN 0
+        integer(kind=KINDINT8)::SubjectCode PREASSIGN 0
+        integer(kind=KINDINT8)::ObjectCode PREASSIGN 0
 
         type(ReactionValue)::TheValue
 
@@ -398,11 +398,11 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         type(ACluster),intent(in)::KeyObject
         CLASS(ReactionValue),intent(in)::TheValue
         !---Local Vars---
-        integer(kind=KMCLINT)::SubjectCode
-        integer(kind=KMCLINT)::ObjectCode
-        integer(kind=KMCLINT)::reSparedCode
-        integer(kind=KMCLINT)::IndexFor
-        integer(kind=KMCLINT)::NextIndex
+        integer(kind=KINDINT8)::SubjectCode
+        integer(kind=KINDINT8)::ObjectCode
+        integer(kind=KINDINT8)::reSparedCode
+        integer(kind=KINDINT8)::IndexFor
+        integer(kind=KINDINT8)::NextIndex
         integer::ICount
         !---Body---
         SubjectCode = this%getCode(KeySubject%m_Atoms)
@@ -486,11 +486,11 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         type(ACluster),intent(in)::KeyObject
         type(ReactionValue)::TheValue
         !---Local Vars---
-        integer(kind=KMCLINT)::SubjectCode
-        integer(kind=KMCLINT)::ObjectCode
-        integer(kind=KMCLINT)::reSparedCode
-        integer(kind=KMCLINT)::IndexFor
-        integer(kind=KMCLINT)::NextIndex
+        integer(kind=KINDINT8)::SubjectCode
+        integer(kind=KINDINT8)::ObjectCode
+        integer(kind=KINDINT8)::reSparedCode
+        integer(kind=KINDINT8)::IndexFor
+        integer(kind=KINDINT8)::NextIndex
         !---Body---
         SubjectCode = this%getCode(KeySubject%m_Atoms)
         ObjectCode = this%getCode(KeyObject%m_Atoms)
@@ -525,7 +525,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         !---Dummy Vars---
         CLASS(ReactionsMap)::this
         type(Single_AtomsSet)::Atoms(:)
-        integer(kind=KMCLINT)::Code
+        integer(kind=KINDINT8)::Code
         !---Local Vars---
         integer::I
         integer::J
@@ -550,11 +550,11 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         ! Purpose: to spare the code to be more uniform
         !---Dummy Vars---
         CLASS(ReactionsMap)::this
-        integer(kind=KMCLINT)::SubjectCode
-        integer(kind=KMCLINT)::ObjectCode
-        integer(kind=KMCLINT)::reSparedCode
+        integer(kind=KINDINT8)::SubjectCode
+        integer(kind=KINDINT8)::ObjectCode
+        integer(kind=KINDINT8)::reSparedCode
         !---Local Vars---
-        integer(kind=KMCLINT)::TempCode
+        integer(kind=KINDINT8)::TempCode
         !---Body---
         reSparedCode = IOR(SubjectCode,ObjectCode)
 
@@ -576,8 +576,8 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         implicit none
         !---Dummy Vars---
         CLASS(ReactionsMap)::this
-        integer(kind=KMCLINT)::Code
-        integer(kind=KMCLINT)::IndexFor
+        integer(kind=KINDINT8)::Code
+        integer(kind=KINDINT8)::IndexFor
         !---Body---
         IndexFor = IAND(Code,this%MapLength)
 

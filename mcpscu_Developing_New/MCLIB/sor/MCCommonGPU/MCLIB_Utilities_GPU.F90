@@ -8,7 +8,6 @@ module MCLIB_Utilities_GPU
   use cudafor
   use curand_device
   use MCLIB_CONSTANTS_GPU
-  use MCLIB_UTILITIES_FORMER
   use MCLIB_TYPEDEF_ACLUSTER
   use MCLIB_TYPEDEF_GEOMETRY
   use MCLIB_TYPEDEF_NEIGHBOR_LIST

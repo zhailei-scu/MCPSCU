@@ -3,8 +3,13 @@
 	<Workspace title="mcpscu">
 		<Project filename="MCLIB/ANALYTOOLS/MC_HomogenizeBox/MC_HomogenizeBox.cbp">
 			<Depends filename="MCLIB/AppShell/AppShell.cbp" />
+			<Depends filename="MCLIB/SimEventsPool/SimEventsPool.cbp" />
 			<Depends filename="MCLIB/InletModel/InletModel.cbp" />
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/HybridMCSCDModel/HybridMCSCDModel.cbp" />
+			<Depends filename="MCLIB/HybridMCRTModel/HybridMCRTModel.cbp" />
+			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -13,12 +18,16 @@
 			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
 			<Depends filename="MSMLIB/MSMLIB.cbp" />
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
-			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
 		</Project>
 		<Project filename="MCLIB/APPLICATIONS/MC_GenerateCascadeBox/MC_GenerateCascadeBox.cbp">
 			<Depends filename="MCLIB/AppShell/AppShell.cbp" />
+			<Depends filename="MCLIB/SimEventsPool/SimEventsPool.cbp" />
 			<Depends filename="MCLIB/InletModel/InletModel.cbp" />
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/HybridMCSCDModel/HybridMCSCDModel.cbp" />
+			<Depends filename="MCLIB/HybridMCRTModel/HybridMCRTModel.cbp" />
+			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -27,12 +36,16 @@
 			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
 			<Depends filename="MSMLIB/MSMLIB.cbp" />
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
-			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
 		</Project>
 		<Project filename="MCLIB/ANALYTOOLS/MC_StatisticClusters_Offline/MC_StatisticClusters_Offline.cbp">
 			<Depends filename="MCLIB/AppShell/AppShell.cbp" />
+			<Depends filename="MCLIB/SimEventsPool/SimEventsPool.cbp" />
 			<Depends filename="MCLIB/InletModel/InletModel.cbp" />
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/HybridMCSCDModel/HybridMCSCDModel.cbp" />
+			<Depends filename="MCLIB/HybridMCRTModel/HybridMCRTModel.cbp" />
+			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -41,12 +54,16 @@
 			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
 			<Depends filename="MSMLIB/MSMLIB.cbp" />
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
-			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
 		</Project>
 		<Project filename="MCLIB/APPLICATIONS/MigrationCoalescence_GPU/MigrationCoalescence_GPU.cbp">
 			<Depends filename="MCLIB/AppShell/AppShell.cbp" />
+			<Depends filename="MCLIB/SimEventsPool/SimEventsPool.cbp" />
 			<Depends filename="MCLIB/InletModel/InletModel.cbp" />
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/HybridMCSCDModel/HybridMCSCDModel.cbp" />
+			<Depends filename="MCLIB/HybridMCRTModel/HybridMCRTModel.cbp" />
+			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -55,11 +72,14 @@
 			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
 			<Depends filename="MSMLIB/MSMLIB.cbp" />
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
-			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
 		</Project>
 		<Project filename="MCLIB/AppShell/AppShell.cbp">
 			<Depends filename="MCLIB/InletModel/InletModel.cbp" />
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/HybridMCSCDModel/HybridMCSCDModel.cbp" />
+			<Depends filename="MCLIB/HybridMCRTModel/HybridMCRTModel.cbp" />
+			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -68,10 +88,27 @@
 			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
 			<Depends filename="MSMLIB/MSMLIB.cbp" />
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
+		</Project>
+		<Project filename="MCLIB/SimEventsPool/SimEventsPool.cbp">
+			<Depends filename="MCLIB/InletModel/InletModel.cbp" />
+			<Depends filename="MCLIB/HybridMCSCDModel/HybridMCSCDModel.cbp" />
+			<Depends filename="MCLIB/HybridMCRTModel/HybridMCRTModel.cbp" />
 			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
+			<Depends filename="MCLIB/Common/Common.cbp" />
+			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
+			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
+			<Depends filename="LIB/RunningProfile/RunningProfile.cbp" />
+			<Depends filename="TCCLIB/TCCLIB.cbp" />
+			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
+			<Depends filename="MSMLIB/MSMLIB.cbp" />
+			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
 		</Project>
 		<Project filename="MCLIB/InletModel/InletModel.cbp">
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -80,10 +117,11 @@
 			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
 			<Depends filename="MSMLIB/MSMLIB.cbp" />
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
-			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
 		</Project>
 		<Project filename="MCLIB/HybridMCSCDModel/HybridMCSCDModel.cbp">
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -94,7 +132,9 @@
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
 		</Project>
 		<Project filename="MCLIB/HybridMCRTModel/HybridMCRTModel.cbp">
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -105,7 +145,8 @@
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
 		</Project>
 		<Project filename="MCLIB/MigCoaleModel/MigCoaleModel.cbp">
-			<Depends filename="MCLIB/CommonGPU/CommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp" />
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
@@ -115,12 +156,25 @@
 			<Depends filename="MSMLIB/MSMLIB.cbp" />
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
 		</Project>
-		<Project filename="MCLIB/CommonGPU/CommonGPU.cbp">
+		<Project filename="MCLIB/MCCommonGPU/MCCommonGPU.cbp">
+			<Depends filename="MCLIB/MCCommon/MCCommon.cbp" />
 			<Depends filename="MCLIB/Common/Common.cbp" />
 			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
 			<Depends filename="LIB/RunningProfile/RunningProfile.cbp" />
+			<Depends filename="TCCLIB/TCCLIB.cbp" />
 			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
+			<Depends filename="MSMLIB/MSMLIB.cbp" />
+			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
+		</Project>
+		<Project filename="MCLIB/MCCommon/MCCommon.cbp">
+			<Depends filename="MCLIB/Common/Common.cbp" />
+			<Depends filename="LIB/MiniUtilities/MiniUtilities.cbp" />
+			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
+			<Depends filename="LIB/RunningProfile/RunningProfile.cbp" />
+			<Depends filename="TCCLIB/TCCLIB.cbp" />
+			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
+			<Depends filename="MSMLIB/MSMLIB.cbp" />
 			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
 		</Project>
 		<Project filename="MCLIB/Common/Common.cbp">
@@ -128,8 +182,8 @@
 			<Depends filename="LIB/RandGenerators/RandGenerators.cbp" />
 			<Depends filename="LIB/RunningProfile/RunningProfile.cbp" />
 			<Depends filename="TCCLIB/TCCLIB.cbp" />
-			<Depends filename="MODELDATABASE/MODELDATABASE.cbp" />
 			<Depends filename="MSMLIB/MSMLIB.cbp" />
+			<Depends filename="LIB/CudaRandomC2F/CudaRandomC2F.cbp" />
 		</Project>
 		<Project filename="LIB/MiniUtilities/MiniUtilities.cbp">
 			<Depends filename="LIB/RunningProfile/RunningProfile.cbp" />

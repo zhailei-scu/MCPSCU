@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="CommonGPU" />
+		<Option title="MCCommonGPU" />
 		<Option pch_mode="2" />
 		<Option compiler="pgifortran" />
 		<Build>
 			<Target title="Debug">
-				<Option output="~/mcworkspace/mcpscu_Developing_New/LIB/Debug/CommonGPU" prefix_auto="1" extension_auto="1" />
+				<Option output="~/mcworkspace/mcpscu_Developing_New/LIB/Debug/MCCommonGPU" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="" />
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/LIB/Debug/" />
 				<Option type="2" />
@@ -19,7 +19,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="~/mcworkspace/mcpscu_Developing_New/LIB/Release/CommonGPU" prefix_auto="1" extension_auto="1" />
+				<Option output="~/mcworkspace/mcpscu_Developing_New/LIB/Release/MCCommonGPU" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="" />
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/LIB/Release/" />
 				<Option type="2" />
@@ -31,34 +31,34 @@
 				</Compiler>
 			</Target>
 		</Build>
-		<Unit filename="../sor/CommonGPU/MCLIB_CAL_NEIGHBOR_LIST_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_CAL_NEIGHBOR_LIST_GPU.F90">
 			<Option weight="4" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_CONSTANTS_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_CONSTANTS_GPU.F90">
 			<Option weight="0" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_GLOBAL_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_GLOBAL_GPU.F90">
 			<Option weight="4" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_ClustersInfo_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_TYPEDEF_ClustersInfo_GPU.F90">
 			<Option weight="2" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_DiffusorsDefine_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_TYPEDEF_DiffusorsDefine_GPU.F90">
 			<Option weight="2" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_Geometry_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_TYPEDEF_Geometry_GPU.F90">
 			<Option weight="2" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_ReactionsDefine_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_TYPEDEF_ReactionsDefine_GPU.F90">
 			<Option weight="2" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_RecordList_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_TYPEDEF_RecordList_GPU.F90">
 			<Option weight="4" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_TYPEDEF_SimBoxArray_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_TYPEDEF_SimBoxArray_GPU.F90">
 			<Option weight="3" />
 		</Unit>
-		<Unit filename="../sor/CommonGPU/MCLIB_Utilities_GPU.F90">
+		<Unit filename="../sor/MCCommonGPU/MCLIB_Utilities_GPU.F90">
 			<Option weight="1" />
 		</Unit>
 		<Extensions>

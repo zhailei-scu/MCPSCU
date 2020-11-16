@@ -192,10 +192,10 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
         integer,device::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*) ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (x,*) for two dimension, cannot be (:,:)
         type(DiffusorValue)::TheValue
         !---Local Vars---
-        integer(kind=KMCLINT)::Code
-        integer(kind=KMCLINT)::reSparedCode
-        integer(kind=KMCLINT)::IndexFor
-        integer(kind=KMCLINT)::NextIndex
+        integer(kind=KINDINT8)::Code
+        integer(kind=KINDINT8)::reSparedCode
+        integer(kind=KINDINT8)::IndexFor
+        integer(kind=KINDINT8)::NextIndex
         !---Body---
         call Dev_GetCode(Key%m_Atoms,Dev_SingleAtomsDivideArrays,Code)
 
@@ -223,7 +223,7 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
         !---Dummy Vars---
         type(Single_AtomsSet)::Atoms(p_ATOMS_GROUPS_NUMBER)
         integer::Dev_SingleAtomsDivideArrays(p_ATOMS_GROUPS_NUMBER,*)  ! When the nollvm compiler option is used, the attributes(device) dummy vars array should write as (x,*) for two dimension, cannot be (:,:)
-        integer(kind=KMCLINT)::Code
+        integer(kind=KINDINT8)::Code
         !---Local Vars---
         integer::I
         integer::J
@@ -246,10 +246,10 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
         implicit none
         ! Purpose: to spare the code to be more uniform
         !---Dummy Vars---
-        integer(kind=KMCLINT)::Code
-        integer(kind=KMCLINT)::reSparedCode
+        integer(kind=KINDINT8)::Code
+        integer(kind=KINDINT8)::reSparedCode
         !---Local Vars---
-        integer(kind=KMCLINT)::TempCode
+        integer(kind=KINDINT8)::TempCode
         !---Body---
         reSparedCode = Code
         TempCode = Code
@@ -271,8 +271,8 @@ module MCLIB_TYPEDEF_DiffusorsDefine_GPU
     attributes(device) subroutine Dev_GetIndexFor(Code,IndexFor)
         implicit none
         !---Dummy Vars---
-        integer(kind=KMCLINT)::Code
-        integer(kind=KMCLINT)::IndexFor
+        integer(kind=KINDINT8)::Code
+        integer(kind=KINDINT8)::IndexFor
         !---Body---
         IndexFor = IAND(Code,dm_MapLength_Diffusors)
 

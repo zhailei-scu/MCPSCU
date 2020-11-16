@@ -4407,7 +4407,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             end if
 
             SBasicInfo%NC(IStatu) = SBasicInfo%NC(IStatu) + 1
-            SBasicInfo%NA(IStatu) = SBasicInfo%NA(IStatu) + INT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA),kind=KMCLINT)
+            SBasicInfo%NA(IStatu) = SBasicInfo%NA(IStatu) + INT(sum(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA),kind=KINDINT8)
 
           End Do
 

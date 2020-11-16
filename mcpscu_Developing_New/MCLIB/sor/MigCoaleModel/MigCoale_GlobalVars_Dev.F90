@@ -104,7 +104,7 @@ module MIGCOALE_GLOBALVARS_DEV
             err = curandDestroyGenerator(this%m_ranGen_ClustersRandomWalk)
         end if
         err = curandCreateGenerator(this%m_ranGen_ClustersRandomWalk, CURAND_RNG_PSEUDO_DEFAULT)
-        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersRandomWalk, INT(SEED(1),kind=KMCLINT))
+        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersRandomWalk, INT(SEED(1),kind=KINDINT8))
         Record%RandSeed_OutDevWalk = SEED
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
@@ -113,7 +113,7 @@ module MIGCOALE_GLOBALVARS_DEV
             err = curandDestroyGenerator(this%m_ranGen_ClustersReaction)
         end if
         err = curandCreateGenerator(this%m_ranGen_ClustersReaction,CURAND_RNG_PSEUDO_DEFAULT)
-        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersReaction,INT(SEED(1),kind=KMCLINT))
+        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersReaction,INT(SEED(1),kind=KINDINT8))
         Record%RandSeed_Reaction = SEED
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
@@ -122,7 +122,7 @@ module MIGCOALE_GLOBALVARS_DEV
             err = curandDestroyGenerator(this%m_ranGen_ClustersSpaceDist_Layer)
         end if
         err = curandCreateGenerator(this%m_ranGen_ClustersSpaceDist_Layer, CURAND_RNG_PSEUDO_DEFAULT)
-        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSpaceDist_Layer, INT(SEED(1),kind=KMCLINT))
+        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSpaceDist_Layer, INT(SEED(1),kind=KINDINT8))
         Record%RandSeed_SpaceDist_Implant_Layer = SEED
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
@@ -131,7 +131,7 @@ module MIGCOALE_GLOBALVARS_DEV
             err = curandDestroyGenerator(this%m_ranGen_ClustersSpaceDist_X)
         end if
         err = curandCreateGenerator(this%m_ranGen_ClustersSpaceDist_X, CURAND_RNG_PSEUDO_DEFAULT)
-        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSpaceDist_X, INT(SEED(1),kind=KMCLINT))
+        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSpaceDist_X, INT(SEED(1),kind=KINDINT8))
         Record%RandSeed_SpaceDist_Implant_X = SEED
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
@@ -140,7 +140,7 @@ module MIGCOALE_GLOBALVARS_DEV
             err = curandDestroyGenerator(this%m_ranGen_ClustersSpaceDist_Y)
         end if
         err = curandCreateGenerator(this%m_ranGen_ClustersSpaceDist_Y, CURAND_RNG_PSEUDO_DEFAULT)
-        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSpaceDist_Y, INT(SEED(1),kind=KMCLINT))
+        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSpaceDist_Y, INT(SEED(1),kind=KINDINT8))
         Record%RandSeed_SpaceDist_Implant_Y = SEED
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
@@ -149,7 +149,7 @@ module MIGCOALE_GLOBALVARS_DEV
             err = curandDestroyGenerator(this%m_ranGen_ClustersSpaceDist_Z)
         end if
         err = curandCreateGenerator(this%m_ranGen_ClustersSpaceDist_Z, CURAND_RNG_PSEUDO_DEFAULT)
-        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSpaceDist_Z, INT(SEED(1),kind=KMCLINT))
+        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSpaceDist_Z, INT(SEED(1),kind=KINDINT8))
         Record%RandSeed_SpaceDist_Implant_Z = SEED
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE
@@ -158,7 +158,7 @@ module MIGCOALE_GLOBALVARS_DEV
             err = curandDestroyGenerator(this%m_ranGen_ClustersSizeDist)
         end if
         err= curandCreateGenerator(this%m_ranGen_ClustersSizeDist,CURAND_RNG_PSEUDO_DEFAULT)
-        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSizeDist,INT(SEED(1),kind=KMCLINT))
+        err = curandSetPseudoRandomGeneratorSeed(this%m_ranGen_ClustersSizeDist,INT(SEED(1),kind=KINDINT8))
         Record%RandSeed_SizeDist_Implant = SEED
 
         ISEED_Curand = DRand32()*RAND32SEEDLIB_SIZE

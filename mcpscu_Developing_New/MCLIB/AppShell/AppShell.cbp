@@ -34,6 +34,9 @@
 		<Unit filename="../sor/AppShell/MC_MethodClass_Factory_GPU.F90">
 			<Option weight="1" />
 		</Unit>
+		<Unit filename="../sor/AppShell/MC_Method_HYBRIDMCRT_CLUSTER_GPU.F90">
+			<Option weight="0" />
+		</Unit>
 		<Unit filename="../sor/AppShell/MC_Method_MIGCOALE_CLUSTER_GPU.F90">
 			<Option weight="0" />
 		</Unit>

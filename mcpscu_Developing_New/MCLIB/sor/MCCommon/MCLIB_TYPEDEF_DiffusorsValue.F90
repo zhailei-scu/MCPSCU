@@ -132,7 +132,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
     !*********when the members size greater than 12*8 bytes, otherwise, the compiler would give some error when you
     !*********visiting the object member value in device code while this object is a defined in function-local.
     TYPE,PUBLIC::DiffusorTypeEntity
-        integer(kind=KMCLINT)::Code PREASSIGN 0
+        integer(kind=KINDINT8)::Code PREASSIGN 0
 
         type(DiffusorValue)::TheValue
 
@@ -506,10 +506,10 @@ module MCLIB_TYPEDEF_DiffusorsValue
         type(ACluster)::Key
         CLASS(DiffusorValue)::TheValue
         !---Local Vars---
-        integer(kind=KMCLINT)::Code
-        integer(kind=KMCLINT)::reSparedCode
-        integer(kind=KMCLINT)::IndexFor
-        integer(kind=KMCLINT)::NextIndex
+        integer(kind=KINDINT8)::Code
+        integer(kind=KINDINT8)::reSparedCode
+        integer(kind=KINDINT8)::IndexFor
+        integer(kind=KINDINT8)::NextIndex
         integer::ICount
         !---Body---
         Code = this%getCode(Key%m_Atoms)
@@ -589,10 +589,10 @@ module MCLIB_TYPEDEF_DiffusorsValue
         type(ACluster)::Key
         type(DiffusorValue)::TheValue
         !---Local Vars---
-        integer(kind=KMCLINT)::Code
-        integer(kind=KMCLINT)::reSparedCode
-        integer(kind=KMCLINT)::IndexFor
-        integer(kind=KMCLINT)::NextIndex
+        integer(kind=KINDINT8)::Code
+        integer(kind=KINDINT8)::reSparedCode
+        integer(kind=KINDINT8)::IndexFor
+        integer(kind=KINDINT8)::NextIndex
         !---Body---
         Code = this%getCode(Key%m_Atoms)
 
@@ -620,7 +620,7 @@ module MCLIB_TYPEDEF_DiffusorsValue
         !---Dummy Vars---
         CLASS(DiffusorTypesMap)::this
         type(Single_AtomsSet)::Atoms(:)
-        integer(kind=KMCLINT)::Code
+        integer(kind=KINDINT8)::Code
         !---Local Vars---
         integer::I
         integer::J
@@ -644,10 +644,10 @@ module MCLIB_TYPEDEF_DiffusorsValue
         ! Purpose: to spare the code to be more uniform
         !---Dummy Vars---
         CLASS(DiffusorTypesMap)::this
-        integer(kind=KMCLINT)::Code
-        integer(kind=KMCLINT)::reSparedCode
+        integer(kind=KINDINT8)::Code
+        integer(kind=KINDINT8)::reSparedCode
         !---Local Vars---
-        integer(kind=KMCLINT)::TempCode
+        integer(kind=KINDINT8)::TempCode
         !---Body---
         reSparedCode = Code
         TempCode = Code
@@ -671,8 +671,8 @@ module MCLIB_TYPEDEF_DiffusorsValue
         implicit none
         !---Dummy Vars---
         CLASS(DiffusorTypesMap)::this
-        integer(kind=KMCLINT)::Code
-        integer(kind=KMCLINT)::IndexFor
+        integer(kind=KINDINT8)::Code
+        integer(kind=KINDINT8)::IndexFor
         !---Body---
         IndexFor = IAND(Code,this%MapLength)
 
