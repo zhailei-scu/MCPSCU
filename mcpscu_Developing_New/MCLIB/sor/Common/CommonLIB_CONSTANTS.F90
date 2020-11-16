@@ -6,13 +6,6 @@ module COMMONLIB_CONSTANTS
     integer,parameter::DEFAULT_SIZE_PGI = 4
 
     !--- numbers
-!    real(kind=KINDDF), parameter::ZERO=0
-!    real(kind=KINDDF), parameter::ONE=1
-!    real(kind=KINDDF), parameter::TWO=2
-!    real(kind=KINDDF), parameter::THREE=3
-!    real(kind=KINDDF), parameter::TEN=10
-!    real(kind=KINDDF), parameter::HUNDRED=100
-!    integer(kind=KINDINT), parameter::IHUNDRED=100
     integer(kind=KINDINT8),parameter::TENPOWTHREE = 1*10**3
     integer(kind=KINDINT8),parameter::TENPOWFOUR = 1*10**4
     integer(kind=KINDINT8),parameter::TENPOWFIVE = 1*10**5
@@ -22,20 +15,7 @@ module COMMONLIB_CONSTANTS
 
 
     !*** Math. and  Phys. constants used
-!    real(kind=KINDDF), parameter::A0B=5.29177249D-9, &      !BOHR RADIU
-!                              AVOG=6.0221367D23            !Avigado constants
-
     real(kind=KINDDF), parameter::C_FOURBYTHREE = 4.D0/3.D0
-
-!    real(kind=KINDDF), parameter::C_UM2CM = 1.D-4
-!    real(kind=KINDDF), parameter::C_CM2UM = 1.D4
-!    real(kind=KINDDF), parameter::C_NM2CM = 1.D-7
-!    real(kind=KINDDF), parameter::C_CM2NM = 1.D7
-!    real(kind=KINDDF), parameter::C_AM2CM = 1.D-8
-!    real(kind=KINDDF), parameter::C_CM2AM = 1.D8
-!    real(kind=KINDDF), parameter::C_JPERM2_TO_ERGPERCM2 = 1.D3
-!    real(kind=KINDDF), parameter::C_KB      =  1.38054D-16              !Boltzmann constant, in ERG/K
-!    real(kind=KINDDF), parameter::C_EV2ERG   = 1.60219D-12
 
     !*** Memory management *****************
     integer, parameter::C_BYTE = 8    ! (8 bits)
