@@ -39,7 +39,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      !***Informaiton about temperature
      real(kind=KINDDF)::TEMP = 300.D0                                    ! temperature
-     real(kind=KINDDF)::TKB = 300D0*C_KB                                 ! the kinetic energy
+     real(kind=KINDDF)::TKB = 300D0*CP_KB                                ! the kinetic energy
 
      !***Implantation section*********
      integer::NImplantSection = 0
@@ -821,7 +821,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      !***Informaiton about temperature
      this%TEMP = 300.D0
-     this%TKB = 300D0*C_KB
+     this%TKB = 300D0*CP_KB
 
      !***Implantation section*********
      this%NImplantSection = 0
@@ -982,7 +982,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      !***Informaiton about temperature
      this%TEMP = 300.D0
-     this%TKB = 300D0*C_KB
+     this%TKB = 300D0*CP_KB
 
      !***Implantation section*********
      this%NImplantSection = 0
@@ -1323,7 +1323,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              stop
            else
              this%TEMP = DRSTR(STRNUMB(1))
-             this%TKB = this%TEMP*C_KB
+             this%TKB = this%TEMP*CP_KB
 
              if(this%TEMP .LE. 0) then
                write(*,*) "MCPSCU ERROR: The absoloute temperature cannot less than 0 .",this%TEMP

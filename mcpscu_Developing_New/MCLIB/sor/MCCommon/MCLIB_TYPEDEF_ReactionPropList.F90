@@ -921,7 +921,7 @@ module MCLIB_TYPEDEF_ReactionPropList
                 case(p_ReactionCoefficient_ByValue)
                     TheValue = cursor%Reaction%ReactionCoefficient_Value
                 case(p_ReactionCoefficient_ByArrhenius)
-                    TheValue = cursor%Reaction%PreFactor*exp(-C_EV2ERG*cursor%Reaction%ActEnergy/TKB)
+                    TheValue = cursor%Reaction%PreFactor*exp(-CP_EVERG*cursor%Reaction%ActEnergy/TKB)
                 case default
                     write(*,*) "MCPSCUERROR: undefined type of reaction value.",cursor%Reaction%ReactionCoefficientType
                     pause

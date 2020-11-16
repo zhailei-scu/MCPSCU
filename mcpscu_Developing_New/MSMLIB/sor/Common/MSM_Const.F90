@@ -56,6 +56,7 @@
      real(KINDDF), parameter::CP_ARC2DEG = 180.D0/CP_PI
 
      !--- length and time
+      real(KINDDF), parameter::CP_UM2CM = 1.D-4
       real(KINDDF), parameter::CP_A2CM    = 1.D-8             !Unit conversion: Anstro to Centimeter
       real(KINDDF), parameter::CP_CM2A    = 1.D8              !Unit conversion: Centimeter to Anstro
       real(KINDDF), parameter::CP_CM2NM   = 1.D7              !Unit conversion: Centimeter to nanometer

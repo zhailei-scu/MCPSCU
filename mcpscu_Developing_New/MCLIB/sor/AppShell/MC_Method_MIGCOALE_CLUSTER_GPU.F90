@@ -1641,16 +1641,16 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     case(p_DiffuseCoefficient_ByValue)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                     case(p_DiffuseCoefficient_ByArrhenius)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
                     case(p_DiffuseCoefficient_BySIACluster)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                     case(p_DiffuseCoefficient_ByVcCluster)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
-                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
@@ -1661,7 +1661,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
                 end if
 
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -1757,16 +1757,16 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 case(p_DiffuseCoefficient_ByValue)
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                 case(p_DiffuseCoefficient_ByArrhenius)
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
                 case(p_DiffuseCoefficient_BySIACluster)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                 case(p_DiffuseCoefficient_ByVcCluster)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
-                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             end select
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
@@ -1778,7 +1778,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
             end if
 
-            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -1881,16 +1881,16 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     case(p_DiffuseCoefficient_ByValue)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                     case(p_DiffuseCoefficient_ByArrhenius)
-                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
                     case(p_DiffuseCoefficient_BySIACluster)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                     case(p_DiffuseCoefficient_ByVcCluster)
                         Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
-                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                 end select
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
@@ -1902,7 +1902,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
                 end if
 
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
@@ -2068,9 +2068,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                                                                                            sum(TBasicInfo%NC),                             &
                                                                                                            sum(TBasicInfo%NA),                             &
                                                                                                            TBasicInfo%NC(1:p_NUMBER_OF_STATU),             &
-                                                                                                           TMigStatInfo%RMIN(1:p_NUMBER_OF_STATU)*C_CM2NM, &
-                                                                                                           TMigStatInfo%RMAX(1:p_NUMBER_OF_STATU)*C_CM2NM, &
-                                                                                                           RAVA*C_CM2NM,                                   &
+                                                                                                           TMigStatInfo%RMIN(1:p_NUMBER_OF_STATU)*CP_CM2NM, &
+                                                                                                           TMigStatInfo%RMAX(1:p_NUMBER_OF_STATU)*CP_CM2NM, &
+                                                                                                           RAVA*CP_CM2NM,                                   &
                                                                                                            NAVA,                                           &
                                                                                                            Concentrate,                                    &
                                                                                                            Record%GetImplantedEntitiesNum(),                &
@@ -2134,9 +2134,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                                                                     TBasicInfo%NC(p_ACTIVEINGB_STATU),                                                       &
                                                                                     NCAct,                                                                                   &
                                                                                     sum(TBasicInfo%NC),                                                                      &
-                                                                                    RMIN*C_CM2NM,                                                                            &
-                                                                                    max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU))*C_CM2NM,&
-                                                                                    RAVA*C_CM2NM,                                                                            &
+                                                                                    RMIN*CP_CM2NM,                                                                            &
+                                                                                    max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU))*CP_CM2NM,&
+                                                                                    RAVA*CP_CM2NM,                                                                            &
                                                                                     NAVA,                                                                                    &
                                                                                     max(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU),TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU)), &
                                                                                     Concentrate
@@ -2189,9 +2189,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                                                                                                              sum(SBasicInfo%NC),                              &
                                                                                                              sum(SBasicInfo%NA(1:p_NUMBER_OF_STATU)),         &
                                                                                                              SBasicInfo%NC(1:p_NUMBER_OF_STATU),              &
-                                                                                                             SMigStatInfo%RMIN(1:p_NUMBER_OF_STATU)*C_CM2NM,  &
-                                                                                                             SMigStatInfo%RMAX(1:p_NUMBER_OF_STATU)*C_CM2NM,  &
-                                                                                                             RAVA*C_CM2NM,                                    &
+                                                                                                             SMigStatInfo%RMIN(1:p_NUMBER_OF_STATU)*CP_CM2NM,  &
+                                                                                                             SMigStatInfo%RMAX(1:p_NUMBER_OF_STATU)*CP_CM2NM,  &
+                                                                                                             RAVA*CP_CM2NM,                                    &
                                                                                                              NAVA,                                            &
                                                                                                              Concentrate,                                     &
                                                                                                              Record%GetImplantedEntitiesNum(),                &

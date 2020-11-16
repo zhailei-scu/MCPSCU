@@ -338,23 +338,23 @@ module MIGCOALE_EVOLUTION_GPU
                 case(p_DiffuseCoefficient_ByValue)
                     Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
                 case(p_DiffuseCoefficient_ByArrhenius)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
                 case(p_DiffuseCoefficient_BySIACluster)
                     Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
-                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                                    TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 case(p_DiffuseCoefficient_ByVcCluster)
                     Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                                    TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
             end select
 
             Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*2.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
 
             Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
 
-            Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+            Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
         end if
 
@@ -771,23 +771,23 @@ module MIGCOALE_EVOLUTION_GPU
                 case(p_DiffuseCoefficient_ByValue)
                     Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
                 case(p_DiffuseCoefficient_ByArrhenius)
-                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                    Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 case(p_DiffuseCoefficient_ByBCluster)
                     ! Here we adopt a model that D=D0*(1/R)**Gama
                     Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
                 case(p_DiffuseCoefficient_BySIACluster)
                     Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
-                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                                    TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 case(p_DiffuseCoefficient_ByVcCluster)
                     Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                    TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                                    TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
             end select
 
             Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*2.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
 
             Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
 
-            Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+            Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
         end if
 
@@ -1496,7 +1496,7 @@ module MIGCOALE_EVOLUTION_GPU
             case(p_ReactionCoefficient_ByValue)
                  ReactionProp = TheReactionValue%ReactionCoefficient_Value
             case(p_ReactionCoefficient_ByArrhenius)
-                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+                 ReactionProp = exp(-CP_EVERG*TheReactionValue%ActEnergy/dm_TKB)
           end select
 
           ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
@@ -1555,16 +1555,16 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_DiffuseCoefficient_ByValue)
                         Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                     case(p_DiffuseCoefficient_ByArrhenius)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
                     case(p_DiffuseCoefficient_BySIACluster)
                         Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                                                       TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                     case(p_DiffuseCoefficient_ByVcCluster)
                         Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                                                       TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                 end select
 
                 Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
@@ -1576,7 +1576,7 @@ module MIGCOALE_EVOLUTION_GPU
                     Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
                 end if
 
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
@@ -1595,22 +1595,22 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_DiffuseCoefficient_ByValue)
                         Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
                     case(p_DiffuseCoefficient_ByArrhenius)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
 
                     case(p_DiffuseCoefficient_BySIACluster)
                         Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
-                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                     case(p_DiffuseCoefficient_ByVcCluster)
                         Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 end select
 
                 Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*2.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
 
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
                 Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
             end if
@@ -1788,7 +1788,7 @@ module MIGCOALE_EVOLUTION_GPU
             case(p_ReactionCoefficient_ByValue)
                  ReactionProp = TheReactionValue%ReactionCoefficient_Value
             case(p_ReactionCoefficient_ByArrhenius)
-                 ReactionProp = exp(-C_EV2ERG*TheReactionValue%ActEnergy/dm_TKB)
+                 ReactionProp = exp(-CP_EVERG*TheReactionValue%ActEnergy/dm_TKB)
           end select
 
           ! @todo (zhail#1#): whether the rand1() + rand2() still be normal distribution, it is necessary to be checked
@@ -1847,16 +1847,16 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_DiffuseCoefficient_ByValue)
                         Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                     case(p_DiffuseCoefficient_ByArrhenius)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Dev_Clusters(IC)%m_DiffCoeff = dm_FREESURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
                     case(p_DiffuseCoefficient_BySIACluster)
                         Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                                                       TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                     case(p_DiffuseCoefficient_ByVcCluster)
                         Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                       TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
+                                                       TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/dm_TKB)
                 end select
 
                 Dev_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
@@ -1869,7 +1869,7 @@ module MIGCOALE_EVOLUTION_GPU
                     Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
                 end if
 
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
             else if(SubjectStatu .eq. p_ACTIVEINGB_STATU) then
 
@@ -1888,22 +1888,22 @@ module MIGCOALE_EVOLUTION_GPU
                     case(p_DiffuseCoefficient_ByValue)
                         Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_InGB_Value
                     case(p_DiffuseCoefficient_ByArrhenius)
-                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                        Dev_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                     case(p_DiffuseCoefficient_ByBCluster)
                         ! Here we adopt a model that D=D0*(1/R)**Gama
                         Dev_Clusters(IC)%m_DiffCoeff = dm_GBSURDIFPRE*(Dev_Clusters(IC)%m_RAD**(-p_GAMMA))
 
                     case(p_DiffuseCoefficient_BySIACluster)
                         Dev_Clusters(IC)%m_DiffCoeff = (sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)**(-TheDiffusorValue%PreFactorParameter_InGB))* &
-                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                     case(p_DiffuseCoefficient_ByVcCluster)
                         Dev_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_InGB)**(1-sum(Dev_Clusters(IC)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1)))* &
-                                                        TheDiffusorValue%PreFactor_InGB*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
+                                                        TheDiffusorValue%PreFactor_InGB*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_InGB/dm_TKB)
                 end select
 
                 Dev_Clusters(IC)%m_DiffCoeff = Dev_Clusters(IC)%m_DiffCoeff*2.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
 
-                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
+                Dev_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/dm_TKB)
 
                 Dev_Clusters(IC)%m_DiffuseDirection = 0.D0
             end if

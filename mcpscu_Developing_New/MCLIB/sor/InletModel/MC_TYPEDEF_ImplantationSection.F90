@@ -1072,16 +1072,16 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             case(p_DiffuseCoefficient_ByValue)
                 ImplantIon%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
             case(p_DiffuseCoefficient_ByArrhenius)
-                ImplantIon%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                ImplantIon%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             case(p_DiffuseCoefficient_ByBCluster)
                 ! Here we adopt a model that D=D0*(1/R)**Gama
                 ImplantIon%m_DiffCoeff = m_FREESURDIFPRE*(ImplantIon%m_RAD**(-p_GAMMA))
             case(p_DiffuseCoefficient_BySIACluster)
                 ImplantIon%m_DiffCoeff = (sum(ImplantIon%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                         TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             case(p_DiffuseCoefficient_ByVcCluster)
                 ImplantIon%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ImplantIon%m_Atoms(:)%m_NA)))* &
-                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                         TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
@@ -1090,7 +1090,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             ImplantIon%m_DiffCoeff =  ImplantIon%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
         end if
 
-        ImplantIon%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+        ImplantIon%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
@@ -1126,7 +1126,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
                 stop
             end if
 
-            LayersThick(ILayer) = 2*(DRSTR(STRTMP(1))*C_UM2CM - SumOfThick)
+            LayersThick(ILayer) = 2*(DRSTR(STRTMP(1))*CP_UM2CM - SumOfThick)
             SumOfThick = SumOfThick + LayersThick(ILayer)
 
             if(SumOfThick .GT. SimBoxes%BOXSIZE(3)) then
@@ -1236,9 +1236,9 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
                     stop
                 end if
 
-                StoppedPosition(IIon,1) = DRSTR(STRTMP(2))*C_AM2CM ! depth   X
-                StoppedPosition(IIon,2) = DRSTR(STRTMP(3))*C_AM2CM ! lateral Y
-                StoppedPosition(IIon,3) = DRSTR(STRTMP(4))*C_AM2CM ! lateral Z
+                StoppedPosition(IIon,1) = DRSTR(STRTMP(2))*CP_A2CM ! depth   X
+                StoppedPosition(IIon,2) = DRSTR(STRTMP(3))*CP_A2CM ! lateral Y
+                StoppedPosition(IIon,3) = DRSTR(STRTMP(4))*CP_A2CM ! lateral Z
 
                 if(StoppedPosition(IIon,2) .LT. SimBoxes%BOXBOUNDARY(1,1) .or. StoppedPosition(IIon,2) .GT. SimBoxes%BOXBOUNDARY(1,2)) then
                     write(*,*) "MCPSCUERROR: The SRIM2003 distribution is out of the simulation box in lateral X."
@@ -1315,16 +1315,16 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             case(p_DiffuseCoefficient_ByValue)
                 ImplantIon%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
             case(p_DiffuseCoefficient_ByArrhenius)
-                ImplantIon%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                ImplantIon%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             case(p_DiffuseCoefficient_ByBCluster)
                 ! Here we adopt a model that D=D0*(1/R)**Gama
                 ImplantIon%m_DiffCoeff = m_FREESURDIFPRE*(ImplantIon%m_RAD**(-p_GAMMA))
             case(p_DiffuseCoefficient_BySIACluster)
                 ImplantIon%m_DiffCoeff = (sum(ImplantIon%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                         TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
             case(p_DiffuseCoefficient_ByVcCluster)
                 ImplantIon%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(ImplantIon%m_Atoms(:)%m_NA)))* &
-                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                         TheDiffusorValue%PreFactor_Free*exp(-CP_EVERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
         end select
 
         ImplantIon%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
@@ -1333,7 +1333,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
             ImplantIon%m_DiffCoeff =  ImplantIon%m_DiffCoeff*1.D0/3.D0     ! All Diffusion coeff would be changed to 3-D formation
         end if
 
-        ImplantIon%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+        ImplantIon%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-CP_EVERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
         ImplantIon%m_Statu = p_ACTIVEFREE_STATU
 
@@ -1594,8 +1594,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
                         stop
                     end if
                     DO I=1, 3
-                        this%SUBBOXBOUNDARY(I,1) = Host_SimBoxes%BOXBOUNDARY(I,1) - DRSTR(STRTMP(I))*C_NM2CM/2
-                        this%SUBBOXBOUNDARY(I,2) = Host_SimBoxes%BOXBOUNDARY(I,2) + DRSTR(STRTMP(I))*C_NM2CM/2
+                        this%SUBBOXBOUNDARY(I,1) = Host_SimBoxes%BOXBOUNDARY(I,1) - DRSTR(STRTMP(I))*CP_NM2CM/2
+                        this%SUBBOXBOUNDARY(I,2) = Host_SimBoxes%BOXBOUNDARY(I,2) + DRSTR(STRTMP(I))*CP_NM2CM/2
                     END DO
 
                 CASE("&DEPTH_GAUSS")
@@ -1610,8 +1610,8 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
                         pause
                         stop
                     end if
-                    this%DepthINI = DRSTR(STRTMP(1))*C_NM2CM
-                    this%DepthSDINI = DRSTR(STRTMP(2))*C_NM2CM
+                    this%DepthINI = DRSTR(STRTMP(1))*CP_NM2CM
+                    this%DepthSDINI = DRSTR(STRTMP(2))*CP_NM2CM
                 CASE default
                     write(*,*) "MCPSCUERROR: Illegal Symbol: ", KEYWORD
                     pause

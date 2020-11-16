@@ -1541,14 +1541,14 @@ module MC_GenerateCascadeBox
 
                 NAtomsRef(NClusterEachBox) = 1
 
-                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
-                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
-                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*CP_A2CM
             else
                 NAtomsRef(NClusterEachBox) = NAtomsRef(NClusterEachBox) + 1
-                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
-                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
-                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*CP_A2CM
             end if
 
         end if
@@ -1737,13 +1737,13 @@ module MC_GenerateCascadeBox
                     ClustersArray(NClusterEachBox -1)%POS = ClustersArray(NClusterEachBox -1)%POS/NAtomEachCluster(NClusterEachBox - 1)
                 end if
 
-                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
-                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
-                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*CP_A2CM
             else
-                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
-                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
-                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*CP_A2CM
             end if
 
             NAtomEachCluster(NClusterEachBox) = NAtomEachCluster(NClusterEachBox) + 1

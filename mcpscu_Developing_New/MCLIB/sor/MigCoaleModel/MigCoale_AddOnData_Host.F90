@@ -86,7 +86,7 @@ module MIGCOALE_ADDONDATA_HOST
         DO I=1,3
             m_FREEDIFCOESPRE(I) = DRSTR(STRTEMP(2*I-1))
             m_FREEDIFCOESES(I) =  DRSTR(STRTEMP(2*I))
-            m_FREEDIFCOES(I) = m_FREEDIFCOESPRE(I)*DEXP(-m_FREEDIFCOESES(I)*C_EV2ERG/Host_SimuCtrlParam%TKB)
+            m_FREEDIFCOES(I) = m_FREEDIFCOESPRE(I)*DEXP(-m_FREEDIFCOESES(I)*CP_EVERG/Host_SimuCtrlParam%TKB)
         END DO
         m_FREESURDIFPRE = (3.D0/(2.D0*CP_PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_FREEDIFCOES(1)
 
@@ -103,7 +103,7 @@ module MIGCOALE_ADDONDATA_HOST
         DO I=1,3
             m_GBDIFCOESPRE(I) = DRSTR(STRTEMP(2*I-1))
             m_GBDIFCOESES(I) =  DRSTR(STRTEMP(2*I))
-            m_GBDIFCOES(I) = m_GBDIFCOESPRE(I)*DEXP(-m_GBDIFCOESES(I)*C_EV2ERG/Host_SimuCtrlParam%TKB)
+            m_GBDIFCOES(I) = m_GBDIFCOESPRE(I)*DEXP(-m_GBDIFCOESES(I)*CP_EVERG/Host_SimuCtrlParam%TKB)
         END DO
 
         m_GBSURDIFPRE = (3.D0/(2.D0*CP_PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_GBDIFCOES(1)

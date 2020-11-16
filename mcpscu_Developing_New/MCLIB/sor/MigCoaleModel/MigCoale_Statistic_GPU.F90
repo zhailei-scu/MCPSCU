@@ -1427,7 +1427,7 @@ module MIGCOALE_STATISTIC_GPU
 !                    case(p_DiffuseCoefficient_ByValue)
 !                        tempDIF = TheDiffusorValue%DiffuseCoefficient_Value
 !                    case(p_DiffuseCoefficient_ByArrhenius)
-!                        tempDIF = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
+!                        tempDIF = TheDiffusorValue%PreFactor*exp(-CP_EVERG*TheDiffusorValue%ActEnergy/dm_TKB)
 !                    case(p_DiffuseCoefficient_ByBCluster)
 !                        ! Here we adopt a model that D=D0*(1/R)**Gama
 !                        tempDIF = dm_SURDIFPRE*(tempRadius**(-p_GAMMA))
@@ -1463,7 +1463,7 @@ module MIGCOALE_STATISTIC_GPU
 !                    case(p_DiffuseCoefficient_ByValue)
 !                        tempDIF = TheDiffusorValue%DiffuseCoefficient_Value
 !                    case(p_DiffuseCoefficient_ByArrhenius)
-!                        tempDIF = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
+!                        tempDIF = TheDiffusorValue%PreFactor*exp(-CP_EVERG*TheDiffusorValue%ActEnergy/dm_TKB)
 !                    case(p_DiffuseCoefficient_ByBCluster)
 !                        ! Here we adopt a model that D=D0*(1/R)**Gama
 !                        tempDIF = dm_SURDIFPRE*(tempRadius**(-p_GAMMA))
@@ -2042,7 +2042,7 @@ module MIGCOALE_STATISTIC_GPU
 !                    case(p_DiffuseCoefficient_ByValue)
 !                        tempDIF = TheDiffusorValue%DiffuseCoefficient_Value
 !                    case(p_DiffuseCoefficient_ByArrhenius)
-!                        tempDIF = TheDiffusorValue%PreFactor*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy/dm_TKB)
+!                        tempDIF = TheDiffusorValue%PreFactor*exp(-CP_EVERG*TheDiffusorValue%ActEnergy/dm_TKB)
 !                    case(p_DiffuseCoefficient_ByBCluster)
 !                        ! Here we adopt a model that D=D0*(1/R)**Gama
 !                        tempDIF = dm_SURDIFPRE*(tempRadius**(-p_GAMMA))
