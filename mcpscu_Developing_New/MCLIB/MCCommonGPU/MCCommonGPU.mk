@@ -7,7 +7,7 @@ oflags_this := $(oflags)
 
 ###########################################################
 #sorce dir name
-objname := CommonGPU
+objname := MCCommonGPU
 
 #sorce directories
 ifeq ($(origin MCLIBDIRS), undefined) 

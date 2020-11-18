@@ -14,10 +14,10 @@ oflags_this := $(oflags)
 objname := AppShell
 
 #sorce directories
-ifeq ($(origin MCLIBDIRS), undefined) 
-MCLIBDIRS := $(mcpscusor)$(Segment)MCLIB$(Segment)sor
+ifeq ($(origin EVENTSFACTORYDIRS), undefined) 
+EVENTSFACTORYDIRS := $(mcpscusor)$(Segment)EVENTSFACTORY$(Segment)sor
 endif
-sor  := $(MCLIBDIRS)$(Segment)$(objname)
+sor  := $(EVENTSFACTORYDIRS)$(Segment)$(objname)
 
 #include dir
 ifeq ($(origin LIBDIRD), undefined)
@@ -29,10 +29,10 @@ incdir := $(LIBDIRD)
 tgt  := $(LIBDIRD)
 
 #target lib name
-libname  := libMC_$(objname).$(LIB_EXT)
+libname  := lib_$(objname).$(LIB_EXT)
 
 #######################################################
-nlist := MC_Method_MIGCOALE_CLUSTER_GPU  \
+nlist :=   MC_Method_MIGCOALE_CLUSTER_GPU  \
 	       MC_MethodClass_Factory_GPU		   \
 	       MC_SimBoxArray_AppShell_GPU
                        

@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="Common" />
+		<Option title="SimEventsPool" />
 		<Option pch_mode="2" />
 		<Option compiler="pgifortran" />
 		<Build>
 			<Target title="Debug">
-				<Option output="~/mcworkspace/mcpscu_Developing_New/LIB/Debug/Common" prefix_auto="1" extension_auto="1" />
+				<Option output="~/mcworkspace/mcpscu_Developing_New/LIB/Debug/SimEventsPool" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="" />
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/LIB/Debug/" />
 				<Option type="2" />
@@ -19,7 +19,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="~/mcworkspace/mcpscu_Developing_New/LIB/Release/Common" prefix_auto="1" extension_auto="1" />
+				<Option output="~/mcworkspace/mcpscu_Developing_New/LIB/Release/SimEventsPool" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="" />
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/LIB/Release/" />
 				<Option type="2" />
@@ -31,14 +31,11 @@
 				</Compiler>
 			</Target>
 		</Build>
-		<Unit filename="../sor/Common/CommonLIB_CONSTANTS.F90">
+		<Unit filename="../sor/SimEventsPool/Simulation_TYPEDEF_EventsPool.F90">
 			<Option weight="0" />
 		</Unit>
-		<Unit filename="../sor/Common/CommonLIB_TYPEDEF_ObjectsCollection.F90">
+		<Unit filename="../sor/SimEventsPool/Simulation_TYPEDEF_ObjectsEventModel.F90">
 			<Option weight="0" />
-		</Unit>
-		<Unit filename="../sor/Common/CommonLIB_Utilities.F90">
-			<Option weight="1" />
 		</Unit>
 		<Extensions>
 			<envvars />

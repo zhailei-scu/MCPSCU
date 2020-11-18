@@ -141,3 +141,32 @@
 	"DiffusorList.h"
 	"ReactionsList.h"
 
+1605535599 source:/home/zhailei/Development/MutiHybrid/mcpscu_Developing_New/TCCLIB/sor/DiffusorList.cpp
+	"DiffusorList.h"
+	<iostream>
+	<cstring>
+	<string.h>
+	<stdlib.h>
+
+1605535599 /home/zhailei/Development/MutiHybrid/mcpscu_Developing_New/TCCLIB/sor/DiffusorList.h
+
+1605535599 source:/home/zhailei/Development/MutiHybrid/mcpscu_Developing_New/TCCLIB/sor/ReactionsList.cpp
+	"ReactionsList.h"
+	<iostream>
+	<cstring>
+	<string.h>
+	<stdlib.h>
+
+1605535599 /home/zhailei/Development/MutiHybrid/mcpscu_Developing_New/TCCLIB/sor/ReactionsList.h
+
+1605535599 source:/home/zhailei/Development/MutiHybrid/mcpscu_Developing_New/TCCLIB/sor/TccInterp.cpp
+	<string>
+	<iostream>
+	<sstream>
+	<string.h>
+	"TccInterp.h"
+
+1605535599 /home/zhailei/Development/MutiHybrid/mcpscu_Developing_New/TCCLIB/sor/TccInterp.h
+	"DiffusorList.h"
+	"ReactionsList.h"
+

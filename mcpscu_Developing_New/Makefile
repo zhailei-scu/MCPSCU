@@ -17,20 +17,20 @@ endif
 libnames          := RunningProfile CudaRandomC2F MiniUtilities RandGenerators
 
 ifeq ($(operateSystem), CYGWIN)
-  export TCCINTERDIRS := $(mcpscusor)$(Segment)TCCLIB$(Segment)sor
-endif
-ifeq ($(operateSystem), LINUX)
-  export TCCINTERDIRS := $(mcpscusor)$(Segment)TCCLIB$(Segment)sor
-endif
-tccinterlibnames := TCCLIB
-
-ifeq ($(operateSystem), CYGWIN)
   export MSMLIBDIRS := $(mcpscusor)$(Segment)MSMLIB$(Segment)sor
 endif
 ifeq ($(operateSystem), LINUX)
   export MSMLIBDIRS := $(mcpscusor)$(Segment)MSMLIB$(Segment)sor
 endif
 msmlibnames	  := MSMLIB
+
+ifeq ($(operateSystem), CYGWIN)
+  export TCCINTERDIRS := $(mcpscusor)$(Segment)TCCLIB$(Segment)sor
+endif
+ifeq ($(operateSystem), LINUX)
+  export TCCINTERDIRS := $(mcpscusor)$(Segment)TCCLIB$(Segment)sor
+endif
+tccinterlibnames := TCCLIB
 
 ifeq ($(operateSystem), CYGWIN)
   export MODELDATABASEDIRS  := $(mcpscusor)$(Segment)MODELDATABASE$(Segment)sor
@@ -41,12 +41,36 @@ endif
 modeldatabasenames	  := MODELDATABASE
 
 ifeq ($(operateSystem), CYGWIN)
+  export COMMONLIBDIRS  := $(mcpscusor)$(Segment)COMMONLIB$(Segment)sor
+endif
+ifeq ($(operateSystem), LINUX)
+  export COMMONLIBDIRS  := $(mcpscusor)$(Segment)COMMONLIB$(Segment)sor
+endif
+commonlibnames	  := Common
+
+ifeq ($(operateSystem), CYGWIN)
   export MCLIBDIRS  := $(mcpscusor)$(Segment)MCLIB$(Segment)sor
 endif
 ifeq ($(operateSystem), LINUX)
   export MCLIBDIRS  := $(mcpscusor)$(Segment)MCLIB$(Segment)sor
 endif
-mclibnames	  := Common CommonGPU MigCoaleModel InletModel AppShell
+mclibnames	  := MCCommon MCCommonGPU MigCoaleModel InletModel
+
+ifeq ($(operateSystem), CYGWIN)
+  export HYBRIDLIBDIRS  := $(mcpscusor)$(Segment)HYBRIDLIB$(Segment)sor
+endif
+ifeq ($(operateSystem), LINUX)
+  export HYBRIDLIBDIRS  := $(mcpscusor)$(Segment)HYBRIDLIB$(Segment)sor
+endif
+hybridlibnames	  := HybridMCRTModel HybridMCSCDModel
+
+ifeq ($(operateSystem), CYGWIN)
+  export EVENTSFACTORYDIRS  := $(mcpscusor)$(Segment)EVENTSFACTORY$(Segment)sor
+endif
+ifeq ($(operateSystem), LINUX)
+  export EVENTSFACTORYDIRS  := $(mcpscusor)$(Segment)EVENTSFACTORY$(Segment)sor
+endif
+eventsfactorylibnames	  := SimEventsPool AppShell
 
 ifeq ($(operateSystem), CYGWIN)
   export LIBDIRD    := $(mcworkspace)$(Segment)LIB$(Segment)$(ConfigName)
@@ -71,16 +95,25 @@ all:
 #the model data base library
 	$(MAKE) -f $(mcpscusor)$(Segment)MODELDATABASE$(Segment)MODELDATABASE.mk
 
+#the common library
+	$(MAKE) -f $(mcpscusor)$(Segment)COMMONLIB$(Segment)Common$(Segment)Common.mk
+
 #the common mc library
-	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)Common$(Segment)Common.mk
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MCCommon$(Segment)MCCommon.mk
 #the commonGPU mc library
-	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)CommonGPU$(Segment)CommonGPU.mk
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MCCommonGPU$(Segment)MCCommonGPU.mk
 #the MigCoale mc library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MigCoaleModel$(Segment)MigCoaleModel.mk
 #the inlet model library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)InletModel$(Segment)InletModel.mk
-#the BubbleGrowth mc library
-	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)AppShell$(Segment)AppShell.mk
+
+#the hybrid model library
+	$(MAKE) -f $(mcpscusor)$(Segment)HYBRIDLIB$(Segment)HybridMCRTModel$(Segment)HybridMCRTModel.mk
+	$(MAKE) -f $(mcpscusor)$(Segment)HYBRIDLIB$(Segment)HybridMCSCDModel$(Segment)HybridMCSCDModel.mk
+
+#the eventsfactory model library
+	$(MAKE) -f $(mcpscusor)$(Segment)EVENTSFACTORY$(Segment)SimEventsPool$(Segment)SimEventsPool.mk
+	$(MAKE) -f $(mcpscusor)$(Segment)EVENTSFACTORY$(Segment)AppShell$(Segment)AppShell.mk
 
 ############################################
 .PHONY: clean

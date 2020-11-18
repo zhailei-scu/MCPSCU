@@ -1,10 +1,10 @@
 #!/bin/bash
 version=Developing_New
-mcpscusor=/home/zhail/Development/public/mcpscu_2019_07_01
-tccpath=/home/zhail/Development/public/tcc-0.9.27/
-mcworkspace=/home/zhail/Development/public/mcworkspace/mcpscu_2019_07_01
-cudaVersion=cuda8.0
-computerCapability=cc35
+mcpscusor=/home/zhailei/Development/MutiHybrid/mcpscu_Developing_New
+tccpath=/home/zhailei/Development/MutiHybrid/tcc-0.9.27/
+mcworkspace=/home/zhailei/mcworkspace/mcpscu_Developing_New
+cudaVersion=cuda10.1
+computerCapability=cc75
 operateSystem=LINUX
 source $HOME/.bashrc
 hostllvm=-Mnollvm

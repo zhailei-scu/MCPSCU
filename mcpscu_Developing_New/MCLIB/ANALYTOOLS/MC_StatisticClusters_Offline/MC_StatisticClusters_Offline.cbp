@@ -55,6 +55,7 @@
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMigCoaleModel.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMCCommon.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMCCommonGPU.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libTCCLIB.a" />
 					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
 					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc.a" />

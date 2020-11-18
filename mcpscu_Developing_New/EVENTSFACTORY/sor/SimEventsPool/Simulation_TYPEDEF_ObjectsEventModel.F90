@@ -6,7 +6,6 @@ module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
         subroutine EventModel()
 
         end subroutine EventModel
-
     end interface
 
     type,public::ObjectsEvent
@@ -41,7 +40,7 @@ module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
     end type CrossEventList
 
     type,public::ObjectsEventManager
-        type(ObjectsEventList),pointer::TheList=>null()
+        type(ObjectsEventList),pointer::TheOriginEventList=>null()
         type(CrossEventList),pointer::TheCrossList=>null()
         contains
 
@@ -50,21 +49,39 @@ module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
     end type
 
 
-
-
-    #define GeneralList(Name,ValueType) type,public::Name \
-                              type(Name),pointer::next=>null()  \
-                              ValueType::Thevalue               \
-                              end type
-
-    GeneralList(CrossEventList2,CrossEvent)
-
-    type(CrossEventList2)::stk
+    private::RegisteOne
+    private::ConstructCrossEvent
 
     contains
 
+    subroutine RegisteOne(this,TheObjectsEvent)
+        implicit none
+        !---Dummy Vars---
+        CLASS(ObjectsEventManager)::this
+        type(ObjectsEvent)::TheObjectsEvent
+        !---Local Vars---
+        !---Body---
 
+        if(.not. associated(this%TheOriginEventList)) then
+            allocate(this%TheOriginEventList)
+        end if
 
+        !this%TheOriginEventList%AppendOne(ObjectsEvent)
+
+        call this%ConstructCrossEvent(TheObjectsEvent)
+
+        return
+    end subroutine RegisteOne
+
+    subroutine ConstructCrossEvent(this,TheObjectsEvent)
+        implicit none
+        !---Dummy Vars---
+        CLASS(ObjectsEventManager)::this
+        type(ObjectsEvent)::TheObjectsEvent
+        !---Local Vars---
+        !---Body---
+        return
+    end subroutine ConstructCrossEvent
 
 
 end module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
