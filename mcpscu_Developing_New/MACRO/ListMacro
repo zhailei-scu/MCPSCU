@@ -1,0 +1,349 @@
+!--------The following are the global macro that used for mcpscu--------------
+!----------------Zhai Lei, 2020/11/19-----------------
+
+#define DefGeneralListStart(Name) type,public::Name
+
+!--Based on our test, 1: the two members must located in different line ,however, when macro are exported, all in one line , it
+!--would make mistake, so we have to use ';' to seperate two lines
+!--                   2: when we use ';' plus '\' in macro, we must ensure that nothing placed after '\' and , there are nothing before #define (even a blank)
+!--                   3: However, the usage of ';' still make all source not true in different line , so we use ourself definded ENTER to make a mark ,
+!--                      and replace ENTER to \n after preprocess during compiling the source
+#define ConstructGeneralListValMember(Name,ValueType) type(Name),pointer::next=>null()[ENTER] \
+  integer,private::ListCount = 0[ENTER] \
+  ValueType::TheValue
+#define ConstructGeneralListFuncMember(Name,ValueType,ValueCleanMethod) contains[ENTER] \
+    procedure,non_overridable,public,pass::CopyListFromOther=>Copy##Name##ListFromOther[ENTER] \
+    procedure,non_overridable,public,pass::AppendOne=>AppendOne_##Name##List[ENTER] \
+    procedure,non_overridable,public,pass::AppendArray=>AppendArray_##Name##List[ENTER] \
+    procedure,non_overridable,public,pass::GetValueByListIndex=>GetValueBy##Name##ListIndex[ENTER] \
+    procedure,non_overridable,public,pass::GetListCount=>Get##Name##List_Count[ENTER] \
+    procedure,non_overridable,public,pass::CleanList=>Clean_##Name##List[ENTER] \
+    Generic::Assignment(=)=>Copy##Name##ListFromOther[ENTER] \
+    Final::Clean##Name##List
+
+  #define DefGeneralListEnd(Name) end type Name
+
+
+
+#define MethodDomain(Name) private::Copy##Name##ListFromOther[ENTER] \
+                           private::AppendOne_##Name##List[ENTER] \
+                           private::AppendArray_##Name##List[ENTER] \
+                           private::GetValueBy##Name##ListIndex[ENTER] \
+                           private::Get##Name##List_Count[ENTER] \
+                           private::Clean_##Name##List[ENTER] \
+                           private::Clean##Name##List
+
+!--Based on our test, 1: the 'end type' must located in different line with 'type,public',however, when macro are exported, all in one line , it
+!--would make mistake, so we have to use ';' to seperate two lines, or use two macro span in different line like
+!--g(G)eneralListStart(Name)
+!--g(G)eneralListEnd(Name)  to create a type
+!--                   2: when we use ';' plus '\' in macro, we must ensure that nothing placed after '\' and , there are nothing before #define (even a blank)
+!--                   3: However, the usage of ';' still make all source not true in different line , so we use ourself definded ENTER to make a mark ,
+!--                      and replace ENTER to \n after preprocess during compiling the source
+#define DefGeneralList(Name,ValueType) DefGeneralListStart(Name)[ENTER] \
+                                       ConstructGeneralListValMember(Name,ValueType)[ENTER] \
+                                       ConstructGeneralListFuncMember(Name,ValueType)[ENTER] \
+                                       DefGeneralListEnd(Name)[ENTER] \
+                                       MethodDomain(Name)
+
+
+#define DefGeneralListFuncSpan_UnComplete(Name, ValueType,ValueClean_this,ValueClean_cursor) subroutine Copy##Name##ListFromOther(this,otherOne)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),intent(out),target::this[ENTER] \
+    type(Name),target,intent(in)::otherOne[ENTER] \
+[ENTER] \
+    type(Name),pointer::cursorOfOthers=>null()[ENTER] \
+    type(Name),pointer::cursorOfSelf=>null()[ENTER] \
+    type(Name),pointer::cursorOfSelfP=>null()[ENTER] \
+[ENTER] \
+    cursorOfSelf=>this[ENTER] \
+    if(.not. associated(cursorOfSelf)) then[ENTER] \
+        write(*,*) "MCPSCUERROR: You need to allocate the List "//#Name//" first!"[ENTER] \
+        pause[ENTER] \
+        stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    cursorOfOthers=>otherOne[ENTER] \
+    if(.not. associated(cursorOfOthers)) then[ENTER] \
+        Nullify(cursorOfSelf)[ENTER] \
+        return[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    call this%CleanList()[ENTER] \
+[ENTER] \
+    this%TheValue = otherOne%TheValue[ENTER] \
+[ENTER] \
+    cursorOfOthers=>otherOne%next[ENTER] \
+    cursorOfSelfP=>this[ENTER] \
+    cursorOfSelf=>this%next[ENTER] \
+    DO While(associated(cursorOfOthers))[ENTER] \
+        allocate(cursorOfSelf)[ENTER] \
+        cursorOfSelf%TheValue = cursorOfOthers%TheValue[ENTER] \
+        cursorOfSelfP%next=>cursorOfSelf[ENTER] \
+[ENTER] \
+        cursorOfOthers=>cursorOfOthers%next[ENTER] \
+        cursorOfSelfP=>cursorOfSelfP%next[ENTER] \
+        cursorOfSelf=>cursorOfSelf%next[ENTER] \
+    END DO[ENTER] \
+    this%ListCount = otherOne%GetListCount()[ENTER] \
+[ENTER] \
+    Nullify(cursorOfSelfP)[ENTER] \
+    cursorOfSelfP=>null()[ENTER] \
+    Nullify(cursorOfSelf)[ENTER] \
+    cursorOfSelf=>null()[ENTER] \
+    Nullify(cursorOfOthers)[ENTER] \
+    cursorOfOthers=>null()[ENTER] \
+    return[ENTER] \
+  end subroutine Copy##Name##ListFromOther[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  subroutine AppendOne_##Name##List(this,newOne)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    ValueType::newOne[ENTER] \
+[ENTER] \
+    type(Name),pointer::cursor=>null(),cursorP=>null()[ENTER] \
+[ENTER] \
+    cursorP=>this[ENTER] \
+    if(.not. associated(cursorP)) then[ENTER] \
+      write(*,*) "MCPSCUERROR: You need to allocate the "//#Name//" first!"[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    if(this%GetListCount() .LE. 0) then[ENTER] \
+      this%ListCount = 1[ENTER] \
+      this%TheValue = newOne[ENTER] \
+    else[ENTER] \
+      cursor=>this%next[ENTER] \
+      cursorP=>this[ENTER] \
+[ENTER] \
+      DO while(associated(cursor))[ENTER] \
+        cursor=>cursor%next[ENTER] \
+        cursorP=>cursorP%next[ENTER] \
+[ENTER] \
+      END DO[ENTER] \
+[ENTER] \
+      this%ListCount = this%ListCount + 1[ENTER] \
+[ENTER] \
+      allocate(cursor)[ENTER] \
+      NUllify(cursor%next)[ENTER] \
+      cursor%next=>null()[ENTER] \
+[ENTER] \
+      cursor%TheValue = newOne[ENTER] \
+      cursorP%next=>cursor[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    Nullify(cursorP)[ENTER] \
+    cursorP=>null()[ENTER] \
+    Nullify(cursor)[ENTER] \
+    cursor=>null()[ENTER] \
+    return[ENTER] \
+  end subroutine AppendOne_##Name##List[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  subroutine AppendArray_##Name##List(this,TheArray,ArraySize)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    ValueType,allocatable::TheArray(:)[ENTER] \
+    integer,intent(in)::ArraySize[ENTER] \
+[ENTER] \
+    integer::I[ENTER] \
+    type(Name),pointer::cursor=>null(),cursorP=>null()[ENTER] \
+[ENTER] \
+    cursorP=>this[ENTER] \
+    if(.not. associated(cursorP)) then[ENTER] \
+      write(*,*) "MCPSCUERROR: You need to allocate the "//#Name//" first!"[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    if(ArraySize  .LE. 0 .or. size(TheArray) .LE. 0) then[ENTER] \
+      write(*,*) "MCPSCUWARNING: No value would be appended to "//#Name[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+      return[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    if(ArraySize .GT. size(TheArray)) then[ENTER] \
+      write(*,*) "MCPSCUERROR: The aimmed size to appended to the List "//#Name//" is greater than the Array size",ArraySize,size(TheArray)[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    DO I=1,ArraySize[ENTER] \
+      call this%AppendOne(TheArray(I))[ENTER] \
+    END DO[ENTER] \
+[ENTER] \
+    return[ENTER] \
+  end subroutine AppendArray_##Name##List[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  function GetValueBy##Name##ListIndex(this,ListIndex) result(TheOutValue)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    integer,intent(in)::ListIndex[ENTER] \
+    ValueType,intent(out)::TheOutValue[ENTER] \
+[ENTER] \
+    integer::tempIndex[ENTER] \
+    type(Name),pointer::cursor=>null()[ENTER] \
+[ENTER] \
+    cursor=>this[ENTER] \
+    if(.not. associated(cursor)) then[ENTER] \
+      write(*,*) "MCPSCUERROR: You need to allocate the "//#Name//" first!"[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    tempIndex = 0[ENTER] \
+[ENTER] \
+    DO while(associated(cursor))[ENTER] \
+      tempIndex = tempIndex + 1[ENTER] \
+[ENTER] \
+      if(tempIndex .eq. ListIndex) then[ENTER] \
+        TheOutValue = cursor%TheValue[ENTER] \
+        exit[ENTER] \
+      end if[ENTER] \
+[ENTER] \
+      cursor=>cursor%next[ENTER] \
+[ENTER] \
+    END DO[ENTER] \
+[ENTER] \
+    if(ListIndex .ne. tempIndex) then[ENTER] \
+      write(*,*) "MCPSCUERROR: Cannot get the value form list by index: ",ListIndex[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    Nullify(cursor)[ENTER] \
+    cursor=>null()[ENTER] \
+    return[ENTER] \
+  end function GetValueBy##Name##ListIndex[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  function Get##Name##List_Count(this) result(TheCount)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    integer,intent(out)::TheCount[ENTER] \
+[ENTER] \
+    type(Name),pointer::cursor=>null()[ENTER] \
+[ENTER] \
+    cursor=>this[ENTER] \
+    if(.not. associated(cursor)) then[ENTER] \
+      write(*,*) "MCPSCUERROR: You need to allocate the List "//#Name//" first!"[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    TheCount = this%ListCount[ENTER] \
+    return[ENTER] \
+  end function Get##Name##List_Count[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  subroutine Clean_##Name##List(this)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+[ENTER] \
+    type(Name),pointer::cursor=>null()[ENTER] \
+    type(Name),pointer::next=>null()[ENTER] \
+[ENTER] \
+    cursor=>this[ENTER] \
+[ENTER] \
+    if(.not. associated(cursor)) then[ENTER] \
+      return[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    if(cursor%GetListCount() .LE. 0) then[ENTER] \
+      return[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    cursor=>this%next[ENTER] \
+[ENTER] \
+    ValueClean_this[ENTER] \
+[ENTER] \
+    DO While(associated(cursor))[ENTER] \
+      next=>cursor%next[ENTER] \
+      ValueClean_cursor[ENTER] \
+      cursor%next=>null()[ENTER] \
+      deallocate(cursor)[ENTER] \
+      Nullify(cursor)[ENTER] \
+      cursor=>next[ENTER] \
+    END DO[ENTER] \
+[ENTER] \
+    this%next=>null()[ENTER] \
+[ENTER] \
+    this%ListCount = 0[ENTER] \
+[ENTER] \
+    Nullify(cursor)[ENTER] \
+    Nullify(next)[ENTER] \
+    cursor=>null()[ENTER] \
+    next=>null()[ENTER] \
+[ENTER] \
+    return[ENTER] \
+  end subroutine Clean_##Name##List[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  subroutine Clean##Name##List(this)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    type(Name)::this[ENTER] \
+[ENTER] \
+    call this%CleanList()[ENTER] \
+  end subroutine Clean##Name##List
+
+  #define ValueCleanMethod_ForThis(x) call this%TheValue%x
+  #define ValueCleanMethod_ForCursor(x) call cursor%TheValue%x
+
+#define DefGeneralListFuncSpan_WithValueCleanMethod(Name, ValueType,ValueCleanMethod)[ENTER] \
+ DefGeneralListFuncSpan_UnComplete(Name, ValueType,ValueCleanMethod_ForThis(ValueCleanMethod),ValueCleanMethod_ForCursor(ValueCleanMethod))
+
+#define DefGeneralListFuncSpan_WithoutValueCleanMethod(Name, ValueType)[ENTER] \
+  DefGeneralListFuncSpan_UnComplete(Name, ValueType)
+
+
+  !*************Generate a list auto who's value whithout clean method***************!
+  !**********************************************************************************!
+  !---Way one to generate a type auto---
+  !****DefGeneralListStart(List1)
+  !****ConstructGeneralListValMember(List1,integer)
+  !****ConstructGeneralListFuncMember(List1,integer)
+  !****DefGeneralListEnd(List1)
+
+  !---Way two to generate a type auto---
+  !DefGeneralList(List2,integer)
+
+  !contains
+
+  !DefGeneralListFuncSpan_WithoutValueCleanMethod(List1,integer)
+  !DefGeneralListFuncSpan_WithoutValueCleanMethod(List2,integer)
+
+
+
+
+  !**************Generate a list auto who's value with clean method******************!
+  !**********************************************************************************!
+  !---Way one to generate a type auto---
+  !****DefGeneralListStart(List3)
+  !****ConstructGeneralListValMember(List3,type(ACluster))
+  !****ConstructGeneralListFuncMember(List3,type(ACluster))
+  !****DefGeneralListEnd(List3)
+
+  !---Way two to generate a type auto---
+  !DefGeneralList(List4,type(ACluster))
+
+  !contains
+
+  !DefGeneralListFuncSpan_WithoutValueCleanMethod(List3,type(ACluster),Clean_Cluster)
+  !DefGeneralListFuncSpan_WithoutValueCleanMethod(List4,type(ACluster),Clean_Cluster)

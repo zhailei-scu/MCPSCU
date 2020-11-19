@@ -53,8 +53,10 @@ $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.o : $(sor)$(Segment)CommonLIB_TYPE
 	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
 	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
 	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
-	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90 -o $@
-	rm $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
+	sed -i 's/\[MacroSymbol\]/#/g' $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
+	$(comp) -E $(oflags_this) -I$(incdir) $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90 > $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.ff
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90 -o $@
+	#rm $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
 
 $(tgt)$(Segment)CommonLIB_TYPEDEF_ObjectsCollection.o : $(sor)$(Segment)CommonLIB_TYPEDEF_ObjectsCollection.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@

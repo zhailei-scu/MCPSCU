@@ -48,6 +48,3 @@
 #else
   #define PREASSIGN ! =
 #endif
-
-
-

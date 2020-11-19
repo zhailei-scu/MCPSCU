@@ -1,3 +1,4 @@
+#include "../../../Macro"
 module COMMONLIB_UTILITIES
 
   USE COMMONLIB_CONSTANTS
@@ -23,6 +24,8 @@ module COMMONLIB_UTILITIES
     Generic::Assignment(=)=>CopySTRListFromOther
     Final::CleanSTRList
   END TYPE
+
+  DefGeneralList(CrossEventList4,type(STRList))
 
   private::CopySTRListFromOther
   private::AppendOne_STRList
