@@ -314,36 +314,38 @@
 
 
   !*************Generate a list auto who's value whithout clean method***************!
+  !************(please delete the '()' in the following)*****************************!
   !**********************************************************************************!
   !---Way one to generate a type auto---
-  !****DefGeneralListStart(List1)
-  !****ConstructGeneralListValMember(List1,integer)
-  !****ConstructGeneralListFuncMember(List1,integer)
-  !****DefGeneralListEnd(List1)
+  !****(D)efGeneralListStart(List1)
+  !****(C)onstructGeneralListValMember(List1,integer)
+  !****(C)onstructGeneralListFuncMember(List1,integer)
+  !****(D)efGeneralListEnd(List1)
 
   !---Way two to generate a type auto---
-  !DefGeneralList(List2,integer)
+  !(D)efGeneralList(List2,integer)
 
   !contains
 
-  !DefGeneralListFuncSpan_WithoutValueCleanMethod(List1,integer)
-  !DefGeneralListFuncSpan_WithoutValueCleanMethod(List2,integer)
+  !(D)efGeneralListFuncSpan_WithoutValueCleanMethod(List1,integer)
+  !(D)efGeneralListFuncSpan_WithoutValueCleanMethod(List2,integer)
 
 
 
 
   !**************Generate a list auto who's value with clean method******************!
+  !************(please delete the '()' in the following)*****************************!
   !**********************************************************************************!
   !---Way one to generate a type auto---
-  !****DefGeneralListStart(List3)
-  !****ConstructGeneralListValMember(List3,type(ACluster))
-  !****ConstructGeneralListFuncMember(List3,type(ACluster))
-  !****DefGeneralListEnd(List3)
+  !****(D)efGeneralListStart(List3)
+  !****(C)onstructGeneralListValMember(List3,type(ACluster))
+  !****(C)onstructGeneralListFuncMember(List3,type(ACluster))
+  !****(D)efGeneralListEnd(List3)
 
   !---Way two to generate a type auto---
-  !DefGeneralList(List4,type(ACluster))
+  !(D)efGeneralList(List4,type(ACluster))
 
   !contains
 
-  !DefGeneralListFuncSpan_WithoutValueCleanMethod(List3,type(ACluster),Clean_Cluster)
-  !DefGeneralListFuncSpan_WithoutValueCleanMethod(List4,type(ACluster),Clean_Cluster)
+  !(D)efGeneralListFuncSpan_WithValueCleanMethod(List3,type(ACluster),Clean_Cluster)
+  !(D)efGeneralListFuncSpan_WithValueCleanMethod(List4,type(ACluster),Clean_Cluster)

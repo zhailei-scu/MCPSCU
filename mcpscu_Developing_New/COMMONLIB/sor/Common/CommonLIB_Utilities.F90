@@ -1,4 +1,4 @@
-#include "../../../Macro"
+#include "../../../MACRO/Macro"
 module COMMONLIB_UTILITIES
 
   USE COMMONLIB_CONSTANTS
@@ -25,7 +25,7 @@ module COMMONLIB_UTILITIES
     Final::CleanSTRList
   END TYPE
 
-  DefGeneralList(CrossEventList4,type(STRList))
+  DefGeneralList(CrossEventList5,type(STRList))
 
   private::CopySTRListFromOther
   private::AppendOne_STRList
@@ -36,6 +36,8 @@ module COMMONLIB_UTILITIES
   private::CleanSTRList
 
   contains
+
+  DefGeneralListFuncSpan_WithValueCleanMethod(CrossEventList5,type(STRList),Clean_STRList)
 
   !***************************************
   subroutine CopySTRListFromOther(this,otherOne)

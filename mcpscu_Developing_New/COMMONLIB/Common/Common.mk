@@ -32,7 +32,6 @@ libname  := lib_$(objname).$(LIB_EXT)
 
 #######################################################          
 nlist    :=  CommonLIB_CONSTANTS               	 \
-	     	 CommonLIB_TYPEDEF_GeneralList		 \
 			 CommonLIB_TYPEDEF_ObjectsCollection \
 			 CommonLIB_Utilities
              
@@ -49,13 +48,11 @@ $(libname) : $(objects)
 $(tgt)$(Segment)CommonLIB_CONSTANTS.o : $(sor)$(Segment)CommonLIB_CONSTANTS.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.o : $(sor)$(Segment)CommonLIB_TYPEDEF_GeneralList.F90
-	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
-	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
-	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
-	sed -i 's/\[MacroSymbol\]/#/g' $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
-	$(comp) -E $(oflags_this) -I$(incdir) $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90 > $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.ff
-	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90 -o $@
+#$(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.o : $(sor)$(Segment)CommonLIB_TYPEDEF_GeneralList.F90
+#	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
+#	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
+#	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
+#	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90 -o $@
 	#rm $(tgt)$(Segment)CommonLIB_TYPEDEF_GeneralList.f90
 
 $(tgt)$(Segment)CommonLIB_TYPEDEF_ObjectsCollection.o : $(sor)$(Segment)CommonLIB_TYPEDEF_ObjectsCollection.F90
@@ -63,7 +60,12 @@ $(tgt)$(Segment)CommonLIB_TYPEDEF_ObjectsCollection.o : $(sor)$(Segment)CommonLI
 
 $(tgt)$(Segment)CommonLIB_Utilities.o : $(sor)$(Segment)CommonLIB_Utilities.F90  \
 			            $(tgt)$(Segment)CommonLIB_CONSTANTS.o
-	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
+	#$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
+	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)CommonLIB_Utilities.f90
+	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)CommonLIB_Utilities.f90
+	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)CommonLIB_Utilities.f90
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)CommonLIB_Utilities.f90 -o $@
+	#rm $(tgt)$(Segment)CommonLIB_Utilities.f90
 
 ######################################################################
 clean:

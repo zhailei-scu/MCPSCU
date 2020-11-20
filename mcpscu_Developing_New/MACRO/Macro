@@ -1,4 +1,2 @@
-!--------The following are the global macro that used for mcpscu--------------
-!----------------Zhai Lei, 2019/01/14-----------------
 #include "GeneralMacro"
 #include "ListMacro"
