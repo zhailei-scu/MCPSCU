@@ -43,7 +43,10 @@ $(libname) : $(objects)
 
 
 $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.o : $(sor)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.F90
-	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
+	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.f90
+	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.f90
+	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.f90
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.f90 -o $@
 
 $(tgt)$(Segment)Simulation_TYPEDEF_EventsPool.o : $(sor)$(Segment)Simulation_TYPEDEF_EventsPool.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
