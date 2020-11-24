@@ -35,5 +35,6 @@ module COMMONLIB_CONSTANTS
 
     character(len=1), parameter::RelativeHead = achar(46) ! "."
 
-
+    character(len=1), parameter::SingleQuote = achar(39)  ! "'"
+    character(len=1), parameter::DoubleQuote = achar(34)  ! '"'
 end module COMMONLIB_CONSTANTS

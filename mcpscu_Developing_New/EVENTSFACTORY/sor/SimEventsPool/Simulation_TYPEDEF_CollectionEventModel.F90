@@ -1,6 +1,7 @@
 #include "../../../MACRO/Macro"
-module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
+module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
     use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+    use SIMULATION_TYPEDEF_READEDEVENTSMODELS
     implicit none
 
     abstract interface
@@ -37,19 +38,19 @@ module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
     end type EventModel
 
     !****************************************************************************
-    type,public::ObjectsEvent
-        type(ObjectsCollection),pointer::TheObjectsCollection=>null()
+    type,public::CollectionEvent
+        type(ObjectsCollection),pointer::TheCollection=>null()
         type(EventModel),public::TheEventModel
         contains
-        procedure,public,non_overridable,pass::CopyFromOther=>CopyObjectsEventFromOther
-        procedure,public,non_overridable,pass::Clean=>Clean_ObjectsEvent
-        Generic::Assignment(=)=>CopyObjectsEventFromOther
-        Final::CleanObjectsEvent
-    end type ObjectsEvent
+        procedure,public,non_overridable,pass::CopyFromOther=>CopyCollectionEventFromOther
+        procedure,public,non_overridable,pass::Clean=>Clean_CollectionEvent
+        Generic::Assignment(=)=>CopyCollectionEventFromOther
+        Final::CleanCollectionEvent
+    end type CollectionEvent
 
 
-    !****Define a list ObjectsEventList with value type(ObjectsEvent)**************
-    DefGeneralList(ObjectsEventList,type(ObjectsEvent))
+    !****Define a list CollectionEventsList with value type(CollectionEvent)**************
+    DefGeneralList(CollectionEventsList,type(CollectionEvent))
 
     !****************************************************************************
     type,public::CrossEvent
@@ -68,35 +69,32 @@ module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
     DefGeneralList(CrossEventList,type(CrossEvent))
 
     !**************************************************************************
-    type,public::ObjectsEventManager
-        type(ObjectsEventList),pointer::TheOriginEventList=>null()
+    type,public::CollectionEventsManager
+        type(CollectionEventsList),pointer::TheOriginEventList=>null()
         type(CrossEventList),pointer::TheCrossList=>null()
-        contains
 
-        procedure,public,non_overridable,pass::CopyFromOther=>CopyObjectsEventManager
-        procedure,public,non_overridable,pass::RegisteOne=>DoRegist
-        procedure,private,non_overridable,pass::ConstructCrossEvent
-         procedure,private,non_overridable,pass::Check=>CheckEvents
-        procedure,public,non_overridable,pass::Clean=>Clean_ObjectsEventManager
-        Generic::Assignment(=)=>CopyObjectsEventManager
-        Final::CleanObjectsEventManager
-    end type ObjectsEventManager
+        type(ReadedEventsModels)::TheReadedEventsModels
+        contains
+        procedure,private,non_overridable,pass::Construct=>ConstructEventsManager
+        procedure,public,non_overridable,pass::CopyFromOther=>CopyCollectionEventsManager
+        procedure,public,non_overridable,pass::Clean=>Clean_CollectionEventsManager
+        Generic::Assignment(=)=>CopyCollectionEventsManager
+        Final::CleanCollectionEventsManager
+    end type CollectionEventsManager
 
     private::CopyEventModelFromOther
     private::Clean_EventModel
     private::CleanEventModel
-    private::CopyObjectsEventFromOther
-    private::Clean_ObjectsEvent
-    private::CleanObjectsEvent
+    private::CopyCollectionEventFromOther
+    private::Clean_CollectionEvent
+    private::CleanCollectionEvent
     private::CopyCrossEventFromOther
     private::Clean_CrossEvent
     private::CleanCrossEvent
-    private::CopyObjectsEventManager
-    private::DoRegist
-    private::ConstructCrossEvent
-    private::CheckEvents
-    private::Clean_ObjectsEventManager
-    private::CleanObjectsEventManager
+    private::ConstructEventsManager
+    private::CopyCollectionEventsManager
+    private::Clean_CollectionEventsManager
+    private::CleanCollectionEventsManager
 
     contains
 
@@ -150,46 +148,46 @@ module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
     end subroutine CleanEventModel
 
     !***************************************************
-    subroutine CopyObjectsEventFromOther(this,other)
+    subroutine CopyCollectionEventFromOther(this,other)
         implicit none
         !---Dummy Vars---
-        CLASS(ObjectsEvent),intent(out)::this
-        CLASS(ObjectsEvent),intent(in)::other
+        CLASS(CollectionEvent),intent(out)::this
+        CLASS(CollectionEvent),intent(in)::other
         !---Body---
 
-        this%TheObjectsCollection => other%TheObjectsCollection
+        this%TheCollection => other%TheCollection
         !---The Assignment(=) had been overideded
         this%TheEventModel = other%TheEventModel
 
         return
-    end subroutine CopyObjectsEventFromOther
+    end subroutine CopyCollectionEventFromOther
 
     !***************************************************
-    subroutine Clean_ObjectsEvent(this)
+    subroutine Clean_CollectionEvent(this)
         implicit none
         !---Dummy Vars---
-        CLASS(ObjectsEvent)::this
+        CLASS(CollectionEvent)::this
         !---Body---
-        Nullify(this%TheObjectsCollection)
-        this%TheObjectsCollection => null()
+        Nullify(this%TheCollection)
+        this%TheCollection => null()
 
         call this%TheEventModel%Clean()
         return
-    end subroutine Clean_ObjectsEvent
+    end subroutine Clean_CollectionEvent
 
     !***************************************************
-    subroutine CleanObjectsEvent(this)
+    subroutine CleanCollectionEvent(this)
         implicit none
         !---Dummy Vars---
-        type(ObjectsEvent)::this
+        type(CollectionEvent)::this
         !---Local Vars---
         call this%Clean()
 
         return
-    end subroutine CleanObjectsEvent
+    end subroutine CleanCollectionEvent
 
-    !****The member function of list ObjectsEventList**************
-    DefGeneralListFuncSpan_WithValueCleanMethod(ObjectsEventList,type(ObjectsEvent),Clean)
+    !****The member function of list CollectionEventsList**************
+    DefGeneralListFuncSpan_WithValueCleanMethod(CollectionEventsList,type(CollectionEvent),Clean)
 
     !***************************************************
     subroutine CopyCrossEventFromOther(this,other)
@@ -236,54 +234,43 @@ module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
     DefGeneralListFuncSpan_WithValueCleanMethod(CrossEventList,type(CrossEvent),Clean)
 
     !***************************************************
-    subroutine DoRegist(this,TheObjectsEvent)
+    subroutine ConstructEventsManager(this,hEventModels)
         implicit none
         !---Dummy Vars---
-        CLASS(ObjectsEventManager)::this
-        type(ObjectsEvent)::TheObjectsEvent
-        !---Local Vars---
+        CLASS(CollectionEventsManager)::this
+        integer,intent(in)::hEventModels
         !---Body---
+        call this%TheReadedEventsModels%Load_ReadedEventsModels(hEventModels)
 
-        if(.not. associated(this%TheOriginEventList)) then
-            allocate(this%TheOriginEventList)
-        end if
+        !DO 
 
-        call this%TheOriginEventList%AppendOne(ObjectsEvent)
 
-        call this%ConstructCrossEvent(TheObjectsEvent)
-
-        call this%Check()
 
         return
-    end subroutine DoRegist
+    end subroutine ConstructEventsManager
+
 
     !***************************************************
-    subroutine ConstructCrossEvent(this,TheObjectsEvent)
+    subroutine CopyEventsManagerFromOther(this,other)
         implicit none
         !---Dummy Vars---
-        CLASS(ObjectsEventManager)::this
-        type(ObjectsEvent)::TheObjectsEvent
-        !---Local Vars---
-        type(ObjectsEventList),pointer::cursor=>null()
+        CLASS(CollectionEventsManager),intent(out)::this
+        CLASS(CollectionEventsManager),intent(in)::other
         !---Body---
-        if(.not. associated(this%TheOriginEventList)) then
-            return
-        end if
 
-        cursor=>this%TheOriginEventList
-
-        Do while(associated(cursor))
-            
-        END Do
+        this%TheOriginEventList => other%TheOriginEventList
+        this%TheCrossList => other%TheCrossList
+        !---The Assignment(=) had been overriaded---
+        this%TheReadedEventsModels = other%TheReadedEventsModels
 
         return
-    end subroutine ConstructCrossEvent
+    end subroutine CopyEventsManagerFromOther
 
     !******************************************************
-    subroutine Clean_ObjectsEventManager(this)
+    subroutine Clean_CollectionEventsManager(this)
         implicit none
         !---Dummy Vars---
-        CLASS(ObjectsEventManager)::this
+        CLASS(CollectionEventsManager)::this
         !---Body---
         call this%TheOriginEventList%CleanList()
         Nullify(this%TheOriginEventList)
@@ -293,18 +280,20 @@ module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
         Nullify(this%TheCrossList)
         this%TheCrossList=>null()
 
+        call this%TheReadedEventsModels%Clean()
+
         return
-    end subroutine Clean_ObjectsEventManager
+    end subroutine Clean_CollectionEventsManager
 
     !******************************************************
-    subroutine CleanObjectsEventManager(this)
+    subroutine CleanCollectionEventsManager(this)
         implicit none
         !---Dummy Vars---
-        type(ObjectsEventManager)::this
+        type(CollectionEventsManager)::this
         !---Body---
         call this%Clean()
 
         return
-    end subroutine CleanObjectsEventManager
+    end subroutine CleanCollectionEventsManager
 
-end module SIMULATION_TYPEDEF_OBJECTSEVENTMODEL
+end module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL

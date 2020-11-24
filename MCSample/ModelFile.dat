@@ -1,0 +1,33 @@
+&MODELNPUTF
+
+    &UDEFMODELSUBCTL
+        &MODELDEF       Name = "MC_MIGCOALE_CLUSTER_GPU"   , unicode = 1
+        &MODELDEF       Name = "RT_MIGCOALE_CLUSTER_GPU"   , unicode = 2
+        &MODELDEF       Name = "SCD_MIGCOALE_CLUSTER_GPU"  , unicode = 3
+        &MODELDEF       Name = "CROSS_MC_RT"               , unicode = 4
+        &MODELDEF       Name = "CROSS_MC_SCD"              , unicode = 5
+        &MODELDEF       Name = "CROSS_RT_SCD"              , unicode = 6
+    &ENDSUBCTL
+
+    &MODELACTIONSSUBCTL        #1
+        &MODELSNAMEHEAD                            "MC_MIGCOALE_CLUSTER_GPU"  "RT_MIGCOALE_CLUSTER_GPU" "SCD_MIGCOALE_CLUSTER_GPU"
+        &MODELSVALUE "MC_MIGCOALE_CLUSTER_GPU"              1                           4                       5
+        &MODELSVALUE "RT_MIGCOALE_CLUSTER_GPU"              4                           2                       6
+        &MODELSVALUE "SCD_MIGCOALE_CLUSTER_GPU"             5                           6                       3
+    &ENDSUBCTL
+
+    !&MODELACTIONSSUBCTL        #2
+    !    &MODELSNAME                               "MC_MIGCOALE_CLUSTER_GPU"  "RT_MIGCOALE_CLUSTER_GPU" "SCD_MIGCOALE_CLUSTER_GPU"
+    !    &MODELSVALUE "MC_MIGCOALE_CLUSTER_GPU"              1                           0                       5
+    !    &MODELSVALUE "RT_MIGCOALE_CLUSTER_GPU"              0                           2                       6
+    !    &MODELSVALUE "SCD_MIGCOALE_CLUSTER_GPU"             5                           6                       3
+    !&ENDSUBCTL
+
+    !&MODELACTIONSSUBCTL        #3
+    !    &MODELSNAME                               "MC_MIGCOALE_CLUSTER_GPU"  "RT_MIGCOALE_CLUSTER_GPU" "SCD_MIGCOALE_CLUSTER_GPU"
+    !    &MODELSVALUE "MC_MIGCOALE_CLUSTER_GPU"              1                           0                       5
+    !    &MODELSVALUE "RT_MIGCOALE_CLUSTER_GPU"              0                           0                       0
+    !    &MODELSVALUE "SCD_MIGCOALE_CLUSTER_GPU"             5                           0                       3
+    !&ENDSUBCTL
+
+&ENDMODELNPUTF

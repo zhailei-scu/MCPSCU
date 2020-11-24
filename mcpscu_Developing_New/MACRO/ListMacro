@@ -15,6 +15,7 @@
     procedure,non_overridable,public,pass::CopyListFromOther=>Copy##Name##ListFromOther[ENTER] \
     procedure,non_overridable,public,pass::AppendOne=>AppendOne_##Name##List[ENTER] \
     procedure,non_overridable,public,pass::AppendArray=>AppendArray_##Name##List[ENTER] \
+    procedure,non_overridable,public,pass::MoveToListPosByIndex=>MoveToPosByList##Name##Index[ENTER] \
     procedure,non_overridable,public,pass::GetValueByListIndex=>GetValueBy##Name##ListIndex[ENTER] \
     procedure,non_overridable,public,pass::GetListCount=>Get##Name##List_Count[ENTER] \
     procedure,non_overridable,public,pass::CleanList=>Clean_##Name##List[ENTER] \
@@ -28,6 +29,7 @@
 #define MethodDomain(Name) private::Copy##Name##ListFromOther[ENTER] \
                            private::AppendOne_##Name##List[ENTER] \
                            private::AppendArray_##Name##List[ENTER] \
+                           private::MoveToPosByList##Name##Index[ENTER] \
                            private::GetValueBy##Name##ListIndex[ENTER] \
                            private::Get##Name##List_Count[ENTER] \
                            private::Clean_##Name##List[ENTER] \
@@ -182,6 +184,50 @@
 [ENTER] \
     return[ENTER] \
   end subroutine AppendArray_##Name##List[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  function MoveToPosByList##Name##Index(this,ListIndex) result(TheOutPointer)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    integer,intent(in)::ListIndex[ENTER] \
+    CLASS(Name),intent(out),pointer::TheOutPointer[ENTER] \
+[ENTER] \
+    integer::tempIndex[ENTER] \
+    type(Name),pointer::cursor=>null()[ENTER] \
+[ENTER] \
+    cursor=>this[ENTER] \
+    if(.not. associated(cursor)) then[ENTER] \
+      write(*,*) "MCPSCUERROR: You need to allocate the "//#Name//" first!"[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    tempIndex = 0[ENTER] \
+[ENTER] \
+    DO while(associated(cursor))[ENTER] \
+      tempIndex = tempIndex + 1[ENTER] \
+[ENTER] \
+      if(tempIndex .eq. ListIndex) then[ENTER] \
+        TheOutPointer => cursor[ENTER] \
+        exit[ENTER] \
+      end if[ENTER] \
+[ENTER] \
+      cursor=>cursor%next[ENTER] \
+[ENTER] \
+    END DO[ENTER] \
+[ENTER] \
+    if(ListIndex .ne. tempIndex) then[ENTER] \
+      write(*,*) "MCPSCUERROR: Cannot get the value form list by index: ",ListIndex[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+[ENTER] \
+    Nullify(cursor)[ENTER] \
+    cursor=>null()[ENTER] \
+    return[ENTER] \
+  end function MoveToPosByList##Name##Index[ENTER] \
 [ENTER] \
 [ENTER] \
 [ENTER] \

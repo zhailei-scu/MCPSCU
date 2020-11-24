@@ -28,7 +28,8 @@ tgt  := $(LIBDIRD)
 libname  := lib_$(objname).$(LIB_EXT)
 
 #######################################################          
-nlist    :=  Simulation_TYPEDEF_ObjectsEventModel	\
+nlist    :=  Simulation_TYPEDEF_ReadedEventsModels		\
+			 Simulation_TYPEDEF_CollectionEventModel	\
 			 Simulation_TYPEDEF_EventsPool
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
@@ -41,12 +42,18 @@ $(libname) : $(objects)
 	ar -rcs $(libname) $(objects)
 	mv $(libname) $(tgt)
 
+$(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.o : $(sor)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.F90
+	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90
+	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90
+	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90 -o $@
 
-$(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.o : $(sor)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.F90
-	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.f90
-	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.f90
-	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.f90
-	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_ObjectsEventModel.f90 -o $@
+$(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventModel.o : $(sor)$(Segment)Simulation_TYPEDEF_CollectionEventModel.F90 \
+															$(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.o
+	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventModel.f90
+	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventModel.f90
+	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventModel.f90
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventModel.f90 -o $@
 
 $(tgt)$(Segment)Simulation_TYPEDEF_EventsPool.o : $(sor)$(Segment)Simulation_TYPEDEF_EventsPool.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@

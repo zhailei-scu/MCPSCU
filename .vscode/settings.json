@@ -1,3 +1,8 @@
 {
-    "fortran-ls.executablePath": "/usr/local/bin/fortls"
+    "fortran-ls.executablePath": "/usr/local/bin/fortls",
+    "fortran-ls.autocompletePrefix": true,
+    "fortran-ls.enableCodeActions": true,
+    "fortran-ls.displayVerWarning": false,
+    "fortran-ls.hoverSignature": true,
+    "fortran-ls.lowercaseIntrinsics": true
 }

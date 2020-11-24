@@ -9,6 +9,50 @@ module COMMONLIB_UTILITIES
 
   implicit none
 
+  interface ResizeArray
+    MODULE PROCEDURE ResizeArrayi_OneDim
+    MODULE PROCEDURE ResizeArrayr_OneDim
+    MODULE PROCEDURE ResizeArrayd_OneDim
+
+    MODULE PROCEDURE ResizeArrayi_TwoDim
+    MODULE PROCEDURE ResizeArrayr_TwoDim
+    MODULE PROCEDURE ResizeArrayd_TwoDim
+
+  end interface ResizeArray
+
+  !-----------------------
+  interface AllocateArray_Host
+    MODULE PROCEDURE AllocateOneDimi_Host
+    MODULE PROCEDURE AllocateOneDimr_Host
+    MODULE PROCEDURE AllocateOneDimd_Host
+
+
+    MODULE PROCEDURE AllocateTwoDimi_Host
+    MODULE PROCEDURE AllocateTwoDimr_Host
+    MODULE PROCEDURE AllocateTwoDimd_Host
+
+    MODULE PROCEDURE AllocateThreeDimi_Host
+    MODULE PROCEDURE AllocateThreeDimr_Host
+    MODULE PROCEDURE AllocateThreeDimd_Host
+
+  end interface AllocateArray_Host
+
+  !------------------
+  interface DeAllocateArray_Host
+    MODULE PROCEDURE DeAllocateOneDimi_Host
+    MODULE PROCEDURE DeAllocateOneDimr_Host
+    MODULE PROCEDURE DeAllocateOneDimd_Host
+
+    MODULE PROCEDURE DeAllocateTwoDimi_Host
+    MODULE PROCEDURE DeAllocateTwoDimr_Host
+    MODULE PROCEDURE DeAllocateTwoDimd_Host
+
+    MODULE PROCEDURE DeAllocateThreeDimi_Host
+    MODULE PROCEDURE DeAllocateThreeDimr_Host
+    MODULE PROCEDURE DeAllocateThreeDimd_Host
+
+  end interface DeAllocateArray_Host
+
   TYPE,public::STRList
     character*1000::TheValue
     integer::ListCount = 0
@@ -25,7 +69,20 @@ module COMMONLIB_UTILITIES
     Final::CleanSTRList
   END TYPE
 
-  DefGeneralList(CrossEventList5,type(STRList))
+  !********ShortInteger List*****************
+  DefGeneralList(ShortIntegerList,integer(kind=KINDINT2))
+
+  !********Integer List*****************
+  DefGeneralList(IntegerList,integer)
+
+  !********LongInteger List*****************
+  DefGeneralList(LongIntegerList,integer(kind=KINDINT8))
+
+  !********float List*****************
+  DefGeneralList(FloatList,real(kind=KINDSF))
+
+  !********double List*****************
+  DefGeneralList(DoubleList,real(kind=KINDDF))
 
   private::CopySTRListFromOther
   private::AppendOne_STRList
@@ -37,7 +94,1153 @@ module COMMONLIB_UTILITIES
 
   contains
 
-  DefGeneralListFuncSpan_WithValueCleanMethod(CrossEventList5,type(STRList),Clean_STRList)
+  !*************************************************************
+  subroutine AllocateOneDimi_Host(Array,Length,Name)
+    implicit none
+    !---Dummy Vars---
+    integer,dimension(:),allocatable::Array
+    integer,intent(in)::Length
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateOneDimi_Host(Array,Name)
+
+    if(Length .GT. 0) then
+        allocate(Array(Length),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateOneDimi_Host
+
+  !*************************************************************
+  subroutine AllocateOneDimr_Host(Array,Length,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDSF),dimension(:),allocatable::Array
+    integer,intent(in)::Length
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateOneDimr_Host(Array,Name)
+
+    if(Length .GT. 0) then
+        allocate(Array(Length),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateOneDimr_Host
+
+  !*************************************************************
+  subroutine AllocateOneDimd_Host(Array,Length,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDDF),dimension(:),allocatable::Array
+    integer,intent(in)::Length
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateOneDimd_Host(Array,Name)
+
+    if(Length .GT. 0) then
+        allocate(Array(Length),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateOneDimd_Host
+
+  !*************************************************************
+  subroutine AllocateTwoDimi_Host(Array,LengthX,LengthY,Name)
+    implicit none
+    !---Dummy Vars---
+    integer,dimension(:,:),allocatable::Array
+    integer,intent(in)::LengthX
+    integer,intent(in)::LengthY
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateTwoDimi_Host(Array,Name)
+
+    if(LengthX .GT. 0 .AND. LengthY .GT. 0) then
+        allocate(Array(LengthX,LengthY),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateTwoDimi_Host
+
+  !*************************************************************
+  subroutine AllocateTwoDimr_Host(Array,LengthX,LengthY,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDSF),dimension(:,:),allocatable::Array
+    integer,intent(in)::LengthX
+    integer,intent(in)::LengthY
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateTwoDimr_Host(Array,Name)
+
+    if(LengthX .GT. 0 .AND. LengthY .GT. 0) then
+        allocate(Array(LengthX,LengthY),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateTwoDimr_Host
+
+  !*************************************************************
+  subroutine AllocateTwoDimd_Host(Array,LengthX,LengthY,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDDF),dimension(:,:),allocatable::Array
+    integer,intent(in)::LengthX
+    integer,intent(in)::LengthY
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateTwoDimd_Host(Array,Name)
+
+    if(LengthX .GT. 0 .AND. LengthY .GT. 0) then
+        allocate(Array(LengthX,LengthY),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateTwoDimd_Host
+
+  !*************************************************************
+  subroutine AllocateThreeDimi_Host(Array,LengthX,LengthY,LengthZ,Name)
+    implicit none
+    !---Dummy Vars---
+    integer,dimension(:,:,:),allocatable::Array
+    integer,intent(in)::LengthX
+    integer,intent(in)::LengthY
+    integer,intent(in)::LengthZ
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateThreeDimi_Host(Array,Name)
+
+    if(LengthX .GT. 0 .AND. LengthY .GT. 0 .AND. LengthZ .GT. 0) then
+        allocate(Array(LengthX,LengthY,LengthZ),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateThreeDimi_Host
+
+  !*************************************************************
+  subroutine AllocateThreeDimr_Host(Array,LengthX,LengthY,LengthZ,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDSF),dimension(:,:,:),allocatable::Array
+    integer,intent(in)::LengthX
+    integer,intent(in)::LengthY
+    integer,intent(in)::LengthZ
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateThreeDimr_Host(Array,Name)
+
+    if(LengthX .GT. 0 .AND. LengthY .GT. 0 .AND. LengthZ .GT. 0) then
+        allocate(Array(LengthX,LengthY,LengthZ),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateThreeDimr_Host
+
+  !*************************************************************
+  subroutine AllocateThreeDimd_Host(Array,LengthX,LengthY,LengthZ,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDDF),dimension(:,:,:),allocatable::Array
+    integer,intent(in)::LengthX
+    integer,intent(in)::LengthY
+    integer,intent(in)::LengthZ
+    character(*)::Name
+    !---Dummy Vars---
+    integer::istat
+    !---Body---
+    call DeAllocateThreeDimd_Host(Array,Name)
+
+    if(LengthX .GT. 0 .AND. LengthY .GT. 0 .AND. LengthZ .GT. 0) then
+        allocate(Array(LengthX,LengthY,LengthZ),STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"allocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine AllocateThreeDimd_Host
+
+
+  !*************************************************************
+  subroutine DeAllocateOneDimi_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    integer,dimension(:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateOneDimi_Host
+
+
+  !*************************************************************
+  subroutine DeAllocateOneDimr_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDSF),dimension(:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateOneDimr_Host
+
+  !*************************************************************
+  subroutine DeAllocateOneDimd_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDDF),dimension(:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateOneDimd_Host
+
+  !*************************************************************
+  subroutine DeAllocateTwoDimi_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    integer,dimension(:,:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateTwoDimi_Host
+
+  !*************************************************************
+  subroutine DeAllocateTwoDimr_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDSF),dimension(:,:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateTwoDimr_Host
+
+  !*************************************************************
+  subroutine DeAllocateTwoDimd_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDDF),dimension(:,:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateTwoDimd_Host
+
+  !*************************************************************
+  subroutine DeAllocateThreeDimi_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    integer,dimension(:,:,:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateThreeDimi_Host
+
+  !*************************************************************
+  subroutine DeAllocateThreeDimr_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDSF),dimension(:,:,:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateThreeDimr_Host
+
+  !*************************************************************
+  subroutine DeAllocateThreeDimd_Host(Array,Name)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDDF),dimension(:,:,:),allocatable::Array
+    character(*)::Name
+    !---Local Vars---
+    integer::istat
+    !---Body---
+
+    if(allocated(Array)) then
+        deallocate(Array,STAT=istat)
+        if(istat /=0) then
+            write(*,*) "MCPSCUERROR: The Array :",Name,"Deallocate Failed !"
+            pause
+            stop
+        end if
+    end if
+
+    return
+  end subroutine DeAllocateThreeDimd_Host
+
+
+  !*****************************************
+  subroutine ResizeArrayi_OneDim(TheArray,NewSize)
+    implicit none
+    !---Dummy Vars---
+    integer, dimension(:), allocatable,intent(inout)::TheArray
+    integer,intent(in)::NewSize
+    !---Local Vars---
+    integer::OldSize(1)
+    integer, dimension(:), allocatable::tempArray
+    integer::istat
+    !---Body----
+    OldSize = shape(TheArray)
+
+    if(OldSize(1) .ne. NewSize) then
+
+        ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+        !       the tempArray need not need to be allocated, the compiler would
+        !       allocate the array automatic that is marked as "allocatable" based on the
+        !       assigned array's size
+        call AllocateArray_Host(tempArray,OldSize(1),"tempArray")
+
+        tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(1)])
+
+        call AllocateArray_Host(TheArray,NewSize,"TheArray")
+
+        TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize],PAD=[0])
+
+        call DeAllocateArray_Host(tempArray,"tempArray")
+
+    end if
+
+
+    return
+  end subroutine ResizeArrayi_OneDim
+
+  !*****************************************
+  subroutine ResizeArrayr_OneDim(TheArray,NewSize)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDSF), dimension(:), allocatable,intent(inout)::TheArray
+    integer,intent(in)::NewSize
+    !---Local Vars---
+    integer::OldSize(1)
+    real(kind=KINDSF), dimension(:), allocatable::tempArray
+    integer::istat
+    real(kind=KINDSF)::zero_Single
+    !---Body----
+    zero_Single = 0.D0
+    OldSize = shape(TheArray)
+
+    if(OldSize(1) .ne. NewSize) then
+
+        ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+        !       the tempArray need not need to be allocated, the compiler would
+        !       allocate the array automatic that is marked as "allocatable" based on the
+        !       assigned array's size
+        call AllocateArray_Host(tempArray,OldSize(1),"tempArray")
+
+        tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(1)])
+
+        call AllocateArray_Host(TheArray,NewSize,"TheArray")
+
+        TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize],PAD=[zero_Single])
+
+        call DeAllocateArray_Host(tempArray,"tempArray")
+
+    end if
+
+
+    return
+  end subroutine ResizeArrayr_OneDim
+
+  !*****************************************
+  subroutine ResizeArrayd_OneDim(TheArray,NewSize)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDDF), dimension(:), allocatable,intent(inout)::TheArray
+    integer,intent(in)::NewSize
+    !---Local Vars---
+    integer::OldSize(1)
+    real(kind=KINDDF), dimension(:), allocatable::tempArray
+    integer::istat
+    real(kind=KINDDF)::zero_Double
+    !---Body----
+    zero_Double = 0.D0
+    OldSize = shape(TheArray)
+
+    if(OldSize(1) .ne. NewSize) then
+
+        ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+        !       the tempArray need not need to be allocated, the compiler would
+        !       allocate the array automatic that is marked as "allocatable" based on the
+        !       assigned array's size
+        call AllocateArray_Host(tempArray,OldSize(1),"tempArray")
+
+        tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(1)])
+
+        call AllocateArray_Host(TheArray,NewSize,"TheArray")
+
+        TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize],PAD=[zero_Double])
+
+        call DeAllocateArray_Host(tempArray,"tempArray")
+
+    end if
+
+    return
+  end subroutine ResizeArrayd_OneDim
+
+  !**********************************************************
+  subroutine ResizeArrayi_TwoDim(TheArray,NewX,NewY)
+    implicit none
+    !---Dummy Vars---
+    integer, dimension(:,:), allocatable::TheArray
+    integer::NewX
+    integer::NewY
+    !---Local Vars---
+    integer::oldShape(2)
+    integer, dimension(:,:), allocatable::tempArray
+    integer::istat
+    !---Body---
+
+    oldShape = shape(TheArray)
+
+    if(oldShape(1) .ne. NewX .and. oldShape(2) .ne. NewY) then
+
+
+        if(NewX .LE. oldShape(1)) then
+
+            if(NewY .LE. oldShape(2)) then
+
+                ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+                !       the tempArray need not need to be allocated, the compiler would
+                !       allocate the array automatic that is marked as "allocatable" based on the
+                !       assigned array's size
+                call AllocateArray_Host(tempArray,NewX,NewY,"tempArray")
+
+                !---restore
+                tempArray = reshape(SOURCE=[TheArray(1:NewX,1:NewY)],SHAPE=[NewX,NewY])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY])
+            else
+                ! note: Here, we use the "reshape" to copy the array. The main reason for this is that we need to consider the
+                !       case that compiler option "-Mallocatable=03" is used, for this compiler options, base on our test, if we
+                !       try to copy the array1 to array2 by the form of array2 = array1 and the array2 is marked as "allocatable",
+                !       if these two array own same shape, the array2 would be reshaped to the size saming with array1, for instant,
+                !       if array1 with size of 1xs1 and array with size of 1xs2 and s1 .ne. s2, in this case, after the operation,
+                !       the array2 would be changed to the size of 1xs1 !!!!!
+                !       Thus, We apply the "reshape" here, reshape([source1,source2,...],[dim1,dim2,dim3...]) to copy the value and
+                !       ensure that array2 would keep the size of 1xs2 after the copying operation.
+                !       If s1< s2, we use the form of array2 = reshape([array1],[s2]) here,infact ,there are tow steps are
+                !       implicated in this opertion:
+                !           1.The reshape operation would construct return an "tempArray" with size 1xs2, and the arrays elements
+                !             from "tempArray(1)" to "tempArray(s1)" would be filled by array1
+                !           2, array2 = "tempArray" would be executed,
+                !       So, based on this startegy, we can keep the size for array2 and copy value from array1 at the same time.
+                !       (If s1> s2, we should use array2 = reshape([array1(1:s2)],[s2]) to avoid overflow)
+                !
+                !       Additional, if s1< s2, the pgfortran compiler would do two things:
+                !            1: copy the contents with the size of s1 from to array1 to array2
+                !            2: the reminded contents with the sizeof (s2 -s1 +1) in array2
+                !               would be assigned to some value automaticlly(the reminded
+                !               contents would be filled based on the value in array1, for
+                !               instant, if the value in array1 is 1,2,3...., the remineded
+                !               contents would be assigned to s1+1,s1+2,....,s2)
+                !       In fact, we hope that the value in array2 would be array(1:s1),0(s1+1:s2) ,which means the remined value
+                !       shoud not be assigned by some values, thus we should do the additional operation: array2(s1+1:s2) = 0
+
+                ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+                !       the tempArray need not need to be allocated, the compiler would
+                !       allocate the array automatic that is marked as "allocatable" based on the
+                !       assigned array's size
+                call AllocateArray_Host(tempArray,NewX,oldShape(2),"tempArray")
+
+                !---restore
+                tempArray = reshape(SOURCE=[TheArray(NewX,oldShape(2))],SHAPE=[NewX,oldShape(2)])
+
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY],PAD=[0],ORDER=[1,2])
+
+            end if
+
+        else
+
+            if(NewY .LE. oldShape(2)) then
+
+                call AllocateArray_Host(tempArray,NewY,oldShape(1),"tempArray")
+
+                !---restore and reverse
+                tempArray = reshape(SOURCE=[TheArray],SHAPE=[NewY,oldShape(1)],PAD=[0],ORDER=[2,1])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY],PAD=[0],ORDER=[2,1])
+
+            else
+
+                call AllocateArray_Host(tempArray,oldShape(2),oldShape(1),"tempArray")
+
+                !---restore and reverse
+                tempArray = reshape(SOURCE=[TheArray],SHAPE=[oldShape(2),oldShape(1)],PAD=[0],ORDER=[2,1])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[reshape(SOURCE=[tempArray],&
+                                                   SHAPE=[NewX,oldShape(2)],&
+                                                   PAD=[0],&
+                                                   ORDER=[2,1])],&
+                                   SHAPE=[NewX,NewY],&
+                                   PAD=[0],&
+                                   ORDER=[1,2])
+
+            end if
+
+        end if
+
+        call DeAllocateArray_Host(tempArray,"tempArray")
+
+    end if
+
+    return
+  end subroutine ResizeArrayi_TwoDim
+
+  !**********************************************************
+  subroutine ResizeArrayr_TwoDim(TheArray,NewX,NewY)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDSF), dimension(:,:), allocatable::TheArray
+    integer::NewX
+    integer::NewY
+    !---Local Vars---
+    integer::oldShape(2)
+    real(kind=KINDSF), dimension(:,:), allocatable::tempArray
+    real(kind=KINDSF)::zero_Single
+    integer::istat
+    !---Body---
+
+    zero_Single = 0.D0
+
+    oldShape = shape(TheArray)
+
+    if(oldShape(1) .ne. NewX .and. oldShape(2) .ne. NewY) then
+
+
+        if(NewX .LE. oldShape(1)) then
+
+            if(NewY .LE. oldShape(2)) then
+
+                ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+                !       the tempArray need not need to be allocated, the compiler would
+                !       allocate the array automatic that is marked as "allocatable" based on the
+                !       assigned array's size
+                call AllocateArray_Host(tempArray,NewX,NewY,"tempArray")
+
+                !---restore
+                tempArray = reshape(SOURCE=[TheArray(1:NewX,1:NewY)],SHAPE=[NewX,NewY])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY])
+            else
+                ! note: Here, we use the "reshape" to copy the array. The main reason for this is that we need to consider the
+                !       case that compiler option "-Mallocatable=03" is used, for this compiler options, base on our test, if we
+                !       try to copy the array1 to array2 by the form of array2 = array1 and the array2 is marked as "allocatable",
+                !       if these two array own same shape, the array2 would be reshaped to the size saming with array1, for instant,
+                !       if array1 with size of 1xs1 and array with size of 1xs2 and s1 .ne. s2, in this case, after the operation,
+                !       the array2 would be changed to the size of 1xs1 !!!!!
+                !       Thus, We apply the "reshape" here, reshape([source1,source2,...],[dim1,dim2,dim3...]) to copy the value and
+                !       ensure that array2 would keep the size of 1xs2 after the copying operation.
+                !       If s1< s2, we use the form of array2 = reshape([array1],[s2]) here,infact ,there are tow steps are
+                !       implicated in this opertion:
+                !           1.The reshape operation would construct return an "tempArray" with size 1xs2, and the arrays elements
+                !             from "tempArray(1)" to "tempArray(s1)" would be filled by array1
+                !           2, array2 = "tempArray" would be executed,
+                !       So, based on this startegy, we can keep the size for array2 and copy value from array1 at the same time.
+                !       (If s1> s2, we should use array2 = reshape([array1(1:s2)],[s2]) to avoid overflow)
+                !
+                !       Additional, if s1< s2, the pgfortran compiler would do two things:
+                !            1: copy the contents with the size of s1 from to array1 to array2
+                !            2: the reminded contents with the sizeof (s2 -s1 +1) in array2
+                !               would be assigned to some value automaticlly(the reminded
+                !               contents would be filled based on the value in array1, for
+                !               instant, if the value in array1 is 1,2,3...., the remineded
+                !               contents would be assigned to s1+1,s1+2,....,s2)
+                !       In fact, we hope that the value in array2 would be array(1:s1),0(s1+1:s2) ,which means the remined value
+                !       shoud not be assigned by some values, thus we should do the additional operation: array2(s1+1:s2) = 0
+
+                ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+                !       the tempArray need not need to be allocated, the compiler would
+                !       allocate the array automatic that is marked as "allocatable" based on the
+                !       assigned array's size
+                call AllocateArray_Host(tempArray,NewX,oldShape(2),"tempArray")
+
+                !---restore
+                tempArray = reshape(SOURCE=[TheArray(NewX,oldShape(2))],SHAPE=[NewX,oldShape(2)])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY],PAD=[zero_Single],ORDER=[1,2])
+
+            end if
+
+        else
+
+            if(NewY .LE. oldShape(2)) then
+
+                call AllocateArray_Host(tempArray,NewY,oldShape(1),"tempArray")
+
+                !---restore and reverse
+                tempArray = reshape(SOURCE=[TheArray],SHAPE=[NewY,oldShape(1)],PAD=[zero_Single],ORDER=[2,1])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY],PAD=[zero_Single],ORDER=[2,1])
+
+            else
+                call AllocateArray_Host(tempArray,oldShape(2),oldShape(1),"tempArray")
+
+                !---restore and reverse
+                tempArray = reshape(SOURCE=[TheArray],SHAPE=[oldShape(2),oldShape(1)],PAD=[zero_Single],ORDER=[2,1])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[reshape(SOURCE=[tempArray],&
+                                                   SHAPE=[NewX,oldShape(2)],&
+                                                   PAD=[zero_Single],&
+                                                   ORDER=[2,1])],&
+                                   SHAPE=[NewX,NewY],&
+                                   PAD=[zero_Single],&
+                                   ORDER=[1,2])
+
+            end if
+
+        end if
+
+        call DeAllocateArray_Host(tempArray,"tempArray")
+
+    end if
+
+    return
+  end subroutine ResizeArrayr_TwoDim
+
+
+  !**********************************************************
+  subroutine ResizeArrayd_TwoDim(TheArray,NewX,NewY)
+    implicit none
+    !---Dummy Vars---
+    real(kind=KINDDF), dimension(:,:), allocatable::TheArray
+    integer::NewX
+    integer::NewY
+    !---Local Vars---
+    integer::oldShape(2)
+    real(kind=KINDDF), dimension(:,:), allocatable::tempArray
+    real(kind=KINDDF)::zero_Double
+    integer::istat
+    !---Body---
+
+    zero_Double = 0.D0
+
+    oldShape = shape(TheArray)
+
+    if(oldShape(1) .ne. NewX .and. oldShape(2) .ne. NewY) then
+
+
+        if(NewX .LE. oldShape(1)) then
+
+            if(NewY .LE. oldShape(2)) then
+
+                ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+                !       the tempArray need not need to be allocated, the compiler would
+                !       allocate the array automatic that is marked as "allocatable" based on the
+                !       assigned array's size
+                call AllocateArray_Host(tempArray,NewX,NewY,"tempArray")
+
+                !---restore
+                tempArray = reshape(SOURCE=[TheArray(1:NewX,1:NewY)],SHAPE=[NewX,NewY])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY])
+            else
+                ! note: Here, we use the "reshape" to copy the array. The main reason for this is that we need to consider the
+                !       case that compiler option "-Mallocatable=03" is used, for this compiler options, base on our test, if we
+                !       try to copy the array1 to array2 by the form of array2 = array1 and the array2 is marked as "allocatable",
+                !       if these two array own same shape, the array2 would be reshaped to the size saming with array1, for instant,
+                !       if array1 with size of 1xs1 and array with size of 1xs2 and s1 .ne. s2, in this case, after the operation,
+                !       the array2 would be changed to the size of 1xs1 !!!!!
+                !       Thus, We apply the "reshape" here, reshape([source1,source2,...],[dim1,dim2,dim3...]) to copy the value and
+                !       ensure that array2 would keep the size of 1xs2 after the copying operation.
+                !       If s1< s2, we use the form of array2 = reshape([array1],[s2]) here,infact ,there are tow steps are
+                !       implicated in this opertion:
+                !           1.The reshape operation would construct return an "tempArray" with size 1xs2, and the arrays elements
+                !             from "tempArray(1)" to "tempArray(s1)" would be filled by array1
+                !           2, array2 = "tempArray" would be executed,
+                !       So, based on this startegy, we can keep the size for array2 and copy value from array1 at the same time.
+                !       (If s1> s2, we should use array2 = reshape([array1(1:s2)],[s2]) to avoid overflow)
+                !
+                !       Additional, if s1< s2, the pgfortran compiler would do two things:
+                !            1: copy the contents with the size of s1 from to array1 to array2
+                !            2: the reminded contents with the sizeof (s2 -s1 +1) in array2
+                !               would be assigned to some value automaticlly(the reminded
+                !               contents would be filled based on the value in array1, for
+                !               instant, if the value in array1 is 1,2,3...., the remineded
+                !               contents would be assigned to s1+1,s1+2,....,s2)
+                !       In fact, we hope that the value in array2 would be array(1:s1),0(s1+1:s2) ,which means the remined value
+                !       shoud not be assigned by some values, thus we should do the additional operation: array2(s1+1:s2) = 0
+
+                ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+                !       the tempArray need not need to be allocated, the compiler would
+                !       allocate the array automatic that is marked as "allocatable" based on the
+                !       assigned array's size
+                call AllocateArray_Host(tempArray,NewX,oldShape(2),"tempArray")
+
+                !---restore
+                tempArray = reshape(SOURCE=[TheArray(NewX,oldShape(2))],SHAPE=[NewX,oldShape(2)])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY],PAD=[zero_Double],ORDER=[1,2])
+
+            end if
+
+        else
+
+            if(NewY .LE. oldShape(2)) then
+
+                call AllocateArray_Host(tempArray,NewY,oldShape(1),"tempArray")
+
+                !---restore and reverse
+                tempArray = reshape(SOURCE=[TheArray],SHAPE=[NewY,oldShape(1)],PAD=[zero_Double],ORDER=[2,1])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewX,NewY],PAD=[zero_Double],ORDER=[2,1])
+
+            else
+
+                call AllocateArray_Host(tempArray,oldShape(2),oldShape(1),"tempArray")
+
+                !---restore and reverse
+                tempArray = reshape(SOURCE=[TheArray],SHAPE=[oldShape(2),oldShape(1)],PAD=[zero_Double],ORDER=[2,1])
+
+                call AllocateArray_Host(TheArray,NewX,NewY,"TheArray")
+
+                TheArray = reshape(SOURCE=[reshape(SOURCE=[tempArray],&
+                                                   SHAPE=[NewX,oldShape(2)],&
+                                                   PAD=[zero_Double],&
+                                                   ORDER=[2,1])],&
+                                   SHAPE=[NewX,NewY],&
+                                   PAD=[zero_Double],&
+                                   ORDER=[1,2])
+
+            end if
+
+        end if
+
+        call DeAllocateArray_Host(tempArray,"tempArray")
+
+    end if
+
+    return
+  end subroutine ResizeArrayd_TwoDim
+
+    !*******************************************
+    subroutine DumplicateArrayi_OneDim(TheArray,DumplicateNum)
+        implicit none
+        !---Dummy Vars---
+        integer, dimension(:), allocatable,intent(inout)::TheArray
+        integer,intent(in)::DumplicateNum
+        !---Local Vars---
+        integer::OldSize(1)
+        integer, dimension(:), allocatable::tempArray
+        integer::NewSize
+        integer::istat
+        !---Body----
+
+        OldSize = shape(TheArray)
+
+        NewSize = DumplicateNum*OldSize(1)
+
+        if(DumplicateNum .GT. 1) then
+            ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+            !       the tempArray need not need to be allocated, the compiler would
+            !       allocate the array automatic that is marked as "allocatable" based on the
+            !       assigned array's size
+            call AllocateArray_Host(tempArray,OldSize(1),"tempArray")
+
+            tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(1)])
+
+            call AllocateArray_Host(TheArray,NewSize,"TheArray")
+
+            TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize],PAD=[tempArray])
+
+            call DeAllocateArray_Host(tempArray,"tempArray")
+
+        end if
+
+        return
+
+    end subroutine DumplicateArrayi_OneDim
+
+    !*******************************************
+    subroutine DumplicateArrayr_OneDim(TheArray,DumplicateNum)
+        implicit none
+        !---Dummy Vars---
+        real(kind=KINDSF), dimension(:), allocatable,intent(inout)::TheArray
+        integer,intent(in)::DumplicateNum
+        !---Local Vars---
+        integer::OldSize(1)
+        real(kind=KINDSF), dimension(:), allocatable::tempArray
+        integer::NewSize
+        integer::istat
+        !---Body----
+
+        OldSize = shape(TheArray)
+
+        NewSize = DumplicateNum*OldSize(1)
+
+        if(DumplicateNum .GT. 1) then
+            ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+            !       the tempArray need not need to be allocated, the compiler would
+            !       allocate the array automatic that is marked as "allocatable" based on the
+            !       assigned array's size
+            call AllocateArray_Host(tempArray,OldSize(1),"tempArray")
+
+            tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(1)])
+
+            call AllocateArray_Host(TheArray,NewSize,"TheArray")
+
+            TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize],PAD=[tempArray])
+
+            call DeAllocateArray_Host(tempArray,"tempArray")
+
+        end if
+
+        return
+
+    end subroutine DumplicateArrayr_OneDim
+
+    !*******************************************
+    subroutine DumplicateArrayd_OneDim(TheArray,DumplicateNum)
+        implicit none
+        !---Dummy Vars---
+        real(kind=KINDDF), dimension(:), allocatable,intent(inout)::TheArray
+        integer,intent(in)::DumplicateNum
+        !---Local Vars---
+        integer::OldSize(1)
+        real(kind=KINDDF), dimension(:), allocatable::tempArray
+        integer::NewSize
+        integer::istat
+        !---Body----
+
+        OldSize = shape(TheArray)
+
+        NewSize = DumplicateNum*OldSize(1)
+
+        if(DumplicateNum .GT. 1) then
+            ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+            !       the tempArray need not need to be allocated, the compiler would
+            !       allocate the array automatic that is marked as "allocatable" based on the
+            !       assigned array's size
+            call AllocateArray_Host(tempArray,OldSize(1),"tempArray")
+
+            tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(1)])
+
+            call AllocateArray_Host(TheArray,NewSize,"TheArray")
+
+            TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize],PAD=[tempArray])
+
+            call DeAllocateArray_Host(tempArray,"tempArray")
+
+        end if
+
+        return
+
+    end subroutine DumplicateArrayd_OneDim
+
+    !*******************************************
+    subroutine DumplicateArrayi_TwoDim(TheArray,DumplicateNum)
+        implicit none
+        !---Dummy Vars---
+        integer, dimension(:,:), allocatable,intent(inout)::TheArray
+        integer,intent(in)::DumplicateNum
+        !---Local Vars---
+        integer::OldSize(2)
+        integer, dimension(:,:), allocatable::tempArray
+        integer::NewSize(2)
+        integer::istat
+        !---Body----
+
+        OldSize = shape(TheArray)
+
+        NewSize(1) = DumplicateNum*OldSize(1)
+        NewSize(2) = OldSize(2)
+
+        if(DumplicateNum .GT. 1) then
+            ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+            !       the tempArray need not need to be allocated, the compiler would
+            !       allocate the array automatic that is marked as "allocatable" based on the
+            !       assigned array's size
+            call AllocateArray_Host(tempArray,OldSize(2),OldSize(1),"tempArray")
+
+            !---Restore and reverse
+            tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(2),OldSize(1)],PAD=[0],ORDER=[2,1])
+
+            call AllocateArray_Host(TheArray,NewSize(1),NewSize(2),"TheArray")
+
+            TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize(1),NewSize(2)],PAD=[tempArray],ORDER=[2,1])
+
+            call DeAllocateArray_Host(tempArray,"tempArray")
+
+        end if
+
+        return
+
+    end subroutine DumplicateArrayi_TwoDim
+
+    !*******************************************
+    subroutine DumplicateArrayr_TwoDim(TheArray,DumplicateNum)
+        implicit none
+        !---Dummy Vars---
+        real(kind=KINDSF), dimension(:,:), allocatable,intent(inout)::TheArray
+        integer,intent(in)::DumplicateNum
+        !---Local Vars---
+        integer::OldSize(2)
+        real(kind=KINDSF), dimension(:,:), allocatable::tempArray
+        real(kind=KINDSF)::zero_Single
+        integer::NewSize(2)
+        integer::istat
+        !---Body----
+
+        zero_Single = 0.D0
+
+        OldSize = shape(TheArray)
+
+        NewSize(1) = DumplicateNum*OldSize(1)
+        NewSize(2) = OldSize(2)
+
+        if(DumplicateNum .GT. 1) then
+            ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+            !       the tempArray need not need to be allocated, the compiler would
+            !       allocate the array automatic that is marked as "allocatable" based on the
+            !       assigned array's size
+            call AllocateArray_Host(tempArray,OldSize(2),OldSize(1),"tempArray")
+
+            !---Restore and reverse
+            tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(2),OldSize(1)],PAD=[zero_Single],ORDER=[2,1])
+
+            call AllocateArray_Host(TheArray,NewSize(1),NewSize(2),"TheArray")
+
+            TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize(1),NewSize(2)],PAD=[tempArray],ORDER=[2,1])
+
+            call DeAllocateArray_Host(tempArray,"tempArray")
+
+        end if
+
+        return
+
+    end subroutine DumplicateArrayr_TwoDim
+
+
+    !*******************************************
+    subroutine DumplicateArrayd_TwoDim(TheArray,DumplicateNum)
+        implicit none
+        !---Dummy Vars---
+        real(kind=KINDDF), dimension(:,:), allocatable,intent(inout)::TheArray
+        integer,intent(in)::DumplicateNum
+        !---Local Vars---
+        integer::OldSize(2)
+        real(kind=KINDDF), dimension(:,:), allocatable::tempArray
+        real(kind=KINDDF)::zero_Double
+        integer::NewSize(2)
+        integer::istat
+        !---Body----
+
+        zero_Double = 0.D0
+
+        OldSize = shape(TheArray)
+
+        NewSize(1) = DumplicateNum*OldSize(1)
+        NewSize(2) = OldSize(2)
+
+        if(DumplicateNum .GT. 1) then
+            ! note: in fortran2003, while the compiler option -Mallocatable=03 is used
+            !       the tempArray need not need to be allocated, the compiler would
+            !       allocate the array automatic that is marked as "allocatable" based on the
+            !       assigned array's size
+            call AllocateArray_Host(tempArray,OldSize(2),OldSize(1),"tempArray")
+
+            !---Restore and reverse
+            tempArray = reshape(SOURCE=[TheArray],SHAPE=[OldSize(2),OldSize(1)],PAD=[zero_Double],ORDER=[2,1])
+
+            call AllocateArray_Host(TheArray,NewSize(1),NewSize(2),"TheArray")
+
+            TheArray = reshape(SOURCE=[tempArray],SHAPE=[NewSize(1),NewSize(2)],PAD=[tempArray],ORDER=[2,1])
+
+            call DeAllocateArray_Host(tempArray,"tempArray")
+
+        end if
+
+        return
+
+    end subroutine DumplicateArrayd_TwoDim  
+
+  !***************Functions for ShortInteger List*****************
+  DefGeneralListFuncSpan_WithoutValueCleanMethod(ShortIntegerList,integer(kind=KINDINT2))
+
+  !***************Functions for Integer List*****************
+  DefGeneralListFuncSpan_WithoutValueCleanMethod(IntegerList,integer)
+
+  !***************Functions for LongInteger List*****************
+  DefGeneralListFuncSpan_WithoutValueCleanMethod(LongIntegerList,integer(kind=KINDINT8))
+
+  !***************Functions for float List*****************
+  DefGeneralListFuncSpan_WithoutValueCleanMethod(FloatList,real(kind=KINDSF))
+
+  !***************Functions for double List*****************
+  DefGeneralListFuncSpan_WithoutValueCleanMethod(DoubleList,real(kind=KINDDF))
 
   !***************************************
   subroutine CopySTRListFromOther(this,otherOne)
@@ -871,8 +2074,42 @@ module COMMONLIB_UTILITIES
     return
   end function CreateDataFolder
 
+  !**************************************************************
+  function GetSubStr_Count(TheString) result(TheResult)
+    implicit none
+    !---Dummy Vars---
+    character*(*),intent(in)::TheString
+    integer,intent(out)::TheResult
+    !---Local Vars---
+    integer::sechar
+    logical::Flag
+    integer::I
+    !---Body---
+    TheResult = 0
+    Flag = .false.
+    I = 0
 
-   !*************************************************************
+    DO while(.true.)
+
+      if(Flag .eq. .true. .AND. ichar(TheString(I:I)) .eq. sechar) then
+        TheResult = TheResult + 1
+        Flag = .false.
+      else if(TheString(I:I) .eq. SingleQuote .or. TheString(I:I) .eq. DoubleQuote) then
+        Flag = .true.
+        sechar = ichar(TheString(I:I))
+      end if
+
+      I = I + 1
+
+      if(I .GT. LENTRIM(TheString) ) then
+        exit
+      end if
+    END DO
+
+    return
+  end function GetSubStr_Count
+
+  !*************************************************************
   function IsRangeCoverage(Range1From,Range1To,Range2From,Range2To) result(TheResult)
     implicit none
     !---Dummy Vars---
