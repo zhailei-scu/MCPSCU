@@ -1,77 +1,44 @@
 #include "../../../MACRO/Macro"
 module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
-    use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+    use COMMONLIB_TYPEDEF_EVENTMODEL
     use SIMULATION_TYPEDEF_READEDEVENTSMODELS
+    use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
     implicit none
 
-    abstract interface
-        subroutine BeforeEachJobProc()
-
-        end subroutine BeforeEachJobProc
-
-        subroutine BeforeEachTestProc()
-
-        end subroutine BeforeEachTestProc
-
-        subroutine BeforeEachTimeSectionProc()
-
-        end subroutine BeforeEachTimeSectionProc
-
-        subroutine EachTimeStepProc()
-
-        end subroutine EachTimeStepProc
-    end interface
-
     !****************************************************************************
-    type,public::EventModel
-        character(len=20)::ModelName PREASSIGN ""
-        procedure(BeforeEachJobProc),pointer,nopass::TheBeforeEachJobProc=>null()
-        procedure(BeforeEachTestProc),pointer,nopass::TheBeforeEachTestProc=>null()
-        procedure(BeforeEachTimeSectionProc),pointer,nopass::TheBeforeEachTimeSectionProc=>null()
-        procedure(EachTimeStepProc),pointer,nopass::TheEachTimeStepProc=>null()
-
-        contains
-        procedure,public,non_overridable,pass::CopyFromOther=>CopyEventModelFromOther
-        procedure,public,non_overridable,pass::Clean=>Clean_EventModel
-        Generic::Assignment(=)=>CopyEventModelFromOther
-        Final::CleanEventModel
-    end type EventModel
-
-    !****************************************************************************
-    type,public::CollectionEvent
+    type,public::SingleCollectionEvent
         type(ObjectsCollection),pointer::TheCollection=>null()
         type(EventModel),public::TheEventModel
         contains
-        procedure,public,non_overridable,pass::CopyFromOther=>CopyCollectionEventFromOther
-        procedure,public,non_overridable,pass::Clean=>Clean_CollectionEvent
-        Generic::Assignment(=)=>CopyCollectionEventFromOther
-        Final::CleanCollectionEvent
-    end type CollectionEvent
+        procedure,public,non_overridable,pass::CopyFromOther=>CopySingleCollectionEventFromOther
+        procedure,public,non_overridable,pass::Clean=>Clean_SingleCollectionEvent
+        Generic::Assignment(=)=>CopySingleCollectionEventFromOther
+        Final::CleanSingleCollectionEvent
+    end type SingleCollectionEvent
 
-
-    !****Define a list CollectionEventsList with value type(CollectionEvent)**************
-    DefGeneralList(CollectionEventsList,type(CollectionEvent))
+    !****Define a list SingleCollectionEventsList with value type(SingleCollectionEvent)**************
+    DefGeneralList(SingleCollectionEventsList,type(SingleCollectionEvent))
 
     !****************************************************************************
-    type,public::CrossEvent
+    type,public::CrossCollectionEvent
         type(ObjectsCollection),pointer::TheLeftObjectsCollection=>null()
         type(ObjectsCollection),pointer::TheRightObjectsCollection=>null()
         type(EventModel),public::TheEventModel
 
         contains
-        procedure,public,non_overridable,pass::CopyFromOther=>CopyCrossEventFromOther
-        procedure,public,non_overridable,pass::Clean=>Clean_CrossEvent
-        Generic::Assignment(=)=>CopyCrossEventFromOther
-        Final::CleanCrossEvent
-    end type CrossEvent
+        procedure,public,non_overridable,pass::CopyFromOther=>CopyCrossCollectionEventFromOther
+        procedure,public,non_overridable,pass::Clean=>Clean_CrossCollectionEvent
+        Generic::Assignment(=)=>CopyCrossCollectionEventFromOther
+        Final::CleanCrossCollectionEvent
+    end type CrossCollectionEvent
 
-    !****Define a list CrossEventList with value type(CrossEvent)**************
-    DefGeneralList(CrossEventList,type(CrossEvent))
+    !****Define a list CrossCollectionEventsList with value type(CrossCollectionEvent)**************
+    DefGeneralList(CrossCollectionEventsList,type(CrossCollectionEvent))
 
     !**************************************************************************
     type,public::CollectionEventsManager
-        type(CollectionEventsList),pointer::TheOriginEventList=>null()
-        type(CrossEventList),pointer::TheCrossList=>null()
+        type(SingleCollectionEventsList)::TheSingleEventsList
+        type(CrossCollectionEventsList)::TheCrossCollectionEventsList
 
         type(ReadedEventsModels)::TheReadedEventsModels
         contains
@@ -82,15 +49,12 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
         Final::CleanCollectionEventsManager
     end type CollectionEventsManager
 
-    private::CopyEventModelFromOther
-    private::Clean_EventModel
-    private::CleanEventModel
-    private::CopyCollectionEventFromOther
-    private::Clean_CollectionEvent
-    private::CleanCollectionEvent
-    private::CopyCrossEventFromOther
-    private::Clean_CrossEvent
-    private::CleanCrossEvent
+    private::CopySingleCollectionEventFromOther
+    private::Clean_SingleCollectionEvent
+    private::CleanSingleCollectionEvent
+    private::CopyCrossCollectionEventFromOther
+    private::Clean_CrossCollectionEvent
+    private::CleanCrossCollectionEvent
     private::ConstructEventsManager
     private::CopyCollectionEventsManager
     private::Clean_CollectionEventsManager
@@ -99,60 +63,11 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
     contains
 
     !***************************************************
-    subroutine CopyEventModelFromOther(this,other)
+    subroutine CopySingleCollectionEventFromOther(this,other)
         implicit none
         !---Dummy Vars---
-        CLASS(EventModel),intent(out)::this
-        CLASS(EventModel),intent(in)::other
-        !---Body---
-        this%ModelName = other%ModelName
-        this%TheBeforeEachJobProc =>other%TheBeforeEachJobProc
-        this%TheBeforeEachTestProc =>other%TheBeforeEachTestProc
-        this%TheBeforeEachTimeSectionProc =>other%TheBeforeEachTimeSectionProc
-        this%TheEachTimeStepProc =>other%TheEachTimeStepProc
-        return
-    end subroutine CopyEventModelFromOther
-
-    !***************************************************
-    subroutine Clean_EventModel(this)
-        implicit none
-        !---Dummy Vars---
-        CLASS(EventModel)::this
-        !---Body---
-
-        this%ModelName = ""
-
-        Nullify(this%TheBeforeEachJobProc)
-        this%TheBeforeEachJobProc => null()
-
-        Nullify(this%TheBeforeEachTestProc)
-        this%TheBeforeEachTestProc => null()
-
-        Nullify(this%TheBeforeEachTimeSectionProc)
-        this%TheBeforeEachTimeSectionProc => null()
-
-        Nullify(this%TheEachTimeStepProc)
-        this%TheEachTimeStepProc => null()
-        return
-    end subroutine Clean_EventModel
-
-    !***************************************************
-    subroutine CleanEventModel(this)
-        implicit none
-        !---Dummy Vars---
-        type(EventModel)::this
-        !---Local Vars---
-        call this%Clean()
-
-        return
-    end subroutine CleanEventModel
-
-    !***************************************************
-    subroutine CopyCollectionEventFromOther(this,other)
-        implicit none
-        !---Dummy Vars---
-        CLASS(CollectionEvent),intent(out)::this
-        CLASS(CollectionEvent),intent(in)::other
+        CLASS(SingleCollectionEvent),intent(out)::this
+        CLASS(SingleCollectionEvent),intent(in)::other
         !---Body---
 
         this%TheCollection => other%TheCollection
@@ -160,41 +75,41 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
         this%TheEventModel = other%TheEventModel
 
         return
-    end subroutine CopyCollectionEventFromOther
+    end subroutine CopySingleCollectionEventFromOther
 
     !***************************************************
-    subroutine Clean_CollectionEvent(this)
+    subroutine Clean_SingleCollectionEvent(this)
         implicit none
         !---Dummy Vars---
-        CLASS(CollectionEvent)::this
+        CLASS(SingleCollectionEvent)::this
         !---Body---
         Nullify(this%TheCollection)
         this%TheCollection => null()
 
         call this%TheEventModel%Clean()
         return
-    end subroutine Clean_CollectionEvent
+    end subroutine Clean_SingleCollectionEvent
 
     !***************************************************
-    subroutine CleanCollectionEvent(this)
+    subroutine CleanSingleCollectionEvent(this)
         implicit none
         !---Dummy Vars---
-        type(CollectionEvent)::this
+        type(SingleCollectionEvent)::this
         !---Local Vars---
         call this%Clean()
 
         return
-    end subroutine CleanCollectionEvent
+    end subroutine CleanSingleCollectionEvent
 
-    !****The member function of list CollectionEventsList**************
-    DefGeneralListFuncSpan_WithValueCleanMethod(CollectionEventsList,type(CollectionEvent),Clean)
+    !****The member function of list SingleCollectionEventsList**************
+    DefGeneralListFuncSpan_WithValueCleanMethod(SingleCollectionEventsList,type(SingleCollectionEvent),Clean)
 
     !***************************************************
-    subroutine CopyCrossEventFromOther(this,other)
+    subroutine CopyCrossCollectionEventFromOther(this,other)
         implicit none
         !---Dummy Vars---
-        CLASS(CrossEvent),intent(out)::this
-        CLASS(CrossEvent),intent(in)::other
+        CLASS(CrossCollectionEvent),intent(out)::this
+        CLASS(CrossCollectionEvent),intent(in)::other
         !---Body---
 
         this%TheLeftObjectsCollection => other%TheLeftObjectsCollection
@@ -202,13 +117,13 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
         this%TheEventModel = other%TheEventModel
 
         return
-    end subroutine CopyCrossEventFromOther
+    end subroutine CopyCrossCollectionEventFromOther
 
     !***************************************************
-    subroutine Clean_CrossEvent(this)
+    subroutine Clean_CrossCollectionEvent(this)
         implicit none
         !---Dummy Vars---
-        CLASS(CrossEvent)::this
+        CLASS(CrossCollectionEvent)::this
         !---Body---
         Nullify(this%TheLeftObjectsCollection)
         this%TheLeftObjectsCollection => null()
@@ -218,20 +133,20 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
 
         call this%TheEventModel%Clean()
         return
-    end subroutine Clean_CrossEvent
+    end subroutine Clean_CrossCollectionEvent
 
     !***************************************************
-    subroutine CleanCrossEvent(this)
+    subroutine CleanCrossCollectionEvent(this)
         implicit none
         !---Dummy Vars---
-        type(CrossEvent)::this
+        type(CrossCollectionEvent)::this
         !---Local Vars---
         call this%Clean()
         return
-    end subroutine CleanCrossEvent
+    end subroutine CleanCrossCollectionEvent
 
-    !****The member function of list CrossEventList**************
-    DefGeneralListFuncSpan_WithValueCleanMethod(CrossEventList,type(CrossEvent),Clean)
+    !****The member function of list CrossCollectionEventsList**************
+    DefGeneralListFuncSpan_WithValueCleanMethod(CrossCollectionEventsList,type(CrossCollectionEvent),Clean)
 
     !***************************************************
     subroutine ConstructEventsManager(this,hEventModels)
@@ -239,16 +154,36 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
         !---Dummy Vars---
         CLASS(CollectionEventsManager)::this
         integer,intent(in)::hEventModels
+        !---Local Vars---
+        integer::I
+        integer::ReadedPairsNum
+        type(EventsModelsPair)::tempEventsModelsPair
         !---Body---
         call this%TheReadedEventsModels%Load_ReadedEventsModels(hEventModels)
 
-        !DO 
+        ReadedPairsNum = this%TheReadedEventsModels%TheEventsModelsPairList%GetListCount()
 
+        DO I = 1, ReadedPairsNum
+            tempEventsModelsPair = this%TheReadedEventsModels%TheEventsModelsPairList%GetValueByListIndex(I)
 
+            if(tempEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .eq. tempEventsModelsPair%ObjectEventsModelDef%GetEventModelCode()) then
+                if(tempEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .ne. tempEventsModelsPair%CrossEventsModelDef%GetEventModelCode()) then
+                    write(*,*) "MCPSCUERROR: It is impossible that the cross event is not same with subject and object events when subject and object events is same."
+                    write(*,*) "Subject: ",adjustl(trim(tempEventsModelsPair%SubjectEventsModelDef%GetEventModelSymbol)), tempEventsModelsPair%SubjectEventsModelDef%GetEventModelCode()
+                    write(*,*) "Object: ",adjustl(trim(tempEventsModelsPair%ObjectEventsModelDef%GetEventModelSymbol)), tempEventsModelsPair%ObjectEventsModelDef%GetEventModelCode()
+                    write(*,*) "Cross: ",adjustl(trim(tempEventsModelsPair%CrossEventsModelDef%GetEventModelSymbol)), tempEventsModelsPair%CrossEventsModelDef%GetEventModelCode()
+                    pause
+                    stop
+                end if
+
+                !this%TheSingleEventsList%
+            else
+
+            end if
+        END DO
 
         return
     end subroutine ConstructEventsManager
-
 
     !***************************************************
     subroutine CopyEventsManagerFromOther(this,other)
@@ -258,8 +193,8 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
         CLASS(CollectionEventsManager),intent(in)::other
         !---Body---
 
-        this%TheOriginEventList => other%TheOriginEventList
-        this%TheCrossList => other%TheCrossList
+        this%TheSingleEventsList = other%TheSingleEventsList
+        this%TheCrossCollectionEventsList = other%TheCrossCollectionEventsList
         !---The Assignment(=) had been overriaded---
         this%TheReadedEventsModels = other%TheReadedEventsModels
 
@@ -272,13 +207,9 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMODEL
         !---Dummy Vars---
         CLASS(CollectionEventsManager)::this
         !---Body---
-        call this%TheOriginEventList%CleanList()
-        Nullify(this%TheOriginEventList)
-        this%TheOriginEventList=>null()
+        call this%TheSingleEventsList%CleanList()
 
-        call this%TheCrossList%CleanList()
-        Nullify(this%TheCrossList)
-        this%TheCrossList=>null()
+        call this%TheCrossCollectionEventsList%CleanList()
 
         call this%TheReadedEventsModels%Clean()
 

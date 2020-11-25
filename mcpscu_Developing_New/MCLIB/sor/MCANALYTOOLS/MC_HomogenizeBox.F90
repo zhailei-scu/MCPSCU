@@ -16,7 +16,7 @@ module MC_HomogenizeBox
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMCMigCoalClusterRecord)::Record
         integer::hFileOut
         !---Local Vars---
         integer::MultiBox
@@ -66,7 +66,7 @@ program Main_MC_HomogenizeBox
     character*1000::ARG
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-    type(MigCoalClusterRecord)::Record
+    type(MCMigCoalClusterRecord)::Record
     character*1000::OutFolder
     character*1000::pathOut
     integer::hFileOut
@@ -107,7 +107,7 @@ program Main_MC_HomogenizeBox
     !*******Init the simulation boxes*****************
     call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-    call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+    call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
     call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,ConfigFile,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 

@@ -4,5 +4,8 @@
     "fortran-ls.enableCodeActions": true,
     "fortran-ls.displayVerWarning": false,
     "fortran-ls.hoverSignature": true,
-    "fortran-ls.lowercaseIntrinsics": true
+    "fortran-ls.lowercaseIntrinsics": true,
+    "explorer.sortOrder": "mixed",
+    "explorer.compactFolders": false,
+    "explorer.incrementalNaming": "smart"
 }

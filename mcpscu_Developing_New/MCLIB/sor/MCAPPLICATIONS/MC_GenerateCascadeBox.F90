@@ -2450,7 +2450,7 @@ module MC_GenerateCascadeBox
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
@@ -2545,7 +2545,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
@@ -2929,7 +2929,7 @@ module MC_GenerateCascadeBox
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
@@ -3008,7 +3008,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox .LE. 0) then
             write(*,*) "MCPSCUERROR: The box number less than 1"
@@ -3326,7 +3326,7 @@ module MC_GenerateCascadeBox
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
@@ -3408,7 +3408,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
@@ -3981,7 +3981,7 @@ module MC_GenerateCascadeBox
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
@@ -4059,7 +4059,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster + NVACCluster))
 

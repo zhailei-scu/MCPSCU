@@ -44,15 +44,15 @@ export operateSystem
 
 
 #Create the directory for the applications
-if [ ! -d $mcworkspace$Segment"APPLICATIONS" ];then
-     mkdir $mcworkspace$Segment"APPLICATIONS"
+if [ ! -d $mcworkspace$Segment"MCAPPLICATIONS" ];then
+     mkdir $mcworkspace$Segment"MCAPPLICATIONS"
 fi
 export tccinterlibnames="TCCLIB"
 export tcclibnames="tcc"
 export libnames="RunningProfile CudaRandomC2F MiniUtilities RandGenerators"
 export msmlibnames="MSMLIB"
 export modeldatabasenames="MODELDATABASE"
-export mclibnames="AppShell InletModel MigCoaleModel CommonGPU Common"
+export mclibnames="MCAppShell MCInletModel MCMigCoaleModel MCCommonGPU MCCommon Common"
 
 
 #other linking options
@@ -117,14 +117,14 @@ fi
 echo "with comipling option: "$oflags
 
 
-if [ ! -d $mcworkspace$Segment"APPLICATIONS"$Segment$ConfigName ];then
-   mkdir $mcworkspace$Segment"APPLICATIONS"$Segment$ConfigName
+if [ ! -d $mcworkspace$Segment"MCAPPLICATIONS"$Segment$ConfigName ];then
+   mkdir $mcworkspace$Segment"MCAPPLICATIONS"$Segment$ConfigName
 fi
 
 if [ "$operateSystem" = "CYGWIN" ];then
 
 	if [ -f $tccpath$Segment"libtcc.dll" ];then
-		cp $tccpath$Segment"libtcc.dll" $mcworkspace$Segment"APPLICATIONS"$Segment$ConfigName
+		cp $tccpath$Segment"libtcc.dll" $mcworkspace$Segment"MCAPPLICATIONS"$Segment$ConfigName
 	else
 		echo "MCPSCU make ERROR: You must install the tcc in windows, the way to install the tcc in windows is: "
 		echo "(1) Unzip the tcc package in cygwin."
@@ -139,4 +139,4 @@ if [ "$operateSystem" = "CYGWIN" ];then
 fi
 
 
-make $cleanFlag -f $mcpscusor$Segment"MCLIB"$Segment"APPLICATIONS"$Segment"Commom_makefile.mk"
+make $cleanFlag -f $mcpscusor$Segment"MCLIB"$Segment"MCAPPLICATIONS"$Segment"Commom_makefile.mk"

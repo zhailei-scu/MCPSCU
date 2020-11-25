@@ -44,15 +44,15 @@ export operateSystem
 
 
 #Create the directory for the apptools
-if [ ! -d $mcworkspace$Segment"ANALYTOOLS" ];then
-     mkdir $mcworkspace$Segment"ANALYTOOLS"
+if [ ! -d $mcworkspace$Segment"MCANALYTOOLS" ];then
+     mkdir $mcworkspace$Segment"MCANALYTOOLS"
 fi
 export tccinterlibnames="TCCLIB"
 export tcclibnames="tcc"
 export libnames="RunningProfile CudaRandomC2F MiniUtilities RandGenerators"
 export msmlibnames="MSMLIB"
 export modeldatabasenames="MODELDATABASE"
-export mclibnames="AppShell InletModel MigCoaleModel CommonGPU Common"
+export mclibnames="MCAppShell MCInletModel MCMigCoaleModel MCCommonGPU MCCommon Common"
 
 #other linking options
 #Note: the -Mcudalib=curand is necessray in cygwin, but unnecessary in linux
@@ -116,14 +116,14 @@ fi
 echo "with comipling option: "$oflags
 
 
-if [ ! -d $mcworkspace$Segment"ANALYTOOLS"$Segment$ConfigName ];then
-   mkdir $mcworkspace$Segment"ANALYTOOLS"$Segment$ConfigName
+if [ ! -d $mcworkspace$Segment"MCANALYTOOLS"$Segment$ConfigName ];then
+   mkdir $mcworkspace$Segment"MCANALYTOOLS"$Segment$ConfigName
 fi
 
 if [ "$operateSystem" = "CYGWIN" ];then
 
 	if [ -f $tccpath$Segment"libtcc.dll" ];then
-		cp $tccpath$Segment"libtcc.dll" $mcworkspace$Segment"ANALYTOOLS"$Segment$ConfigName
+		cp $tccpath$Segment"libtcc.dll" $mcworkspace$Segment"MCANALYTOOLS"$Segment$ConfigName
 	else
 		echo "MCPSCU make ERROR: You must install the tcc in windows, the way to install the tcc in windows is: "
 		echo "(1) Unzip the tcc package in cygwin."
@@ -137,5 +137,5 @@ if [ "$operateSystem" = "CYGWIN" ];then
 	fi
 fi
 
-make $cleanFlag -f $mcpscusor$Segment"MCLIB"$Segment"ANALYTOOLS"$Segment"Commom_makefile.mk"
+make $cleanFlag -f $mcpscusor$Segment"MCLIB"$Segment"MCANALYTOOLS"$Segment"Commom_makefile.mk"
 

@@ -1009,7 +1009,7 @@ program Main_StatisticClusters_Offline
     character*1000::SampleFile
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-    type(MigCoalClusterRecord)::Record
+    type(MCMigCoalClusterRecord)::Record
     character*1000::pathIn
     character*1000::OutFolder
     character*1000::pathOut
@@ -1114,7 +1114,7 @@ program Main_StatisticClusters_Offline
                 !*******Init the simulation boxes*****************
                 call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-                call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+                call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
                 call Host_Boxes%PutinCfg(Host_SimuCtrlParamList%theSimulationCtrlParam,Record,pathIn,m_FREESURDIFPRE,m_GBSURDIFPRE,TheVersion,AsInitial=.true.)
 

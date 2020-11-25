@@ -1,9 +1,9 @@
-module MIGCOALE_TYPEDEF_SIMRECORD
+module MCMIGCOALE_TYPEDEF_SIMRECORD
     use MCLIB_TYPEDEF_BASICRECORD
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
 
-    type,public,extends(SimulationRecord)::MigCoalClusterRecord
+    type,public,extends(SimulationRecord)::MCMigCoalClusterRecord
         real(kind=KINDDF),private::StartImplantTime = 0.D0
         integer,private::ImplantedEntities = 0
         integer,private::LastRecordImplantNum = 0
@@ -41,7 +41,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         integer,public::RandSeed_SizeDist_Implant(2) = 0
 
         contains
-        procedure,NON_OVERRIDABLE,public,pass::InitMigCoalClusterRecord
+        procedure,NON_OVERRIDABLE,public,pass::InitMCMigCoalClusterRecord
         procedure,non_overridable,public,pass::SetStartImplantTime=>Set_StartImplantTime
         procedure,non_overridable,public,pass::GetStartImplantTime=>Get_StartImplantTime
         procedure,non_overridable,public,pass::GetLastUpdateAveSepTime=>Get_LastUpdateAveSepTime
@@ -74,15 +74,15 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         procedure,NON_OVERRIDABLE,public,pass::GetLastOutSizeDistTime_EachBox
         procedure,non_overridable,public,pass::WhetherOutSizeDist_IntegralBox
         procedure,non_overridable,public,pass::WhetherOutSizeDist_EachBox
-        procedure,non_overridable,pass,private::CopyMigCoalClusterRecordFromOther
-        Generic::Assignment(=)=>CopyMigCoalClusterRecordFromOther
-        procedure,non_overridable,pass,private::Clean_MigCoalClusterRecord
+        procedure,non_overridable,pass,private::CopyMCMigCoalClusterRecordFromOther
+        Generic::Assignment(=)=>CopyMCMigCoalClusterRecordFromOther
+        procedure,non_overridable,pass,private::Clean_MCMigCoalClusterRecord
         !---Based on our test, the final procedure cannot be applied in type who extended from other abstract one
-        Final::CleanMigCoalClusterRecord
+        Final::CleanMCMigCoalClusterRecord
 
-    end type MigCoalClusterRecord
+    end type MCMigCoalClusterRecord
 
-    private::InitMigCoalClusterRecord
+    private::InitMCMigCoalClusterRecord
     private::Set_StartImplantTime
     private::Get_StartImplantTime
     private::Set_LastUpdateAveSepTime
@@ -114,9 +114,9 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     private::GetLastOutSizeDistTime_EachBox
     private::WhetherOutSizeDist_IntegralBox
     private::WhetherOutSizeDist_EachBox
-    private::CopyMigCoalClusterRecordFromOther
-    private::Clean_MigCoalClusterRecord
-    private::CleanMigCoalClusterRecord
+    private::CopyMCMigCoalClusterRecordFromOther
+    private::Clean_MCMigCoalClusterRecord
+    private::CleanMCMigCoalClusterRecord
 
     contains
 
@@ -131,7 +131,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         character*32::KEYWORD
         character*32::STRTMP(20)
         integer::N
-        type(MigCoalClusterRecord),pointer::fp_Record=>null()
+        type(MCMigCoalClusterRecord),pointer::fp_Record=>null()
         type(c_ptr)::cp_Record
         !---Body---
 
@@ -474,11 +474,11 @@ module MIGCOALE_TYPEDEF_SIMRECORD
             stop
     end subroutine UDefReadWriteRecord_BatchNum
 
-    !***********type MigCoalClusterRecord *****************
-    subroutine InitMigCoalClusterRecord(this,MultiBox,SimuSteps,SimuTimes,SimuPatchs,TimeSection)
+    !***********type MCMigCoalClusterRecord *****************
+    subroutine InitMCMigCoalClusterRecord(this,MultiBox,SimuSteps,SimuTimes,SimuPatchs,TimeSection)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         integer,intent(in)::MultiBox
         integer,optional::SimuSteps
         real(kind=KINDDF),optional::SimuTimes
@@ -492,7 +492,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         type(UDefReadWriteRecordList)::tempUDefReadWriteRecordList
         !---Body-- -
 
-        call this%Clean_MigCoalClusterRecord()
+        call this%Clean_MCMigCoalClusterRecord()
 
         Steps = 0
         Times = 0.D0
@@ -556,12 +556,12 @@ module MIGCOALE_TYPEDEF_SIMRECORD
         call this%GetUDefReadWriteRecord_List()%AppendOne(tempUDefReadWriteRecordList)
 
         return
-    end subroutine InitMigCoalClusterRecord
+    end subroutine InitMCMigCoalClusterRecord
 
     subroutine Set_StartImplantTime(this,TheTime)
         implicit none
         !---Dummy Vars---
-        CLass(MigCoalClusterRecord)::this
+        CLass(MCMigCoalClusterRecord)::this
         real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%StartImplantTime = TheTime
@@ -571,7 +571,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     function Get_StartImplantTime(this) result(TheTime)
         implicit none
         !---Dummy Vars---
-        CLass(MigCoalClusterRecord)::this
+        CLass(MCMigCoalClusterRecord)::this
         real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%StartImplantTime
@@ -581,7 +581,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     subroutine Add_ImplantedEntitiesNum(this,AddNum)
         implicit none
         !---Dummy Vars---
-        CLass(MigCoalClusterRecord)::this
+        CLass(MCMigCoalClusterRecord)::this
         integer, intent(in)::AddNum
         !---Body---
         if(AddNum .LT. 0) then
@@ -598,7 +598,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     integer function Get_ImplantedEntitiesNum(this)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
 
         Get_ImplantedEntitiesNum = this%ImplantedEntities
         return
@@ -607,7 +607,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     subroutine Set_ImplantedEntitiesNum(this,TheNum)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         integer,intent(in)::TheNum
         !---Body---
         this%ImplantedEntities = TheNum
@@ -618,7 +618,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     integer function Get_LastRecordImplantNum(this)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
 
         Get_LastRecordImplantNum = this%LastRecordImplantNum
         return
@@ -627,7 +627,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     subroutine Set_LastRecordImplantNum(this,TheNum)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         integer,intent(in)::TheNum
         !---Body---
         this%LastRecordImplantNum = TheNum
@@ -638,7 +638,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     integer function Get_NCUT(this)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
 
         Get_NCUT = this%NCUT
         return
@@ -647,7 +647,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     subroutine Set_NCUT(this,TheNCUT)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         integer,intent(in)::TheNCUT
         !---Body---
         this%NCUT = TheNCUT
@@ -658,7 +658,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     subroutine SetLastOutSizeDistTime_IntegralBox(this,TheTime)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%LastOutSizeDistTime_IntegralBox = TheTime
@@ -669,7 +669,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     function GetLastOutSizeDistTime_IntegralBox(this) result(TheTime)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%LastOutSizeDistTime_IntegralBox
@@ -680,7 +680,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     subroutine SetLastOutSizeDistTime_EachBox(this,TheTime)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%LastOutSizeDistTime_EachBox = TheTime
@@ -691,7 +691,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     function GetLastOutSizeDistTime_EachBox(this) result(TheTime)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%LastOutSizeDistTime_EachBox
@@ -703,7 +703,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     function WhetherOutSizeDist_IntegralBox(this,Host_SimuCtrlParam) result(TheResult)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         logical,intent(inout)::TheResult
         !---Body---
@@ -733,7 +733,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     function WhetherOutSizeDist_EachBox(this,Host_SimuCtrlParam) result(TheResult)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoalClusterRecord)::this
+        CLASS(MCMigCoalClusterRecord)::this
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         logical,intent(inout)::TheResult
         !---Body---
@@ -759,10 +759,10 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     end function WhetherOutSizeDist_EachBox
 
     !**************************************************************
-    subroutine Clean_MigCoalClusterRecord(this)
+    subroutine Clean_MCMigCoalClusterRecord(this)
         implicit none
         !---Dummy Vars---
-        CLass(MigCoalClusterRecord)::this
+        CLass(MCMigCoalClusterRecord)::this
         !---Body---
         call this%SimulationRecord%TheDefCleanProc()
 
@@ -806,14 +806,14 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     end subroutine
 
     !**************************************************************
-    subroutine CopyMigCoalClusterRecordFromOther(this,Other)
+    subroutine CopyMCMigCoalClusterRecordFromOther(this,Other)
         implicit none
         !---Dummy Vars---
-        CLass(MigCoalClusterRecord),intent(out)::this
-        type(MigCoalClusterRecord),intent(in)::Other
+        CLass(MCMigCoalClusterRecord),intent(out)::this
+        type(MCMigCoalClusterRecord),intent(in)::Other
         !---Body---
 
-        call this%Clean_MigCoalClusterRecord()
+        call this%Clean_MCMigCoalClusterRecord()
         !---The Assignment(=) had been override
         this%SimulationRecord = Other%SimulationRecord
 
@@ -856,19 +856,19 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     end subroutine
 
     !**************************************************************
-    subroutine CleanMigCoalClusterRecord(this)
+    subroutine CleanMCMigCoalClusterRecord(this)
         implicit none
         !---Dummy Vars---
-        type(MigCoalClusterRecord)::this
+        type(MCMigCoalClusterRecord)::this
 
-        call this%Clean_MigCoalClusterRecord()
+        call this%Clean_MCMigCoalClusterRecord()
         return
     end subroutine
 
     !**************************************************************
     subroutine Increase_OneRescaleCount(this)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
 
         this%rescaleCount = this%rescaleCount + 1
         return
@@ -877,7 +877,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !**************************************************************
     function Get_RescaleCount(this) result(rescaleCount)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         integer::rescaleCount
 
         rescaleCount = this%rescaleCount
@@ -887,7 +887,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !**************************************************************
     subroutine Set_RescaleCount(this,theCount)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         integer,intent(in)::theCount
 
         this%rescaleCount = theCount
@@ -897,7 +897,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !**************************************************************
     subroutine Increase_OneSweepOutCount(this)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
 
         this%SweepOutCount = this%SweepOutCount + 1
         return
@@ -907,7 +907,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !*************************************************************
     subroutine SetTrue_InsertOneBatchInNextStep(this)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
 
         this%InsertOneBatchInNextStep = .true.
     end subroutine
@@ -915,7 +915,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !*************************************************************
     subroutine SetFalse_InsertOneBatchInNextStep(this)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
 
         this%InsertOneBatchInNextStep = .false.
     end subroutine
@@ -923,7 +923,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !*************************************************************
     function GetStatu_InsertOneBatchInNextStep(this) result(TheResult)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         logical::TheResult
 
 
@@ -934,7 +934,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !*************************************************************
     subroutine InCrease_OneInsertBatchNum(this)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
 
         this%InsetedBatchNum = this%InsetedBatchNum + 1
         return
@@ -943,7 +943,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !*************************************************************
     function Get_InsertBatchNum(this) result(TheResult)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         integer::TheResult
 
         TheResult = this%InsetedBatchNum
@@ -953,7 +953,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !*************************************************************
     subroutine Set_LastSweepOutTime(this,TheTime)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         real(kind=KINDDF)::TheTime
 
         this%LastSweepOutTime = TheTime
@@ -962,7 +962,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !**************************************************************
     function Get_LastSweepOutTime(this) result(TheTime)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         real(kind=KINDDF)::TheTime
 
         TheTime = this%LastSweepOutTime
@@ -972,7 +972,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !*************************************************************
     subroutine Set_InsertBatchNum(this,TheBatchNum)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         integer::TheBatchNum
 
         this%InsetedBatchNum = TheBatchNum
@@ -981,7 +981,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !**************************************************************
     function Get_SweepOutCount(this) result(SweepOutCount)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         integer::SweepOutCount
 
         SweepOutCount = this%SweepOutCount
@@ -991,7 +991,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     !**************************************************************
     subroutine Set_SweepOutCount(this,theCount)
         implicit none
-        Class(MigCoalClusterRecord)::this
+        Class(MCMigCoalClusterRecord)::this
         integer,intent(in)::theCount
 
         this%SweepOutCount = theCount
@@ -1001,7 +1001,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     subroutine Set_LastUpdateAveSepTime(this,TheTime)
         implicit none
         !---Dummy Vars---
-        CLass(MigCoalClusterRecord)::this
+        CLass(MCMigCoalClusterRecord)::this
         real(kind=KINDDF),intent(in)::TheTime
         !---Body---
         this%LastUpdateAveSepTime = TheTime
@@ -1011,7 +1011,7 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     function Get_LastUpdateAveSepTime(this) result(TheTime)
         implicit none
         !---Dummy Vars---
-        CLass(MigCoalClusterRecord)::this
+        CLass(MCMigCoalClusterRecord)::this
         real(kind=KINDDF),intent(out)::TheTime
         !---Body---
         TheTime = this%LastUpdateAveSepTime

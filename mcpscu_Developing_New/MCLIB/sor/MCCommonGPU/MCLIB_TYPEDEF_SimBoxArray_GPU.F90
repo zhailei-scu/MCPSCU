@@ -548,8 +548,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
         !   The array size maybe a little bigger than used size
         !   The main purpose to let what happen is that we do not want to allocate a suitable memory size
         !   for used situation in each step, because for implant, the used size is keeping changing and we should not adjustment below
-        !   memory each step, so we use the virtual or expd size, which mean, while GetBoxesMigCoaleStat_Expd_GPU or
-        !   GetBoxesMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
+        !   memory each step, so we use the virtual or expd size, which mean, while GetBoxesMCMigCoaleStat_Expd_GPU or
+        !   GetBoxesMCMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
         !   for next N steps and need not to adjustment memory size.
         NBAllocate = max(NB,NBExpd,NBVirtual)
 
@@ -772,8 +772,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
 !        !   The array size maybe a little bigger than used size
 !        !   The main purpose to let what happen is that we do not want to allocate a suitable memory size
 !        !   for used situation in each step, because for implant, the used size is keeping changing and we should not adjustment below
-!        !   memory each step, so we use the virtual or expd size, which mean, while GetBoxesMigCoaleStat_Expd_GPU or
-!        !   GetBoxesMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
+!        !   memory each step, so we use the virtual or expd size, which mean, while GetBoxesMCMigCoaleStat_Expd_GPU or
+!        !   GetBoxesMCMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
 !        !   for next N steps and need not to adjustment memory size.
 !        NBAllocate = max(NB,NBExpd,NBVirtual)
 !

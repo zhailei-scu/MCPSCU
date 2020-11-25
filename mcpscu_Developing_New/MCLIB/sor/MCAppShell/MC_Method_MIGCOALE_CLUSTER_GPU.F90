@@ -6,13 +6,13 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     use RAND32_MODULE
     use RAND32SEEDLIB_MODULE
     use MCLIB_CAL_NEIGHBOR_LIST_GPU
-    use MIGCOALE_EVOLUTION_GPU
-    use MIGCOALE_TIMECTL
+    use MCMIGCOALE_EVOLUTION_GPU
+    use MCMIGCOALE_TIMECTL
     use MCLIB_GLOBAL_GPU
-    use MIGCOALE_STATISTIC_GPU
-    use MIGCOALE_STATISTIC_CPU
-    use MIGCOALE_TYPEDEF_SIMRECORD
-    use INLET_TYPEDEF_IMPLANTLIST
+    use MCMIGCOALE_STATISTIC_GPU
+    use MCMIGCOALE_STATISTIC_CPU
+    use MCMIGCOALE_TYPEDEF_SIMRECORD
+    use MCINLET_TYPEDEF_IMPLANTLIST
     implicit none
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
@@ -74,9 +74,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
     type(InitBoxSimCfgList),target::m_InitBoxSimCfgList
     type(ImplantList)::m_ImplantList
-    type(MigCoalClusterRecord)::m_MigCoalClusterRecord
-    type(MigCoaleStatInfoWrap),private::m_MigCoaleStatInfoWrap
-    type(MigCoale_GVarsDev),private::m_MigCoale_GVarsDev
+    type(MCMigCoalClusterRecord)::m_MCMigCoalClusterRecord
+    type(MCMigCoaleStatInfoWrap),private::m_MCMigCoaleStatInfoWrap
+    type(MCMigCoale_GVarsDev),private::m_MCMigCoale_GVarsDev
 
     private::CopyInitBoxSimCfgFromOther
     private::Clean_InitBoxSimCfg
@@ -102,7 +102,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         type(SimulationCtrlParamList),pointer::cursor=>null()
         type(ImplantSection),pointer::PImplantSection=>null()
         type(InitBoxSimCfg)::tempInitBoxSimCfg
-        type(MigCoalClusterRecord)::tempMigCoalClusterRecord
+        type(MCMigCoalClusterRecord)::tempMCMigCoalClusterRecord
         integer::ITEST
         integer::TestLoop0,TestLoop1
         integer::I
@@ -111,7 +111,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::ISEED(2)
         logical::exitflag
         !---Body---
-        call tempMigCoalClusterRecord%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call tempMCMigCoalClusterRecord%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%RESTARTAT .GT. 0) then
             call m_InitBoxSimCfgList%Clean_InitBoxSimCfgList()
@@ -120,13 +120,13 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             tempInitBoxSimCfg%InitCfgFileName = Host_SimuCtrlParamList%theSimulationCtrlParam%RestartCfg
             call m_InitBoxSimCfgList%AppendOne_InintSimBoxCfg(tempInitBoxSimCfg)
         else
-            call ReadInitBoxSimCfgList(Host_SimBoxes,Host_SimuCtrlParamList%theSimulationCtrlParam,m_InitBoxSimCfgList,tempMigCoalClusterRecord)
+            call ReadInitBoxSimCfgList(Host_SimBoxes,Host_SimuCtrlParamList%theSimulationCtrlParam,m_InitBoxSimCfgList,tempMCMigCoalClusterRecord)
         end if
 
-        call ReadInitBoxSimRecord(Host_SimBoxes,m_InitBoxSimCfgList,tempMigCoalClusterRecord)
+        call ReadInitBoxSimRecord(Host_SimBoxes,m_InitBoxSimCfgList,tempMCMigCoalClusterRecord)
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%RESTARTAT .GT. 0 .or. &
-          tempMigCoalClusterRecord%GetSimuSteps() .GT. 0) then
+          tempMCMigCoalClusterRecord%GetSimuSteps() .GT. 0) then
             !---For restart, we should use the random number in the sequence before last running---
             !---However, it too hard to realize, currently, we should at least that the random number in---
             !---the restart job is not same with last running, so, it is necessary to change the random seed again---
@@ -134,10 +134,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             DO While(.true.)
                 exitflag = .true.
 
-                ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1) + tempMigCoalClusterRecord%GetSimuSteps() + DRAND32()*RAND32SEEDLIB_SIZE
+                ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1) + tempMCMigCoalClusterRecord%GetSimuSteps() + DRAND32()*RAND32SEEDLIB_SIZE
 
                 call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
-                ISEED0 = ISEED0 + JobIndex + tempMigCoalClusterRecord%GetTimeSections() - 1
+                ISEED0 = ISEED0 + JobIndex + tempMCMigCoalClusterRecord%GetTimeSections() - 1
                 call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
 
                 DO I = 1,size(ISEED)
@@ -155,48 +155,48 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         end if
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%INDEPBOX) then
-            if(JobIndex .LT. tempMigCoalClusterRecord%GetSimuPatch()) then
+            if(JobIndex .LT. tempMCMigCoalClusterRecord%GetSimuPatch()) then
                 return
             end if
 
             TestLoop0 = 1
             TestLoop1 = 1
         else
-            TestLoop0 = tempMigCoalClusterRecord%GetSimuPatch()
+            TestLoop0 = tempMCMigCoalClusterRecord%GetSimuPatch()
             TestLoop1 = Host_SimuCtrlParamList%theSimulationCtrlParam%TOTALBOX/Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
         end if
 
         DO ITEST = TestLoop0,TestLoop1
 
             !---The Assignment had been override----
-            m_MigCoalClusterRecord = tempMigCoalClusterRecord
+            m_MCMigCoalClusterRecord = tempMCMigCoalClusterRecord
 
-            cursor=>Host_SimuCtrlParamList%Get_P(m_MigCoalClusterRecord%GetTimeSections())
+            cursor=>Host_SimuCtrlParamList%Get_P(m_MCMigCoalClusterRecord%GetTimeSections())
 
             if(Host_SimuCtrlParamList%theSimulationCtrlParam%INDEPBOX) then
-                call m_MigCoalClusterRecord%SetSimuPatch(JobIndex)
+                call m_MCMigCoalClusterRecord%SetSimuPatch(JobIndex)
             else
-                call m_MigCoalClusterRecord%SetSimuPatch(ITEST)
+                call m_MCMigCoalClusterRecord%SetSimuPatch(ITEST)
             end if
 
             if(ITEST .eq. 1) then
 
-                call m_MigCoaleStatInfoWrap%Init(cursor%theSimulationCtrlParam%MultiBox)
+                call m_MCMigCoaleStatInfoWrap%Init(cursor%theSimulationCtrlParam%MultiBox)
 
                 call resolveAddOnData(Host_SimBoxes,cursor%theSimulationCtrlParam)
                 call resolveModelRelativeData(cursor%theSimulationCtrlParam%ModelData,Host_SimBoxes%Atoms_list)
-                call InitSimulationBoxesConfig(Host_SimBoxes,cursor%theSimulationCtrlParam,m_InitBoxSimCfgList,m_MigCoaleStatInfoWrap,m_MigCoalClusterRecord)
+                call InitSimulationBoxesConfig(Host_SimBoxes,cursor%theSimulationCtrlParam,m_InitBoxSimCfgList,m_MCMigCoaleStatInfoWrap,m_MCMigCoalClusterRecord)
 
                 call Initital_Global_Variables_GPU(Host_SimBoxes, cursor%theSimulationCtrlParam,Dev_Boxes)
 
-                call m_MigCoale_GVarsDev%Init(Host_SimBoxes, cursor%theSimulationCtrlParam,m_MigCoalClusterRecord)
+                call m_MCMigCoale_GVarsDev%Init(Host_SimBoxes, cursor%theSimulationCtrlParam,m_MCMigCoalClusterRecord)
             end if
 
             DO While(.true.)
 
-                write(*,*) "Start to evolution for time section ",m_MigCoalClusterRecord%GetTimeSections()
+                write(*,*) "Start to evolution for time section ",m_MCMigCoalClusterRecord%GetTimeSections()
 
-                call m_MigCoalClusterRecord%SetStartImplantTime(m_MigCoalClusterRecord%GetSimuTimes())
+                call m_MCMigCoalClusterRecord%SetStartImplantTime(m_MCMigCoalClusterRecord%GetSimuTimes())
 
                 call copyInPhyParamsConstant(cursor%theSimulationCtrlParam)
 
@@ -210,9 +210,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call m_ImplantList%Init(Host_SimBoxes,cursor%theSimulationCtrlParam)
 
-                call For_One_TimeSect(Host_SimBoxes,cursor%theSimulationCtrlParam,Dev_Boxes,m_MigCoale_GVarsDev,m_ImplantList,m_MigCoaleStatInfoWrap,m_MigCoalClusterRecord)
+                call For_One_TimeSect(Host_SimBoxes,cursor%theSimulationCtrlParam,Dev_Boxes,m_MCMigCoale_GVarsDev,m_ImplantList,m_MCMigCoaleStatInfoWrap,m_MCMigCoalClusterRecord)
 
-                call m_MigCoalClusterRecord%SetLastRecordImplantNum(m_MigCoalClusterRecord%GetImplantedEntitiesNum())
+                call m_MCMigCoalClusterRecord%SetLastRecordImplantNum(m_MCMigCoalClusterRecord%GetImplantedEntitiesNum())
 
                 cursor=>cursor%next
 
@@ -220,7 +220,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     exit
                 end if
 
-                call m_MigCoalClusterRecord%IncreaseOneTimeSection()
+                call m_MCMigCoalClusterRecord%IncreaseOneTimeSection()
 
             END DO
 
@@ -231,16 +231,16 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine For_One_Test
 
     !****************************************************************
-    subroutine For_One_TimeSect(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record)
+    subroutine For_One_TimeSect(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
         type(ImplantList)::ImplantSectionList
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         !---Local Vars---
         integer::TotalSize
         integer:: NCUT, DUP, DUPXYZ(3)
@@ -279,24 +279,24 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     TotalSize = 0
                 end if
 
-                call GetBoxesMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+                call GetBoxesMCMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
                 if(Record%GetSimuSteps() .eq. 0) then
-                    call TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%ConverFromUsed(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
-                    call TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual%ConverFromUsed(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
+                    call TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%ConverFromUsed(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used)
+                    call TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Virtual%ConverFromUsed(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used)
                 else
-                    call GetBoxesMigCoaleStat_Expd_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
-                    call GetBoxesMigCoaleStat_Virtual_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record)
+                    call GetBoxesMCMigCoaleStat_Expd_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record)
+                    call GetBoxesMCMigCoaleStat_Virtual_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Virtual,Record)
                 end if
 
-                call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TotalSize, NCUT)
+                call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record,TotalSize, NCUT)
 
                 call Record%IncreaseOneRescaleCount()
                 call Host_SimBoxes%PutoutCfg(Host_SimuCtrlParam,Record,RescaleCount=Record%GetRescaleCount())
 
-                call GetBoxesMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+                call GetBoxesMCMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
-                call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record,Model=0)
-                call PutOut_Instance_Statistic_EachBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+                call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record,Model=0)
+                call PutOut_Instance_Statistic_EachBox(Host_SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
                 if(Record%GetSimuTimes() .gt. Host_SimuCtrlParam%TermTValue) then
                     exit
@@ -315,24 +315,24 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     TotalSize = 0
                 end if
 
-                if(TotalSize*3 .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_RandArray_Walk)) then
-                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(TotalSize)
+                if(TotalSize*3 .GT. size(Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%dm_RandArray_Walk)) then
+                    call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeWalkRandNum(TotalSize)
                 end if
 
-                if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_DevRandRecord)) then
+                if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%dm_DevRandRecord)) then
                     if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-                        call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                        call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
                         ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
                     else
-                        call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                        call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
                         ! 3 is for three random boundary condition for 1-D diffusion ,2 is for the random 1-D direction for new generated cluster in pre and back merge
                     end if
 
 
                 end if
 
-                if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_RandArray_Reaction)) then
-                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeReactionRandNum(TotalSize)
+                if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%dm_RandArray_Reaction)) then
+                    call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeReactionRandNum(TotalSize)
                 end if
 
                 NCUT = (Host_SimBoxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEFREE_STATU) + Host_SimBoxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(p_ACTIVEINGB_STATU))/DUP+1
@@ -341,10 +341,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 write(*,fmt="(A20,I10,A20)") "Rescale for ",Record%GetRescaleCount()," times ."
 
-                call GetBoxesMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+                call GetBoxesMCMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
-                call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record,Model=0)
-                call PutOut_Instance_Statistic_EachBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+                call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record,Model=0)
+                call PutOut_Instance_Statistic_EachBox(Host_SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
             END DO
         else
@@ -355,38 +355,38 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 TotalSize = 0
             end if
 
-            call GetBoxesMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+            call GetBoxesMCMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
             if(Record%GetSimuSteps() .eq. 0) then
-                call TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%ConverFromUsed(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
-                call TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual%ConverFromUsed(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
+                call TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%ConverFromUsed(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used)
+                call TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Virtual%ConverFromUsed(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used)
             else
-                call GetBoxesMigCoaleStat_Expd_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
-                call GetBoxesMigCoaleStat_Virtual_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record)
+                call GetBoxesMCMigCoaleStat_Expd_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record)
+                call GetBoxesMCMigCoaleStat_Virtual_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Virtual,Record)
             end if
 
-            call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TotalSize)
+            call Growth_FixBox(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record,TotalSize)
 
         end if
 
-        call GetBoxesMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+        call GetBoxesMCMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
-        call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record,Model=1)
+        call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record,Model=1)
 
         return
     end subroutine For_One_TimeSect
 
     !*****************************************************
-    subroutine Growth_FixBox(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap, Record, NC0, NCUT)
+    subroutine Growth_FixBox(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap, Record, NC0, NCUT)
         ! To start growth
         implicit none
         !---Dummy vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
         type(ImplantList)::ImplantSectionList
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         integer, intent(in)::NC0
         integer, optional::NCUT
         !---local vars---
@@ -402,19 +402,19 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
               TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral)
 
             call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                       max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                           TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
-                                           MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
-                                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+                                       max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                           TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                           MaxDiffuse=max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                          TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
             DO WHILE(.TRUE.)
 
 
-                call For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TSTEP)
+                call For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record,TSTEP)
 
                 if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
                     if ((Record%GetSimuSteps() - Record%GetLastUpdateStatisTime()) .GE. Host_SimuCtrlParam%TUpdateStatisValue) then
-                        call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
+                        call GetBoxesMCMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record)
 
                         call Record%SetLastUpdateStatisTime(dble(Record%GetSimuSteps()))
 
@@ -423,23 +423,23 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 else if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalRealTime) then
                     if((Record%GetSimuTimes() - Record%GetLastUpdateStatisTime()) .GE. Host_SimuCtrlParam%TUpdateStatisValue) then
 
-                        call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
+                        call GetBoxesMCMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record)
 
                         call Record%SetLastUpdateStatisTime(Record%GetSimuTimes())
                     end if
                 end if
 
-                call OutPutCurrent(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+                call OutPutCurrent(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
-                call SweepOutMemory(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record)
+                call SweepOutMemory(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap,Record)
 
                 NAct = TBasicInfo%NC(p_ACTIVEFREE_STATU)+TBasicInfo%NC(p_ACTIVEINGB_STATU)
 
                 call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.false.,RMAX= &
-                                           max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                           TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
-                                           MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
-                                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+                                           max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                           TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                           MaxDiffuse=max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                          TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
 
                 !Check if need to duplicate the box
@@ -461,28 +461,28 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine Growth_FixBox
 
     !*********************************************************************
-    subroutine For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TSTEP)
+    subroutine For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record,TSTEP)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
         type(ImplantList),target::ImplantSectionList
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         !---Local Vars---
         type(ImplantList),pointer::curosr=>null()
         integer::I
         !---Body---
 
-        call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
+        call UpdateTimeStep_MCMigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record,TSTEP)
 
         curosr=>ImplantSectionList
         DO I = 1,ImplantSectionList%ListCount
             if(curosr%TheImplantSection%InsertCountOneBatch .GT. 0.D0) then
-                call curosr%TheImplantSection%Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,m_FREESURDIFPRE,m_GBSURDIFPRE)
+                call curosr%TheImplantSection%Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMCMigCoaleStatInfoWrap,Record,TSTEP,m_FREESURDIFPRE,m_GBSURDIFPRE)
             end if
 
             curosr=>curosr%next
@@ -711,14 +711,14 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine CleanInitBoxSimCfgList
 
     !*****************************************************************
-    subroutine InitSimulationBoxesConfig(SimBoxes,Host_SimuCtrlParam,InitBoxCfgList,TheMigCoaleStatInfoWrap,Record)
+    subroutine InitSimulationBoxesConfig(SimBoxes,Host_SimuCtrlParam,InitBoxCfgList,TheMCMigCoaleStatInfoWrap,Record)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(InitBoxSimCfgList)::InitBoxCfgList
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         !---Local Vars---
         character*1000::path
         character*18,dimension(:),allocatable::CRMin
@@ -731,9 +731,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call DOInitSimulationBoxesConfig(SimBoxes,Host_SimuCtrlParam,Record,InitBoxCfgList)
 
-        call GetBoxesMigCoaleStat_Used_CPU(SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
+        call GetBoxesMCMigCoaleStat_Used_CPU(SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used)
 
-        call GetBoxesMigCoaleStat_Expd_CPU(SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd)
+        call GetBoxesMCMigCoaleStat_Expd_CPU(SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd)
 
         !---The final one is used for the total boxes
         allocate(CRMin(p_NUMBER_OF_STATU))
@@ -819,8 +819,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call SimBoxes%PutoutCfg(Host_SimuCtrlParam,Record)
 
-        call PutOut_Instance_Statistic_IntegralBox(SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record,Model=0)
-        call PutOut_Instance_Statistic_EachBox(SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+        call PutOut_Instance_Statistic_IntegralBox(SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record,Model=0)
+        call PutOut_Instance_Statistic_EachBox(SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
         return
     end subroutine InitSimulationBoxesConfig
@@ -1454,7 +1454,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Dummy Vars---
         type(SimulationBoxes)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         type(InitBoxSimCfgList),target::InitBoxCfgList
         !---Local Vars---
         integer::MultiBox
@@ -1525,7 +1525,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Dummy Vars---
         type(SimulationBoxes)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         type(InitBoxSimCfg)::InitBoxCfg
         character*30::TheVersion
         !---Body---
@@ -1923,14 +1923,14 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
    end subroutine Init_Depth_Dis_Gauss
 
     !*****************************************************************
-    subroutine OutPutCurrent(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record)
+    subroutine OutPutCurrent(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo,Record)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationBoxes_GPU)::Dev_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoaleStatisticInfo_Used)::TheMigCoaleStatisticInfo
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatisticInfo_Used)::TheMCMigCoaleStatisticInfo
+        type(MCMigCoalClusterRecord)::Record
         !---Local Vars---
         logical::OutIntegralBoxStatistic
         logical::OutEachBoxStatistic
@@ -1952,10 +1952,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
 
         if(OutIntegralBoxStatistic .eq. .true. .or. OutEachBoxStatistic .eq. .true. .or. Record%GetStatusTriggerFocusedTimePoints() .eq. .true.) then
-            call GetBoxesMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record)
+            call GetBoxesMCMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo,Record)
 
             if(OutIntegralBoxStatistic .eq. .true.) then
-                call PutOut_Instance_Statistic_IntegralBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record,Model=0)
+                call PutOut_Instance_Statistic_IntegralBox(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo,Record,Model=0)
 
                 if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalSteps) then
                     call Record%SetLastOutSizeDistTime_IntegralBox(dble(Record%GetSimuSteps()))
@@ -1967,7 +1967,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             end if
 
             if(OutEachBoxStatistic .eq. .true.) then
-                call PutOut_Instance_Statistic_EachBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record)
+                call PutOut_Instance_Statistic_EachBox(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo,Record)
 
                 if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalSteps) then
                     call Record%SetLastOutSizeDistTime_EachBox(dble(Record%GetSimuSteps()))
@@ -1979,8 +1979,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             end if
 
             if(Record%GetStatusTriggerFocusedTimePoints() .eq. .true.) then
-                call PutOut_Instance_Statistic_IntegralBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record,Model=0)
-                call PutOut_Instance_Statistic_EachBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record)
+                call PutOut_Instance_Statistic_IntegralBox(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo,Record,Model=0)
+                call PutOut_Instance_Statistic_EachBox(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo,Record)
             end if
 
         end if
@@ -2028,12 +2028,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine
 
     !*****************************************************************
-    subroutine PutOut_Instance_Statistic_IntegralBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record,Model)
+    subroutine PutOut_Instance_Statistic_IntegralBox(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo,Record,Model)
         implicit none
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoaleStatisticInfo_Used)::TheMigCoaleStatisticInfo
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatisticInfo_Used)::TheMCMigCoaleStatisticInfo
+        type(MCMigCoalClusterRecord)::Record
         integer,intent(in)::Model                           ! 1 would output ot file
         !---Local Vars---
         integer::MultiBox
@@ -2045,7 +2045,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
-        ASSOCIATE(TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral,TMigStatInfo=>TheMigCoaleStatisticInfo%statistic_IntegralBox)
+        ASSOCIATE(TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral,TMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_IntegralBox)
 
             if(Model .eq. 0) then
 
@@ -2148,12 +2148,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine PutOut_Instance_Statistic_IntegralBox
 
     !*****************************************************************
-    subroutine PutOut_Instance_Statistic_EachBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record)
+    subroutine PutOut_Instance_Statistic_EachBox(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo,Record)
         implicit none
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoaleStatisticInfo_Used)::TheMigCoaleStatisticInfo
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatisticInfo_Used)::TheMCMigCoaleStatisticInfo
+        type(MCMigCoalClusterRecord)::Record
         !---Local Vars---
         integer::IBox
         integer::MultiBox
@@ -2167,7 +2167,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         DO IBox = 1,MultiBox
 
-            ASSOCIATE(SBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox),SMigStatInfo=>TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox))
+            ASSOCIATE(SBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox),SMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox))
 
                 NCAct = SBasicInfo%NC(p_ACTIVEFREE_STATU) + SBasicInfo%NC(p_ACTIVEINGB_STATU)
 
@@ -2209,14 +2209,14 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     end subroutine PutOut_Instance_Statistic_EachBox
 
     !*************************************************************
-    subroutine SweepOutMemory(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record)
+    subroutine SweepOutMemory(Host_Boxes,Dev_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap,Record)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationBoxes_GPU)::Dev_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         !---Local Vars---
         integer::MultiBox
         integer::NC0
@@ -2253,10 +2253,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
 
                     call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                      max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
-                                          MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
-                                                         TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+                                      max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                          TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                          MaxDiffuse=max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                         TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
                 end if
 
@@ -2279,10 +2279,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     call Record%SetLastSweepOutTime(Record%GetSimuTimes())
 
                     call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                      max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
-                                          MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
-                                                         TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+                                      max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                          TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                          MaxDiffuse=max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                         TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
                 end if
             end if
 

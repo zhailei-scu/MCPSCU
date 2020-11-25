@@ -11,7 +11,7 @@ oflags_this := $(oflags)
 
 ##########################################################
 #sorce dir name
-objname := InletModel
+objname := MCInletModel
 
 #sorce directories
 ifeq ($(origin MCLIBDIRS), undefined) 
@@ -31,8 +31,8 @@ tgt  := $(LIBDIRD)
 libname  := libMC_$(objname).$(LIB_EXT)
 
 #######################################################          
-nlist    :=  Inlet_TYPEDEF_ImplantSection    	\
-	     Inlet_TYPEDEF_ImplantList		\
+nlist    :=  MCInlet_TYPEDEF_ImplantSection    	\
+	     	 MCInlet_TYPEDEF_ImplantList		\
              MC_TYPEDEF_ImplantationSection
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
@@ -45,14 +45,14 @@ $(libname) : $(objects)
 	ar -rcs $(libname) $(objects)
 	mv $(libname) $(tgt)
 
-$(tgt)$(Segment)Inlet_TYPEDEF_ImplantSection.o : $(sor)$(Segment)Inlet_TYPEDEF_ImplantSection.F90
+$(tgt)$(Segment)MCInlet_TYPEDEF_ImplantSection.o : $(sor)$(Segment)MCInlet_TYPEDEF_ImplantSection.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MC_TYPEDEF_ImplantationSection.o : $(sor)$(Segment)MC_TYPEDEF_ImplantationSection.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)Inlet_TYPEDEF_ImplantList.o : $(sor)$(Segment)Inlet_TYPEDEF_ImplantList.F90 \
-						   $(tgt)$(Segment)Inlet_TYPEDEF_ImplantSection.o
+$(tgt)$(Segment)MCInlet_TYPEDEF_ImplantList.o : $(sor)$(Segment)MCInlet_TYPEDEF_ImplantList.F90 \
+						   $(tgt)$(Segment)MCInlet_TYPEDEF_ImplantSection.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 ######################################################################

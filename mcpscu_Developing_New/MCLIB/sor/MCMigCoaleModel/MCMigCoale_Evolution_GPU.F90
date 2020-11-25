@@ -1,10 +1,10 @@
-module MIGCOALE_EVOLUTION_GPU
+module MCMIGCOALE_EVOLUTION_GPU
   use cudafor
   use MCLIB_CONSTANTS
   use MCLIB_TYPEDEF_ACLUSTER
   use MCLIB_GLOBAL_GPU
-  use MIGCOALE_GLOBALVARS_DEV
-  use MIGCOALE_ADDONDATA_DEV
+  use MCMIGCOALE_GLOBALVARS_DEV
+  use MCMIGCOALE_ADDONDATA_DEV
   use MCLIB_TYPEDEF_GEOMETRY_GPU
   use MODEL_ECR_GPU
   implicit none
@@ -18,8 +18,8 @@ module MIGCOALE_EVOLUTION_GPU
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
-    type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
-    type(MigCoalClusterRecord)::Record
+    type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
+    type(MCMigCoalClusterRecord)::Record
     real(kind=KINDDF)::TSTEP
     !---Local Vars---
     integer::MULTIBOX
@@ -57,7 +57,7 @@ module MIGCOALE_EVOLUTION_GPU
         return
     end if
 
-    ASSOCIATE(Dev_ClusterInfo_GPU=>Dev_Boxes%dm_ClusterInfo_GPU,Dev_DiffusorMap=>Dev_Boxes%dm_DiffusorTypesMap,Dev_Rand=>Dev_MigCoaleGVars%dm_MigCoale_RandDev)
+    ASSOCIATE(Dev_ClusterInfo_GPU=>Dev_Boxes%dm_ClusterInfo_GPU,Dev_DiffusorMap=>Dev_Boxes%dm_DiffusorTypesMap,Dev_Rand=>Dev_MigCoaleGVars%dm_MCMigCoale_RandDev)
         if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
             BlockNumEachBox = (maxUsedNC - 1)/p_BLOCKSIZE + 1
             NB = BlockNumEachBox*MultiBox
@@ -994,8 +994,8 @@ module MIGCOALE_EVOLUTION_GPU
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
-    type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
-    type(MigCoalClusterRecord)::Record
+    type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
+    type(MCMigCoalClusterRecord)::Record
     real(kind=KINDDF)::TSTEP
     !---Local Vars---
     integer::MULTIBOX
@@ -1009,7 +1009,7 @@ module MIGCOALE_EVOLUTION_GPU
     !---Body---
 
     ASSOCIATE(Dev_ClusterInfo_GPU=>Dev_Boxes%dm_ClusterInfo_GPU,Dev_DiffusorMap=>Dev_Boxes%dm_DiffusorTypesMap,Dev_ReactionsMap=>Dev_Boxes%dm_ReactionsMap, &
-              Dev_Rand=>Dev_MigCoaleGVars%dm_MigCoale_RandDev)
+              Dev_Rand=>Dev_MigCoaleGVars%dm_MCMigCoale_RandDev)
 
         MULTIBOX = Host_SimuCtrlParam%MultiBox
 
@@ -1931,4 +1931,4 @@ module MIGCOALE_EVOLUTION_GPU
     return
   end subroutine MergeBack_Kernel
 
-end module MIGCOALE_EVOLUTION_GPU
+end module MCMIGCOALE_EVOLUTION_GPU

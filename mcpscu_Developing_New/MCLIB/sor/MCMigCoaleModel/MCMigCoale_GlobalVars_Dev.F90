@@ -1,15 +1,15 @@
-module MIGCOALE_GLOBALVARS_DEV
+module MCMIGCOALE_GLOBALVARS_DEV
     use cudafor
     use curand_device
     use MCLIB_CONSTANTS
     use CudaRandomC2F_M
     use MCLIB_Utilities_GPU
-    use MIGCOALE_TYPEDEF_SIMRECORD
+    use MCMIGCOALE_TYPEDEF_SIMRECORD
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
 
 
-    type,public::MigCoale_RandDev
+    type,public::MCMigCoale_RandDev
 
         integer(kind=int_ptr_kind())::m_ranGen_ClustersRandomWalk = 0
         integer(kind=int_ptr_kind())::m_ranGen_ClustersReaction = 0
@@ -35,52 +35,52 @@ module MIGCOALE_GLOBALVARS_DEV
 
         contains
 
-        procedure,non_overridable,public,pass::Init=>InitMigCoale_RandDev
+        procedure,non_overridable,public,pass::Init=>InitMCMigCoale_RandDev
 
-        procedure,non_overridable,public,pass::ReSizeWalkRandNum=>ResizeMigCoale_WalkRandNumDev
+        procedure,non_overridable,public,pass::ReSizeWalkRandNum=>ResizeMCMigCoale_WalkRandNumDev
 
-        procedure,non_overridable,public,pass::ReSizeDevRandRecord=>ResizeMigCoale_WalkRandNumDevRecord
+        procedure,non_overridable,public,pass::ReSizeDevRandRecord=>ResizeMCMigCoale_WalkRandNumDevRecord
 
-        procedure,non_overridable,public,pass::ReSizeReactionRandNum=>ResizeMigCoale_ReactionRandNumDev
+        procedure,non_overridable,public,pass::ReSizeReactionRandNum=>ResizeMCMigCoale_ReactionRandNumDev
 
-        procedure,non_overridable,public,pass::ReSizeImplantRandNum=>ResizeMigCoale_ImplantRandNumDev
+        procedure,non_overridable,public,pass::ReSizeImplantRandNum=>ResizeMCMigCoale_ImplantRandNumDev
 
-        procedure,non_overridable,public,pass::Clean=>Clean_MigCoale_RandDev
-        Final::CleanMigCoale_RandDev
-    end type MigCoale_RandDev
+        procedure,non_overridable,public,pass::Clean=>Clean_MCMigCoale_RandDev
+        Final::CleanMCMigCoale_RandDev
+    end type MCMigCoale_RandDev
 
-    type,public::MigCoale_GVarsDev
+    type,public::MCMigCoale_GVarsDev
 
-        type(MigCoale_RandDev)::dm_MigCoale_RandDev
+        type(MCMigCoale_RandDev)::dm_MCMigCoale_RandDev
 
         contains
-        procedure,non_overridable,public,pass::Init=>InitMigCoale_GVarsDev
-        procedure,non_overridable,public,pass::Clean=>Clean_MigCoale_GVarsDev
-        Final::CleanMigCoale_GVarsDev
-    end type MigCoale_GVarsDev
+        procedure,non_overridable,public,pass::Init=>InitMCMigCoale_GVarsDev
+        procedure,non_overridable,public,pass::Clean=>Clean_MCMigCoale_GVarsDev
+        Final::CleanMCMigCoale_GVarsDev
+    end type MCMigCoale_GVarsDev
 
-    private::InitMigCoale_RandDev
-    private::ResizeMigCoale_WalkRandNumDev
-    private::ResizeMigCoale_WalkRandNumDevRecord
-    private::ResizeMigCoale_ReactionRandNumDev
-    private::ResizeMigCoale_ImplantRandNumDev
-    private::Clean_MigCoale_RandDev
-    private::CleanMigCoale_RandDev
-    private::InitMigCoale_GVarsDev
-    private::Clean_MigCoale_GVarsDev
-    private::CleanMigCoale_GVarsDev
+    private::InitMCMigCoale_RandDev
+    private::ResizeMCMigCoale_WalkRandNumDev
+    private::ResizeMCMigCoale_WalkRandNumDevRecord
+    private::ResizeMCMigCoale_ReactionRandNumDev
+    private::ResizeMCMigCoale_ImplantRandNumDev
+    private::Clean_MCMigCoale_RandDev
+    private::CleanMCMigCoale_RandDev
+    private::InitMCMigCoale_GVarsDev
+    private::Clean_MCMigCoale_GVarsDev
+    private::CleanMCMigCoale_GVarsDev
 
     contains
-    !*******************For type MigCoale_RandDev**********************************
-    subroutine InitMigCoale_RandDev(this,Host_Boxes,Host_SimuCtrlParam,Record)
+    !*******************For type MCMigCoale_RandDev**********************************
+    subroutine InitMCMigCoale_RandDev(this,Host_Boxes,Host_SimuCtrlParam,Record)
         use RAND32_MODULE
         use RAND32SEEDLIB_MODULE
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoale_RandDev)::this
+        CLASS(MCMigCoale_RandDev)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         !---Local Vars---
         integer::MultiBox
         integer::TotalUsedNC
@@ -178,21 +178,21 @@ module MIGCOALE_GLOBALVARS_DEV
     end subroutine
 
     !********************************************************************
-    subroutine ResizeMigCoale_WalkRandNumDev(this,ReSize)
+    subroutine ResizeMCMigCoale_WalkRandNumDev(this,ReSize)
         !---Dummy Vars---
-        CLASS(MigCoale_RandDev)::this
+        CLASS(MCMigCoale_RandDev)::this
         integer,intent(in)::ReSize
         !---Body---
         call DeAllocateArray_GPU(this%dm_RandArray_Walk,"dm_RandArray_Walk")
         call AllocateArray_GPU(this%dm_RandArray_Walk,ReSize*3,"dm_RandArray_Walk")
 
         return
-    end subroutine ResizeMigCoale_WalkRandNumDev
+    end subroutine ResizeMCMigCoale_WalkRandNumDev
 
     !********************************************************************
-    subroutine ResizeMigCoale_WalkRandNumDevRecord(this,ReSize,Seed,Offset)
+    subroutine ResizeMCMigCoale_WalkRandNumDevRecord(this,ReSize,Seed,Offset)
         !---Dummy Vars---
-        CLASS(MigCoale_RandDev)::this
+        CLASS(MCMigCoale_RandDev)::this
         integer,intent(in)::ReSize
         integer,intent(in)::Seed
         integer,intent(in)::Offset
@@ -211,21 +211,21 @@ module MIGCOALE_GLOBALVARS_DEV
     !********************************************************************
 
         !********************************************************************
-    subroutine ResizeMigCoale_ReactionRandNumDev(this,ReSize)
+    subroutine ResizeMCMigCoale_ReactionRandNumDev(this,ReSize)
         !---Dummy Vars---
-        CLASS(MigCoale_RandDev)::this
+        CLASS(MCMigCoale_RandDev)::this
         integer,intent(in)::ReSize
         !---Body---
         call DeAllocateArray_GPU(this%dm_RandArray_Reaction,"dm_RandArray_Reaction")
         call AllocateArray_GPU(this%dm_RandArray_Reaction,ReSize,"dm_RandArray_Reaction")
 
         return
-    end subroutine ResizeMigCoale_ReactionRandNumDev
+    end subroutine ResizeMCMigCoale_ReactionRandNumDev
 
     !********************************************************************
-    subroutine ResizeMigCoale_ImplantRandNumDev(this,ReSize)
+    subroutine ResizeMCMigCoale_ImplantRandNumDev(this,ReSize)
         !---Dummy Vars---
-        CLASS(MigCoale_RandDev)::this
+        CLASS(MCMigCoale_RandDev)::this
         integer,intent(in)::ReSize
         !---Body---
         call DeAllocateArray_GPU(this%dm_SpaceDist_Implant,"dm_SpaceDist_Implant")
@@ -235,13 +235,13 @@ module MIGCOALE_GLOBALVARS_DEV
         call AllocateArray_GPU(this%dm_SizeDist_Implant,ReSize,"dm_SizeDist_Implant")
 
         return
-    end subroutine ResizeMigCoale_ImplantRandNumDev
+    end subroutine ResizeMCMigCoale_ImplantRandNumDev
 
 
     !********************************************************************
-    subroutine Clean_MigCoale_RandDev(this)
+    subroutine Clean_MCMigCoale_RandDev(this)
         !---Dummy Vars---
-        CLASS(MigCoale_RandDev)::this
+        CLASS(MCMigCoale_RandDev)::this
         !---Local Vars---
         integer::err
         !---Body---
@@ -281,56 +281,56 @@ module MIGCOALE_GLOBALVARS_DEV
         end if
 
         return
-    end subroutine Clean_MigCoale_RandDev
+    end subroutine Clean_MCMigCoale_RandDev
 
     !********************************************************************
-    subroutine CleanMigCoale_RandDev(this)
+    subroutine CleanMCMigCoale_RandDev(this)
         !---Dummy Vars---
-        type(MigCoale_RandDev)::this
+        type(MCMigCoale_RandDev)::this
         !---Body---
 
         call this%Clean()
 
         return
-    end subroutine CleanMigCoale_RandDev
+    end subroutine CleanMCMigCoale_RandDev
 
-    !********************For type MigCoale_GVarsDev**********************
-    subroutine InitMigCoale_GVarsDev(this,Host_Boxes,Host_SimuCtrlParam,Record)
+    !********************For type MCMigCoale_GVarsDev**********************
+    subroutine InitMCMigCoale_GVarsDev(this,Host_Boxes,Host_SimuCtrlParam,Record)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoale_GVarsDev)::this
+        CLASS(MCMigCoale_GVarsDev)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         !---Body---
 
-        call this%dm_MigCoale_RandDev%Init(Host_Boxes,Host_SimuCtrlParam,Record)
+        call this%dm_MCMigCoale_RandDev%Init(Host_Boxes,Host_SimuCtrlParam,Record)
 
         return
-    end subroutine InitMigCoale_GVarsDev
+    end subroutine InitMCMigCoale_GVarsDev
 
     !********************************************************************
-    subroutine Clean_MigCoale_GVarsDev(this)
+    subroutine Clean_MCMigCoale_GVarsDev(this)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoale_GVarsDev)::this
+        CLASS(MCMigCoale_GVarsDev)::this
         !---Body---
 
-        call this%dm_MigCoale_RandDev%Clean()
+        call this%dm_MCMigCoale_RandDev%Clean()
         return
-    end subroutine Clean_MigCoale_GVarsDev
+    end subroutine Clean_MCMigCoale_GVarsDev
 
     !********************************************************************
-    subroutine CleanMigCoale_GVarsDev(this)
+    subroutine CleanMCMigCoale_GVarsDev(this)
         implicit none
         !---Dummy Vars---
-        type(MigCoale_GVarsDev)::this
+        type(MCMigCoale_GVarsDev)::this
         !---Body---
 
         call this%Clean()
         return
     end subroutine
 
-end module MIGCOALE_GLOBALVARS_DEV
+end module MCMIGCOALE_GLOBALVARS_DEV
 
 

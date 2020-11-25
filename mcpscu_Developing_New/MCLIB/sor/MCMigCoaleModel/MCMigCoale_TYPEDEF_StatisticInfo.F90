@@ -1,11 +1,11 @@
-module MIGCOALE_TYPEDEF_STATISTICINFO
+module MCMIGCOALE_TYPEDEF_STATISTICINFO
 
     use MCLIB_CONSTANTS
     use MCLIB_UTILITIES
 
     implicit none
 
-    type,public::MigCoaleStatisticOneBox
+    type,public::MCMigCoaleStatisticOneBox
 
         integer::ICMAX(p_NUMBER_OF_STATU) = 0                               ! the ID of the largest cluster
         real(kind=KINDDF)::RMAX(p_NUMBER_OF_STATU) = 0.D0                    ! the radius of the largest cluster at current time intervale
@@ -17,72 +17,72 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
         contains
         procedure,non_overridable,public,pass::InitStatisticInfo
         procedure,non_overridable,public,pass::Clean_StatisticInfo
-        procedure,non_overridable,private,pass::CopyMigCoaleStatisticOneBoxFromOther
-        Generic::Assignment(=)=>CopyMigCoaleStatisticOneBoxFromOther
+        procedure,non_overridable,private,pass::CopyMCMigCoaleStatisticOneBoxFromOther
+        Generic::Assignment(=)=>CopyMCMigCoaleStatisticOneBoxFromOther
         Final::CleanStatisticInfo
 
-    end type MigCoaleStatisticOneBox
+    end type MCMigCoaleStatisticOneBox
 
-    type,public::MigCoaleStatisticInfo
-        type(MigCoaleStatisticOneBox),dimension(:),allocatable::statistic_SingleBoxes
-        type(MigCoaleStatisticOneBox)::statistic_IntegralBox
+    type,public::MCMigCoaleStatisticInfo
+        type(MCMigCoaleStatisticOneBox),dimension(:),allocatable::statistic_SingleBoxes
+        type(MCMigCoaleStatisticOneBox)::statistic_IntegralBox
 
         contains
-        procedure,non_overridable,public,pass::Init=>InitMigCoaleStatisticInfo
-        procedure,non_overridable,public,pass::Clean=>Clean_MigCoaleStatisticInfo
-        procedure,non_overridable,private,pass::CopyMigCoaleStatisticInfoFromOther
-        Generic::Assignment(=)=>CopyMigCoaleStatisticInfoFromOther
-        Final::CleanMigCoaleStatisticInfo
-    end type MigCoaleStatisticInfo
+        procedure,non_overridable,public,pass::Init=>InitMCMigCoaleStatisticInfo
+        procedure,non_overridable,public,pass::Clean=>Clean_MCMigCoaleStatisticInfo
+        procedure,non_overridable,private,pass::CopyMCMigCoaleStatisticInfoFromOther
+        Generic::Assignment(=)=>CopyMCMigCoaleStatisticInfoFromOther
+        Final::CleanMCMigCoaleStatisticInfo
+    end type MCMigCoaleStatisticInfo
 
-    type,public,extends(MigCoaleStatisticInfo)::MigCoaleStatisticInfo_Used
+    type,public,extends(MCMigCoaleStatisticInfo)::MCMigCoaleStatisticInfo_Used
 
     end type
 
-    type,public,extends(MigCoaleStatisticInfo)::MigCoaleStatisticInfo_Expd
+    type,public,extends(MCMigCoaleStatisticInfo)::MCMigCoaleStatisticInfo_Expd
         contains
         procedure,non_overridable,public,pass::ConverFromUsed=>ConvertUsedToExpd
     end type
 
-    type,public,extends(MigCoaleStatisticInfo)::MigCoaleStatisticInfo_Virtual
+    type,public,extends(MCMigCoaleStatisticInfo)::MCMigCoaleStatisticInfo_Virtual
         contains
         procedure,non_overridable,public,pass::ConverFromUsed=>ConvertUsedToVirtual
     end type
 
 
-    type,public::MigCoaleStatInfoWrap
-        type(MigCoaleStatisticInfo_Used)::m_MigCoaleStatisticInfo_Used
-        type(MigCoaleStatisticInfo_Expd)::m_MigCoaleStatisticInfo_Expd
-        type(MigCoaleStatisticInfo_Virtual)::m_MigCoaleStatisticInfo_Virtual
+    type,public::MCMigCoaleStatInfoWrap
+        type(MCMigCoaleStatisticInfo_Used)::m_MCMigCoaleStatisticInfo_Used
+        type(MCMigCoaleStatisticInfo_Expd)::m_MCMigCoaleStatisticInfo_Expd
+        type(MCMigCoaleStatisticInfo_Virtual)::m_MCMigCoaleStatisticInfo_Virtual
 
         contains
-        procedure,non_overridable,public,pass::Init=>InitMigCoaleStatInfoWrap
-        procedure,non_overridable,public,pass::Clean=>Clean_MigCoaleStatInfoWrap
-        Final::CleanMigCoaleStatInfoWrap
+        procedure,non_overridable,public,pass::Init=>InitMCMigCoaleStatInfoWrap
+        procedure,non_overridable,public,pass::Clean=>Clean_MCMigCoaleStatInfoWrap
+        Final::CleanMCMigCoaleStatInfoWrap
     end type
 
 
     private::InitStatisticInfo
-    private::CopyMigCoaleStatisticOneBoxFromOther
+    private::CopyMCMigCoaleStatisticOneBoxFromOther
     private::Clean_StatisticInfo
     private::CleanStatisticInfo
-    private::InitMigCoaleStatisticInfo
-    private::CopyMigCoaleStatisticInfoFromOther
-    private::Clean_MigCoaleStatisticInfo
-    private::CleanMigCoaleStatisticInfo
+    private::InitMCMigCoaleStatisticInfo
+    private::CopyMCMigCoaleStatisticInfoFromOther
+    private::Clean_MCMigCoaleStatisticInfo
+    private::CleanMCMigCoaleStatisticInfo
     private::ConvertUsedToExpd
     private::ConvertUsedToVirtual
-    private::InitMigCoaleStatInfoWrap
-    private::Clean_MigCoaleStatInfoWrap
-    private::CleanMigCoaleStatInfoWrap
+    private::InitMCMigCoaleStatInfoWrap
+    private::Clean_MCMigCoaleStatInfoWrap
+    private::CleanMCMigCoaleStatInfoWrap
 
     contains
 
-    !****************Type MigCoaleStatisticOneBox*****************************
+    !****************Type MCMigCoaleStatisticOneBox*****************************
     subroutine InitStatisticInfo(this)
         implicit none
         !---Dummy Vars---
-        Class(MigCoaleStatisticOneBox)::this
+        Class(MCMigCoaleStatisticOneBox)::this
         !---Body---
 
         this%ICMAX = 0
@@ -96,11 +96,11 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
     end subroutine InitStatisticInfo
 
     !***********************************************
-    subroutine CopyMigCoaleStatisticOneBoxFromOther(this,other)
+    subroutine CopyMCMigCoaleStatisticOneBoxFromOther(this,other)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoaleStatisticOneBox),intent(out)::this
-        TYPE(MigCoaleStatisticOneBox),intent(in)::other
+        CLASS(MCMigCoaleStatisticOneBox),intent(out)::this
+        TYPE(MCMigCoaleStatisticOneBox),intent(in)::other
         !---Body---
         this%RMAX = other%RMAX
         this%RMIN = other%RMIN
@@ -117,7 +117,7 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
     subroutine Clean_StatisticInfo(this)
         implicit none
         !---Dummy Vars---
-        Class(MigCoaleStatisticOneBox)::this
+        Class(MCMigCoaleStatisticOneBox)::this
         !---Body---
 
         this%ICMAX = 0
@@ -133,7 +133,7 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
     subroutine CleanStatisticInfo(this)
         implicit none
         !---Dummy Vars---
-        type(MigCoaleStatisticOneBox)::this
+        type(MCMigCoaleStatisticOneBox)::this
         !---Body---
 
         call this%Clean_StatisticInfo()
@@ -141,11 +141,11 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
         return
     end subroutine CleanStatisticInfo
 
-    !****************Type MigCoaleStatisticOneBox*****************************
-    subroutine InitMigCoaleStatisticInfo(this,MultiBox)
+    !****************Type MCMigCoaleStatisticOneBox*****************************
+    subroutine InitMCMigCoaleStatisticInfo(this,MultiBox)
         implicit none
         !---Dummy Vars---
-        Class(MigCoaleStatisticInfo)::this
+        Class(MCMigCoaleStatisticInfo)::this
         integer,intent(in)::MultiBox
         !---Local Vars---
         integer::IBox
@@ -166,11 +166,11 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
     end subroutine
 
     !***********************************************
-    subroutine CopyMigCoaleStatisticInfoFromOther(this,other)
+    subroutine CopyMCMigCoaleStatisticInfoFromOther(this,other)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoaleStatisticInfo),intent(out)::this
-        TYPE(MigCoaleStatisticInfo),intent(in)::other
+        CLASS(MCMigCoaleStatisticInfo),intent(out)::this
+        TYPE(MCMigCoaleStatisticInfo),intent(in)::other
         !---Local Vars---
         integer::I
         !---Body---
@@ -191,10 +191,10 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
         return
     end subroutine
 
-    subroutine Clean_MigCoaleStatisticInfo(this)
+    subroutine Clean_MCMigCoaleStatisticInfo(this)
         implicit none
         !---Dummy Vars---
-        Class(MigCoaleStatisticInfo)::this
+        Class(MCMigCoaleStatisticInfo)::this
         !---Body---
         if(allocated(this%statistic_SingleBoxes)) then
             deallocate(this%statistic_SingleBoxes)
@@ -203,24 +203,24 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
         call this%statistic_IntegralBox%Clean_StatisticInfo()
 
         return
-    end subroutine Clean_MigCoaleStatisticInfo
+    end subroutine Clean_MCMigCoaleStatisticInfo
 
-    subroutine CleanMigCoaleStatisticInfo(this)
+    subroutine CleanMCMigCoaleStatisticInfo(this)
         implicit none
         !---Dummy Vars---
-        type(MigCoaleStatisticInfo)::this
+        type(MCMigCoaleStatisticInfo)::this
         !---Body---
         call this%Clean()
 
         return
-    end subroutine CleanMigCoaleStatisticInfo
+    end subroutine CleanMCMigCoaleStatisticInfo
 
-    !****************For type MigCoaleStatisticInfo_Expd*************************
+    !****************For type MCMigCoaleStatisticInfo_Expd*************************
     subroutine ConvertUsedToExpd(this,Used)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoaleStatisticInfo_Expd)::this
-        TYPE(MigCoaleStatisticInfo_Used)::Used
+        CLASS(MCMigCoaleStatisticInfo_Expd)::this
+        TYPE(MCMigCoaleStatisticInfo_Used)::Used
         !---Local Vars---
         integer::I
         !---Body---
@@ -241,12 +241,12 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
         return
     end subroutine
 
-    !****************For type MigCoaleStatisticInfo_Virtual*************************
+    !****************For type MCMigCoaleStatisticInfo_Virtual*************************
     subroutine ConvertUsedToVirtual(this,Used)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoaleStatisticInfo_Virtual)::this
-        TYPE(MigCoaleStatisticInfo_Used)::Used
+        CLASS(MCMigCoaleStatisticInfo_Virtual)::this
+        TYPE(MCMigCoaleStatisticInfo_Used)::Used
         !---Local Vars---
         integer::I
         !---Body---
@@ -267,44 +267,44 @@ module MIGCOALE_TYPEDEF_STATISTICINFO
         return
     end subroutine
 
-    !****************For type MigCoaleStatInfoWrap************************
-    subroutine InitMigCoaleStatInfoWrap(this,MultiBox)
+    !****************For type MCMigCoaleStatInfoWrap************************
+    subroutine InitMCMigCoaleStatInfoWrap(this,MultiBox)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoaleStatInfoWrap)::this
+        CLASS(MCMigCoaleStatInfoWrap)::this
         integer,intent(in)::MultiBox
         !---Body---
-        call this%m_MigCoaleStatisticInfo_Expd%Init(MultiBox)
+        call this%m_MCMigCoaleStatisticInfo_Expd%Init(MultiBox)
 
-        call this%m_MigCoaleStatisticInfo_Used%Init(MultiBox)
+        call this%m_MCMigCoaleStatisticInfo_Used%Init(MultiBox)
 
-        call this%m_MigCoaleStatisticInfo_Virtual%Init(MultiBox)
+        call this%m_MCMigCoaleStatisticInfo_Virtual%Init(MultiBox)
 
         return
     end subroutine
 
-    subroutine Clean_MigCoaleStatInfoWrap(this)
+    subroutine Clean_MCMigCoaleStatInfoWrap(this)
         implicit none
         !---Dummy Vars---
-        CLASS(MigCoaleStatInfoWrap)::this
+        CLASS(MCMigCoaleStatInfoWrap)::this
         !---Body---
-        call this%m_MigCoaleStatisticInfo_Expd%Clean()
+        call this%m_MCMigCoaleStatisticInfo_Expd%Clean()
 
-        call this%m_MigCoaleStatisticInfo_Used%Clean()
+        call this%m_MCMigCoaleStatisticInfo_Used%Clean()
 
-        call this%m_MigCoaleStatisticInfo_Virtual%Clean()
+        call this%m_MCMigCoaleStatisticInfo_Virtual%Clean()
 
         return
     end subroutine
 
-    subroutine CleanMigCoaleStatInfoWrap(this)
+    subroutine CleanMCMigCoaleStatInfoWrap(this)
         implicit none
         !---Dummy Vars---
-        type(MigCoaleStatInfoWrap)::this
+        type(MCMigCoaleStatInfoWrap)::this
         !---Body---
         call this%Clean()
 
         return
     end subroutine
 
-end module MIGCOALE_TYPEDEF_STATISTICINFO
+end module MCMIGCOALE_TYPEDEF_STATISTICINFO

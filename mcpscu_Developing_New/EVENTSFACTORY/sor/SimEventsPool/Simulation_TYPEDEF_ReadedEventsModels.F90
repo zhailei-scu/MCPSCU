@@ -620,7 +620,45 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
 
                         newEventsModelsPair%ObjectEventsModelDef = HeadCodeList%GetValueByListIndex(I)
 
-                        call this%TheEventsModelsPairList%AppendOne(newEventsModelsPair)
+                        if(newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .eq. newEventsModelsPair%ObjectEventsModelDef%GetEventModelCode()) then
+                            if(newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .ne. newEventsModelsPair%CrossEventsModelDef%GetEventModelCode()) then
+                                write(*,*) "MCPSCUERROR: It is impossible that the cross event is not same with subject and object events when subject and object events is same."
+                                write(*,*) "Subject: ",adjustl(trim(newEventsModelsPair%SubjectEventsModelDef%GetEventModelSymbol)), newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode()
+                                write(*,*) "Object: ",adjustl(trim(newEventsModelsPair%ObjectEventsModelDef%GetEventModelSymbol)), newEventsModelsPair%ObjectEventsModelDef%GetEventModelCode()
+                                write(*,*) "Cross: ",adjustl(trim(newEventsModelsPair%CrossEventsModelDef%GetEventModelSymbol)), newEventsModelsPair%CrossEventsModelDef%GetEventModelCode()
+                                pause
+                                stop
+                            end if
+                        end if
+                        !---Filter some dumplicated pairs---
+                        Finded = .false.
+                        DO J = 1,this%TheEventsModelsPairList%GetListCount()
+                            tempEventsModelsPair = this%TheEventsModelsPairList%GetValueByListIndex(J)
+                            if( (newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .eq. tempEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .and. &
+                                 newEventsModelsPair%ObjectEventsModelDef%GetEventModelCode() .eq. tempEventsModelsPair%ObjectEventsModelDef%GetEventModelCode()) .or.   &   
+                                (newEventsModelsPair%ObjectEventsModelDef%GetEventModelCode() .eq. tempEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .and.  &
+                                 newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .eq. tempEventsModelsPair%ObjectEventsModelDef%GetEventModelCode())) then
+
+                                Finded = .true.
+
+                                if(newEventsModelsPair%CrossEventsModelDef%GetEventModelCode() .ne. tempEventsModelsPair%CrossEventsModelDef%GetEventModelCode()) then
+                                    write(*,*) "MCPSCUERROR: It seems that that two same event model pairs have different cross event."
+                                    write(*,*) "Subject: ",adjustl(trim(newEventsModelsPair%SubjectEventsModelDef%GetEventModelSymbol)), &
+                                               "Object: ",adjustl(trim(newEventsModelsPair%ObjectEventsModelDef%GetEventModelSymbol)),   &
+                                               "Cross: ",adjustl(trim(newEventsModelsPair%CrossEventsModelDef%GetEventModelSymbol)) 
+                                    write(*,*) "Subject: ",adjustl(trim(tempEventsModelsPair%SubjectEventsModelDef%GetEventModelSymbol)), &
+                                               "Object: ",adjustl(trim(tempEventsModelsPair%ObjectEventsModelDef%GetEventModelSymbol)),   &
+                                               "Cross: ",adjustl(trim(tempEventsModelsPair%CrossEventsModelDef%GetEventModelSymbol))
+                                    pause
+                                    stop
+                                end if
+
+                            end if
+                        END DO
+
+                        if(.not. Finded) then
+                            call this%TheEventsModelsPairList%AppendOne(newEventsModelsPair)
+                        end if
                     END DO
 
                 case default

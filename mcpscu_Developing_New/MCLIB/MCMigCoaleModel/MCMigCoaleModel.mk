@@ -11,7 +11,7 @@ oflags_this := $(oflags)
 
 ###########################################################
 #sorce dir name
-objname := MigCoaleModel
+objname := MCMigCoaleModel
 
 #sorce directories
 ifeq ($(origin MCLIBDIRS), undefined) 
@@ -32,15 +32,15 @@ tgt  := $(LIBDIRD)
 libname  := libMC_$(objname).$(LIB_EXT)
 
 #######################################################          
-nlist := MigCoale_AddOnData_Host		\
-	       MigCoale_AddOnData_Dev		\
-	       MigCoale_TYPEDEF_SimRecord	\
-	       MigCoale_TYPEDEF_StatisticInfo	\
-	       MigCoale_Statistic_CPU		\
-	       MigCoale_Statistic_GPU		\
-	       MigCoale_TimeCtl			\
-	       MigCoale_GlobalVars_Dev		\
-	       MigCoale_Evolution_GPU
+nlist := MCMigCoale_AddOnData_Host			\
+	     MCMigCoale_AddOnData_Dev			\
+	     MCMigCoale_TYPEDEF_SimRecord		\
+	     MCMigCoale_TYPEDEF_StatisticInfo	\
+	     MCMigCoale_Statistic_CPU			\
+	     MCMigCoale_Statistic_GPU			\
+	     MCMigCoale_TimeCtl					\
+	     MCMigCoale_GlobalVars_Dev			\
+	     MCMigCoale_Evolution_GPU
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
 modules  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).mod)
@@ -52,36 +52,36 @@ $(libname) : $(objects)
 	ar -rcs $(libname) $(objects)
 	mv $(libname) $(tgt)
 
-$(tgt)$(Segment)MigCoale_AddOnData_Host.o : $(sor)$(Segment)MigCoale_AddOnData_Host.F90
+$(tgt)$(Segment)MCMigCoale_AddOnData_Host.o : $(sor)$(Segment)MCMigCoale_AddOnData_Host.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_AddOnData_Dev.o : $(sor)$(Segment)MigCoale_AddOnData_Dev.F90  \
-			      	                             $(tgt)$(Segment)MigCoale_AddOnData_Host.o
+$(tgt)$(Segment)MCMigCoale_AddOnData_Dev.o : $(sor)$(Segment)MCMigCoale_AddOnData_Dev.F90  \
+			      	                             $(tgt)$(Segment)MCMigCoale_AddOnData_Host.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_TYPEDEF_SimRecord.o : $(sor)$(Segment)MigCoale_TYPEDEF_SimRecord.F90
+$(tgt)$(Segment)MCMigCoale_TYPEDEF_SimRecord.o : $(sor)$(Segment)MCMigCoale_TYPEDEF_SimRecord.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_TYPEDEF_StatisticInfo.o : $(sor)$(Segment)MigCoale_TYPEDEF_StatisticInfo.F90
+$(tgt)$(Segment)MCMigCoale_TYPEDEF_StatisticInfo.o : $(sor)$(Segment)MCMigCoale_TYPEDEF_StatisticInfo.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_Statistic_CPU.o : $(sor)$(Segment)MigCoale_Statistic_CPU.F90	\
-				                                    $(tgt)$(Segment)MigCoale_TYPEDEF_StatisticInfo.o 
+$(tgt)$(Segment)MCMigCoale_Statistic_CPU.o : $(sor)$(Segment)MCMigCoale_Statistic_CPU.F90	\
+				                                    $(tgt)$(Segment)MCMigCoale_TYPEDEF_StatisticInfo.o 
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_Statistic_GPU.o : $(sor)$(Segment)MigCoale_Statistic_GPU.F90	\
-				                                   $(tgt)$(Segment)MigCoale_TYPEDEF_StatisticInfo.o 
+$(tgt)$(Segment)MCMigCoale_Statistic_GPU.o : $(sor)$(Segment)MCMigCoale_Statistic_GPU.F90	\
+				                                   $(tgt)$(Segment)MCMigCoale_TYPEDEF_StatisticInfo.o 
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_TimeCtl.o : $(sor)$(Segment)MigCoale_TimeCtl.F90		  \
-			                               $(tgt)$(Segment)MigCoale_TYPEDEF_StatisticInfo.o
+$(tgt)$(Segment)MCMigCoale_TimeCtl.o : $(sor)$(Segment)MCMigCoale_TimeCtl.F90		  \
+			                               $(tgt)$(Segment)MCMigCoale_TYPEDEF_StatisticInfo.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_GlobalVars_Dev.o : $(sor)$(Segment)MigCoale_GlobalVars_Dev.F90
+$(tgt)$(Segment)MCMigCoale_GlobalVars_Dev.o : $(sor)$(Segment)MCMigCoale_GlobalVars_Dev.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-$(tgt)$(Segment)MigCoale_Evolution_GPU.o : $(sor)$(Segment)MigCoale_Evolution_GPU.F90  \
-				                                   $(tgt)$(Segment)MigCoale_GlobalVars_Dev.o
+$(tgt)$(Segment)MCMigCoale_Evolution_GPU.o : $(sor)$(Segment)MCMigCoale_Evolution_GPU.F90  \
+				                                   $(tgt)$(Segment)MCMigCoale_GlobalVars_Dev.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 ######################################################################

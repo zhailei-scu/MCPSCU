@@ -1,11 +1,11 @@
-module MIGCOALE_STATISTIC_GPU
+module MCMIGCOALE_STATISTIC_GPU
     use cudafor
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
-    use MIGCOALE_TYPEDEF_STATISTICINFO
+    use MCMIGCOALE_TYPEDEF_STATISTICINFO
     use MCLIB_CONSTANTS
     use MCLIB_Utilities
-    use MIGCOALE_ADDONDATA_DEV
+    use MCMIGCOALE_ADDONDATA_DEV
     implicit none
 
     real(kind=KINDDF),private,device,dimension(:,:),allocatable::dm_SumRArray
@@ -20,32 +20,32 @@ module MIGCOALE_STATISTIC_GPU
     contains
 
     !************************************************************
-    subroutine GetBoxesMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record)
+    subroutine GetBoxesMCMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo,Record)
       !*** Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
       implicit none
       !---Dummy Vars---
       type(SimulationBoxes)::Host_Boxes
       type(SimulationCtrlParam)::Host_SimuCtrlParam
       type(SimulationBoxes_GPU)::Dev_Boxes
-      type(MigCoaleStatisticInfo_Used)::TheMigCoaleStatisticInfo
+      type(MCMigCoaleStatisticInfo_Used)::TheMCMigCoaleStatisticInfo
       CLASS(SimulationRecord)::Record
       !---Body---
 
       call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
-      call StatisticClusters_Used_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+      call StatisticClusters_Used_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 
       return
-    end subroutine GetBoxesMigCoaleStat_Used_GPU
+    end subroutine GetBoxesMCMigCoaleStat_Used_GPU
 
     !******************************************
-    subroutine StatisticClusters_Used_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+    subroutine StatisticClusters_Used_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoaleStatisticInfo_Used)::TheMigCoaleStatisticInfo
+        type(MCMigCoaleStatisticInfo_Used)::TheMCMigCoaleStatisticInfo
         !---Local Vars---
         integer::MultiBox
         integer::IBox
@@ -83,8 +83,8 @@ module MIGCOALE_STATISTIC_GPU
             !   The array size maybe a little bigger than used size
             !   The main purpose to let what happen is that we do not want to allocate a suitable memory size
             !   for used situation in each step, because for implant, the used size is keeping changing and we should not adjustment below
-            !   memory each step, so we use the virtual or expd size, which mean, while GetBoxesMigCoaleStat_Expd_GPU or
-            !   GetBoxesMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
+            !   memory each step, so we use the virtual or expd size, which mean, while GetBoxesMCMigCoaleStat_Expd_GPU or
+            !   GetBoxesMCMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
             !   for next N steps and need not to adjustment memory size.
             deallocate(m_SumRArray)
             allocate(m_SumRArray(p_NUMBER_OF_STATU,NB))
@@ -163,15 +163,15 @@ module MIGCOALE_STATISTIC_GPU
                 NCCount = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(IStatu)
 
                 if(NCCount .GT. 0) then
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = sum(m_SumRArray(IStatu,IBFROM:IBTO))/NCCount
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,IBFROM:IBTO))
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = minval(m_MinRArray(IStatu,IBFROM:IBTO))
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = sum(m_SumRArray(IStatu,IBFROM:IBTO))/NCCount
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = minval(m_MinRArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,IBFROM:IBTO))
                 else
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = 0.D0
                 end if
 
             END DO
@@ -179,15 +179,15 @@ module MIGCOALE_STATISTIC_GPU
             NCCount = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(IStatu)
 
             if(NCCount .GT. 0) then
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = sum(m_SumRArray(IStatu,1:NB))/NCCount
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,1:NB))
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = minval(m_MinRArray(IStatu,1:NB))
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = sum(m_SumRArray(IStatu,1:NB))/NCCount
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = minval(m_MinRArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,1:NB))
             else
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = 0.D0
             end if
 
         END DO
@@ -196,32 +196,32 @@ module MIGCOALE_STATISTIC_GPU
     end subroutine StatisticClusters_Used_Way3_1
 
     !************************************************************
-    subroutine GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record)
+    subroutine GetBoxesMCMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo,Record)
       !*** Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
       implicit none
       !---Dummy Vars---
       type(SimulationBoxes)::Host_Boxes
       type(SimulationCtrlParam)::Host_SimuCtrlParam
       type(SimulationBoxes_GPU)::Dev_Boxes
-      type(MigCoaleStatisticInfo_Expd)::TheMigCoaleStatisticInfo
+      type(MCMigCoaleStatisticInfo_Expd)::TheMCMigCoaleStatisticInfo
       CLASS(SimulationRecord)::Record
       !---Body---
 
       call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
-      call StatisticClusters_Expd_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+      call StatisticClusters_Expd_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 
       return
-    end subroutine GetBoxesMigCoaleStat_Expd_GPU
+    end subroutine GetBoxesMCMigCoaleStat_Expd_GPU
 
     !******************************************
-    subroutine StatisticClusters_Expd_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+    subroutine StatisticClusters_Expd_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoaleStatisticInfo_Expd)::TheMigCoaleStatisticInfo
+        type(MCMigCoaleStatisticInfo_Expd)::TheMCMigCoaleStatisticInfo
         !---Local Vars---
         integer::MultiBox
         integer::IBox
@@ -259,7 +259,7 @@ module MIGCOALE_STATISTIC_GPU
             !   The array size maybe a little bigger than expd size
             !   The main purpose to let what happen is that we do not want to allocate a suitable memory size
             !   for expd situation while the expd boundary is changed, so we use the virtual size, which mean, while
-            !   GetBoxesMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
+            !   GetBoxesMCMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
             !   for next N steps and need not to adjustment memory size.
             deallocate(m_SumRArray)
             allocate(m_SumRArray(p_NUMBER_OF_STATU,NB))
@@ -347,15 +347,15 @@ module MIGCOALE_STATISTIC_GPU
                 end if
 
                 if(NCCount .GT. 0) then
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = sum(m_SumRArray(IStatu,IBFROM:IBTO))/NCCount
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,IBFROM:IBTO))
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = minval(m_MinRArray(IStatu,IBFROM:IBTO))
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = sum(m_SumRArray(IStatu,IBFROM:IBTO))/NCCount
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = minval(m_MinRArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,IBFROM:IBTO))
                 else
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = 0.D0
                 end if
 
                 NCCountTotal = NCCountTotal + NCCount
@@ -363,15 +363,15 @@ module MIGCOALE_STATISTIC_GPU
             END DO
 
             if(NCCountTotal .GT. 0) then
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = sum(m_SumRArray(IStatu,1:NB))/NCCountTotal
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,1:NB))
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = minval(m_MinRArray(IStatu,1:NB))
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = sum(m_SumRArray(IStatu,1:NB))/NCCountTotal
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = minval(m_MinRArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,1:NB))
             else
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = 0.D0
             end if
 
         END DO
@@ -380,31 +380,31 @@ module MIGCOALE_STATISTIC_GPU
     end subroutine StatisticClusters_Expd_Way3_1
 
     !************************************************************
-    subroutine GetBoxesMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record)
+    subroutine GetBoxesMCMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo,Record)
       !*** Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
       implicit none
       !---Dummy Vars---
       type(SimulationBoxes)::Host_Boxes
       type(SimulationCtrlParam)::Host_SimuCtrlParam
       type(SimulationBoxes_GPU)::Dev_Boxes
-      type(MigCoaleStatisticInfo_Virtual)::TheMigCoaleStatisticInfo
+      type(MCMigCoaleStatisticInfo_Virtual)::TheMCMigCoaleStatisticInfo
       CLASS(SimulationRecord)::Record
       !---Body---
 
       call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
-      call StatisticClusters_Virtual_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+      call StatisticClusters_Virtual_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
       return
-    end subroutine GetBoxesMigCoaleStat_Virtual_GPU
+    end subroutine GetBoxesMCMigCoaleStat_Virtual_GPU
 
     !******************************************
-    subroutine StatisticClusters_Virtual_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+    subroutine StatisticClusters_Virtual_Way3_1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoaleStatisticInfo_Virtual)::TheMigCoaleStatisticInfo
+        type(MCMigCoaleStatisticInfo_Virtual)::TheMCMigCoaleStatisticInfo
         !---Local Vars---
         integer::MultiBox
         integer::IBox
@@ -530,15 +530,15 @@ module MIGCOALE_STATISTIC_GPU
                 end if
 
                 if(NCCount .GT. 0) then
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = sum(m_SumRArray(IStatu,IBFROM:IBTO))/NCCount
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,IBFROM:IBTO))
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = minval(m_MinRArray(IStatu,IBFROM:IBTO))
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = sum(m_SumRArray(IStatu,IBFROM:IBTO))/NCCount
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = minval(m_MinRArray(IStatu,IBFROM:IBTO))
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,IBFROM:IBTO))
                 else
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = 0.D0
-                    TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(IStatu) = 0.D0
+                    TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(IStatu) = 0.D0
                 end if
 
                 NCCountTotal = NCCountTotal + NCCount
@@ -546,15 +546,15 @@ module MIGCOALE_STATISTIC_GPU
             END DO
 
             if(NCCountTotal .GT. 0) then
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = sum(m_SumRArray(IStatu,1:NB))/NCCountTotal
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,1:NB))
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = minval(m_MinRArray(IStatu,1:NB))
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = sum(m_SumRArray(IStatu,1:NB))/NCCountTotal
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = maxval(m_MaxRArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = minval(m_MinRArray(IStatu,1:NB))
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = maxval(m_MaxDiffArray(IStatu,1:NB))
             else
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = 0.D0
-                TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(IStatu) = 0.D0
+                TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(IStatu) = 0.D0
             end if
         END DO
 
@@ -696,14 +696,14 @@ module MIGCOALE_STATISTIC_GPU
     end subroutine Kernel_StatisticClusters3
 
 !    !************************************************************
-!    subroutine GetBoxesMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!    subroutine GetBoxesMCMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !      !*** Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
 !      implicit none
 !      !---Dummy Vars---
 !      type(SimulationBoxes)::Host_Boxes
 !      type(SimulationCtrlParam)::Host_SimuCtrlParam
 !      type(SimulationBoxes_GPU)::Dev_Boxes
-!      type(MigCoaleStatisticInfo_Used)::TheMigCoaleStatisticInfo
+!      type(MCMigCoaleStatisticInfo_Used)::TheMCMigCoaleStatisticInfo
 !      !---Local Vars---
 !      integer::Statu
 !      !---Body---
@@ -711,21 +711,21 @@ module MIGCOALE_STATISTIC_GPU
 !      call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 !
 !      DO Statu = 1,p_NUMBER_OF_STATU
-!        call StatisticOneStatuClusters_Used_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!        call StatisticOneStatuClusters_Used_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !      END DO
 !
 !      return
-!    end subroutine GetBoxesMigCoaleStat_Used_GPU
+!    end subroutine GetBoxesMCMigCoaleStat_Used_GPU
 !
 !    !******************************************
-!    subroutine StatisticOneStatuClusters_Used_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!    subroutine StatisticOneStatuClusters_Used_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !        implicit none
 !        !---Dummy Vars---
 !        integer,intent(in)::Statu
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoaleStatisticInfo_Used)::TheMigCoaleStatisticInfo
+!        type(MCMigCoaleStatisticInfo_Used)::TheMCMigCoaleStatisticInfo
 !        !---Local Vars---
 !        integer::MultiBox
 !        integer::IBox
@@ -762,8 +762,8 @@ module MIGCOALE_STATISTIC_GPU
 !            !   The array size maybe a little bigger than used size
 !            !   The main purpose to let what happen is that we do not want to allocate a suitable memory size
 !            !   for used situation in each step, because for implant, the used size is keeping changing and we should not adjustment below
-!            !   memory each step, so we use the virtual or expd size, which mean, while GetBoxesMigCoaleStat_Expd_GPU or
-!            !   GetBoxesMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
+!            !   memory each step, so we use the virtual or expd size, which mean, while GetBoxesMCMigCoaleStat_Expd_GPU or
+!            !   GetBoxesMCMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
 !            !   for next N steps and need not to adjustment memory size.
 !            deallocate(m_SumROneStatuArray)
 !            allocate(m_SumROneStatuArray(NB))
@@ -839,15 +839,15 @@ module MIGCOALE_STATISTIC_GPU
 !            NCCount = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Single(IBox)%NC(Statu)
 !
 !            if(NCCount .GT. 0) then
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = sum(m_SumROneStatuArray(IBFROM:IBTO))/NCCount
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = maxval(m_MaxROneStatuArray(IBFROM:IBTO))
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = minval(m_MinROneStatuArray(IBFROM:IBTO))
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = sum(m_SumROneStatuArray(IBFROM:IBTO))/NCCount
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = maxval(m_MaxROneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = minval(m_MinROneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(IBFROM:IBTO))
 !            else
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = 0.D0
 !            end if
 !
 !        END DO
@@ -855,29 +855,29 @@ module MIGCOALE_STATISTIC_GPU
 !        NCCount = Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC(Statu)
 !
 !        if(NCCount .GT. 0) then
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = sum(m_SumROneStatuArray(1:NB))/NCCount
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = maxval(m_MaxROneStatuArray(1:NB))
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = minval(m_MinROneStatuArray(1:NB))
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = sum(m_SumROneStatuArray(1:NB))/NCCount
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = maxval(m_MaxROneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = minval(m_MinROneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(1:NB))
 !        else
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = 0.D0
 !        end if
 !
 !        return
 !    end subroutine StatisticOneStatuClusters_Used_Way3_1
 !
 !        !************************************************************
-!    subroutine GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!    subroutine GetBoxesMCMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !      !*** Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
 !      implicit none
 !      !---Dummy Vars---
 !      type(SimulationBoxes)::Host_Boxes
 !      type(SimulationCtrlParam)::Host_SimuCtrlParam
 !      type(SimulationBoxes_GPU)::Dev_Boxes
-!      type(MigCoaleStatisticInfo_Expd)::TheMigCoaleStatisticInfo
+!      type(MCMigCoaleStatisticInfo_Expd)::TheMCMigCoaleStatisticInfo
 !      !---Local Vars---
 !      integer::Statu
 !      !---Body---
@@ -885,21 +885,21 @@ module MIGCOALE_STATISTIC_GPU
 !      call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 !
 !      DO Statu = 1,p_NUMBER_OF_STATU
-!        call StatisticOneStatuClusters_Expd_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!        call StatisticOneStatuClusters_Expd_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !      END DO
 !
 !      return
-!    end subroutine GetBoxesMigCoaleStat_Expd_GPU
+!    end subroutine GetBoxesMCMigCoaleStat_Expd_GPU
 !
 !    !******************************************
-!    subroutine StatisticOneStatuClusters_Expd_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!    subroutine StatisticOneStatuClusters_Expd_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !        implicit none
 !        !---Dummy Vars---
 !        integer,intent(in)::Statu
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoaleStatisticInfo_Expd)::TheMigCoaleStatisticInfo
+!        type(MCMigCoaleStatisticInfo_Expd)::TheMCMigCoaleStatisticInfo
 !        !---Local Vars---
 !        integer::MultiBox
 !        integer::IBox
@@ -936,7 +936,7 @@ module MIGCOALE_STATISTIC_GPU
 !            !   The array size maybe a little bigger than expd size
 !            !   The main purpose to let what happen is that we do not want to allocate a suitable memory size
 !            !   for expd situation while the expd boundary is changed, so we use the virtual size, which mean, while
-!            !   GetBoxesMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
+!            !   GetBoxesMCMigCoaleStat_Virtual_GPU is used, we had get a bigger block of memory size that can ensure the usage
 !            !   for next N steps and need not to adjustment memory size.
 !            deallocate(m_SumROneStatuArray)
 !            allocate(m_SumROneStatuArray(NB))
@@ -1023,15 +1023,15 @@ module MIGCOALE_STATISTIC_GPU
 !            end if
 !
 !            if(NCCount .GT. 0) then
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = sum(m_SumROneStatuArray(IBFROM:IBTO))/NCCount
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = maxval(m_MaxROneStatuArray(IBFROM:IBTO))
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = minval(m_MinROneStatuArray(IBFROM:IBTO))
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = sum(m_SumROneStatuArray(IBFROM:IBTO))/NCCount
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = maxval(m_MaxROneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = minval(m_MinROneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(IBFROM:IBTO))
 !            else
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = 0.D0
 !            end if
 !
 !            NCCountTotal = NCCountTotal + NCCount
@@ -1039,29 +1039,29 @@ module MIGCOALE_STATISTIC_GPU
 !        END DO
 !
 !        if(NCCountTotal .GT. 0) then
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = sum(m_SumROneStatuArray(1:NB))/NCCountTotal
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = maxval(m_MaxROneStatuArray(1:NB))
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = minval(m_MinROneStatuArray(1:NB))
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = sum(m_SumROneStatuArray(1:NB))/NCCountTotal
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = maxval(m_MaxROneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = minval(m_MinROneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(1:NB))
 !        else
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = 0.D0
 !        end if
 !
 !        return
 !    end subroutine StatisticOneStatuClusters_Expd_Way3_1
 !
 !    !************************************************************
-!    subroutine GetBoxesMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!    subroutine GetBoxesMCMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !      !*** Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
 !      implicit none
 !      !---Dummy Vars---
 !      type(SimulationBoxes)::Host_Boxes
 !      type(SimulationCtrlParam)::Host_SimuCtrlParam
 !      type(SimulationBoxes_GPU)::Dev_Boxes
-!      type(MigCoaleStatisticInfo_Virtual)::TheMigCoaleStatisticInfo
+!      type(MCMigCoaleStatisticInfo_Virtual)::TheMCMigCoaleStatisticInfo
 !      !---Local Vars---
 !      integer::Statu
 !      !---Body---
@@ -1069,21 +1069,21 @@ module MIGCOALE_STATISTIC_GPU
 !      call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 !
 !      DO Statu = 1,p_NUMBER_OF_STATU
-!        call StatisticOneStatuClusters_Virtual_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!        call StatisticOneStatuClusters_Virtual_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !      END DO
 !
 !      return
-!    end subroutine GetBoxesMigCoaleStat_Virtual_GPU
+!    end subroutine GetBoxesMCMigCoaleStat_Virtual_GPU
 !
 !    !******************************************
-!    subroutine StatisticOneStatuClusters_Virtual_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo)
+!    subroutine StatisticOneStatuClusters_Virtual_Way3_1(Statu,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo)
 !        implicit none
 !        !---Dummy Vars---
 !        integer,intent(in)::Statu
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoaleStatisticInfo_Virtual)::TheMigCoaleStatisticInfo
+!        type(MCMigCoaleStatisticInfo_Virtual)::TheMCMigCoaleStatisticInfo
 !        !---Local Vars---
 !        integer::MultiBox
 !        integer::IBox
@@ -1206,15 +1206,15 @@ module MIGCOALE_STATISTIC_GPU
 !            end if
 !
 !            if(NCCount .GT. 0) then
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = sum(m_SumROneStatuArray(IBFROM:IBTO))/NCCount
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = maxval(m_MaxROneStatuArray(IBFROM:IBTO))
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = minval(m_MinROneStatuArray(IBFROM:IBTO))
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = sum(m_SumROneStatuArray(IBFROM:IBTO))/NCCount
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = maxval(m_MaxROneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = minval(m_MinROneStatuArray(IBFROM:IBTO))
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(IBFROM:IBTO))
 !            else
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = 0.D0
-!                TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RAVA(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMAX(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%RMIN(Statu) = 0.D0
+!                TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox)%DiffusorValueMax(Statu) = 0.D0
 !            end if
 !
 !            NCCountTotal = NCCountTotal + NCCount
@@ -1222,15 +1222,15 @@ module MIGCOALE_STATISTIC_GPU
 !        END DO
 !
 !        if(NCCountTotal .GT. 0) then
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = sum(m_SumROneStatuArray(1:NB))/NCCountTotal
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = maxval(m_MaxROneStatuArray(1:NB))
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = minval(m_MinROneStatuArray(1:NB))
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = sum(m_SumROneStatuArray(1:NB))/NCCountTotal
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = maxval(m_MaxROneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = minval(m_MinROneStatuArray(1:NB))
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = maxval(m_MaxDiffOneStatuArray(1:NB))
 !        else
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = 0.D0
-!            TheMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RAVA(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMAX(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%RMIN(Statu) = 0.D0
+!            TheMCMigCoaleStatisticInfo%statistic_IntegralBox%DiffusorValueMax(Statu) = 0.D0
 !        end if
 !
 !        return
@@ -2264,4 +2264,4 @@ module MIGCOALE_STATISTIC_GPU
 !        return
 !    end subroutine Kernel_StatisticOneStatuValue3
 
-end module MIGCOALE_STATISTIC_GPU
+end module MCMIGCOALE_STATISTIC_GPU

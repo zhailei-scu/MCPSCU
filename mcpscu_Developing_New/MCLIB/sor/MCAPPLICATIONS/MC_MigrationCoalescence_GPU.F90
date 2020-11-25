@@ -1,4 +1,4 @@
-program MigrationCoalescence_GPU_Main
+program MC_MigrationCoalescence_GPU_Main
     use MC_SimBoxArray_AppShell_GPU
     implicit none
     !---Local Vars---
@@ -11,6 +11,6 @@ program MigrationCoalescence_GPU_Main
     !---Exclute the main process---
     call AppShell_Main_GPU(nmpi,procid)
 
-    write(*,*) "---End MigrationCoalescence_GPU---"
+    write(*,*) "---End MC_MigrationCoalescence_GPU---"
 
-end program MigrationCoalescence_GPU_Main
+end program MC_MigrationCoalescence_GPU_Main

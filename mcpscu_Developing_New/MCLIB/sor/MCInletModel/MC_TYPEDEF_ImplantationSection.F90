@@ -6,13 +6,13 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
     use MCLIB_GLOBAL_GPU
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
     use MCLIB_CAL_NEIGHBOR_LIST_GPU
-    use MIGCOALE_TIMECTL
-    use MIGCOALE_TYPEDEF_STATISTICINFO
-    use MIGCOALE_STATISTIC_GPU
-    use MIGCOALE_STATISTIC_CPU
-    use MIGCOALE_TYPEDEF_SIMRECORD
-    use MIGCOALE_ADDONDATA_HOST
-    use MIGCOALE_GLOBALVARS_DEV
+    use MCMIGCOALE_TIMECTL
+    use MCMIGCOALE_TYPEDEF_STATISTICINFO
+    use MCMIGCOALE_STATISTIC_GPU
+    use MCMIGCOALE_STATISTIC_CPU
+    use MCMIGCOALE_TYPEDEF_SIMRECORD
+    use MCMIGCOALE_ADDONDATA_HOST
+    use MCMIGCOALE_GLOBALVARS_DEV
     use MODEL_ECR_GPU
     implicit none
 
@@ -802,7 +802,7 @@ module MC_TYPEDEF_IMPLANTATIONSECTION
         character*32::KEYWORD
         character*1000::STRTEMP(1)
         integer::N
-        type(MigCoalClusterRecord)::tempRecord
+        type(MCMigCoalClusterRecord)::tempRecord
         real(kind=KINDDF)::TotalSampleRate
         character*1000::FolderPath
         integer::LayerNum

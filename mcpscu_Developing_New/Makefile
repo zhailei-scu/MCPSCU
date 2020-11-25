@@ -54,7 +54,7 @@ endif
 ifeq ($(operateSystem), LINUX)
   export MCLIBDIRS  := $(mcpscusor)$(Segment)MCLIB$(Segment)sor
 endif
-mclibnames	  := MCCommon MCCommonGPU MigCoaleModel InletModel
+mclibnames	  := MCCommon MCCommonGPU MCMigCoaleModel MCInletModel MCAppShell
 
 ifeq ($(operateSystem), CYGWIN)
   export HYBRIDLIBDIRS  := $(mcpscusor)$(Segment)HYBRIDLIB$(Segment)sor
@@ -102,10 +102,12 @@ all:
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MCCommon$(Segment)MCCommon.mk
 #the commonGPU mc library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MCCommonGPU$(Segment)MCCommonGPU.mk
-#the MigCoale mc library
-	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MigCoaleModel$(Segment)MigCoaleModel.mk
-#the inlet model library
-	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)InletModel$(Segment)InletModel.mk
+#the MCMigCoale mc library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MCMigCoaleModel$(Segment)MCMigCoaleModel.mk
+#the MCInlet model library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MCInletModel$(Segment)MCInletModel.mk
+#the MCAppShell model library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MCAppShell$(Segment)MCAppShell.mk
 
 #the hybrid model library
 	$(MAKE) -f $(mcpscusor)$(Segment)HYBRIDLIB$(Segment)HybridMCRTModel$(Segment)HybridMCRTModel.mk

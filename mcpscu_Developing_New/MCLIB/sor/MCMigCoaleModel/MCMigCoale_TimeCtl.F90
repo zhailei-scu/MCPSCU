@@ -1,10 +1,10 @@
-module MIGCOALE_TIMECTL
+module MCMIGCOALE_TIMECTL
     use cudafor
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
-    use MIGCOALE_STATISTIC_GPU
+    use MCMIGCOALE_STATISTIC_GPU
     use MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
-    use MIGCOALE_TYPEDEF_STATISTICINFO
+    use MCMIGCOALE_TYPEDEF_STATISTICINFO
     use MCLIB_CAL_NEIGHBOR_LIST_GPU
     implicit none
 
@@ -14,7 +14,7 @@ module MIGCOALE_TIMECTL
     contains
 
     !**************************************************************
-    subroutine UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record,TSTEP)
+    subroutine UpdateTimeStep_MCMigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo,Record,TSTEP)
         ! To automatically determine the time step
         !  Host_Boxes: the boxes info in host
         !       INPUT: DIF - the diffusion coefficient
@@ -24,7 +24,7 @@ module MIGCOALE_TIMECTL
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoaleStatisticInfo_Expd)::TheMigCoaleStatisticInfo
+        type(MCMigCoaleStatisticInfo_Expd)::TheMCMigCoaleStatisticInfo
         CLASS(SimulationRecord)::Record
         real(kind=KINDDF)::TSTEP
         !---Local Vars---
@@ -38,7 +38,7 @@ module MIGCOALE_TIMECTL
         TSTEPFREE = 1.D32
         TSTEPGB = 1.D32
 
-        ASSOCIATE(TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral,TMigStatInfo=>TheMigCoaleStatisticInfo%statistic_IntegralBox)
+        ASSOCIATE(TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral,TMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_IntegralBox)
 
         select case(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY)
             case(mp_SelfAdjustlStep_NearestSep)
@@ -159,16 +159,16 @@ module MIGCOALE_TIMECTL
         END DO
 
         return
-    end subroutine UpdateTimeStep_MigCoal
+    end subroutine UpdateTimeStep_MCMigCoal
 
     !*********************************************************
-    function Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record,ImplantedNumEachBox) result(TheVerifyTime)
+    function Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatisticInfo,Record,ImplantedNumEachBox) result(TheVerifyTime)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoaleStatisticInfo_Virtual)::TheMigCoaleStatisticInfo
+        type(MCMigCoaleStatisticInfo_Virtual)::TheMCMigCoaleStatisticInfo
         CLASS(SimulationRecord)::Record
         integer,intent(in)::ImplantedNumEachBox
         real(kind=KINDDF),intent(out)::TheVerifyTime
@@ -186,7 +186,7 @@ module MIGCOALE_TIMECTL
 
         MultiBox = Host_SimuCtrlParam%MultiBox
 
-        ASSOCIATE(TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral,TMigStatInfo=>TheMigCoaleStatisticInfo%statistic_IntegralBox)
+        ASSOCIATE(TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral,TMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_IntegralBox)
 
         select case(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY)
             case(mp_SelfAdjustlStep_NearestSep)
@@ -308,4 +308,4 @@ module MIGCOALE_TIMECTL
     end function Cal_VerifyTime_Implant
 
 
-end module MIGCOALE_TIMECTL
+end module MCMIGCOALE_TIMECTL

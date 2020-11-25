@@ -1,4 +1,4 @@
-module MIGCOALE_ADDONDATA_HOST
+module MCMIGCOALE_ADDONDATA_HOST
     use MSM_TYPEDEF_InputPaser
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
@@ -129,4 +129,4 @@ module MIGCOALE_ADDONDATA_HOST
         return
     end subroutine PrintResolveAddOnData
 
-end module MIGCOALE_ADDONDATA_HOST
+end module MCMIGCOALE_ADDONDATA_HOST

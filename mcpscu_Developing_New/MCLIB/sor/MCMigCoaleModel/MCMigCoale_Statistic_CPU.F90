@@ -1,18 +1,18 @@
-module MIGCOALE_STATISTIC_CPU
+module MCMIGCOALE_STATISTIC_CPU
   use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
-  use MIGCOALE_TYPEDEF_STATISTICINFO
-  use MIGCOALE_ADDONDATA_HOST
+  use MCMIGCOALE_TYPEDEF_STATISTICINFO
+  use MCMIGCOALE_ADDONDATA_HOST
   contains
 
   !*************************************************************
-  subroutine GetBoxesMigCoaleStat_Used_CPU(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo)
+  subroutine GetBoxesMCMigCoaleStat_Used_CPU(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo)
     !***                 Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
     !                 Host_Boxes: the boxes information in host
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    type(MigCoaleStatisticInfo_Used)::TheMigCoaleStatisticInfo
+    type(MCMigCoaleStatisticInfo_Used)::TheMCMigCoaleStatisticInfo
     !---Local Vars---
     integer::MultiBox
     integer::IBox
@@ -28,7 +28,7 @@ module MIGCOALE_STATISTIC_CPU
 
     RAVA = 0.D0
 
-    ASSOCIATE(TMigStatInfo=>TheMigCoaleStatisticInfo%statistic_IntegralBox)
+    ASSOCIATE(TMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_IntegralBox)
 
     TMigStatInfo%RMAX = -1.D32
     TMigStatInfo%RMIN = 1.D32
@@ -41,8 +41,8 @@ module MIGCOALE_STATISTIC_CPU
 
         NActCountTemp = 0
 
-        ASSOCIATE(SMigStatInfo=>TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox))
-            call GetOneBoxMigCoaleStat_Used_CPU(IBox,Host_Boxes,Host_SimuCtrlParam,SMigStatInfo,NActCountTemp)
+        ASSOCIATE(SMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox))
+            call GetOneBoxMCMigCoaleStat_Used_CPU(IBox,Host_Boxes,Host_SimuCtrlParam,SMigStatInfo,NActCountTemp)
 
             DO IStatu = 1, p_NUMBER_OF_STATU
                 if(TMigStatInfo%RMAX(IStatu) .LT. SMigStatInfo%RMAX(IStatu)) then
@@ -78,10 +78,10 @@ module MIGCOALE_STATISTIC_CPU
     END ASSOCIATE
 
     return
-  end subroutine GetBoxesMigCoaleStat_Used_CPU
+  end subroutine GetBoxesMCMigCoaleStat_Used_CPU
 
   !**************************************************************
-  subroutine GetOneBoxMigCoaleStat_Used_CPU(IBox, Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticOneBox,NActCount)
+  subroutine GetOneBoxMCMigCoaleStat_Used_CPU(IBox, Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticOneBox,NActCount)
     !   ***   Purpose        : To get average size of clusters, maxma size, and so on, at current time and this single box
     !                    IBox: the index of simulation box
     !              Host_Boxes: the boxes information in host
@@ -90,7 +90,7 @@ module MIGCOALE_STATISTIC_CPU
     integer, intent(in)::IBox
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    type(MigCoaleStatisticOneBox)::TheMigCoaleStatisticOneBox
+    type(MCMigCoaleStatisticOneBox)::TheMCMigCoaleStatisticOneBox
     integer,optional::NActCount(p_NUMBER_OF_STATU)
     !---Local Vars---
     integer::IC, ICFROM, ICTO
@@ -98,10 +98,10 @@ module MIGCOALE_STATISTIC_CPU
     integer::ActiveFlag,DisappearFlag
     integer::NActCountTemp(p_NUMBER_OF_STATU)
     !---Body---
-    TheMigCoaleStatisticOneBox%RMAX = -1.D32
-    TheMigCoaleStatisticOneBox%RMIN = 1.D32
-    TheMigCoaleStatisticOneBox%RAVA  = 0.D0
-    TheMigCoaleStatisticOneBox%DiffusorValueMax = -1.D32
+    TheMCMigCoaleStatisticOneBox%RMAX = -1.D32
+    TheMCMigCoaleStatisticOneBox%RMIN = 1.D32
+    TheMCMigCoaleStatisticOneBox%RAVA  = 0.D0
+    TheMCMigCoaleStatisticOneBox%DiffusorValueMax = -1.D32
 
     ICFROM = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
     ICTO   = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -127,19 +127,19 @@ module MIGCOALE_STATISTIC_CPU
             DisappearFlag = DisappearFlag - 1
         end if
 
-        TheMigCoaleStatisticOneBox%RAVA(IStatu) = TheMigCoaleStatisticOneBox%RAVA(IStatu) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+        TheMCMigCoaleStatisticOneBox%RAVA(IStatu) = TheMCMigCoaleStatisticOneBox%RAVA(IStatu) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff .GT. TheMigCoaleStatisticOneBox%DiffusorValueMax(IStatu)) then
-            TheMigCoaleStatisticOneBox%DiffusorValueMax(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff .GT. TheMCMigCoaleStatisticOneBox%DiffusorValueMax(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%DiffusorValueMax(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff
         end if
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. TheMigCoaleStatisticOneBox%RMAX(IStatu)) then
-            TheMigCoaleStatisticOneBox%RMAX(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
-            TheMigCoaleStatisticOneBox%ICMAX(IStatu) = IC
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. TheMCMigCoaleStatisticOneBox%RMAX(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%RMAX(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+            TheMCMigCoaleStatisticOneBox%ICMAX(IStatu) = IC
         end if
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .LT. TheMigCoaleStatisticOneBox%RMIN(IStatu)) then
-            TheMigCoaleStatisticOneBox%RMIN(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .LT. TheMCMigCoaleStatisticOneBox%RMIN(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%RMIN(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
         end if
 
       END DO
@@ -166,7 +166,7 @@ module MIGCOALE_STATISTIC_CPU
 
     DO IStatu = 1,p_NUMBER_OF_STATU
         if(NActCountTemp(IStatu) .GT. 0) then
-            TheMigCoaleStatisticOneBox%RAVA(IStatu) = TheMigCoaleStatisticOneBox%RAVA(IStatu)/NActCountTemp(IStatu)
+            TheMCMigCoaleStatisticOneBox%RAVA(IStatu) = TheMCMigCoaleStatisticOneBox%RAVA(IStatu)/NActCountTemp(IStatu)
         end if
     END DO
 
@@ -175,17 +175,17 @@ module MIGCOALE_STATISTIC_CPU
     end if
 
     return
-  end subroutine GetOneBoxMigCoaleStat_Used_CPU
+  end subroutine GetOneBoxMCMigCoaleStat_Used_CPU
 
   !*************************************************************
-  subroutine GetBoxesMigCoaleStat_Expd_CPU(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo)
+  subroutine GetBoxesMCMigCoaleStat_Expd_CPU(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo)
     !***                 Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
     !                 Host_Boxes: the boxes information in host
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    type(MigCoaleStatisticInfo_Expd)::TheMigCoaleStatisticInfo
+    type(MCMigCoaleStatisticInfo_Expd)::TheMCMigCoaleStatisticInfo
     !---Local Vars---
     integer::MultiBox
     integer::IBox
@@ -199,7 +199,7 @@ module MIGCOALE_STATISTIC_CPU
 
     RAVA = 0.D0
 
-    ASSOCIATE(TMigStatInfo=>TheMigCoaleStatisticInfo%statistic_IntegralBox)
+    ASSOCIATE(TMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_IntegralBox)
 
     TMigStatInfo%RMAX = -1.D32
     TMigStatInfo%RMIN = 1.D32
@@ -212,8 +212,8 @@ module MIGCOALE_STATISTIC_CPU
 
         NActCountTemp = 0
 
-        ASSOCIATE(SMigStatInfo=>TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox))
-            call GetOneBoxMigCoaleStat_Expd_CPU(IBox,Host_Boxes,Host_SimuCtrlParam,SMigStatInfo,NActCountTemp)
+        ASSOCIATE(SMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox))
+            call GetOneBoxMCMigCoaleStat_Expd_CPU(IBox,Host_Boxes,Host_SimuCtrlParam,SMigStatInfo,NActCountTemp)
 
             DO IStatu = 1, p_NUMBER_OF_STATU
                 if(TMigStatInfo%RMAX(IStatu) .LT. SMigStatInfo%RMAX(IStatu)) then
@@ -248,10 +248,10 @@ module MIGCOALE_STATISTIC_CPU
     END ASSOCIATE
 
     return
-  end subroutine GetBoxesMigCoaleStat_Expd_CPU
+  end subroutine GetBoxesMCMigCoaleStat_Expd_CPU
 
   !**************************************************************
-  subroutine GetOneBoxMigCoaleStat_Expd_CPU(IBox, Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticOneBox,NActCount)
+  subroutine GetOneBoxMCMigCoaleStat_Expd_CPU(IBox, Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticOneBox,NActCount)
     !   ***   Purpose        : To get average size of clusters, maxma size, and so on, at current time and this single box
     !                    IBox: the index of simulation box
     !              Host_Boxes: the boxes information in host
@@ -261,7 +261,7 @@ module MIGCOALE_STATISTIC_CPU
     integer, intent(in)::IBox
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    type(MigCoaleStatisticOneBox)::TheMigCoaleStatisticOneBox
+    type(MCMigCoaleStatisticOneBox)::TheMCMigCoaleStatisticOneBox
     integer,optional::NActCount(p_NUMBER_OF_STATU)
     !---Local Vars---
     integer::IC, ICFROM, ICTO
@@ -270,10 +270,10 @@ module MIGCOALE_STATISTIC_CPU
     integer::NActCountTemp(p_NUMBER_OF_STATU)
     !---Body---
 
-    TheMigCoaleStatisticOneBox%RMAX = -1.D32
-    TheMigCoaleStatisticOneBox%RMIN = 1.D32
-    TheMigCoaleStatisticOneBox%RAVA  = 0.D0
-    TheMigCoaleStatisticOneBox%DiffusorValueMax = -1.D32
+    TheMCMigCoaleStatisticOneBox%RMAX = -1.D32
+    TheMCMigCoaleStatisticOneBox%RMIN = 1.D32
+    TheMCMigCoaleStatisticOneBox%RAVA  = 0.D0
+    TheMCMigCoaleStatisticOneBox%DiffusorValueMax = -1.D32
 
     ICFROM = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,1)
     ICTO   = Host_Boxes%m_BoxesInfo%SEExpdIndexBox(IBox,2)
@@ -298,19 +298,19 @@ module MIGCOALE_STATISTIC_CPU
             DisappearFlag = DisappearFlag - 1
         end if
 
-        TheMigCoaleStatisticOneBox%RAVA(IStatu) = TheMigCoaleStatisticOneBox%RAVA(IStatu) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+        TheMCMigCoaleStatisticOneBox%RAVA(IStatu) = TheMCMigCoaleStatisticOneBox%RAVA(IStatu) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff .GT. TheMigCoaleStatisticOneBox%DiffusorValueMax(IStatu)) then
-            TheMigCoaleStatisticOneBox%DiffusorValueMax(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff .GT. TheMCMigCoaleStatisticOneBox%DiffusorValueMax(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%DiffusorValueMax(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff
         end if
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. TheMigCoaleStatisticOneBox%RMAX(IStatu)) then
-            TheMigCoaleStatisticOneBox%RMAX(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
-            TheMigCoaleStatisticOneBox%ICMAX(IStatu) = IC
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. TheMCMigCoaleStatisticOneBox%RMAX(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%RMAX(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+            TheMCMigCoaleStatisticOneBox%ICMAX(IStatu) = IC
         end if
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .LT. TheMigCoaleStatisticOneBox%RMIN(IStatu)) then
-            TheMigCoaleStatisticOneBox%RMIN(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .LT. TheMCMigCoaleStatisticOneBox%RMIN(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%RMIN(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
         end if
 
     END DO
@@ -346,7 +346,7 @@ module MIGCOALE_STATISTIC_CPU
 
 
         if(NActCountTemp(IStatu) .GT. 0) then
-            TheMigCoaleStatisticOneBox%RAVA(IStatu) = TheMigCoaleStatisticOneBox%RAVA(IStatu)/NActCountTemp(IStatu)
+            TheMCMigCoaleStatisticOneBox%RAVA(IStatu) = TheMCMigCoaleStatisticOneBox%RAVA(IStatu)/NActCountTemp(IStatu)
         end if
     END DO
 
@@ -355,17 +355,17 @@ module MIGCOALE_STATISTIC_CPU
     end if
 
     return
-  end subroutine GetOneBoxMigCoaleStat_Expd_CPU
+  end subroutine GetOneBoxMCMigCoaleStat_Expd_CPU
 
   !*************************************************************
-  subroutine GetBoxesMigCoaleStat_Virtual_CPU(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo)
+  subroutine GetBoxesMCMigCoaleStat_Virtual_CPU(Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticInfo)
     !***                 Purpose: To get average size of clusters, maxma size, and so on, at current time(for all boxs)
     !                 Host_Boxes: the boxes information in host
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    type(MigCoaleStatisticInfo_Virtual)::TheMigCoaleStatisticInfo
+    type(MCMigCoaleStatisticInfo_Virtual)::TheMCMigCoaleStatisticInfo
     !---Local Vars---
     integer::MultiBox
     integer::IBox
@@ -379,7 +379,7 @@ module MIGCOALE_STATISTIC_CPU
 
     RAVA = 0.D0
 
-    ASSOCIATE(TMigStatInfo=>TheMigCoaleStatisticInfo%statistic_IntegralBox)
+    ASSOCIATE(TMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_IntegralBox)
 
     TMigStatInfo%RMAX = -1.D32
     TMigStatInfo%RMIN = 1.D32
@@ -392,8 +392,8 @@ module MIGCOALE_STATISTIC_CPU
 
         NActCountTemp = 0
 
-        ASSOCIATE(SMigStatInfo=>TheMigCoaleStatisticInfo%statistic_SingleBoxes(IBox))
-            call GetOneBoxMigCoaleStat_Virtual_CPU(IBox,Host_Boxes,Host_SimuCtrlParam,SMigStatInfo,NActCountTemp)
+        ASSOCIATE(SMigStatInfo=>TheMCMigCoaleStatisticInfo%statistic_SingleBoxes(IBox))
+            call GetOneBoxMCMigCoaleStat_Virtual_CPU(IBox,Host_Boxes,Host_SimuCtrlParam,SMigStatInfo,NActCountTemp)
 
             DO IStatu = 1, p_NUMBER_OF_STATU
                 if(TMigStatInfo%RMAX(IStatu) .LT. SMigStatInfo%RMAX(IStatu)) then
@@ -428,10 +428,10 @@ module MIGCOALE_STATISTIC_CPU
     END ASSOCIATE
 
     return
-  end subroutine GetBoxesMigCoaleStat_Virtual_CPU
+  end subroutine GetBoxesMCMigCoaleStat_Virtual_CPU
 
   !**************************************************************
-  subroutine GetOneBoxMigCoaleStat_Virtual_CPU(IBox, Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticOneBox,NActCount)
+  subroutine GetOneBoxMCMigCoaleStat_Virtual_CPU(IBox, Host_Boxes,Host_SimuCtrlParam,TheMCMigCoaleStatisticOneBox,NActCount)
     !   ***   Purpose        : To get average size of clusters, maxma size, and so on, at current time and this single box
     !                    IBox: the index of simulation box
     !              Host_Boxes: the boxes information in host
@@ -441,7 +441,7 @@ module MIGCOALE_STATISTIC_CPU
     integer, intent(in)::IBox
     type(SimulationBoxes)::Host_Boxes
     type(SimulationCtrlParam)::Host_SimuCtrlParam
-    type(MigCoaleStatisticOneBox)::TheMigCoaleStatisticOneBox
+    type(MCMigCoaleStatisticOneBox)::TheMCMigCoaleStatisticOneBox
     integer,optional::NActCount(p_NUMBER_OF_STATU)
     !---Local Vars---
     integer::IC, ICFROM, ICTO
@@ -450,10 +450,10 @@ module MIGCOALE_STATISTIC_CPU
     integer::NActCountTemp(p_NUMBER_OF_STATU)
     !---Body---
 
-    TheMigCoaleStatisticOneBox%RMAX = 0.D0
-    TheMigCoaleStatisticOneBox%RMIN = 1.D32
-    TheMigCoaleStatisticOneBox%RAVA  = 0.D0
-    TheMigCoaleStatisticOneBox%DiffusorValueMax = 0.D0
+    TheMCMigCoaleStatisticOneBox%RMAX = 0.D0
+    TheMCMigCoaleStatisticOneBox%RMIN = 1.D32
+    TheMCMigCoaleStatisticOneBox%RAVA  = 0.D0
+    TheMCMigCoaleStatisticOneBox%DiffusorValueMax = 0.D0
 
     ICFROM = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,1)
     ICTO   = Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2)
@@ -482,19 +482,19 @@ module MIGCOALE_STATISTIC_CPU
             DisappearFlag = DisappearFlag - 1
         end if
 
-        TheMigCoaleStatisticOneBox%RAVA(IStatu) = TheMigCoaleStatisticOneBox%RAVA(IStatu) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+        TheMCMigCoaleStatisticOneBox%RAVA(IStatu) = TheMCMigCoaleStatisticOneBox%RAVA(IStatu) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff .GT. TheMigCoaleStatisticOneBox%DiffusorValueMax(IStatu)) then
-            TheMigCoaleStatisticOneBox%DiffusorValueMax(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff .GT. TheMCMigCoaleStatisticOneBox%DiffusorValueMax(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%DiffusorValueMax(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff
         end if
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. TheMigCoaleStatisticOneBox%RMAX(IStatu)) then
-            TheMigCoaleStatisticOneBox%RMAX(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
-            TheMigCoaleStatisticOneBox%ICMAX(IStatu) = IC
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .GT. TheMCMigCoaleStatisticOneBox%RMAX(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%RMAX(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+            TheMCMigCoaleStatisticOneBox%ICMAX(IStatu) = IC
         end if
 
-        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .LT. TheMigCoaleStatisticOneBox%RMIN(IStatu)) then
-            TheMigCoaleStatisticOneBox%RMIN(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
+        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD .LT. TheMCMigCoaleStatisticOneBox%RMIN(IStatu)) then
+            TheMCMigCoaleStatisticOneBox%RMIN(IStatu) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD
         end if
 
     END DO
@@ -531,7 +531,7 @@ module MIGCOALE_STATISTIC_CPU
 
 
         if(NActCountTemp(IStatu) .GT. 0) then
-            TheMigCoaleStatisticOneBox%RAVA(IStatu) = TheMigCoaleStatisticOneBox%RAVA(IStatu)/NActCountTemp(IStatu)
+            TheMCMigCoaleStatisticOneBox%RAVA(IStatu) = TheMCMigCoaleStatisticOneBox%RAVA(IStatu)/NActCountTemp(IStatu)
         end if
     END DO
 
@@ -540,6 +540,6 @@ module MIGCOALE_STATISTIC_CPU
     end if
 
     return
-  end subroutine GetOneBoxMigCoaleStat_Virtual_CPU
+  end subroutine GetOneBoxMCMigCoaleStat_Virtual_CPU
 
-end module MIGCOALE_STATISTIC_CPU
+end module MCMIGCOALE_STATISTIC_CPU

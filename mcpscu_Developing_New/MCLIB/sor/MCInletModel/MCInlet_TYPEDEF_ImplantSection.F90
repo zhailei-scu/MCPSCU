@@ -1,4 +1,4 @@
-module INLET_TYPEDEF_IMPLANTSECTION
+module MCINLET_TYPEDEF_IMPLANTSECTION
     use cudafor
     use MCLIB_CONSTANTS_GPU
     use MCLIB_TYPEDEF_BASICRECORD
@@ -7,13 +7,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
     use MCLIB_GLOBAL_GPU
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY_GPU
     use MCLIB_CAL_NEIGHBOR_LIST_GPU
-    use MIGCOALE_TIMECTL
-    use MIGCOALE_TYPEDEF_STATISTICINFO
-    use MIGCOALE_STATISTIC_GPU
-    use MIGCOALE_STATISTIC_CPU
-    use MIGCOALE_TYPEDEF_SIMRECORD
-    use MIGCOALE_ADDONDATA_HOST
-    use MIGCOALE_GLOBALVARS_DEV
+    use MCMIGCOALE_TIMECTL
+    use MCMIGCOALE_TYPEDEF_STATISTICINFO
+    use MCMIGCOALE_STATISTIC_GPU
+    use MCMIGCOALE_STATISTIC_CPU
+    use MCMIGCOALE_TYPEDEF_SIMRECORD
+    use MCMIGCOALE_ADDONDATA_HOST
+    use MCMIGCOALE_GLOBALVARS_DEV
     use MODEL_ECR_GPU
     implicit none
 
@@ -631,7 +631,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*32::KEYWORD
         character*1000::STRTEMP(10)
         integer::N
-        type(MigCoalClusterRecord)::tempRecord
+        type(MCMigCoalClusterRecord)::tempRecord
         real(kind=KINDDF)::TotalSampleRate
         character*1000::ConfigPath
         integer::LayerNum
@@ -1542,16 +1542,16 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine ReadImplantClusterDepthDist_Simple
 
     !*********************************************************************
-    subroutine Implant(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    subroutine Implant(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMCMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
         real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
@@ -1559,9 +1559,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         select case(this%InsertCountModel)
             case(p_InsertCountModel_ByClusterNum)
-                call this%ImplantClusters_Contiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP)
+                call this%ImplantClusters_Contiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMCMigCoaleStatInfoWrap,Record,TSTEP)
             case(p_InsertCountModel_ByConfigNum)
-                call this%ImplantClusters_BatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
+                call this%ImplantClusters_BatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMCMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
             case default
                 write(*,*) "MCPSCUERROR: Unknown insert count model : ", this%InsertCountModel
                 pause
@@ -1572,7 +1572,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine
 
     !*********************************************************************
-    subroutine ImplantClusters_BatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    subroutine ImplantClusters_BatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMCMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
         use RAND32_MODULE
         implicit none
         !---Dummy Vars---
@@ -1580,15 +1580,15 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
         real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
         !---Local Vars---
         integer::I
-        type(MigCoalClusterRecord)::tempRecord
+        type(MCMigCoalClusterRecord)::tempRecord
         integer::ISelected
         character*1000::cfgFile
         character*30::TheVersion
@@ -1614,7 +1614,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 NC0 = 0
             end if
 
-            call GetBoxesMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+            call GetBoxesMCMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
             NCBefore = sum(Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC)
 
@@ -1662,17 +1662,17 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 NewTotalSize = 0
             end if
 
-            call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
+            call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
 
             if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
                 ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             else
-                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
                 ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             end if
 
-            call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeReactionRandNum(NewTotalSize)
+            call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeReactionRandNum(NewTotalSize)
 
             call CleanSimulationBoxes_GPU(Dev_Boxes)
 
@@ -1680,9 +1680,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             call Dev_Boxes%CopyInBoxesArrayFromHost(Host_Boxes,NewTotalSize,IfCpyNL=.false.)
 
-            call GetBoxesMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record)
-            call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
-            call GetBoxesMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
+            call GetBoxesMCMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Virtual,Record)
+            call GetBoxesMCMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record)
+            call GetBoxesMCMigCoaleStat_Used_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record)
 
             NCAfter = sum(Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral%NC)
 
@@ -1697,12 +1697,12 @@ module INLET_TYPEDEF_IMPLANTSECTION
             end if
 
             call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                      max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)), &
-                                          MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
-                                                         TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+                                      max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                          TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)), &
+                                          MaxDiffuse=max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                         TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
-            call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
+            call UpdateTimeStep_MCMigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record,TSTEP)
 
 
             Dev_Boxes%dm_SEUsedIndexBox = Host_Boxes%m_BoxesInfo%SEUsedIndexBox
@@ -1712,22 +1712,22 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call Record%AddImplantedEntitiesNum(TotalImplantNum)
         end if
 
-        call this%AdjustTimeStep_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP)
+        call this%AdjustTimeStep_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap,Record,TSTEP)
 
         return
     end subroutine
 
 
     !*********************************************
-    subroutine AdjustTimeStep_ImplantBatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP)
+    subroutine AdjustTimeStep_ImplantBatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap,Record,TSTEP)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         !---Local Vars---
         integer::I
@@ -1762,7 +1762,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         logical::TheResult
         !---Local Vars---
         integer::I
@@ -1788,7 +1788,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end function Check_ImplantBatchFromConfig
 
     !*********************************************************************
-    subroutine ImplantClusters_Contiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP)
+    subroutine ImplantClusters_Contiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMCMigCoaleStatInfoWrap,Record,TSTEP)
         use RAND32_MODULE
         implicit none
         !---Dummy Vars---
@@ -1796,9 +1796,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         !---Local Vars---
         integer::err
@@ -1825,7 +1825,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         MultiBox = Host_SimuCtrlParam%MultiBox
 
-        call this%AdjustTimeStep_ImplantContiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP,ImplantNumEachBox_Ceiling)
+        call this%AdjustTimeStep_ImplantContiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap,Record,TSTEP,ImplantNumEachBox_Ceiling)
 
         DO IBox = 1,MultiBox
             if((Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + ImplantNumEachBox_Ceiling) .GT. Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2)) then
@@ -1875,22 +1875,22 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     NewTotalSize = 0
                 end if
 
-                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
-                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeImplantRandNum(MultiBox*NewAllocateNCEachBox)
+                call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
+                call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeImplantRandNum(MultiBox*NewAllocateNCEachBox)
 
                 if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                    call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
                     ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
                 else
-                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                    call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
                     ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
                 end if
 
-                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeReactionRandNum(NewTotalSize)
+                call Dev_MigCoaleGVars%dm_MCMigCoale_RandDev%ReSizeReactionRandNum(NewTotalSize)
 
                 call this%DoImplantTillVirtualBoundary_CPUTOGPU_ImplantContiune(Host_Boxes,Host_SimuCtrlParam,Record,Dev_Boxes,NewAllocateNCEachBox)
 
-                call GetBoxesMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record)
+                call GetBoxesMCMigCoaleStat_Virtual_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Virtual,Record)
 
                 DO IBox = 1,MultiBox
                     write(*,*) "The virtual range for box ",IBox, " is ",Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2)
@@ -1903,7 +1903,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
             END DO
             Dev_Boxes%dm_SEExpdIndexBox = Host_Boxes%m_BoxesInfo%SEExpdIndexBox
 
-            call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
+            call GetBoxesMCMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record)
 
             if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
                 call Record%SetLastUpdateStatisTime(Record%GetSimuSteps() + 1.D0)
@@ -1912,10 +1912,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
             end if
 
             call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                      max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
-                                          MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
-                                                         TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+                                      max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                          TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                          MaxDiffuse=max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                         TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
         else
 
@@ -1937,7 +1937,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 END DO
                 Dev_Boxes%dm_SEExpdIndexBox = Host_Boxes%m_BoxesInfo%SEExpdIndexBox
 
-                call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
+                call GetBoxesMCMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd,Record)
 
                 if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
                     call Record%SetLastUpdateStatisTime(Record%GetSimuSteps() + 1.D0)
@@ -1946,10 +1946,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 end if
 
                 call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                            max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                                TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)), &
-                                                MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
-                                                               TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+                                            max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                                TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)), &
+                                                MaxDiffuse=max(TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                               TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
             end if
 
@@ -1995,15 +1995,15 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine ImplantClusters_Contiune
 
     !*********************************************
-    subroutine AdjustTimeStep_ImplantContiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP,ImplantNumEachBox_Ceiling)
+    subroutine AdjustTimeStep_ImplantContiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap,Record,TSTEP,ImplantNumEachBox_Ceiling)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoaleStatInfoWrap)::TheMCMigCoaleStatInfoWrap
+        type(MCMigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         integer::ImplantNumEachBox_Ceiling
         !---Local Vars---
@@ -2017,7 +2017,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             DO While(.true.)
 
-                VerifyTime = Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record,ImplantNumEachBox_Ceiling)
+                VerifyTime = Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Virtual,Record,ImplantNumEachBox_Ceiling)
 
                 if(VerifyTime .LT. TSTEP*0.95) then
                     TSTEP = TSTEP*0.95
@@ -2042,7 +2042,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         real(kind=KINDDF), intent(inout)::TSTEP
         integer, intent(inout)::ImplantNumEachBox_Ceiling
         integer, intent(inout)::NewAllocateNCEachBox
@@ -2150,7 +2150,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Body---
         select case(this%ImplantConfigType)
@@ -2174,7 +2174,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Body--
         select case(this%ImplantDepthDistType)
@@ -2201,7 +2201,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Local Vars---
         integer::MultiBox
@@ -2439,7 +2439,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Body---
 
@@ -2454,7 +2454,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         type(SimulationBoxes_GPU)::Dev_Boxes
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---Local Vars---
         integer::MultiBox
@@ -2496,7 +2496,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       CLASS(ImplantSection)::this
       type(SimulationBoxes)::Host_Boxes
       type(SimulationCtrlParam)::Host_SimuCtrlParam
-      type(MigCoalClusterRecord)::Record
+      type(MCMigCoalClusterRecord)::Record
       integer,intent(in)::NewAllocateNCEachBox
       !-----local variables---
       integer::MultiBox
@@ -2671,7 +2671,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
       CLASS(ImplantSection)::this
       type(SimulationBoxes)::Host_Boxes
       type(SimulationCtrlParam)::Host_SimuCtrlParam
-      type(MigCoalClusterRecord)::Record
+      type(MCMigCoalClusterRecord)::Record
       integer,intent(in)::NewAllocateNCEachBox
       !-----local variables---
       integer::MultiBox
@@ -2820,7 +2820,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         CLASS(ImplantSection)::this
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
-        type(MigCoalClusterRecord)::Record
+        type(MCMigCoalClusterRecord)::Record
         integer,intent(in)::NewAllocateNCEachBox
         !---local variables---
         integer::MultiBox
@@ -2977,7 +2977,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
 !        integer,intent(in)::NewAllocateNCEachBox
 !        !---Local Vars---
 !        integer::MultiBox
@@ -3010,7 +3010,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
 !        integer,intent(in)::NewAllocateNCEachBox
 !        !---Body---
 !
@@ -3041,7 +3041,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
 !        integer,intent(in)::NewAllocateNCEachBox
 !        !---Body---
 !        select case(this%ImplantDepthDistType)
@@ -3068,7 +3068,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
 !        integer,intent(in)::NewAllocateNCEachBox
 !        !---Local Vars---
 !        integer::MultiBox
@@ -3082,7 +3082,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        integer::err
 !        !---Body---
 !
-!        ASSOCIATE(ImplantRand=>Dev_MigCoaleGVars%dm_MigCoale_RandDev)
+!        ASSOCIATE(ImplantRand=>Dev_MigCoaleGVars%dm_MCMigCoale_RandDev)
 !
 !            if(NewAllocateNCEachBox .GT. 0) then
 !
@@ -3306,7 +3306,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
 !        integer,intent(in)::NewAllocateNCEachBox
 !        !---Local Vars---
 !        integer::MultiBox
@@ -3320,7 +3320,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        integer::err
 !        !---Body---
 !
-!        ASSOCIATE(ImplantRand=>Dev_MigCoaleGVars%dm_MigCoale_RandDev)
+!        ASSOCIATE(ImplantRand=>Dev_MigCoaleGVars%dm_MCMigCoale_RandDev)
 !
 !            if(NewAllocateNCEachBox .GT. 0) then
 !
@@ -3511,7 +3511,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
 !        integer,intent(in)::NewAllocateNCEachBox
 !        !---Local Vars---
 !        integer::MultiBox
@@ -3524,7 +3524,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        integer::BY
 !        integer::err
 !        !---Body---
-!        ASSOCIATE(ImplantRand=>Dev_MigCoaleGVars%dm_MigCoale_RandDev)
+!        ASSOCIATE(ImplantRand=>Dev_MigCoaleGVars%dm_MCMigCoale_RandDev)
 !
 !            if(NewAllocateNCEachBox .GT. 0) then
 !
@@ -3720,7 +3720,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
 !        integer,intent(in)::NewAllocateNCEachBox
 !        !---Local Vars---
 !        integer::MultiBox
@@ -3733,7 +3733,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        integer::BY
 !        integer::err
 !        !---Body---
-!        ASSOCIATE(ImplantRand=>Dev_MigCoaleGVars%dm_MigCoale_RandDev)
+!        ASSOCIATE(ImplantRand=>Dev_MigCoaleGVars%dm_MCMigCoale_RandDev)
 !
 !            if(NewAllocateNCEachBox .GT. 0) then
 !
@@ -3968,11 +3968,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
 !        type(SimulationBoxes)::Host_Boxes
 !        type(SimulationCtrlParam)::Host_SimuCtrlParam
 !        type(SimulationBoxes_GPU)::Dev_Boxes
-!        type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!        type(MCMigCoale_GVarsDev)::Dev_MigCoaleGVars
 !        integer,intent(in)::NewAllocateNCEachBox
 !        !---Body---
 !
 !        return
 !    end subroutine FillVirtualBoundary_GPU_FromExteFunc
 
-end module INLET_TYPEDEF_IMPLANTSECTION
+end module MCINLET_TYPEDEF_IMPLANTSECTION
