@@ -34,6 +34,7 @@ libname  := lib_$(objname).$(LIB_EXT)
 nlist    :=  CommonLIB_CONSTANTS               	 \
 			 CommonLIB_TYPEDEF_ObjectsCollection \
 			 CommonLIB_TYPEDEF_EventModel		 \
+			 CommonLIB_TYPEDEF_CollectionEvent	 \
 			 CommonLIB_Utilities
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
@@ -55,6 +56,15 @@ $(tgt)$(Segment)CommonLIB_TYPEDEF_ObjectsCollection.o : $(sor)$(Segment)CommonLI
 
 $(tgt)$(Segment)CommonLIB_TYPEDEF_EventModel.o : $(sor)$(Segment)CommonLIB_TYPEDEF_EventModel.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
+
+$(tgt)$(Segment)CommonLIB_TYPEDEF_CollectionEvent.o : $(sor)$(Segment)CommonLIB_TYPEDEF_CollectionEvent.F90  \
+													  $(tgt)$(Segment)CommonLIB_TYPEDEF_ObjectsCollection.o  \
+													  $(tgt)$(Segment)CommonLIB_TYPEDEF_EventModel.o
+	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)CommonLIB_TYPEDEF_CollectionEvent.f90
+	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)CommonLIB_TYPEDEF_CollectionEvent.f90
+	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)CommonLIB_TYPEDEF_CollectionEvent.f90
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)CommonLIB_TYPEDEF_CollectionEvent.f90 -o $@
+	#rm $(tgt)$(Segment)CommonLIB_TYPEDEF_CollectionEvent.f90
 
 $(tgt)$(Segment)CommonLIB_Utilities.o : $(sor)$(Segment)CommonLIB_Utilities.F90  \
 			            $(tgt)$(Segment)CommonLIB_CONSTANTS.o
