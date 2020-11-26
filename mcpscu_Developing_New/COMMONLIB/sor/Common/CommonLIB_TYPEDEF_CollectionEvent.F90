@@ -5,21 +5,27 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
     implicit none
 
     !****************************************************************************
-    type,public::SingleCollectionEvent
+    type,abstract,public::SingleCollectionEvent
         type(ObjectsCollection),pointer::TheCollection=>null()
         type(EventModel),public::TheEventModel
         contains
         procedure,public,non_overridable,pass::CopyFromOther=>CopySingleCollectionEventFromOther
         procedure,public,non_overridable,pass::Clean=>Clean_SingleCollectionEvent
-        Generic::Assignment(=)=>CopySingleCollectionEventFromOther
-        Final::CleanSingleCollectionEvent
+        !---abstract method---
+        procedure(DefSingleCollectionEventConstructProc),pass,deferred::TheDefSingleCollectionEventonstructProc
+        procedure(DefSingleCollectionEventCleanProc),pass,deferred,private::TheDefSingleCollectionEventCleanProc
+        procedure(DefSingleCollectionEventCopyProc),pass,deferred,private::TheDefSingleCollectionEventCopyProc
+        !---Based On Our test, the abstract cannot override (=), other wise his childrens' assginment(=) would be invalid
+        !Generic::Assignment(=)=>CopySingleCollectionEventFromOther
+        !---Based On Our test, the abstract cannot own Final (de-constructor)---
+        !Final::CleanSingleCollectionEvent
     end type SingleCollectionEvent
 
-    !****Define a list SingleCollectionEventsList with value type(SingleCollectionEvent)**************
-    DefGeneralList(SingleCollectionEventsList,type(SingleCollectionEvent))
+    !****Define a list SingleCollectionEventsList_P with value class(SingleCollectionEvent),pointer**************
+    DefGeneralList_P(SingleCollectionEventsList_P,class(SingleCollectionEvent))
 
     !****************************************************************************
-    type,public::CrossCollectionEvent
+    type,abstract,public::CrossCollectionEvent
         type(ObjectsCollection),pointer::TheLeftObjectsCollection=>null()
         type(ObjectsCollection),pointer::TheRightObjectsCollection=>null()
         type(EventModel),public::TheEventModel
@@ -27,19 +33,31 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
         contains
         procedure,public,non_overridable,pass::CopyFromOther=>CopyCrossCollectionEventFromOther
         procedure,public,non_overridable,pass::Clean=>Clean_CrossCollectionEvent
-        Generic::Assignment(=)=>CopyCrossCollectionEventFromOther
-        Final::CleanCrossCollectionEvent
+        !---abstract method---
+        procedure(DefCrossCollectionEventConstructProc),pass,deferred::TheDefCrossCollectionEventConstructProc
+        procedure(DefCrossCollectionEventCleanProc),pass,deferred,private::TheDefCrossCollectionEventCleanProc
+        procedure(DefCrossCollectionEventCopyProc),pass,deferred,private::TheDefCrossCollectionEventCopyProc
+        !---Based On Our test, the abstract cannot override (=), other wise his childrens' assginment(=) would be invalid
+        !Generic::Assignment(=)=>CopyCrossCollectionEventFromOther
+        !---Based On Our test, the abstract cannot own Final (de-constructor)---
+        !Final::CleanCrossCollectionEvent
     end type CrossCollectionEvent
 
-    !****Define a list CrossCollectionEventsList with value type(CrossCollectionEvent)**************
-    DefGeneralList(CrossCollectionEventsList,type(CrossCollectionEvent))
+    !****Define a list CrossCollectionEventsList_P with value calss(CrossCollectionEvent) ,pointer**************
+    DefGeneralList_P(CrossCollectionEventsList_P,class(CrossCollectionEvent))
 
     private::CopySingleCollectionEventFromOther
     private::Clean_SingleCollectionEvent
-    private::CleanSingleCollectionEvent
+    private::TheDefSingleCollectionEventonstructProc
+    private::TheDefSingleCollectionEventCleanProc
+    private::TheDefSingleCollectionEventCopyProc
+    !private::CleanSingleCollectionEvent
     private::CopyCrossCollectionEventFromOther
     private::Clean_CrossCollectionEvent
-    private::CleanCrossCollectionEvent
+    private::TheDefCrossCollectionEventConstructProc
+    private::TheDefCrossCollectionEventCleanProc
+    private::TheDefCrossCollectionEventCopyProc
+    !private::CleanCrossCollectionEvent
 
     contains
     !***************************************************
@@ -70,19 +88,39 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
         return
     end subroutine Clean_SingleCollectionEvent
 
-    !***************************************************
-    subroutine CleanSingleCollectionEvent(this)
+    !*****The declare for abstract method***************
+    !*****Note: this is not same with the "Fortran 95/2003 For Scientists and Engineers, Third Edition (chinese version)(P668)"
+    !*****Because the abstract useage way in this book is not depended on PGFORTRAN compiler. The  following is based on our test
+    !*****and verified to suit for pgfortran.
+    subroutine DefSingleCollectionEventConstructProc(this)
         implicit none
-        !---Dummy Vars---
-        type(SingleCollectionEvent)::this
-        !---Local Vars---
-        call this%Clean()
+        CLASS(SingleCollectionEvent)::this
+    end subroutine DefSingleCollectionEventConstructProc
 
-        return
-    end subroutine CleanSingleCollectionEvent
+    subroutine DefSingleCollectionEventCleanProc(this)
+        implicit none
+        CLASS(SingleCollectionEvent)::this
+    end subroutine DefSingleCollectionEventCleanProc
 
-    !****The member function of list SingleCollectionEventsList**************
-    DefGeneralListFuncSpan_WithValueCleanMethod(SingleCollectionEventsList,type(SingleCollectionEvent),Clean)
+    subroutine DefSingleCollectionEventCopyProc(this,Other)
+        implicit none
+        CLASS(SingleCollectionEvent),intent(out)::this
+        CLASS(SingleCollectionEvent),intent(in)::Other
+    end subroutine DefSingleCollectionEventCopyProc
+
+    !***************************************************
+    !subroutine CleanSingleCollectionEvent(this)
+    !    implicit none
+    !    !---Dummy Vars---
+    !    type(SingleCollectionEvent)::this
+    !    !---Local Vars---
+    !    call this%Clean()
+    !
+    !    return
+    !end subroutine CleanSingleCollectionEvent
+
+    !****The member function of list SingleCollectionEventsList_P**************
+    DefGeneralListFuncSpan_WithValueCleanMethod_P(SingleCollectionEventsList_P,class(SingleCollectionEvent),Clean)
 
     !***************************************************
     subroutine CopyCrossCollectionEventFromOther(this,other)
@@ -115,17 +153,37 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
         return
     end subroutine Clean_CrossCollectionEvent
 
-    !***************************************************
-    subroutine CleanCrossCollectionEvent(this)
+    !*****The declare for abstract method***************
+    !*****Note: this is not same with the "Fortran 95/2003 For Scientists and Engineers, Third Edition (chinese version)(P668)"
+    !*****Because the abstract useage way in this book is not depended on PGFORTRAN compiler. The  following is based on our test
+    !*****and verified to suit for pgfortran.
+    subroutine DefCrossCollectionEventConstructProc(this)
         implicit none
-        !---Dummy Vars---
-        type(CrossCollectionEvent)::this
-        !---Local Vars---
-        call this%Clean()
-        return
-    end subroutine CleanCrossCollectionEvent
+        CLASS(CrossCollectionEvent)::this
+    end subroutine DefCrossCollectionEventConstructProc
 
-    !****The member function of list CrossCollectionEventsList**************
-    DefGeneralListFuncSpan_WithValueCleanMethod(CrossCollectionEventsList,type(CrossCollectionEvent),Clean)
+    subroutine DefCrossCollectionEventCleanProc(this)
+        implicit none
+        CLASS(CrossCollectionEvent)::this
+    end subroutine DefCrossCollectionEventCleanProc
+
+    subroutine DefCrossCollectionEventCopyProc(this,Other)
+        implicit none
+        CLASS(CrossCollectionEvent),intent(out)::this
+        CLASS(CrossCollectionEvent),intent(in)::Other
+    end subroutine DefCrossCollectionEventCopyProc
+
+    !***************************************************
+    !subroutine CleanCrossCollectionEvent(this)
+    !   implicit none
+    !    !---Dummy Vars---
+    !    type(CrossCollectionEvent)::this
+    !    !---Local Vars---
+    !    call this%Clean()
+    !    return
+    !end subroutine CleanCrossCollectionEvent
+
+    !****The member function of list CrossCollectionEventsList_P**************
+    DefGeneralListFuncSpan_WithValueCleanMethod_P(CrossCollectionEventsList_P,class(CrossCollectionEvent),Clean)
 
 end module COMMONLIB_TYPEDEF_COLLECTIONEVENT

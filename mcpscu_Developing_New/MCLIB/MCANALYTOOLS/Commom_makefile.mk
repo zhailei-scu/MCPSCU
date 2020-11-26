@@ -17,12 +17,12 @@ incdir     := $(mcworkspace)$(Segment)LIB$(Segment)$(ConfigName)
 objname := $(OBJNAME)
 
 #sorce name
-MCANALYTOOLSOR := $(mcpscusor)$(Segment)MCLIB$(Segment)sor$(Segment)ANALYTOOLS
+MCANALYTOOLSOR := $(mcpscusor)$(Segment)MCLIB$(Segment)sor$(Segment)MCANALYTOOLS
 sormain := $(MCANALYTOOLSOR)$(Segment)$(OBJNAME).F90
 
 #target directories
 
-tgt  := $(mcworkspace)$(Segment)ANALYTOOLS$(Segment)$(ConfigName)
+tgt  := $(mcworkspace)$(Segment)MCANALYTOOLS$(Segment)$(ConfigName)
 
 
 #objmain := $(tgt)$(Segment)$(OBJNAME).o
@@ -37,9 +37,15 @@ libs	 += $(foreach n, $(tccinterlibnames), $(LIBDIRD)$(Segment)lib_$(n).$(LIB_EX
 libs	 += $(foreach n, $(tcclibnames), $(tccpath)$(Segment)lib$(n).$(LIB_EXT))
 libs	 += $(foreach n, $(msmlibnames), $(LIBDIRD)$(Segment)lib_$(n).$(LIB_EXT))
 libs	 += $(foreach n, $(modeldatabasenames), $(LIBDIRD)$(Segment)lib_$(n).$(LIB_EXT))
-libs     += $(foreach n, $(mclibnames),  $(LIBDIRD)$(Segment)libMC_$(n).$(LIB_EXT))
+libs	 += $(foreach n, $(commonlibnames), $(LIBDIRD)$(Segment)lib_$(n).$(LIB_EXT))
+libs     += $(foreach n, $(mclibnames),  $(LIBDIRD)$(Segment)lib_$(n).$(LIB_EXT))
+libs     += $(foreach n, $(hybridlibnames),  $(LIBDIRD)$(Segment)lib_$(n).$(LIB_EXT))
+libs     += $(foreach n, $(eventsfactorylibnames),  $(LIBDIRD)$(Segment)lib_$(n).$(LIB_EXT))
 
-liblist  := $(foreach n, $(mclibnames),  -L$(LIBDIRD)  -lMC_$(n))
+liblist  := $(foreach n, $(eventsfactorylibnames),  -L$(LIBDIRD)  -l_$(n))
+liblist  := $(foreach n, $(hybridlibnames),  -L$(LIBDIRD)  -l_$(n))
+liblist  := $(foreach n, $(mclibnames),  -L$(LIBDIRD)  -l_$(n))
+liblist	 += $(foreach n, $(commonlibnames), -L$(LIBDIRD) -l_$(n))
 liblist  += $(foreach n, $(modeldatabasenames), -L$(LIBDIRD) -l_$(n))
 liblist  += $(foreach n, $(msmlibnames), -L$(LIBDIRD)  -l_$(n))
 liblist  += $(foreach n, $(tccinterlibnames), -L$(LIBDIRD)  -l_$(n))

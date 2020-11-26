@@ -30,7 +30,10 @@ module COMMONLIB_TYPEDEF_EVENTMODEL
         procedure(EachTimeStepProc),pointer,nopass::TheEachTimeStepProc=>null()
 
         contains
-        procedure,public,non_overridable,pass::CopyFromOther=>CopyEventModelFromOther
+        !---Based on our test, if the FINAL subroutine (deconstructor) is used, the CopyEventModelFromOther in
+        !--the Generic::Assignment(=)=>CopyEventModelFromOther cannot be assig to another symbol such as CopyFromOther=>CopyEventModelFromOther
+        !procedure,public,non_overridable,pass::CopyFromOther=>CopyEventModelFromOther
+        procedure,public,non_overridable,pass::CopyEventModelFromOther
         procedure,public,non_overridable,pass::Clean=>Clean_EventModel
         Generic::Assignment(=)=>CopyEventModelFromOther
         Final::CleanEventModel

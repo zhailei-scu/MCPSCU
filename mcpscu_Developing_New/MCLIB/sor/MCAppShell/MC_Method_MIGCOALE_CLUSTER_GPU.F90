@@ -13,20 +13,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     use MCMIGCOALE_STATISTIC_CPU
     use MCMIGCOALE_TYPEDEF_SIMRECORD
     use MCINLET_TYPEDEF_IMPLANTLIST
-    use COMMONLIB_TYPEDEF_EVENTMODEL
+    use COMMONLIB_TYPEDEF_COLLECTIONEVENT
     implicit none
 
-    type,public,extends(EventModel)::MC_MIGCOALE_CLUSTER_GPU
+    type,public,extends(SingleCollectionEvent)::MC_MIGCOALE_CLUSTER_GPU
         
     end type MC_MIGCOALE_CLUSTER_GPU
-
-
-
-
-
-
-
-
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
     integer, parameter, private::p_ClusterIniConfig_SpecialDistFromFile = 1

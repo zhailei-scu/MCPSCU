@@ -25,7 +25,7 @@ incdir := $(LIBDIRD)
 tgt  := $(LIBDIRD)
 
 #target lib name
-libname  := libMC_$(objname).$(LIB_EXT)
+libname  := lib_$(objname).$(LIB_EXT)
 
 #######################################################          
 nlist    :=  MCLIB_CONSTANTS_GPU		  \

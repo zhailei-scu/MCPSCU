@@ -1,7 +1,7 @@
 #!/bin/bash
 version=Developing_New
 mcpscusor=/home/zhailei/Development/MutiHybrid/mcpscu_Developing_New
-tccpath=/home/zhailei/Development/MutiHybrid/tcc-0.9.27/
+tccpath=/home/zhailei/tcc-0.9.27/
 mcworkspace=/home/zhailei/mcworkspace/mcpscu_Developing_New
 cudaVersion=cuda10.1
 computerCapability=cc75

@@ -7,8 +7,8 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
 
     !**************************************************************************
     type,public::CollectionEventsManager
-        type(SingleCollectionEventsList)::TheSingleEventsList
-        type(CrossCollectionEventsList)::TheCrossCollectionEventsList
+        type(SingleCollectionEventsList_P)::TheSingleEventsList
+        type(SingleCollectionEventsList_P)::TheCrossCollectionEventsList
 
         type(ReadedEventsModels)::TheReadedEventsModels
         contains
@@ -55,6 +55,8 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
                     pause
                     stop
                 end if
+                
+
 
                 !this%TheSingleEventsList%
             else
