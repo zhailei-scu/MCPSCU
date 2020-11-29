@@ -6,7 +6,7 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
 
     !****************************************************************************
     type,abstract,public::SingleCollectionEvent
-        type(ObjectsCollection),pointer::TheCollection=>null()
+        CLASS(ObjectsCollection),pointer::TheCollection=>null()
         type(EventModel),public::TheEventModel
         contains
         procedure,public,non_overridable,pass::CopyFromOther=>CopySingleCollectionEventFromOther
@@ -26,8 +26,8 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
 
     !****************************************************************************
     type,abstract,public::CrossCollectionEvent
-        type(ObjectsCollection),pointer::TheLeftObjectsCollection=>null()
-        type(ObjectsCollection),pointer::TheRightObjectsCollection=>null()
+        CLASS(ObjectsCollection),pointer::TheLeftObjectsCollection=>null()
+        CLASS(ObjectsCollection),pointer::TheRightObjectsCollection=>null()
         type(EventModel),public::TheEventModel
 
         contains
@@ -48,15 +48,9 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
 
     private::CopySingleCollectionEventFromOther
     private::Clean_SingleCollectionEvent
-    private::TheDefSingleCollectionEventonstructProc
-    private::TheDefSingleCollectionEventCleanProc
-    private::TheDefSingleCollectionEventCopyProc
     !private::CleanSingleCollectionEvent
     private::CopyCrossCollectionEventFromOther
     private::Clean_CrossCollectionEvent
-    private::TheDefCrossCollectionEventConstructProc
-    private::TheDefCrossCollectionEventCleanProc
-    private::TheDefCrossCollectionEventCopyProc
     !private::CleanCrossCollectionEvent
 
     contains

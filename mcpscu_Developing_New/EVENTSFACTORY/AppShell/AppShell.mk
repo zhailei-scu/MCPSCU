@@ -32,7 +32,7 @@ tgt  := $(LIBDIRD)
 libname  := lib_$(objname).$(LIB_EXT)
 
 #######################################################
-nlist :=   
+nlist :=   Simulation_AppShell
                        
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
 modules  := $(foreach n, $(mlist ), $(tgt)$(Segment)$(n).mod)
@@ -44,6 +44,9 @@ $(libname) : $(objects)
 	ar -rcs $(libname) $(objects)
 	mv $(libname) $(tgt)
 
+
+$(tgt)$(Segment)Simulation_AppShell.o : $(sor)$(Segment)Simulation_AppShell.F90
+	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 ######################################################################
 clean:
 	-rm $(objects) $(libname) $(modules) 

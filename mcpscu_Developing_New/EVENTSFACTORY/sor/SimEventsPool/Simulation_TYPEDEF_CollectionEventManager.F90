@@ -2,15 +2,15 @@
 module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
     use COMMONLIB_TYPEDEF_COLLECTIONEVENT
     use SIMULATION_TYPEDEF_READEDEVENTSMODELS
-    use MC_Method_MIGCOALE_CLUSTER_GPU
+    use MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
     implicit none
 
     !**************************************************************************
     type,public::CollectionEventsManager
         type(SingleCollectionEventsList_P)::TheSingleEventsList
-        type(SingleCollectionEventsList_P)::TheCrossCollectionEventsList
+        type(CrossCollectionEventsList_P)::TheCrossCollectionEventsList
 
-        type(ReadedEventsModels)::TheReadedEventsModels
+        type(ReadedEventsModels),private::TheReadedEventsModels
         contains
         procedure,private,non_overridable,pass::Construct=>ConstructEventsManager
         procedure,public,non_overridable,pass::CopyFromOther=>CopyCollectionEventsManager
@@ -37,6 +37,8 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
         integer::I
         integer::ReadedPairsNum
         type(EventsModelsPair)::tempEventsModelsPair
+        Class(SingleCollectionEvent),pointer::newSingleCollectionEvent=>null()
+        character*100::tempEventModelSymbol
         !---Body---
         call this%TheReadedEventsModels%Load_ReadedEventsModels(hEventModels)
 
@@ -55,8 +57,19 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
                     pause
                     stop
                 end if
+                tempEventModelSymbol = tempEventsModelsPair%SubjectEventsModelDef%GetEventModelSymbol()
                 
+                select case(tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol)))
+                    case("MC_MIGCOALE_CLUSTER_GPU")
+                        newSingleCollectionEvent=>m_MC_MIGCOALE_CLUSTER_GPU
+                        call m_MC_MIGCOALE_CLUSTER_GPU%Constructor()
+                    case default
+                        write(*,*) "MCPSCUERROR: Unkonwn single event collenction: ",tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol))
+                        pause
+                        stop
+                end select
 
+                call this%TheSingleEventsList%AppendOne(newSingleCollectionEvent)
 
                 !this%TheSingleEventsList%
             else

@@ -32,7 +32,8 @@ tgt  := $(LIBDIRD)
 libname  := lib_$(objname).$(LIB_EXT)
 
 #######################################################
-nlist :=   MC_Method_MIGCOALE_CLUSTER_GPU  \
+nlist :=   MC_CollectionEvent_MIGCOALE_CLUSTER_GPU \
+		   MC_Method_MIGCOALE_CLUSTER_GPU  \
 	       MC_MethodClass_Factory_GPU		   \
 	       MC_SimBoxArray_AppShell_GPU
                        
@@ -45,6 +46,9 @@ F90files := $(foreach n, $(nlist), $(sor)$(Segment)$(n).F90)
 $(libname) : $(objects)
 	ar -rcs $(libname) $(objects)
 	mv $(libname) $(tgt)
+
+$(tgt)$(Segment)MC_CollectionEvent_MIGCOALE_CLUSTER_GPU.o : $(sor)$(Segment)MC_CollectionEvent_MIGCOALE_CLUSTER_GPU.F90
+	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MC_SimBoxArray_AppShell_GPU.o : $(sor)$(Segment)MC_SimBoxArray_AppShell_GPU.F90	\
 				                                        $(tgt)$(Segment)MC_Method_MIGCOALE_CLUSTER_GPU.o     \

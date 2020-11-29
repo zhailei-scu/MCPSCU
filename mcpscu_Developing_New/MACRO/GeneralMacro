@@ -1,5 +1,5 @@
 !--------The following are the global macro that used for mcpscu--------------
-!----------------Zhai Lei, 2019/01/14-----------------
+!----------------Zhai Lei, 2019/01/14, Sichuan University-----------------
 
 
 ! We define the PreAssign macro for the reason of the potiential problem in pgice cygwin 17.10 and 18.4.

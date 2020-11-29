@@ -7,5 +7,7 @@
     "fortran-ls.lowercaseIntrinsics": true,
     "explorer.sortOrder": "mixed",
     "explorer.compactFolders": false,
+    "explorer.autoReveal": false,
+    "explorer.openEditors.visible": 100,
     "explorer.incrementalNaming": "smart"
 }

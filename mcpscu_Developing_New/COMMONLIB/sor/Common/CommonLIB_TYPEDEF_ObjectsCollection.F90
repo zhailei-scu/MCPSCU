@@ -2,7 +2,7 @@ module COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
 
     implicit none
 
-    type,public::ObjectsCollection
+    type,abstract,public::ObjectsCollection
 
 
 

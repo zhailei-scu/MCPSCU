@@ -1,8 +1,8 @@
-module MC_Method_MIGCOALE_CLUSTER_GPU
+module MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
     !--- Description:                                                                 ---!
     !--- This module is created for the KMC method based on migration-coalesence model---!
     !--- for CLUSTER object                                                           ---!
-    !--- Creator: Zhai Lei, 2018-05-23, in Sichuan University                         ---!
+    !--- Creator: Zhai Lei, 2020,11,26, in Sichuan University                         ---!
     use RAND32_MODULE
     use RAND32SEEDLIB_MODULE
     use MCLIB_CAL_NEIGHBOR_LIST_GPU
@@ -13,6 +13,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     use MCMIGCOALE_STATISTIC_CPU
     use MCMIGCOALE_TYPEDEF_SIMRECORD
     use MCINLET_TYPEDEF_IMPLANTLIST
+    use COMMONLIB_TYPEDEF_COLLECTIONEVENT
     implicit none
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
@@ -72,11 +73,30 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         Final::CleanInitBoxSimCfgList
     end type
 
+    type(SimulationBoxes)::m_SimBoxes
+    type(SimulationCtrlParamList)::m_CtrlParamList
+    type(SimulationBoxes_GPU)::dm_Boxes
     type(InitBoxSimCfgList),target::m_InitBoxSimCfgList
     type(ImplantList)::m_ImplantList
     type(MCMigCoalClusterRecord)::m_MCMigCoalClusterRecord
     type(MCMigCoaleStatInfoWrap),private::m_MCMigCoaleStatInfoWrap
     type(MCMigCoale_GVarsDev),private::m_MCMigCoale_GVarsDev
+
+    type,public,extends(SingleCollectionEvent)::MC_MIGCOALE_CLUSTER_GPU
+        contains
+        procedure,non_overridable,public,pass::MC_MIGCOALE_CLUSTER_GPU_Constructor
+        procedure,non_overridable,public,pass::MC_MIGCOALE_CLUSTER_GPU_Clean
+        procedure,non_overridable,public,pass::MC_MIGCOALE_CLUSTER_GPU_Copy
+        procedure,non_overridable,public,pass::TheDefSingleCollectionEventonstructProc=>MC_MIGCOALE_CLUSTER_GPU_Constructor
+        procedure,non_overridable,public,pass::Constructor=>MC_MIGCOALE_CLUSTER_GPU_Constructor
+        procedure,non_overridable,public,pass::TheDefSingleCollectionEventCleanProc=>MC_MIGCOALE_CLUSTER_GPU_Clean
+        procedure,non_overridable,public,pass::TheDefSingleCollectionEventCopyProc=>MC_MIGCOALE_CLUSTER_GPU_Copy
+        Generic::Assignment(=)=>MC_MIGCOALE_CLUSTER_GPU_Copy
+        Final::CleanMC_MIGCOALE_CLUSTER_GPU
+    end type MC_MIGCOALE_CLUSTER_GPU
+
+    type(MC_MIGCOALE_CLUSTER_GPU),target::m_MC_MIGCOALE_CLUSTER_GPU
+    
 
     private::CopyInitBoxSimCfgFromOther
     private::Clean_InitBoxSimCfg
@@ -87,10 +107,167 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
     private::ReadInitBoxSimRecord
     private::Clean_InitBoxSimCfgList
     private::CleanInitBoxSimCfgList
+    private::MC_MIGCOALE_CLUSTER_GPU_Constructor
+    private::MC_MIGCOALE_CLUSTER_GPU_Clean
+    private::MC_MIGCOALE_CLUSTER_GPU_Copy
+    private::CleanMC_MIGCOALE_CLUSTER_GPU
 
     contains
     !*****************************************************************
-    subroutine For_One_Test(Host_SimBoxes,Host_SimuCtrlParamList,Dev_Boxes,JobIndex)
+    subroutine MC_MIGCOALE_CLUSTER_GPU_Constructor(this)
+        implicit none
+        !---Dummary vars---
+        CLASS(MC_MIGCOALE_CLUSTER_GPU)::this
+        !---Body---
+        this%TheEventModel%TheBeforeEachWorkProc=>MIGCOALE_CLUSTER_GPU_BeforeEachWorkProc
+        this%TheEventModel%TheAfterEachWorkProc=>MIGCOALE_CLUSTER_GPU_AfterEachWorkProc
+
+        this%TheEventModel%TheBeforeEachJobProc=>MIGCOALE_CLUSTER_GPU_BeforeEachJobProc
+        this%TheEventModel%TheAfterEachJobProc=>MIGCOALE_CLUSTER_GPU_AfterEachJobProc
+
+        this%TheEventModel%TheBeforeEachTestProc=>MIGCOALE_CLUSTER_GPU_BeforeEachTestProc
+        this%TheEventModel%TheAfterEachTestProc=>MIGCOALE_CLUSTER_GPU_AfterEachTestProc
+
+        this%TheEventModel%TheBeforeEachTimeSectionProc=>MIGCOALE_CLUSTER_GPU_BeforeEachTimeSectionProc
+        this%TheEventModel%TheAfterEachTimeSectionProc=>MIGCOALE_CLUSTER_GPU_AfterEachTimeSectionProc
+
+        this%TheEventModel%TheBeforeEachTimeStepProc=>MIGCOALE_CLUSTER_GPU_BeforeEachTimeStepProc
+        this%TheEventModel%TheEachTimeStepProc=>MIGCOALE_CLUSTER_GPU_EachTimeStepProc
+        this%TheEventModel%TheAfterEachTimeStepProc=>MIGCOALE_CLUSTER_GPU_AfterEachTimeStepProc
+
+        this%TheCollection=>null()
+        return
+    end subroutine MC_MIGCOALE_CLUSTER_GPU_Constructor
+
+    !*****************************************************************
+    subroutine MC_MIGCOALE_CLUSTER_GPU_Clean(this)
+        implicit none
+        !---Dummary vars---
+        CLASS(MC_MIGCOALE_CLUSTER_GPU)::this
+        !---Body---
+        call this%SingleCollectionEvent%Clean()
+        return
+    end subroutine MC_MIGCOALE_CLUSTER_GPU_Clean
+
+    !*****************************************************************
+    subroutine MC_MIGCOALE_CLUSTER_GPU_Copy(this,other)
+        implicit none
+        !---Dummary vars---
+        CLASS(MC_MIGCOALE_CLUSTER_GPU),intent(out)::this
+        CLASS(MC_MIGCOALE_CLUSTER_GPU),intent(in)::other
+        !---Body---
+        call this%MC_MIGCOALE_CLUSTER_GPU_Clean()
+        call this%SingleCollectionEvent%CopyFromOther(other%SingleCollectionEvent)
+        return
+    end subroutine MC_MIGCOALE_CLUSTER_GPU_Copy
+
+    !*****************************************************************
+    subroutine CleanMC_MIGCOALE_CLUSTER_GPU(this)
+        implicit none
+        !---Dummary vars---
+        type(MC_MIGCOALE_CLUSTER_GPU)::this
+        !---Body---
+        call this%MC_MIGCOALE_CLUSTER_GPU_Clean()
+        return
+    end subroutine CleanMC_MIGCOALE_CLUSTER_GPU
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachWorkProc()
+        implicit none
+        !---Dummy Vars---
+
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachWorkProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachWorkProc()
+        implicit none
+        !---Dummy Vars---
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_AfterEachWorkProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachJobProc()
+        implicit none
+        !---Dummy Vars---
+
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachJobProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachJobProc()
+        implicit none
+        !---Dummy Vars---
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_AfterEachJobProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTestProc()
+        implicit none
+        !---Dummy Vars---
+
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTestProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTestProc()
+        implicit none
+        !---Dummy Vars---
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_AfterEachTestProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeSectionProc()
+        implicit none
+        !---Dummy Vars---
+
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeSectionProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeSectionProc()
+        implicit none
+        !---Dummy Vars---
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeSectionProc
+
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeStepProc()
+        implicit none
+        !---Dummy Vars---
+
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeStepProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_EachTimeStepProc()
+        implicit none
+        !---Dummy Vars---
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_EachTimeStepProc
+
+    !****************************************************************
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeStepProc()
+        implicit none
+        !---Dummy Vars---
+
+        return
+    end subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeStepProc
+
+
+    !*****************************************************************
+    subroutine For_One_Test1(Host_SimBoxes,Host_SimuCtrlParamList,Dev_Boxes,JobIndex)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_SimBoxes
@@ -227,10 +404,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         return
 
-    end subroutine For_One_Test
+    end subroutine For_One_Test1
 
     !****************************************************************
-    subroutine For_One_TimeSect(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record)
+    subroutine For_One_TimeSect1(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_SimBoxes
@@ -372,10 +549,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMCMigCoaleStatInfoWrap%m_MCMigCoaleStatisticInfo_Used,Record,Model=1)
 
         return
-    end subroutine For_One_TimeSect
+    end subroutine For_One_TimeSect1
 
     !*****************************************************
-    subroutine Growth_FixBox(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap, Record, NC0, NCUT)
+    subroutine Growth_FixBox1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap, Record, NC0, NCUT)
         ! To start growth
         implicit none
         !---Dummy vars---
@@ -457,10 +634,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         END Associate
 
         return
-    end subroutine Growth_FixBox
+    end subroutine Growth_FixBox1
 
     !*********************************************************************
-    subroutine For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record,TSTEP)
+    subroutine For_One_Step1(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMCMigCoaleStatInfoWrap,Record,TSTEP)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
@@ -503,7 +680,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         curosr=>null()
 
         return
-    end subroutine For_One_Step
+    end subroutine For_One_Step1
 
     !*************************************************************
     subroutine CopyInitBoxSimCfgFromOther(this,other)
@@ -2290,5 +2467,4 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         return
     end subroutine
 
-
-end module MC_Method_MIGCOALE_CLUSTER_GPU
+end module MC_CollectionEvent_MIGCOALE_CLUSTER_GPU

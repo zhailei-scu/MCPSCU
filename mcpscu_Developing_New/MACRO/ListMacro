@@ -1,5 +1,5 @@
-!--------The following are the global macro that used for mcpscu--------------
-!----------------Zhai Lei, 2020/11/19-----------------
+!--------The following are the List macro that used for mcpscu--------------
+!----------------Zhai Lei, 2020/11/19, Sichuan University-----------------
 
 #define DefGeneralListStart(Name) type,public::Name
 
@@ -22,6 +22,7 @@
     procedure,non_overridable,public,pass::AppendArray=>AppendArray_##Name##List[ENTER] \
     procedure,non_overridable,public,pass::MoveToListPosByIndex=>MoveToPosByList##Name##Index[ENTER] \
     procedure,non_overridable,public,pass::GetValueByListIndex=>GetValueBy##Name##ListIndex[ENTER] \
+    procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListHeaderP[ENTER] \
     procedure,non_overridable,public,pass::GetListCount=>Get##Name##List_Count[ENTER] \
     procedure,non_overridable,public,pass::CleanList=>Clean_##Name##List[ENTER] \
     Generic::Assignment(=)=>Copy##Name##ListFromOther[ENTER] \
@@ -32,6 +33,7 @@
     procedure,non_overridable,public,pass::AppendOne=>AppendOne_##Name##List[ENTER] \
     procedure,non_overridable,public,pass::MoveToListPosByIndex=>MoveToPosByList##Name##Index[ENTER] \
     procedure,non_overridable,public,pass::GetValueByListIndex=>GetValueBy##Name##ListIndex[ENTER] \
+    procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListHeaderP[ENTER] \
     procedure,non_overridable,public,pass::GetListCount=>Get##Name##List_Count[ENTER] \
     procedure,non_overridable,public,pass::CleanList=>Clean_##Name##List[ENTER] \
     Generic::Assignment(=)=>Copy##Name##ListFromOther[ENTER] \
@@ -46,6 +48,7 @@
                            private::AppendArray_##Name##List[ENTER] \
                            private::MoveToPosByList##Name##Index[ENTER] \
                            private::GetValueBy##Name##ListIndex[ENTER] \
+                           private::Get##Name##ListHeaderP[ENTER] \
                            private::Get##Name##List_Count[ENTER] \
                            private::Clean_##Name##List[ENTER] \
                            private::Clean##Name##List
@@ -54,6 +57,7 @@
                              private::AppendOne_##Name##List[ENTER] \
                              private::MoveToPosByList##Name##Index[ENTER] \
                              private::GetValueBy##Name##ListIndex[ENTER] \
+                             private::Get##Name##ListHeaderP[ENTER] \
                              private::Get##Name##List_Count[ENTER] \
                              private::Clean_##Name##List[ENTER] \
                              private::Clean##Name##List
@@ -301,6 +305,24 @@
     cursor=>null()[ENTER] \
     return[ENTER] \
   end function GetValueBy##Name##ListIndex[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  function Get##Name##ListHeaderP(this) result(TheOutPointer)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    CLASS(Name),intent(out),pointer::TheOutPointer[ENTER] \
+[ENTER] \
+    TheOutPointer=>null()[ENTER] \
+    TheOutPointer=>this[ENTER] \
+    if(.not. associated(TheOutPointer)) then[ENTER] \
+      write(*,*) "MCPSCUERROR: You need to allocate the "//#Name//" first!"[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+    return[ENTER] \
+  end function Get##Name##ListHeaderP[ENTER] \
 [ENTER] \
 [ENTER] \
 [ENTER] \
@@ -568,6 +590,24 @@
     cursor=>null()[ENTER] \
     return[ENTER] \
   end function GetValueBy##Name##ListIndex[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  function Get##Name##ListHeaderP(this) result(TheOutPointer)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    CLASS(Name),intent(out),pointer::TheOutPointer[ENTER] \
+[ENTER] \
+    TheOutPointer=>null()[ENTER] \
+    TheOutPointer=>this[ENTER] \
+    if(.not. associated(TheOutPointer)) then[ENTER] \
+      write(*,*) "MCPSCUERROR: You need to allocate the "//#Name//" first!"[ENTER] \
+      pause[ENTER] \
+      stop[ENTER] \
+    end if[ENTER] \
+    return[ENTER] \
+  end function Get##Name##ListHeaderP[ENTER] \
 [ENTER] \
 [ENTER] \
 [ENTER] \
