@@ -977,6 +977,12 @@ module MC_ConstructCaptureBox
         real(kind=KINDDF)::SEP(3)
         real(kind=KINDDF)::Distance
         integer::I
+        integer::J
+        real(kind=KINDDF)::Sep_X
+        real(kind=KINDDF)::Sep_Y
+        real(kind=KINDDF)::Sep_Z
+        real(kind=KINDDF)::RadSum
+        real(kind=KINDDF)::Dist
         type(DiffusorValue)::TheDiffusorValue
         real(kind=KINDDF)::RR
         real(kind=KINDDF)::RRXY
@@ -1817,15 +1823,55 @@ module MC_ConstructCaptureBox
 
                 select case(TheCaptureCal%SIASPaceModel)
                     case(Capture_SIASPaceModel_Type_UnderSphereFace)
-                        ArrowLen = 0.D0
-                        DO I = 1,3
-                            Vector(I) = DRAND32() - 0.5D0
-                            ArrowLen = ArrowLen + Vector(I)*Vector(I)
-                        END DO
-                        ArrowLen = DSQRT(ArrowLen)
 
-                        DO I = 1,3
-                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                        exitFlag = .false.
+                        DO while(exitFlag .eq. .false.)
+
+                            ArrowLen = 0.D0
+                            DO I = 1,3
+                                Vector(I) = DRAND32() - 0.5D0
+                                ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                            END DO
+                            ArrowLen = DSQRT(ArrowLen)
+
+                            DO I = 1,3
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                            END DO
+
+                            exitFlag = .true.
+
+                            DO J = ICFrom,ICFrom+NCUsed-1
+                                Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                    Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                end if
+
+                                if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                    Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                end if
+
+                                if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                    Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                end if
+
+                                Sep_X = ABS(Sep_X)
+                                Sep_Y = ABS(Sep_Y)
+                                Sep_Z = ABS(Sep_Z)
+
+                                RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                if(DIST .LE. RadSum ) then
+                                    exitFlag = .false.
+                                    exit
+                                end if
+
+                            END DO
+
                         END DO
 
                     case(Capture_SIASPaceModel_Type_UniformOutRSIA)
@@ -1855,6 +1901,38 @@ module MC_ConstructCaptureBox
 
                             END DO
 
+                            DO J = ICFrom,ICFrom+NCUsed-1
+                                Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                    Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                end if
+
+                                if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                    Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                end if
+
+                                if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                    Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                end if
+
+                                Sep_X = ABS(Sep_X)
+                                Sep_Y = ABS(Sep_Y)
+                                Sep_Z = ABS(Sep_Z)
+
+                                RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                if(DIST .LE. RadSum ) then
+                                    exitFlag = .false.
+                                    exit
+                                end if
+
+                            END DO
+
                         END DO
 
 
@@ -1872,6 +1950,38 @@ module MC_ConstructCaptureBox
                                 if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
                                     (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                                     exitFlag = .false.
+                                end if
+
+                            END DO
+
+                            DO J = ICFrom,ICFrom+NCUsed-1
+                                Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                    Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                end if
+
+                                if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                    Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                end if
+
+                                if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                    Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                end if
+
+                                Sep_X = ABS(Sep_X)
+                                Sep_Y = ABS(Sep_Y)
+                                Sep_Z = ABS(Sep_Z)
+
+                                RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                if(DIST .LE. RadSum ) then
+                                    exitFlag = .false.
+                                    exit
                                 end if
 
                             END DO
@@ -1987,17 +2097,56 @@ module MC_ConstructCaptureBox
 
                     select case(TheCaptureCal%SIASPaceModel)
                         case(Capture_SIASPaceModel_Type_UnderSphereFace)
-                            ArrowLen = 0.D0
-                            DO I = 1,3
-                                Vector(I) = DRAND32() - 0.5D0
-                                ArrowLen = ArrowLen + Vector(I)*Vector(I)
-                            END DO
-                            ArrowLen = DSQRT(ArrowLen)
 
-                            DO I = 1,3
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
-                            END DO
+                            exitFlag = .false.
+                            DO while(exitFlag .eq. .false.)
 
+                                ArrowLen = 0.D0
+                                DO I = 1,3
+                                    Vector(I) = DRAND32() - 0.5D0
+                                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                                END DO
+                                ArrowLen = DSQRT(ArrowLen)
+
+                                DO I = 1,3
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                                END DO
+
+                                exitFlag = .true.
+
+                                DO J = ICFrom,ICFrom+NCUsed-1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
+                                    end if
+
+                                END DO
+
+                            END DO
                         case(Capture_SIASPaceModel_Type_UniformOutRSIA)
 
                             exitFlag = .false.
@@ -2025,6 +2174,38 @@ module MC_ConstructCaptureBox
 
                                 END DO
 
+                                DO J = ICFrom,ICFrom+NCUsed-1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
+                                    end if
+
+                                END DO
+
                             END DO
 
 
@@ -2042,6 +2223,38 @@ module MC_ConstructCaptureBox
                                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
                                         (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                                         exitFlag = .false.
+                                    end if
+
+                                END DO
+
+                                DO J = ICFrom,ICFrom+NCUsed-1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
                                     end if
 
                                 END DO
@@ -2142,6 +2355,12 @@ module MC_ConstructCaptureBox
         real(kind=KINDDF)::SEP(3)
         real(kind=KINDDF)::Distance
         integer::I
+        integer::J
+        real(kind=KINDDF)::Sep_X
+        real(kind=KINDDF)::Sep_Y
+        real(kind=KINDDF)::Sep_Z
+        real(kind=KINDDF)::RadSum
+        real(kind=KINDDF)::Dist
         type(DiffusorValue)::TheDiffusorValue
         integer::NCUsed
         integer::NC
@@ -2375,17 +2594,57 @@ module MC_ConstructCaptureBox
 
                 select case(TheCaptureCal%SIASPaceModel)
                     case(Capture_SIASPaceModel_Type_UnderSphereFace)
-                        ArrowLen = 0.D0
-                        DO I = 1,3
-                            Vector(I) = DRAND32() - 0.5D0
-                            ArrowLen = ArrowLen + Vector(I)*Vector(I)
-                        END DO
-                        ArrowLen = DSQRT(ArrowLen)
 
-                        DO I = 1,3
-                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
-                        END DO
+                        exitFlag = .false.
+                        DO while(exitFlag .eq. .false.)
 
+                            ArrowLen = 0.D0
+                            DO I = 1,3
+                                Vector(I) = DRAND32() - 0.5D0
+                                ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                            END DO
+                            ArrowLen = DSQRT(ArrowLen)
+
+                            DO I = 1,3
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                            END DO
+
+
+                            exitFlag = .true.
+
+                            DO J = ICFrom,ICFrom+NCUsed-1
+                                Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                    Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                end if
+
+                                if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                    Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                end if
+
+                                if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                    Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                end if
+
+                                Sep_X = ABS(Sep_X)
+                                Sep_Y = ABS(Sep_Y)
+                                Sep_Z = ABS(Sep_Z)
+
+                                RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                if(DIST .LE. RadSum ) then
+                                    exitFlag = .false.
+                                    exit
+                                end if
+
+                            END DO
+
+                        END DO
                     case(Capture_SIASPaceModel_Type_UniformOutRSIA)
 
                         exitFlag = .false.
@@ -2413,6 +2672,38 @@ module MC_ConstructCaptureBox
 
                             END DO
 
+                            DO J = ICFrom,ICFrom+NCUsed-1
+                                Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                    Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                end if
+
+                                if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                    Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                end if
+
+                                if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                    Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                end if
+
+                                Sep_X = ABS(Sep_X)
+                                Sep_Y = ABS(Sep_Y)
+                                Sep_Z = ABS(Sep_Z)
+
+                                RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                if(DIST .LE. RadSum ) then
+                                    exitFlag = .false.
+                                    exit
+                                end if
+
+                            END DO
+
                         END DO
 
 
@@ -2430,6 +2721,38 @@ module MC_ConstructCaptureBox
                                 if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
                                     (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                                     exitFlag = .false.
+                                end if
+
+                            END DO
+
+                            DO J = ICFrom,ICFrom+NCUsed-1
+                                Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                    Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                end if
+
+                                if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                    Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                end if
+
+                                if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                    Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                end if
+
+                                Sep_X = ABS(Sep_X)
+                                Sep_Y = ABS(Sep_Y)
+                                Sep_Z = ABS(Sep_Z)
+
+                                RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                if(DIST .LE. RadSum ) then
+                                    exitFlag = .false.
+                                    exit
                                 end if
 
                             END DO
@@ -2546,15 +2869,56 @@ module MC_ConstructCaptureBox
 
                     select case(TheCaptureCal%SIASPaceModel)
                         case(Capture_SIASPaceModel_Type_UnderSphereFace)
-                            ArrowLen = 0.D0
-                            DO I = 1,3
-                                Vector(I) = DRAND32() - 0.5D0
-                                ArrowLen = ArrowLen + Vector(I)*Vector(I)
-                            END DO
-                            ArrowLen = DSQRT(ArrowLen)
 
-                            DO I = 1,3
-                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                            exitFlag = .false.
+                            DO while(exitFlag .eq. .false.)
+
+                                ArrowLen = 0.D0
+                                DO I = 1,3
+                                    Vector(I) = DRAND32() - 0.5D0
+                                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                                END DO
+                                ArrowLen = DSQRT(ArrowLen)
+
+                                DO I = 1,3
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_CascadeCenter(IBox,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                                END DO
+
+
+                                exitFlag = .true.
+
+                                DO J = ICFrom,ICFrom+NCUsed-1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
+                                    end if
+
+                                END DO
+
                             END DO
 
                         case(Capture_SIASPaceModel_Type_UniformOutRSIA)
@@ -2584,6 +2948,38 @@ module MC_ConstructCaptureBox
 
                                 END DO
 
+                                DO J = ICFrom,ICFrom+NCUsed-1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
+                                    end if
+
+                                END DO
+
                             END DO
 
 
@@ -2601,6 +2997,38 @@ module MC_ConstructCaptureBox
                                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
                                         (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .GT. Host_Boxes%BOXBOUNDARY(I,2)) then
                                         exitFlag = .false.
+                                    end if
+
+                                END DO
+
+                                DO J = ICFrom,ICFrom+NCUsed-1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
                                     end if
 
                                 END DO
