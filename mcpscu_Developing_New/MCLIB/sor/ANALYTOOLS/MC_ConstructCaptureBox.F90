@@ -1840,7 +1840,7 @@ module MC_ConstructCaptureBox
 
                             exitFlag = .true.
 
-                            DO J = ICFrom,ICFrom+NCUsed-1
+                            DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                 Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                 Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                 Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -1901,7 +1901,7 @@ module MC_ConstructCaptureBox
 
                             END DO
 
-                            DO J = ICFrom,ICFrom+NCUsed-1
+                            DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                 Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                 Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                 Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -1954,7 +1954,7 @@ module MC_ConstructCaptureBox
 
                             END DO
 
-                            DO J = ICFrom,ICFrom+NCUsed-1
+                            DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                 Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                 Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                 Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -2114,7 +2114,7 @@ module MC_ConstructCaptureBox
 
                                 exitFlag = .true.
 
-                                DO J = ICFrom,ICFrom+NCUsed-1
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                     Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                     Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                     Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -2174,7 +2174,7 @@ module MC_ConstructCaptureBox
 
                                 END DO
 
-                                DO J = ICFrom,ICFrom+NCUsed-1
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                     Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                     Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                     Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -2227,7 +2227,7 @@ module MC_ConstructCaptureBox
 
                                 END DO
 
-                                DO J = ICFrom,ICFrom+NCUsed-1
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                     Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                     Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                     Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -2612,7 +2612,7 @@ module MC_ConstructCaptureBox
 
                             exitFlag = .true.
 
-                            DO J = ICFrom,ICFrom+NCUsed-1
+                            DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                 Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                 Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                 Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -2672,7 +2672,7 @@ module MC_ConstructCaptureBox
 
                             END DO
 
-                            DO J = ICFrom,ICFrom+NCUsed-1
+                            DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                 Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                 Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                 Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -2725,7 +2725,7 @@ module MC_ConstructCaptureBox
 
                             END DO
 
-                            DO J = ICFrom,ICFrom+NCUsed-1
+                            DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                 Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                 Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                 Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -2887,7 +2887,7 @@ module MC_ConstructCaptureBox
 
                                 exitFlag = .true.
 
-                                DO J = ICFrom,ICFrom+NCUsed-1
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                     Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                     Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                     Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -2948,7 +2948,7 @@ module MC_ConstructCaptureBox
 
                                 END DO
 
-                                DO J = ICFrom,ICFrom+NCUsed-1
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                     Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                     Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                     Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
@@ -3001,7 +3001,7 @@ module MC_ConstructCaptureBox
 
                                 END DO
 
-                                DO J = ICFrom,ICFrom+NCUsed-1
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
                                     Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
                                     Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
                                     Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
