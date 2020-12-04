@@ -10,4 +10,21 @@ module HYBRIDMCRT_EVOLUTION_GPU
 
   contains
 
+  !********************************************************
+!  subroutine WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP)
+!    implicit none
+!    !---Dummy Vars---
+!    type(SimulationBoxes)::Host_Boxes
+!    type(SimulationCtrlParam)::Host_SimuCtrlParam
+!    type(SimulationBoxes_GPU)::Dev_Boxes
+!    type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
+!    type(MigCoalClusterRecord)::Record
+!    real(kind=KINDDF)::TSTEP
+!    !---Local Vars----
+!    !---Body---
+!    return
+!  end subroutine WalkOneStep
+
+
+
 end module HYBRIDMCRT_EVOLUTION_GPU
