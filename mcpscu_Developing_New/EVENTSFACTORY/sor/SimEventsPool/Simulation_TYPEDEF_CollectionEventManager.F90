@@ -2,7 +2,7 @@
 module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
     use COMMONLIB_TYPEDEF_COLLECTIONEVENT
     use SIMULATION_TYPEDEF_READEDEVENTSMODELS
-    use MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
+    use 
     implicit none
 
     !**************************************************************************

@@ -172,8 +172,12 @@ module MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
     end subroutine CleanMC_MIGCOALE_CLUSTER_GPU
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachWorkProc()
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachWorkProc(Host_SimBoxes,Host_CtrlParamList)
+        use COMMONLIB_TYPEDEF_EVENTCONTROL
         implicit none
+        !---Dummy Vars----
+        !CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        !CLASS(EventCtrl),pointer::Host_CtrlParamList
         !---Dummy Vars---
 
 

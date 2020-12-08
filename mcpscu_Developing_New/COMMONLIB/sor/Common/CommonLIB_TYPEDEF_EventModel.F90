@@ -1,57 +1,122 @@
 #include "../../../MACRO/Macro"
 module COMMONLIB_TYPEDEF_EVENTMODEL
-
     implicit none
 
     abstract interface
 
         !*******For each work*************
-        subroutine BeforeEachWorkProc()
-
+        subroutine BeforeEachWorkProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine BeforeEachWorkProc
 
-        subroutine AfterEachWorkProc()
-
+        subroutine AfterEachWorkProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end  subroutine AfterEachWorkProc
 
         !******For each job***************
-        subroutine BeforeEachJobProc()
-
+        subroutine BeforeEachJobProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine BeforeEachJobProc
 
-        subroutine AfterEachJobProc()
-
+        subroutine AfterEachJobProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine AfterEachJobProc
 
         !*****For each test***************
-        subroutine BeforeEachTestProc()
-
+        subroutine BeforeEachTestProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine BeforeEachTestProc
 
-        subroutine AfterEachTestProc()
-
+        subroutine AfterEachTestProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine AfterEachTestProc
 
         !*****For each time section*******
-        subroutine BeforeEachTimeSectionProc()
-
+        subroutine BeforeEachTimeSectionProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine BeforeEachTimeSectionProc
 
-        subroutine AfterEachTimeSectionProc()
-
+        subroutine AfterEachTimeSectionProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine AfterEachTimeSectionProc
 
         !****For each time step***********
-        subroutine BeforeEachTimeStepProc()
-
+        subroutine BeforeEachTimeStepProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine BeforeEachTimeStepProc
 
-        subroutine EachTimeStepProc()
-
+        subroutine EachTimeStepProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine EachTimeStepProc
 
-        subroutine AfterEachTimeStepProc()
-
+        subroutine AfterEachTimeStepProc(TheObjectsCollection,TheEventCtrl)
+            use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
+            use COMMONLIB_TYPEDEF_EVENTCONTROL
+            implicit none
+            !---Dummy Vars----
+            CLASS(ObjectsCollection),pointer::TheObjectsCollection
+            CLASS(EventCtrl),pointer::TheEventCtrl
+            !---Body---
         end subroutine AfterEachTimeStepProc
     end interface
 

@@ -1541,14 +1541,14 @@ module MC_GenerateCascadeBox
 
                 NAtomsRef(NClusterEachBox) = 1
 
-                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*CP_A2CM
-                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*CP_A2CM
-                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
             else
                 NAtomsRef(NClusterEachBox) = NAtomsRef(NClusterEachBox) + 1
-                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*CP_A2CM
-                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*CP_A2CM
-                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
             end if
 
         end if
@@ -1737,13 +1737,13 @@ module MC_GenerateCascadeBox
                     ClustersArray(NClusterEachBox -1)%POS = ClustersArray(NClusterEachBox -1)%POS/NAtomEachCluster(NClusterEachBox - 1)
                 end if
 
-                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*CP_A2CM
-                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*CP_A2CM
-                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(1) = DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(2) = DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(3) = DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
             else
-                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*CP_A2CM
-                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*CP_A2CM
-                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*CP_A2CM
+                ClustersArray(NClusterEachBox)%POS(1) = ClustersArray(NClusterEachBox)%POS(1) + DRSTR(STRTMP(2))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(2) = ClustersArray(NClusterEachBox)%POS(2) + DRSTR(STRTMP(3))*LatticeLength*C_AM2CM
+                ClustersArray(NClusterEachBox)%POS(3) = ClustersArray(NClusterEachBox)%POS(3) + DRSTR(STRTMP(4))*LatticeLength*C_AM2CM
             end if
 
             NAtomEachCluster(NClusterEachBox) = NAtomEachCluster(NClusterEachBox) + 1
@@ -2450,7 +2450,7 @@ module MC_GenerateCascadeBox
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-        type(MCMigCoalClusterRecord)::Record
+        type(MigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
@@ -2500,6 +2500,8 @@ module MC_GenerateCascadeBox
         integer::CheckVACEachBox
         integer::CascadePosModel
         real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
+        type(DiffusorValue)::TheDiffusorValue
+        integer::TheDim
         !-----------Body--------------
         WhetherIncludeSIA = .false.
         WhetherIncludeVAC = .false.
@@ -2545,7 +2547,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
@@ -2732,6 +2734,47 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
+
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
+                    end select
+
+                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                        case(p_DiffuseCoefficient_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                        case(p_DiffuseCoefficient_ByArrhenius)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByBCluster)
+                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        case(p_DiffuseCoefficient_BySIACluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByVcCluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                    end select
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                        DO TheDim = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                        END DO
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICase
@@ -2871,6 +2914,47 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
+
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
+                    end select
+
+                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                        case(p_DiffuseCoefficient_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                        case(p_DiffuseCoefficient_ByArrhenius)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByBCluster)
+                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        case(p_DiffuseCoefficient_BySIACluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByVcCluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                    end select
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                        DO TheDim = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                        END DO
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICase
@@ -2929,7 +3013,7 @@ module MC_GenerateCascadeBox
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-        type(MCMigCoalClusterRecord)::Record
+        type(MigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
@@ -2973,6 +3057,8 @@ module MC_GenerateCascadeBox
         integer::ICVACReadFrom
         integer::CascadePosModel
         real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
+        type(DiffusorValue)::TheDiffusorValue
+        integer::TheDim
         !-----------Body--------------
         WhetherIncludeSIA = .false.
         WhetherIncludeVAC = .false.
@@ -3008,7 +3094,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox .LE. 0) then
             write(*,*) "MCPSCUERROR: The box number less than 1"
@@ -3198,6 +3284,46 @@ module MC_GenerateCascadeBox
                         end if
                     END DO
 
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
+                    end select
+
+                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                        case(p_DiffuseCoefficient_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                        case(p_DiffuseCoefficient_ByArrhenius)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByBCluster)
+                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        case(p_DiffuseCoefficient_BySIACluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByVcCluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                    end select
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                        DO TheDim = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                        END DO
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICase
@@ -3265,6 +3391,46 @@ module MC_GenerateCascadeBox
                         end if
                     END DO
 
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
+                    end select
+
+                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                        case(p_DiffuseCoefficient_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                        case(p_DiffuseCoefficient_ByArrhenius)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByBCluster)
+                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        case(p_DiffuseCoefficient_BySIACluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByVcCluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                    end select
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                        DO TheDim = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                        END DO
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICase
@@ -3326,7 +3492,7 @@ module MC_GenerateCascadeBox
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-        type(MCMigCoalClusterRecord)::Record
+        type(MigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
@@ -3364,6 +3530,8 @@ module MC_GenerateCascadeBox
         integer::CheckVACEachBox
         integer::CascadePosModel
         real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
+        type(DiffusorValue)::TheDiffusorValue
+        integer::TheDim
         !-----------Body--------------
 
         WhetherIncludeSIA = .false.
@@ -3408,7 +3576,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster+NVACCluster))
 
@@ -3489,6 +3657,49 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
+
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
+                    end select
+
+                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                        case(p_DiffuseCoefficient_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                        case(p_DiffuseCoefficient_ByArrhenius)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByBCluster)
+                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        case(p_DiffuseCoefficient_BySIACluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByVcCluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                    end select
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                        DO TheDim = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                        END DO
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
+
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICase
@@ -3569,6 +3780,48 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
+
+
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
+                    end select
+
+                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                        case(p_DiffuseCoefficient_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                        case(p_DiffuseCoefficient_ByArrhenius)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByBCluster)
+                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        case(p_DiffuseCoefficient_BySIACluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByVcCluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                    end select
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                        DO TheDim = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                        END DO
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICase
@@ -3981,7 +4234,7 @@ module MC_GenerateCascadeBox
         !---Local Vars---
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
-        type(MCMigCoalClusterRecord)::Record
+        type(MigCoalClusterRecord)::Record
         character*1000::OutFolder
         logical::WhetherIncludeSIA
         logical::WhetherIncludeVAC
@@ -4015,6 +4268,8 @@ module MC_GenerateCascadeBox
         real(kind=KINDDF),dimension(:,:),allocatable::CellCentralPos
         integer::CascadePosModel
         real(kind=KINDDF),dimension(:,:),allocatable::CascadePos
+        type(DiffusorValue)::TheDiffusorValue
+        integer::TheDim
         !-----------Body--------------
 
         call ResloveCascadeControlFile_Locally_CentUniform(hFile,WhetherIncludeSIA,WhetherIncludeVAC,ClusterNumOneCase,CascadeNum,CascadePosModel,CascadePos,WhetherCascadeSameInOneBox)
@@ -4059,7 +4314,7 @@ module MC_GenerateCascadeBox
 
         call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Record%InitMCMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
         call Host_Boxes%ExpandClustersInfor_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam,CascadeNum*(NSIACluster + NVACCluster))
 
@@ -4156,6 +4411,48 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
+
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
+                    end select
+
+                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                        case(p_DiffuseCoefficient_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                        case(p_DiffuseCoefficient_ByArrhenius)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByBCluster)
+                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        case(p_DiffuseCoefficient_BySIACluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByVcCluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                    end select
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                        DO TheDim = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                        END DO
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICase
@@ -4206,6 +4503,47 @@ module MC_GenerateCascadeBox
                         end if
 
                     END DO
+
+                    TheDiffusorValue = Host_Boxes%m_DiffusorTypesMap%Get(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC))
+
+                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                    !---you should init the distribution by external file---
+                    select case(TheDiffusorValue%ECRValueType_Free)
+                        case(p_ECR_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = TheDiffusorValue%ECR_Free
+                        case default
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,                          &
+                                                                                                   Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA,&
+                                                                                                   Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,                                      &
+                                                                                                   Host_Boxes%LatticeLength)
+                    end select
+
+                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                        case(p_DiffuseCoefficient_ByValue)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                        case(p_DiffuseCoefficient_ByArrhenius)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByBCluster)
+                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = m_FREESURDIFPRE*(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD**(-p_GAMMA))
+                        case(p_DiffuseCoefficient_BySIACluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = (sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                        TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                        case(p_DiffuseCoefficient_ByVcCluster)
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA)))* &
+                                                                                    TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                    end select
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                        DO TheDim = 1,3
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                        END DO
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                    end if
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICase
@@ -4344,4 +4682,3 @@ program Main_MC_GenerateCascadeBox
     close(hFile)
 
 end program Main_MC_GenerateCascadeBox
-

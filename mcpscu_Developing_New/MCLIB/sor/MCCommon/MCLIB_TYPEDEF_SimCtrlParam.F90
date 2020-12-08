@@ -7,6 +7,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
   use MCLIB_CONSTANTS
   use MCLIB_UTILITIES
   use MSM_TYPEDEF_InputPaser
+  use COMMONLIB_TYPEDEF_EVENTMODEL
   use MiniUtilities, only:EXTRACT_NUMB,GETINPUTSTRLINE,GETKEYWORD,UPCASE,DRSTR,ISTR
 
   implicit none
@@ -139,7 +140,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
   end type
 
 
-  type,public::SimulationCtrlParamList
+  type,extends(EventCtrl),public::SimulationCtrlParamList
     type(SimulationCtrlParam)::theSimulationCtrlParam
 
     type(SimulationCtrlParamList),pointer::next=>null()

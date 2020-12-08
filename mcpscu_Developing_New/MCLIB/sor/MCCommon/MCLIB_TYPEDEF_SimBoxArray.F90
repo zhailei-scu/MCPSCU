@@ -8,12 +8,13 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   use MCLIB_TYPEDEF_ReactionPropList
   use MCLIB_UTILITIES
   use MCLIB_TYPEDEF_GEOMETRY
+  use COMMONLIB_TYPEDEF_OBJECTSCOLLECTION
   use MiniUtilities, only:EXTRACT_NUMB,EXTRACT_SUBSTR,GETINPUTSTRLINE, GETKEYWORD, UPCASE, ISTR, DRSTR
   implicit none
 
   character(len=5), parameter, private::m_BOXSTARTFLAG = "&BOXF"
 
-  type,public::SimulationBoxes
+  type,extends(ObjectsCollection),public::SimulationBoxes
 
     !***********Diffusor list memory mapping*************
     type(DiffusorTypesMap)::m_DiffusorTypesMap
