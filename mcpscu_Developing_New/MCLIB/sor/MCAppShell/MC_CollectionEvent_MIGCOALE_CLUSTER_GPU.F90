@@ -135,8 +135,6 @@ module MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
         this%TheEventModel%TheEachTimeStepProc=>MIGCOALE_CLUSTER_GPU_EachTimeStepProc
         this%TheEventModel%TheAfterEachTimeStepProc=>MIGCOALE_CLUSTER_GPU_AfterEachTimeStepProc
 
-
-
         this%TheCollection=>null()
         return
     end subroutine MC_MIGCOALE_CLUSTER_GPU_Constructor
