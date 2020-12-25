@@ -371,7 +371,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         integer::J
         type(UserDefEventModels)::tempUserDefEventModels
         type(UserDefEventModels)::newUserDefEventModels
-        type(UserDefEventModelsList),pointer::HeadEventModels
+        type(UserDefEventModelsList),target::HeadEventModels
         type(UserDefEventModelsList),pointer::cursor=>null()
         logical::Finded
         !---Body---
@@ -671,7 +671,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         end if
 
         call DeAllocateArray_Host(CodeArray, "CodeArray") 
-        deallocate(CodeSTRArray)
+        if(allocated(CodeSTRArray)) deallocate(CodeSTRArray)
        
         Nullify(cursor)
         cursor=>null()

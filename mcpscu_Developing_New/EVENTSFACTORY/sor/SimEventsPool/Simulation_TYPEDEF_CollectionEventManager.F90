@@ -2,7 +2,7 @@
 module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
     use COMMONLIB_TYPEDEF_COLLECTIONEVENT
     use SIMULATION_TYPEDEF_READEDEVENTSMODELS
-    use 
+    use SIMULATION_TYPEDEF_EVENTSPOOL
     implicit none
 
     !**************************************************************************
@@ -59,10 +59,18 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
                 end if
                 tempEventModelSymbol = tempEventsModelsPair%SubjectEventsModelDef%GetEventModelSymbol()
                 
+                
+
                 select case(tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol)))
                     case("MC_MIGCOALE_CLUSTER_GPU")
                         newSingleCollectionEvent=>m_MC_MIGCOALE_CLUSTER_GPU
-                        call m_MC_MIGCOALE_CLUSTER_GPU%Constructor()
+                        newSingleCollectionEvent=>LinkName(m,tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol)))
+                        if(associated(newSingleCollectionEvent)) then
+                            deallocate(newSingleCollectionEvent)
+                            Nullify(newSingleCollectionEvent)
+                        end if
+                        allocate(newSingleCollectionEvent)
+                        call newSingleCollectionEvent%Constructor()
                     case default
                         write(*,*) "MCPSCUERROR: Unkonwn single event collenction: ",tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol))
                         pause

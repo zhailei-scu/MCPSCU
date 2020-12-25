@@ -5,7 +5,13 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
     implicit none
 
     !****************************************************************************
-    type,abstract,public::SingleCollectionEvent
+
+    type,public::CollectionEvent
+
+    end type CollectionEvent
+
+
+    type,abstract,extends(CollectionEvent),public::SingleCollectionEvent
         CLASS(ObjectsCollection),pointer::TheCollection=>null()
         type(EventModel),public::TheEventModel
         contains
@@ -25,11 +31,10 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
     DefGeneralList_P(SingleCollectionEventsList_P,class(SingleCollectionEvent))
 
     !****************************************************************************
-    type,abstract,public::CrossCollectionEvent
+    type,abstract,extends(CollectionEvent),public::CrossCollectionEvent
         CLASS(ObjectsCollection),pointer::TheLeftObjectsCollection=>null()
         CLASS(ObjectsCollection),pointer::TheRightObjectsCollection=>null()
         type(EventModel),public::TheEventModel
-
         contains
         procedure,public,non_overridable,pass::CopyFromOther=>CopyCrossCollectionEventFromOther
         procedure,public,non_overridable,pass::Clean=>Clean_CrossCollectionEvent

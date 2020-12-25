@@ -122,7 +122,6 @@ module COMMONLIB_TYPEDEF_EVENTMODEL
 
     !****************************************************************************
     type,public::EventModel
-        character(len=100)::ModelName PREASSIGN ""
         procedure(BeforeEachWorkProc),pointer,nopass::TheBeforeEachWorkProc=>null()
         procedure(AfterEachWorkProc),pointer,nopass::TheAfterEachWorkProc=>null()
         procedure(BeforeEachJobProc),pointer,nopass::TheBeforeEachJobProc=>null()
@@ -159,7 +158,6 @@ module COMMONLIB_TYPEDEF_EVENTMODEL
         CLASS(EventModel),intent(out)::this
         CLASS(EventModel),intent(in)::other
         !---Body---
-        this%ModelName = other%ModelName
         this%TheBeforeEachWorkProc =>other%TheBeforeEachWorkProc
         this%TheAfterEachWorkProc =>other%TheAfterEachWorkProc
         this%TheBeforeEachJobProc =>other%TheBeforeEachJobProc
@@ -181,7 +179,6 @@ module COMMONLIB_TYPEDEF_EVENTMODEL
         CLASS(EventModel)::this
         !---Body---
 
-        this%ModelName = ""
 
         Nullify(this%TheBeforeEachWorkProc)
         this%TheBeforeEachWorkProc => null()

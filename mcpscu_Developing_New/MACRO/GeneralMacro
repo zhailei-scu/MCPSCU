@@ -48,3 +48,5 @@
 #else
   #define PREASSIGN ! =
 #endif
+
+#define LinkName(a,b) a##b

@@ -14,6 +14,7 @@ module MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
     use MCMIGCOALE_TYPEDEF_SIMRECORD
     use MCINLET_TYPEDEF_IMPLANTLIST
     use COMMONLIB_TYPEDEF_COLLECTIONEVENT
+    use COMMONLIB_TYPEDEF_EVENTCONTROL
     implicit none
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
@@ -95,9 +96,6 @@ module MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
         Final::CleanMC_MIGCOALE_CLUSTER_GPU
     end type MC_MIGCOALE_CLUSTER_GPU
 
-    type(MC_MIGCOALE_CLUSTER_GPU),target::m_MC_MIGCOALE_CLUSTER_GPU
-    
-
     private::CopyInitBoxSimCfgFromOther
     private::Clean_InitBoxSimCfg
     private::CleanInitBoxSimCfg
@@ -134,8 +132,6 @@ module MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
         this%TheEventModel%TheBeforeEachTimeStepProc=>MIGCOALE_CLUSTER_GPU_BeforeEachTimeStepProc
         this%TheEventModel%TheEachTimeStepProc=>MIGCOALE_CLUSTER_GPU_EachTimeStepProc
         this%TheEventModel%TheAfterEachTimeStepProc=>MIGCOALE_CLUSTER_GPU_AfterEachTimeStepProc
-
-
 
 
         this%TheCollection=>null()
@@ -179,96 +175,117 @@ module MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
         use COMMONLIB_TYPEDEF_EVENTCONTROL
         implicit none
         !---Dummy Vars----
-        !CLASS(ObjectsCollection),pointer::Host_SimBoxes
-        !CLASS(EventCtrl),pointer::Host_CtrlParamList
-        !---Dummy Vars---
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
 
 
         return
     end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachWorkProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_AfterEachWorkProc()
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachWorkProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
-        !---Dummy Vars---
+        !---Dummy Vars----
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
 
         return
     end subroutine MIGCOALE_CLUSTER_GPU_AfterEachWorkProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachJobProc()
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachJobProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
 
         return
     end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachJobProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_AfterEachJobProc()
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachJobProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
         return
     end subroutine MIGCOALE_CLUSTER_GPU_AfterEachJobProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTestProc()
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTestProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
 
         return
     end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTestProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTestProc()
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTestProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
         return
     end subroutine MIGCOALE_CLUSTER_GPU_AfterEachTestProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeSectionProc()
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeSectionProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
 
         return
     end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeSectionProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeSectionProc()
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeSectionProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
         return
     end subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeSectionProc
 
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeStepProc()
+    subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeStepProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
 
         return
     end subroutine MIGCOALE_CLUSTER_GPU_BeforeEachTimeStepProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_EachTimeStepProc()
+    subroutine MIGCOALE_CLUSTER_GPU_EachTimeStepProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
         return
     end subroutine MIGCOALE_CLUSTER_GPU_EachTimeStepProc
 
     !****************************************************************
-    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeStepProc()
+    subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeStepProc(Host_SimBoxes,Host_CtrlParamList)
         implicit none
         !---Dummy Vars---
-
+        CLASS(ObjectsCollection),pointer::Host_SimBoxes
+        CLASS(EventCtrl),pointer::Host_CtrlParamList
+        !---body---
         return
     end subroutine MIGCOALE_CLUSTER_GPU_AfterEachTimeStepProc
 
