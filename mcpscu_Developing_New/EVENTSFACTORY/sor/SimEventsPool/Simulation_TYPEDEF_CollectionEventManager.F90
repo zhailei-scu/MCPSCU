@@ -37,7 +37,7 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
         integer::I
         integer::ReadedPairsNum
         type(EventsModelsPair)::tempEventsModelsPair
-        Class(SingleCollectionEvent),pointer::newSingleCollectionEvent=>null()
+        !Class(SingleCollectionEvent),pointer::newSingleCollectionEvent=>null()
         character*100::tempEventModelSymbol
         !---Body---
         call this%TheReadedEventsModels%Load_ReadedEventsModels(hEventModels)
@@ -61,23 +61,22 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
                 
                 
 
-                select case(tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol)))
-                    case("MC_MIGCOALE_CLUSTER_GPU")
-                        newSingleCollectionEvent=>m_MC_MIGCOALE_CLUSTER_GPU
-                        newSingleCollectionEvent=>LinkName(m,tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol)))
-                        if(associated(newSingleCollectionEvent)) then
-                            deallocate(newSingleCollectionEvent)
-                            Nullify(newSingleCollectionEvent)
-                        end if
-                        allocate(newSingleCollectionEvent)
-                        call newSingleCollectionEvent%Constructor()
-                    case default
-                        write(*,*) "MCPSCUERROR: Unkonwn single event collenction: ",tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol))
-                        pause
-                        stop
-                end select
+                !select case(tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol)))
+                !    case("MC_MIGCOALE_CLUSTER_GPU")
+                !        newSingleCollectionEvent=>m_MC_MIGCOALE_CLUSTER_GPU
+                !        if(associated(newSingleCollectionEvent)) then
+                !            deallocate(newSingleCollectionEvent)
+                !            Nullify(newSingleCollectionEvent)
+                !        end if
+                !        allocate(newSingleCollectionEvent)
+                !        call newSingleCollectionEvent%Constructor()
+                !    case default
+                !        write(*,*) "MCPSCUERROR: Unkonwn single event collenction: ",tempEventModelSymbol(1:LENTRIM(tempEventModelSymbol))
+                !        pause
+                !        stop
+                !end select
 
-                call this%TheSingleEventsList%AppendOne(newSingleCollectionEvent)
+                !call this%TheSingleEventsList%AppendOne(newSingleCollectionEvent)
 
                 !this%TheSingleEventsList%
             else

@@ -50,17 +50,23 @@ $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.o : $(sor)$(Segment)Simula
 	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90
 	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90 -o $@
 
-$(tgt)$(Segment)Simulation_TYPEDEF_DataPool.o : $(sor)$(Segment)Simulation_TYPEDEF_DataPool.F90
-	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
+$(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.o : $(sor)$(Segment)Simulation_TYPEDEF_DataRelationPool.F90
+	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.f90
+	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.f90
+	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.f90
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.f90 -o $@
 
-$(tgt)$(Segment)Simulation_TYPEDEF_EventsPool.o : $(sor)$(Segment)Simulation_TYPEDEF_EventsPool.F90 \
-												  $(tgt)$(Segment)Simulation_TYPEDEF_DataPool.o
-	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
+$(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.o : $(sor)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.F90 \
+												  $(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.o
+	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.f90
+	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.f90
+	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.f90
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.f90 -o $@
 
 $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventManager.o : $(sor)$(Segment)Simulation_TYPEDEF_CollectionEventManager.F90 \
 															$(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.o \
-															$(tgt)$(Segment)Simulation_TYPEDEF_EventsPool.o \
-															$(tgt)$(Segment)Simulation_TYPEDEF_DataPool.o
+															$(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.o \
+															$(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.o
 	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventManager.f90
 	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventManager.f90
 	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventManager.f90

@@ -73,13 +73,13 @@ module SIMULATION_APPSHELL
         !*********Before Each work
         cursorSingle=>m_CollectionEventsManager%TheSingleEventsList%GetListHeaderP()
         Do while(associated(cursorSingle))
-            call cursorSingle%TheValue%TheEventModel%TheBeforeEachWorkProc()
+            !call cursorSingle%TheValue%TheEventModel%TheBeforeEachWorkProc()
             cursorSingle=>cursorSingle%next
         END DO
 
         cursorCross=>m_CollectionEventsManager%TheCrossCollectionEventsList%GetListHeaderP()
         Do while(associated(cursorCross))
-            call cursorCross%TheValue%TheEventModel%TheBeforeEachWorkProc()
+            !call cursorCross%TheValue%TheEventModel%TheBeforeEachWorkProc()
             cursorCross=>cursorCross%next
         END DO
 
@@ -112,13 +112,13 @@ module SIMULATION_APPSHELL
         !*********After Each work***********
         cursorSingle=>m_CollectionEventsManager%TheSingleEventsList%GetListHeaderP()
         Do while(associated(cursorSingle))
-            call cursorSingle%TheValue%TheEventModel%TheAfterEachWorkProc()
+            !call cursorSingle%TheValue%TheEventModel%TheAfterEachWorkProc()
             cursorSingle=>cursorSingle%next
         END DO
 
         cursorCross=>m_CollectionEventsManager%TheCrossCollectionEventsList%GetListHeaderP()
         Do while(associated(cursorCross))
-            call cursorCross%TheValue%TheEventModel%TheAfterEachWorkProc()
+            !call cursorCross%TheValue%TheEventModel%TheAfterEachWorkProc()
             cursorCross=>cursorCross%next
         END DO
 
