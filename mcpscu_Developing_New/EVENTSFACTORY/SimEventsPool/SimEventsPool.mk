@@ -29,8 +29,8 @@ libname  := lib_$(objname).$(LIB_EXT)
 
 #######################################################          
 nlist    :=  Simulation_TYPEDEF_ReadedEventsModels		\
-			 Simulation_TYPEDEF_DataPool					\
-			 Simulation_TYPEDEF_EventsPool				\
+			 Simulation_TYPEDEF_DataRelationPool		\
+			 Simulation_TYPEDEF_CollectionEventsRegisterCenter				\
 			 Simulation_TYPEDEF_CollectionEventManager
 
              

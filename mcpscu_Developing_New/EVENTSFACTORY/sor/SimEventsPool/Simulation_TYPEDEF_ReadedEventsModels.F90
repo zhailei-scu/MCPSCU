@@ -5,29 +5,53 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     implicit none
     character*11,private,parameter::m_MODELFILEFLAG = "&MODELNPUTF"
 
-    type,public::UserDefEventModels
+    integer,private,parameter::p_ModelType_Single = 0
+    integer,private,parameter::p_ModelType_Cross = 1
+
+    type,public::UserDefObjectCollection
+        character(len=100),private::ObjectCollectionSymbol PREASSIGN ""
+        character(len=100),private::ObjectCollectionCode PREASSIGN ""
+
+        contains
+        procedure,non_overridable,public,pass::GetObjectCollectionSymbol
+        procedure,non_overridable,public,pass::SetObjectCollectionSymbol
+        procedure,non_overridable,public,pass::GetObjectCollectionCode
+        procedure,non_overridable,public,pass::SetObjectCollectionCode
+        procedure,non_overridable,public,pass::CopyFormOther=>CopyUserDefObjectCollection
+        procedure,non_overridable,public,pass::Clean=>CleanUserDefObjectCollection
+        Generic::Assignment(=)=>CopyUserDefObjectCollection
+        Final::Clean_UserDefObjectCollection
+    end type UserDefObjectCollection
+
+    !****Define a list UserDefObjectCollectionsList with value type(UserDefObjectCollection)*********
+    DefGeneralList(UserDefObjectCollectionsList,type(UserDefObjectCollection))
+
+    type,public::UserDefEventModel
         character(len=100),private::EventModelSymbol PREASSIGN ""
         integer,private::EventModelCode PREASSIGN -1
-
+        integer,private::ModelType PREASSIGN p_ModelType_Single
+        type(UserDefObjectCollection)::RelativeData(2)
         contains
         procedure,non_overridable,public,pass::GetEventModelSymbol
         procedure,non_overridable,public,pass::SetEventModelSymbol
         procedure,non_overridable,public,pass::GetEventModelCode
         procedure,non_overridable,public,pass::SetEventModelCode
-        procedure,non_overridable,public,pass::CopyFormOther=>CopyUserDefEventModelsFormOther
-        procedure,non_overridable,public,pass::Clean=>CleanUserDefEventModels
-        Generic::Assignment(=)=>CopyUserDefEventModelsFormOther
-        Final::Clean_UserDefEventModels
-    end type UserDefEventModels
+        procedure,non_overridable,public,pass::GetEventModelType
+        procedure,non_overridable,public,pass::SetEventModelType
+        procedure,non_overridable,public,pass::CopyFormOther=>CopyUserDefEventModelFormOther
+        procedure,non_overridable,public,pass::Clean=>CleanUserDefEventModel
+        Generic::Assignment(=)=>CopyUserDefEventModelFormOther
+        Final::Clean_UserDefEventModel
+    end type UserDefEventModel
 
-    !****Define a list UserDefEventModelsList with value type(UserDefEventModels)*********
-    DefGeneralList(UserDefEventModelsList,type(UserDefEventModels))
+    !****Define a list UserDefEventModelsList with value type(UserDefEventModel)*********
+    DefGeneralList(UserDefEventModelsList,type(UserDefEventModel))
 
     !*************************************************************************************
     type,public::EventsModelsPair
-        type(UserDefEventModels)::SubjectEventsModelDef
-        type(UserDefEventModels)::ObjectEventsModelDef
-        type(UserDefEventModels)::CrossEventsModelDef
+        type(UserDefEventModel)::SubjectEventsModelDef
+        type(UserDefEventModel)::ObjectEventsModelDef
+        type(UserDefEventModel)::CrossEventsModelDef
 
         contains
         procedure,non_overridable,public,pass::CopyFormOther=>CopyEventsModelsPairFormOther
@@ -41,6 +65,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
 
     !**************************************************************************************
     type,public::ReadedEventsModels
+        type(UserDefObjectCollectionsList),private::TheUserDefObjectCollectionsList
         type(UserDefEventModelsList),private::TheUserDefEventModelsList
 
         type(EventsModelsPairList),public::TheEventsModelsPairList
@@ -48,6 +73,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         contains
 
         procedure,non_overridable,public,pass::Load_ReadedEventsModels
+        procedure,non_overridable,private,pass::Load_UDefObjectCollections
         procedure,non_overridable,private,pass::Load_UDefEventsModels
         procedure,non_overridable,private,pass::LoadOne_ReadedEventsModelsActions
         procedure,non_overridable,private,pass::Load_OneRowEventsModelsActions
@@ -57,17 +83,28 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         Final::Clean_ReadedEventsModels
     end type ReadedEventsModels
 
+
+    private::GetObjectCollectionSymbol
+    private::SetObjectCollectionSymbol
+    private::GetObjectCollectionCode
+    private::SetObjectCollectionCode
+    private::CopyUserDefObjectCollection
+    private::CleanUserDefObjectCollection
+    private::Clean_UserDefObjectCollection
     private::GetEventModelSymbol
     private::SetEventModelSymbol
     private::GetEventModelCode
     private::SetEventModelCode
-    private::CopyUserDefEventModelsFormOther
-    private::CleanUserDefEventModels
-    private::Clean_UserDefEventModels
+    private::GetEventModelType
+    private::SetEventModelType
+    private::CopyUserDefEventModelFormOther
+    private::CleanUserDefEventModel
+    private::Clean_UserDefEventModel
     private::CopyEventsModelsPairFormOther
     private::CleanEventsModelsPair
     private::Clean_EventsModelsPair
     private::Load_ReadedEventsModels
+    private::Load_UDefObjectCollections
     private::Load_UDefEventsModels
     private::LoadOne_ReadedEventsModelsActions
     private::Load_OneRowEventsModelsActions
@@ -76,11 +113,98 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     private::Clean_ReadedEventsModels
 
     contains
+
+    !**************************************************************************
+    function GetObjectCollectionSymbol(this) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        Class(UserDefObjectCollection),intent(in)::this
+        character(len=100),intent(out)::TheResult
+        !---Body---
+
+        TheResult = this%ObjectCollectionSymbol
+        return
+    end function GetObjectCollectionSymbol
+
+    !**************************************************************************
+    subroutine SetObjectCollectionSymbol(this,TheSymbol)
+        implicit none
+        !---Dummy Vars---
+        Class(UserDefObjectCollection)::this
+        character*(*),intent(in)::TheSymbol
+        !---Body---
+
+        this%ObjectCollectionSymbol = TheSymbol
+        return
+    end subroutine SetObjectCollectionSymbol
+
+
+    !**************************************************************************
+    function GetObjectCollectionCode(this) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        Class(UserDefObjectCollection),intent(in)::this
+        character(len=100),intent(out)::TheResult
+        !---Body---
+
+        TheResult = this%ObjectCollectionCode
+        return
+    end function GetObjectCollectionCode
+
+    !**************************************************************************
+    subroutine SetObjectCollectionCode(this,TheSymbol)
+        implicit none
+        !---Dummy Vars---
+        Class(UserDefObjectCollection)::this
+        character*(*),intent(in)::TheSymbol
+        !---Body---
+
+        this%ObjectCollectionCode = TheSymbol
+        return
+    end subroutine SetObjectCollectionCode
+
+
+    !***************************************************************************
+    subroutine CopyUserDefObjectCollection(this,other)
+        implicit none
+        !---Dummy Vars---
+        Class(UserDefObjectCollection),intent(out)::this
+        Class(UserDefObjectCollection),intent(in)::other
+        !---Body---
+        this%ObjectCollectionSymbol = other%ObjectCollectionSymbol
+        this%ObjectCollectionCode = other%ObjectCollectionCode
+        return
+    end subroutine CopyUserDefObjectCollection
+
+    !*************************************************************************
+    subroutine CleanUserDefObjectCollection(this)
+        implicit none
+        !---Dummy Vars---
+        Class(UserDefObjectCollection)::this
+        !---Body---
+        this%ObjectCollectionSymbol = ""
+        this%ObjectCollectionCode = ""
+        return
+    end subroutine CleanUserDefObjectCollection
+    
+    !*************************************************************************
+    subroutine Clean_UserDefObjectCollection(this)
+        implicit none
+        !---Dummy Vars---
+        type(UserDefObjectCollection)::this
+        !---Body---
+        call this%Clean()
+        return
+    end subroutine Clean_UserDefObjectCollection
+
+    !****The member function of list UserDefObjectCollectionsList**************
+    DefGeneralListFuncSpan_WithValueCleanMethod(UserDefObjectCollectionsList,type(UserDefObjectCollection),Clean)
+
     !**********************************************************
     function GetEventModelSymbol(this) result(TheResult)
         implicit none
         !---Dummy Vars---
-        Class(UserDefEventModels),intent(in)::this
+        Class(UserDefEventModel),intent(in)::this
         character(len=100),intent(out)::TheResult
         !---Body---
 
@@ -92,7 +216,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     subroutine SetEventModelSymbol(this,TheSymbol)
         implicit none
         !---Dummy Vars---
-        Class(UserDefEventModels)::this
+        Class(UserDefEventModel)::this
         character*(*),intent(in)::TheSymbol
         !---Body---
 
@@ -104,7 +228,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     function GetEventModelCode(this) result(TheResult)
         implicit none
         !---Dummy Vars---
-        Class(UserDefEventModels),intent(in)::this
+        Class(UserDefEventModel),intent(in)::this
         integer,intent(out)::TheResult
         !---Body---
 
@@ -116,7 +240,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     subroutine SetEventModelCode(this,TheCode)
         implicit none
         !---Dummy Vars---
-        Class(UserDefEventModels)::this
+        Class(UserDefEventModel)::this
         integer,intent(in)::TheCode
         !---Body---
 
@@ -124,42 +248,80 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         return
     end subroutine SetEventModelCode
 
-    !******************************************************************
-    subroutine CopyUserDefEventModelsFormOther(this,other)
+    !**********************************************************
+    function GetEventModelType(this) result(TheResult)
         implicit none
         !---Dummy Vars---
-        CLASS(UserDefEventModels),intent(out)::this
-        CLASS(UserDefEventModels),intent(in)::other
+        Class(UserDefEventModel),intent(in)::this
+        integer,intent(out)::TheResult
+        !---Body---
+
+        TheResult = this%ModelType
+        return
+    end function GetEventModelType
+
+    !**********************************************************
+    subroutine SetEventModelType(this,TheType)
+        implicit none
+        !---Dummy Vars---
+        Class(UserDefEventModel)::this
+        integer,intent(in)::TheType
+        !---Body---
+
+        this%ModelType = TheType
+        return
+    end subroutine SetEventModelType
+
+    !******************************************************************
+    subroutine CopyUserDefEventModelFormOther(this,other)
+        implicit none
+        !---Dummy Vars---
+        CLASS(UserDefEventModel),intent(out)::this
+        CLASS(UserDefEventModel),intent(in)::other
+        !---Local Vars---
+        integer::I
         !---Body---
         this%EventModelSymbol = other%EventModelSymbol
         this%EventModelCode = other%EventModelCode
+        this%ModelType = other%ModelType
+
+        DO I = 1,size(other%RelativeData)
+            this%RelativeData(I) = other%RelativeData(I)
+        END DO
         return
-    end subroutine CopyUserDefEventModelsFormOther
+    end subroutine CopyUserDefEventModelFormOther
 
     !***************************************************
-    subroutine CleanUserDefEventModels(this)
+    subroutine CleanUserDefEventModel(this)
         implicit none
         !---Dummy Vars---
-        CLASS(UserDefEventModels)::this
+        CLASS(UserDefEventModel)::this
+        !---Local Vars---
+        integer::I
         !---Body---
         this%EventModelSymbol = ""
         this%EventModelCode = -1
+        this%ModelType = p_ModelType_Single
+
+        DO I = 1,size(this%RelativeData)
+            call this%RelativeData(I)%Clean()
+        END DO
         return
-    end subroutine CleanUserDefEventModels
+    end subroutine CleanUserDefEventModel
 
     !***************************************************
-    subroutine Clean_UserDefEventModels(this)
+    subroutine Clean_UserDefEventModel(this)
         implicit none
         !---Dummy Vars---
-        type(UserDefEventModels)::this
+        type(UserDefEventModel)::this
         !---Local Vars---
         call this%Clean()
 
         return
-    end subroutine Clean_UserDefEventModels
+    end subroutine Clean_UserDefEventModel
 
     !****The member function of list UserDefEventModelsList**************
-    DefGeneralListFuncSpan_WithValueCleanMethod(UserDefEventModelsList,type(UserDefEventModels),Clean)
+    DefGeneralListFuncSpan_WithValueCleanMethod(UserDefEventModelsList,type(UserDefEventModel),Clean)
 
     !******************************************************************
     subroutine CopyEventsModelsPairFormOther(this,other)
@@ -242,6 +404,8 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
             select case(KEYWORD(1:LENTRIM(KEYWORD)))
                 case("&ENDMODELNPUTF")
                     exit
+                case("&UDEFDATASUBCTL")
+                    call this%Load_UDefObjectCollections(hFile,*100)
                 case("&UDEFMODELSUBCTL")
                     call this%Load_UDefEventsModels(hFile,*100)
                 case("&MODELACTIONSSUBCTL")
@@ -262,6 +426,98 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     end subroutine Load_ReadedEventsModels
 
     !******************************************************************
+    subroutine Load_UDefObjectCollections(this,hFile,*)
+        implicit none
+        !---Dummy Vars---
+        CLASS(ReadedEventsModels)::this
+        integer,intent(in)::hFile
+        !---Local Vars---
+        integer::LINE
+        character*1000::STR
+        character*100::KEYWORD
+        character*100::STRTMP(10)
+        type(UserDefEventModelsList),pointer::cursor=>null()
+        type(UserDefEventModel)::tempUserDefEventModel
+        type(UserDefEventModel)::newUserDefEventModel
+        integer::I
+        integer::N
+        !---Body---
+
+        call this%TheUserDefObjectCollectionsList%CleanList()
+
+        DO while(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            call RemoveComments(STR,"!")
+            STR = adjustl(STR)
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&ENDSUBCTL")
+                    exit
+                case("&MODELDEF")
+
+                    call newUserDefEventModel%Clean()
+
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for &MODELDEF setting, you must special a model name and unicode."
+                        write(*,*) "By the way:  &MODELDEF       Name =   , unicode = "
+                        pause
+                        stop
+                    end if
+
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+                    
+                    call newUserDefEventModel%SetEventModelSymbol(STRTMP(1)(1:LENTRIM(STRTMP(1))))
+
+                    call EXTRACT_NUMB(STR,1,N,STRTMP)
+
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for &MODELDEF setting, you must special a model name and unicode."
+                        write(*,*) "By the way:  &MODELDEF       Name =   , unicode = "
+                        pause
+                        stop
+                    end if
+
+                    call newUserDefEventModel%SetEventModelCode(ISTR(STRTMP(1)))
+
+                    DO I = 1,this%TheUserDefObjectCollectionsList%GetListCount()
+                        !---Use safe way to access the list---
+                        tempUserDefEventModel = this%TheUserDefObjectCollectionsList%GetValueByListIndex(I)
+
+                        if(ISSTREQUAL(tempUserDefEventModel%GetEventModelSymbol(),newUserDefEventModel%GetEventModelSymbol()) .or. &
+                           tempUserDefEventModel%GetEventModelCode() .eq. newUserDefEventModel%GetEventModelCode()) then
+                            write(*,*) "MCPSCUERROR: The event model had been defined , cannot be redefineded."
+                            write(*,*) tempUserDefEventModel%GetEventModelSymbol(),tempUserDefEventModel%GetEventModelCode()
+                            write(*,*) newUserDefEventModel%GetEventModelSymbol(),newUserDefEventModel%GetEventModelCode()
+                            pause
+                            stop
+                        end if
+                    END DO
+
+                    call this%TheUserDefObjectCollectionsList%AppendOne(newUserDefEventModel)
+
+                case default
+                    write(*,*) "MCPSCUERROR: The Illegal flag, for model define: ",KEYWORD(1:LENTRIM(KEYWORD))
+                    write(*,*) "Please check model ctrl file"
+                    pause
+                    stop
+            end select
+        END DO
+
+        return
+
+        100 return 1
+    end  subroutine Load_UDefObjectCollections
+
+    !******************************************************************
     subroutine Load_UDefEventsModels(this,hFile,*)
         implicit none
         !---Dummy Vars---
@@ -273,10 +529,12 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         character*100::KEYWORD
         character*100::STRTMP(10)
         type(UserDefEventModelsList),pointer::cursor=>null()
-        type(UserDefEventModels)::tempUserDefEventModels
-        type(UserDefEventModels)::newUserDefEventModels
+        type(UserDefEventModel)::tempUserDefEventModel
+        type(UserDefEventModel)::newUserDefEventModel
+        type(UserDefObjectCollection)::tempUserDefObjectCollection
         integer::I
         integer::N
+        logical::Finded
         !---Body---
 
         call this%TheUserDefEventModelsList%CleanList()
@@ -297,7 +555,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                     exit
                 case("&MODELDEF")
 
-                    call newUserDefEventModels%Clean()
+                    call newUserDefEventModel%Clean()
 
                     call EXTRACT_SUBSTR(STR,1,N,STRTMP)
 
@@ -311,7 +569,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                     STRTMP(1) = adjustl(trim(STRTMP(1)))
                     call UPCASE(STRTMP(1))
                     
-                    call newUserDefEventModels%SetEventModelSymbol(STRTMP(1)(1:LENTRIM(STRTMP(1))))
+                    call newUserDefEventModel%SetEventModelSymbol(STRTMP(1)(1:LENTRIM(STRTMP(1))))
 
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
 
@@ -322,23 +580,137 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                         stop
                     end if
 
-                    call newUserDefEventModels%SetEventModelCode(ISTR(STRTMP(1)))
+                    call newUserDefEventModel%SetEventModelCode(ISTR(STRTMP(1)))
 
                     DO I = 1,this%TheUserDefEventModelsList%GetListCount()
                         !---Use safe way to access the list---
-                        tempUserDefEventModels = this%TheUserDefEventModelsList%GetValueByListIndex(I)
+                        tempUserDefEventModel = this%TheUserDefEventModelsList%GetValueByListIndex(I)
 
-                        if(ISSTREQUAL(tempUserDefEventModels%GetEventModelSymbol(),newUserDefEventModels%GetEventModelSymbol()) .or. &
-                           tempUserDefEventModels%GetEventModelCode() .eq. newUserDefEventModels%GetEventModelCode()) then
+                        if(ISSTREQUAL(tempUserDefEventModel%GetEventModelSymbol(),newUserDefEventModel%GetEventModelSymbol()) .or. &
+                           tempUserDefEventModel%GetEventModelCode() .eq. newUserDefEventModel%GetEventModelCode()) then
                             write(*,*) "MCPSCUERROR: The event model had been defined , cannot be redefineded."
-                            write(*,*) tempUserDefEventModels%GetEventModelSymbol(),tempUserDefEventModels%GetEventModelCode()
-                            write(*,*) newUserDefEventModels%GetEventModelSymbol(),newUserDefEventModels%GetEventModelCode()
+                            write(*,*) tempUserDefEventModel%GetEventModelSymbol(),tempUserDefEventModel%GetEventModelCode()
+                            write(*,*) newUserDefEventModel%GetEventModelSymbol(),newUserDefEventModel%GetEventModelCode()
                             pause
                             stop
                         end if
                     END DO
 
-                    call this%TheUserDefEventModelsList%AppendOne(newUserDefEventModels)
+
+                    call EXTRACT_SUBSTR(STR,2,N,STRTMP) 
+
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for &MODELDEF setting, you must special a model name and unicode ,type and data "
+                        write(*,*) STR
+                        pause
+                        stop
+                    end if
+
+                    STRTMP(2) = adjustl(trim(STRTMP(2)))
+                    call UPCASE(STRTMP(2))
+
+                    select case(STRTMP(2)(1:LENTRIM(STRTMP(2))))
+                        case("SINGLE")
+                            call newUserDefEventModel%SetEventModelType(p_ModelType_Single)
+                        case("CROSS")
+                            call newUserDefEventModel%SetEventModelType(p_ModelType_Cross)
+                        case default
+                            write(*,*) "MCPSCUERROR: The evnet type can only be single or cross"
+                            write(*,*) "However, what you specialed is: ",STRTMP(2)(1:LENTRIM(STRTMP(2)))
+                            pause
+                            stop
+                    end select
+
+                    select case(newUserDefEventModel%GetEventModelType())
+                        case(p_ModelType_Single)
+                            call EXTRACT_SUBSTR(STR,3,N,STRTMP) 
+
+                            if(N .LT. 3) then
+                                write(*,*) "MCPSCUERROR: Too few parameters for &MODELDEF setting, you must special a model name and unicode ,type and data "
+                                write(*,*) STR
+                                pause
+                                stop
+                            end if
+
+                            STRTMP(3) = adjustl(trim(STRTMP(3)))
+                            call UPCASE(STRTMP(3))
+                            Finded = .false.
+                            DO I = 1,this%TheUserDefObjectCollectionsList%GetListCount()
+                                tempUserDefObjectCollection = this%TheUserDefObjectCollectionsList%GetValueByListIndex(I)
+
+                                if(ISSTREQUAL(STRTMP(3),tempUserDefObjectCollection%GetObjectCollectionSymbol()) .or. &
+                                    ISSTREQUAL(STRTMP(3),tempUserDefObjectCollection%GetObjectCollectionCode())) then
+                                    Finded = .true.
+                                    !---The Assignment(=) had been overrided---
+                                    newUserDefEventModel%RelativeData(1) = tempUserDefObjectCollection
+                                    break
+                                end if
+                            END DO
+
+                            if(.not. Finded) then
+                                write(*,*) "MCPSCUERROR: The ObjectCollection used had not been defineded: ",STRTMP(3)
+                                pause
+                                stop
+                            end if
+
+                        case(p_ModelType_Cross)
+                            call EXTRACT_SUBSTR(STR,4,N,STRTMP) 
+
+                            if(N .LT. 4) then
+                                write(*,*) "MCPSCUERROR: Too few parameters for &MODELDEF setting, you must special a model name and unicode ,type and data(left) and dataright when cross event type are specialed "
+                                write(*,*) STR
+                                pause
+                                stop
+                            end if
+
+                            STRTMP(3) = adjustl(trim(STRTMP(3)))
+                            call UPCASE(STRTMP(3))
+                            Finded = .false.
+                            DO I = 1,this%TheUserDefObjectCollectionsList%GetListCount()
+                                tempUserDefObjectCollection = this%TheUserDefObjectCollectionsList%GetValueByListIndex(I)
+
+                                if(ISSTREQUAL(STRTMP(3),tempUserDefObjectCollection%GetObjectCollectionSymbol()) .or. &
+                                    ISSTREQUAL(STRTMP(3),tempUserDefObjectCollection%GetObjectCollectionCode())) then
+                                    Finded = .true.
+                                    !---The Assignment(=) had been overrided---
+                                    newUserDefEventModel%RelativeData(1) = tempUserDefObjectCollection
+                                    break
+                                end if
+                            END DO
+
+                            if(.not. Finded) then
+                                write(*,*) "MCPSCUERROR: The ObjectCollection used had not been defineded: ",STRTMP(3)
+                                pause
+                                stop
+                            end if
+
+                            STRTMP(4) = adjustl(trim(STRTMP(4)))
+                            call UPCASE(STRTMP(4))
+                            Finded = .false.
+                            DO I = 1,this%TheUserDefObjectCollectionsList%GetListCount()
+                                tempUserDefObjectCollection = this%TheUserDefObjectCollectionsList%GetValueByListIndex(I)
+
+                                if(ISSTREQUAL(STRTMP(4),tempUserDefObjectCollection%GetObjectCollectionSymbol()) .or. &
+                                    ISSTREQUAL(STRTMP(4),tempUserDefObjectCollection%GetObjectCollectionCode())) then
+                                    Finded = .true.
+                                    !---The Assignment(=) had been overrided---
+                                    newUserDefEventModel%RelativeData(2) = tempUserDefObjectCollection
+                                    break
+                                end if
+                            END DO
+
+                            if(.not. Finded) then
+                                write(*,*) "MCPSCUERROR: The ObjectCollection used had not been defineded: ",STRTMP(4)
+                                pause
+                                stop
+                            end if
+                        case default
+                            write(*,*) "MCPSCUERROR: Unknown event type: ",newUserDefEventModel%GetEventModelType()
+                            pause
+                            stop
+                    end select
+
+                    call this%TheUserDefEventModelsList%AppendOne(newUserDefEventModel)
 
                 case default
                     write(*,*) "MCPSCUERROR: The Illegal flag, for model define: ",KEYWORD(1:LENTRIM(KEYWORD))
@@ -369,8 +741,8 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         integer::NCol
         integer::I
         integer::J
-        type(UserDefEventModels)::tempUserDefEventModels
-        type(UserDefEventModels)::newUserDefEventModels
+        type(UserDefEventModel)::tempUserDefEventModel
+        type(UserDefEventModel)::newUserDefEventModel
         type(UserDefEventModelsList),target::HeadEventModels
         type(UserDefEventModelsList),pointer::cursor=>null()
         logical::Finded
@@ -414,7 +786,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                     call HeadEventModels%CleanList()
                     
                     DO I = 1,NCol
-                        call newUserDefEventModels%Clean()
+                        call newUserDefEventModel%Clean()
 
                         Finded = .false.
 
@@ -424,11 +796,11 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
 
                         DO J = 1,this%TheUserDefEventModelsList%GetListCount()
                             !---Use safe way to access the list---
-                            tempUserDefEventModels = this%TheUserDefEventModelsList%GetValueByListIndex(J)
+                            tempUserDefEventModel = this%TheUserDefEventModelsList%GetValueByListIndex(J)
 
-                            if(ISSTREQUAL(tempUserDefEventModels%GetEventModelSymbol(),ModelsName(I)(1:LENTRIM(ModelsName(I))))) then
+                            if(ISSTREQUAL(tempUserDefEventModel%GetEventModelSymbol(),ModelsName(I)(1:LENTRIM(ModelsName(I))))) then
                                 !---The Assignment(=) had been overridable---
-                                newUserDefEventModels = tempUserDefEventModels
+                                newUserDefEventModel = tempUserDefEventModel
                                 Finded = .true.
                                 exit
                             end if
@@ -443,17 +815,17 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                         !---Check dumplicate----
                         cursor=>HeadEventModels
                         DO J = 1,HeadEventModels%GetListCount()
-                            if(cursor%TheValue%GetEventModelCode() .eq. newUserDefEventModels%GetEventModelCode()) then
+                            if(cursor%TheValue%GetEventModelCode() .eq. newUserDefEventModel%GetEventModelCode()) then
                                 write(*,*) "MCPSCUERROR: The model name is used , cannot be used again."
                                 write(*,*) cursor%TheValue%GetEventModelCode()
-                                write(*,*) newUserDefEventModels%GetEventModelCode()
+                                write(*,*) newUserDefEventModel%GetEventModelCode()
                                 pause
                                 stop
                             end if
                             cursor=>cursor%Next
                         END DO
 
-                        call HeadEventModels%AppendOne(newUserDefEventModels)
+                        call HeadEventModels%AppendOne(newUserDefEventModel)
                     END DO
 
                     if(allocated(ModelsName)) then
@@ -497,7 +869,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         integer::N
         integer::I
         integer::J
-        type(UserDefEventModels)::tempUserDefEventModels
+        type(UserDefEventModel)::tempUserDefEventModel
         type(EventsModelsPair)::newEventsModelsPair
         type(EventsModelsPair)::tempEventsModelsPair
         logical::Finded
@@ -536,11 +908,11 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
 
                     DO I = 1,this%TheUserDefEventModelsList%GetListCount()
                         !---Use safe way to access the list---
-                        tempUserDefEventModels = this%TheUserDefEventModelsList%GetValueByListIndex(I)
+                        tempUserDefEventModel = this%TheUserDefEventModelsList%GetValueByListIndex(I)
 
-                        if(ISSTREQUAL(tempUserDefEventModels%GetEventModelSymbol(),STRTMP(1)(1:LENTRIM(STRTMP(1))))) then
-                            newEventsModelsPair%SubjectEventsModelDef = tempUserDefEventModels
-                            tempCode = tempUserDefEventModels%GetEventModelCode()
+                        if(ISSTREQUAL(tempUserDefEventModel%GetEventModelSymbol(),STRTMP(1)(1:LENTRIM(STRTMP(1))))) then
+                            newEventsModelsPair%SubjectEventsModelDef = tempUserDefEventModel
+                            tempCode = tempUserDefEventModel%GetEventModelCode()
                             Finded = .true.
                             exit
                         end if
@@ -602,10 +974,10 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
 
                         DO J = 1,this%TheUserDefEventModelsList%GetListCount()
                             !---Use safe way to access the list---
-                            tempUserDefEventModels = this%TheUserDefEventModelsList%GetValueByListIndex(J)
+                            tempUserDefEventModel = this%TheUserDefEventModelsList%GetValueByListIndex(J)
 
-                            if(tempUserDefEventModels%GetEventModelCode() .eq. CodeArray(I)) then
-                                newEventsModelsPair%CrossEventsModelDef = tempUserDefEventModels
+                            if(tempUserDefEventModel%GetEventModelCode() .eq. CodeArray(I)) then
+                                newEventsModelsPair%CrossEventsModelDef = tempUserDefEventModel
                                 Finded = .true.
                                 exit
                             end if
@@ -688,6 +1060,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         CLASS(ReadedEventsModels),intent(in)::other
         !---Body---
         !---Assignment(=) had been overrided-------
+        this%TheUserDefObjectCollectionsList = other%TheUserDefObjectCollectionsList
         this%TheUserDefEventModelsList = other%TheUserDefEventModelsList
         this%TheEventsModelsPairList = other%TheEventsModelsPairList
         return
@@ -699,6 +1072,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         !---Dummy Vars---
         CLASS(ReadedEventsModels)::this
         !---Body---
+        call this%TheUserDefObjectCollectionsList%CleanList()
         call this%TheUserDefEventModelsList%CleanList()
         call this%TheEventsModelsPairList%CleanList()
         return

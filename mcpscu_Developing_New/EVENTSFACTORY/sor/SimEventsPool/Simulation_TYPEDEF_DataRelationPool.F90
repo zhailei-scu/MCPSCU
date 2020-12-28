@@ -3,7 +3,6 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
 
-
     CLASS(SimulationBoxes),pointer,private::m_MC_SimulationBox=>null()
 
     type,public::DataRelationRegister
@@ -17,7 +16,6 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
         Generic::Assignment(=)=>CopyObjectsCollectionRegister
         Final::CleanObjectsCollectionRegister
     end type DataRelationRegister
-
 
     !****Define a list DataRelationRegisterList with value type(DataRelationRegister),pointer**************
     DefGeneralList(DataRelationRegisterList,type(DataRelationRegister))
@@ -93,17 +91,17 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
         call this%Clean()
 
         !---User need to register each event model---
-        call this%RegisterOne("MC_MIGCOALE_CLUSTER_GPU",m_MC_SimulationBox)
+        call this%RegisterOne("MC_SimulationBox",m_MC_SimulationBox)
 
         return
     end subroutine InitDataRelationPool
 
     !**********************************************
-    subroutine RegisterOneDataRelation(this,EventModelName,TheObjectsCollection)
+    subroutine RegisterOneDataRelation(this,ObjectsCollectionName,TheObjectsCollection)
         implicit none
         !---Dummy Vars---
         Class(DataRelationPool)::this
-        character*(*),intent(in)::EventModelName
+        character*(*),intent(in)::ObjectsCollectionName
         Class(ObjectsCollection),pointer::TheObjectsCollection
         !---Local Vars---
         integer::I
@@ -114,15 +112,15 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
         DO I = 1,this%TheDataRelationRegisterList%GetListCount()
             tempDataRelationRegister = this%TheDataRelationRegisterList%GetValueByListIndex(I)
 
-            if(ISSTREQUAL(tempDataRelationRegister%TheName,adjustl(trim(EventModelName)))) then
-                write(*,*) "MCPSCUERROR: The model had been registed , please do not registe it again: ",adjustl(trim(EventModelName))
+            if(ISSTREQUAL(tempDataRelationRegister%TheName,adjustl(trim(ObjectsCollectionName)))) then
+                write(*,*) "MCPSCUERROR: The ObjectsCollection had been registed , please do not registe it again: ",adjustl(trim(ObjectsCollectionName))
                 pause
                 stop
             end if
         END DO
 
         call newDataRelationRegister%Clean()
-        newDataRelationRegister%TheName = adjustl(trim(EventModelName))
+        newDataRelationRegister%TheName = adjustl(trim(ObjectsCollectionName))
         newDataRelationRegister%TheObjectsCollection=>TheObjectsCollection
 
         call this%TheDataRelationRegisterList%AppendOne(newDataRelationRegister)

@@ -1,12 +1,19 @@
 &MODELNPUTF
 
+    &UDEFDATASUBCTL
+        &DATADEF        Name = "MC_SimulationBox" , unicode = "D1"
+        &DATADEF        Name = "RT_SimulationBox" , unicode = "D2"
+        &DATADEF        Name = "SCD_SimulationBox" , unicode = "D3"
+    &ENDSUBCTL
+
+
     &UDEFMODELSUBCTL
-        &MODELDEF       Name = "MC_MIGCOALE_CLUSTER_GPU"   , unicode = 1
-        &MODELDEF       Name = "RT_MIGCOALE_CLUSTER_GPU"   , unicode = 2
-        &MODELDEF       Name = "SCD_MIGCOALE_CLUSTER_GPU"  , unicode = 3
-        &MODELDEF       Name = "CROSS_MC_RT"               , unicode = 4
-        &MODELDEF       Name = "CROSS_MC_SCD"              , unicode = 5
-        &MODELDEF       Name = "CROSS_RT_SCD"              , unicode = 6
+        &MODELDEF       Name = "MC_MIGCOALE_CLUSTER_GPU"   , unicode = 1 , type = "single" , data = "D1"
+        &MODELDEF       Name = "RT_MIGCOALE_CLUSTER_GPU"   , unicode = 2 , type = "single" , data = "D2"
+        &MODELDEF       Name = "SCD_MIGCOALE_CLUSTER_GPU"  , unicode = 3 , type = "single" , data = "D3"
+        &MODELDEF       Name = "CROSS_MC_RT"               , unicode = 4 , type = "cross" , data = "D1" , "D2"
+        &MODELDEF       Name = "CROSS_MC_SCD"              , unicode = 5 , type = "cross" , data = "D1" , "D3"
+        &MODELDEF       Name = "CROSS_RT_SCD"              , unicode = 6 , type = "cross" , data = "D2" , "D3"
     &ENDSUBCTL
 
     &MODELACTIONSSUBCTL        #1
