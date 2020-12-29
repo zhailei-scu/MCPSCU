@@ -5,8 +5,8 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     implicit none
     character*11,private,parameter::m_MODELFILEFLAG = "&MODELNPUTF"
 
-    integer,private,parameter::p_ModelType_Single = 0
-    integer,private,parameter::p_ModelType_Cross = 1
+    integer,public,parameter::p_ModelType_Single = 0
+    integer,public,parameter::p_ModelType_Cross = 1
 
     type,public::UserDefObjectCollection
         character(len=100),private::ObjectCollectionSymbol PREASSIGN ""

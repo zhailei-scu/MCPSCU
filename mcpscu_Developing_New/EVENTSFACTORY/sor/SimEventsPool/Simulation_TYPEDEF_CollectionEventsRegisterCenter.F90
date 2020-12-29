@@ -25,6 +25,7 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTSREGISTERCENTER
         contains
         procedure,public,non_overridable,pass::Init=>InitCollectionEventsRegisterCenter
         procedure,public,non_overridable,pass::RegisterOne=>RegisterOneCollectionEvent
+        procedure,public,non_overridable,pass::GetOneCollectionEventRegisterByName=>GetOne_CollectionEventRegisterByName
         procedure,public,non_overridable,pass::CopyFromOther=>CopyCollectionEventsRegisterCenter
         procedure,public,non_overridable,pass::Clean=>Clean_CollectionEventsRegisterCenter
         Generic::Assignment(=)=>CopyCollectionEventsRegisterCenter
@@ -36,6 +37,7 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTSREGISTERCENTER
     private::CleanCollectionEventRegister
     private::InitCollectionEventsRegisterCenter
     private::RegisterOneCollectionEvent
+    private::GetOne_CollectionEventRegisterByName
     private::CopyCollectionEventsRegisterCenter
     private::Clean_CollectionEventsRegisterCenter
     private::CleanCollectionEventsRegisterCenter
@@ -128,6 +130,36 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTSREGISTERCENTER
     end subroutine RegisterOneCollectionEvent
 
     !************************************************
+    function GetOne_CollectionEventRegisterByName(this,TheName) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        Class(CollectionEventsRegisterCenter)::this
+        character*(*),intent(in)::TheName
+        type(CollectionEventRegister),intent(out)::TheResult
+        !---Local Vars---
+        integer::I
+        logical::Finded
+        !---Body---
+        Finded = .false.
+        DO I = 1,this%TheCollectionEventRegisterList%GetListCount()
+            TheResult = this%TheCollectionEventRegisterList%GetValueByListIndex(I)
+
+            if(ISSTREQUAL(TheResult%TheName,adjustl(trim(TheName)))) then
+                Finded = .true.
+                exit
+            end if
+        END DO
+
+        if(.not. Finded) then
+            write(*,*) "MCPSCUERROR: The model had not been registed",adjustl(trim(TheName))
+            pause
+            stop
+        end if
+
+        return
+    end function GetOne_CollectionEventRegisterByName
+
+    !************************************************
     subroutine CopyCollectionEventsRegisterCenter(this,other)
         implicit none
         !---Dummy Vars---
@@ -165,5 +197,5 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTSREGISTERCENTER
         return
     end subroutine CleanCollectionEventsRegisterCenter
 
-    
+
 end module SIMULATION_TYPEDEF_COLLECTIONEVENTSREGISTERCENTER

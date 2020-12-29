@@ -23,6 +23,7 @@
     procedure,non_overridable,public,pass::MoveToListPosByIndex=>MoveToPosByList##Name##Index[ENTER] \
     procedure,non_overridable,public,pass::GetValueByListIndex=>GetValueBy##Name##ListIndex[ENTER] \
     procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListHeaderP[ENTER] \
+    procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListTailP[ENTER] \
     procedure,non_overridable,public,pass::GetListCount=>Get##Name##List_Count[ENTER] \
     procedure,non_overridable,public,pass::CleanList=>Clean_##Name##List[ENTER] \
     Generic::Assignment(=)=>Copy##Name##ListFromOther[ENTER] \
@@ -34,6 +35,7 @@
     procedure,non_overridable,public,pass::MoveToListPosByIndex=>MoveToPosByList##Name##Index[ENTER] \
     procedure,non_overridable,public,pass::GetValueByListIndex=>GetValueBy##Name##ListIndex[ENTER] \
     procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListHeaderP[ENTER] \
+    procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListTailP[ENTER] \
     procedure,non_overridable,public,pass::GetListCount=>Get##Name##List_Count[ENTER] \
     procedure,non_overridable,public,pass::CleanList=>Clean_##Name##List[ENTER] \
     Generic::Assignment(=)=>Copy##Name##ListFromOther[ENTER] \
@@ -49,6 +51,7 @@
                            private::MoveToPosByList##Name##Index[ENTER] \
                            private::GetValueBy##Name##ListIndex[ENTER] \
                            private::Get##Name##ListHeaderP[ENTER] \
+                           private::Get##Name##ListTailP[ENTER] \
                            private::Get##Name##List_Count[ENTER] \
                            private::Clean_##Name##List[ENTER] \
                            private::Clean##Name##List
@@ -58,6 +61,7 @@
                              private::MoveToPosByList##Name##Index[ENTER] \
                              private::GetValueBy##Name##ListIndex[ENTER] \
                              private::Get##Name##ListHeaderP[ENTER] \
+                             private::Get##Name##ListTailP[ENTER] \
                              private::Get##Name##List_Count[ENTER] \
                              private::Clean_##Name##List[ENTER] \
                              private::Clean##Name##List
@@ -323,6 +327,25 @@
     end if[ENTER] \
     return[ENTER] \
   end function Get##Name##ListHeaderP[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  function Get##Name##ListTailP(this) result(TheOutPointer)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    CLASS(Name),intent(out),pointer::TheOutPointer[ENTER] \
+    integer::I[ENTER] \
+[ENTER] \
+    TheOutPointer=>null()[ENTER] \
+    TheOutPointer=>this[ENTER] \
+    if(associated(TheOutPointer)) then[ENTER] \
+      DO I = 1,this%GetListCount()[ENTER] \
+        TheOutPointer=>TheOutPointer%next[ENTER] \
+      END DO[ENTER] \
+    end if[ENTER] \
+    return[ENTER] \
+  end function Get##Name##ListTailP[ENTER] \
 [ENTER] \
 [ENTER] \
 [ENTER] \
@@ -608,6 +631,25 @@
     end if[ENTER] \
     return[ENTER] \
   end function Get##Name##ListHeaderP[ENTER] \
+[ENTER] \
+[ENTER] \
+[ENTER] \
+  function Get##Name##ListTailP(this) result(TheOutPointer)[ENTER] \
+    implicit none[ENTER] \
+[ENTER] \
+    CLASS(Name),target::this[ENTER] \
+    CLASS(Name),intent(out),pointer::TheOutPointer[ENTER] \
+    integer::I[ENTER] \
+[ENTER] \
+    TheOutPointer=>null()[ENTER] \
+    TheOutPointer=>this[ENTER] \
+    if(associated(TheOutPointer)) then[ENTER] \
+      DO I = 1,this%GetListCount()[ENTER] \
+        TheOutPointer=>TheOutPointer%next[ENTER] \
+      END DO[ENTER] \
+    end if[ENTER] \
+    return[ENTER] \
+  end function Get##Name##ListTailP[ENTER] \
 [ENTER] \
 [ENTER] \
 [ENTER] \

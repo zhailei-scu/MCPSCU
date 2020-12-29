@@ -10,7 +10,6 @@ module COMMONLIB_TYPEDEF_COLLECTIONEVENT
 
     end type CollectionEvent
 
-
     type,abstract,extends(CollectionEvent),public::SingleCollectionEvent
         CLASS(ObjectsCollection),pointer::TheCollection=>null()
         type(EventModel),public::TheEventModel
