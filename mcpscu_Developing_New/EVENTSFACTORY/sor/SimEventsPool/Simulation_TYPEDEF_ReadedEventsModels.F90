@@ -425,6 +425,90 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
             stop
     end subroutine Load_ReadedEventsModels
 
+
+    !******************************************************************
+    subroutine Load_UDefObjectCollections(this,hFile,*)
+        implicit none
+        !---Dummy Vars---
+        CLASS(ReadedEventsModels)::this
+        integer,intent(in)::hFile
+        !---Local Vars---
+        integer::LINE
+        character*1000::STR
+        character*100::KEYWORD
+        character*100::STRTMP(10)
+        type(UserDefObjectCollection)::tempUserDefObjectCollection
+        type(UserDefObjectCollection)::newUserDefObjectCollection
+        integer::I
+        integer::N
+        logical::Finded
+        !---Body---
+
+        call this%TheUserDefObjectCollectionsList%CleanList()
+
+        DO while(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+            call RemoveComments(STR,"!")
+            STR = adjustl(STR)
+
+            if(LENTRIM(STR) .LE. 0) then
+                cycle
+            end if
+
+            call GETKEYWORD("&",STR,KEYWORD)
+            call UPCASE(KEYWORD)
+
+            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                case("&ENDSUBCTL")
+                    exit
+                case("&DATADEF")
+
+                    call newUserDefObjectCollection%Clean()
+
+                    call EXTRACT_SUBSTR(STR,2,N,STRTMP)
+
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: Too few parameters for &DATADEF setting, you must special a model name and unicode."
+                        write(*,*) "By the way:  &DATADEF       Name =   , unicode = "
+                        pause
+                        stop
+                    end if
+
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+                    
+                    call newUserDefObjectCollection%SetObjectCollectionSymbol(STRTMP(1)(1:LENTRIM(STRTMP(1))))
+
+                    call newUserDefObjectCollection%SetObjectCollectionCode(adjustl(trim(STRTMP(2))))
+
+                    DO I = 1,this%TheUserDefObjectCollectionsList%GetListCount()
+                        !---Use safe way to access the list---
+                        tempUserDefObjectCollection = this%TheUserDefObjectCollectionsList%GetValueByListIndex(I)
+
+                        if(ISSTREQUAL(tempUserDefObjectCollection%GetObjectCollectionSymbol(),newUserDefObjectCollection%GetObjectCollectionSymbol()) .or. &
+                           ISSTREQUAL(tempUserDefObjectCollection%GetObjectCollectionCode(),newUserDefObjectCollection%GetObjectCollectionCode())) then
+                            write(*,*) "MCPSCUERROR: The data had been defined , cannot be redefineded."
+                            write(*,*) tempUserDefObjectCollection%GetObjectCollectionSymbol(),newUserDefObjectCollection%GetObjectCollectionSymbol()
+                            write(*,*) tempUserDefObjectCollection%GetObjectCollectionCode(),newUserDefObjectCollection%GetObjectCollectionCode()
+                            pause
+                            stop
+                        end if
+                    END DO
+
+                    call this%TheUserDefObjectCollectionsList%AppendOne(newUserDefObjectCollection)
+
+                case default
+                    write(*,*) "MCPSCUERROR: The Illegal flag, for model define: ",KEYWORD(1:LENTRIM(KEYWORD))
+                    write(*,*) "Please check model ctrl file"
+                    pause
+                    stop
+            end select
+        END DO
+
+        return
+
+        100 return 1
+    end  subroutine Load_UDefObjectCollections
+
     !******************************************************************
     subroutine Load_UDefEventsModels(this,hFile,*)
         implicit none
@@ -436,7 +520,6 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
         character*1000::STR
         character*100::KEYWORD
         character*100::STRTMP(10)
-        type(UserDefEventModelsList),pointer::cursor=>null()
         type(UserDefEventModel)::tempUserDefEventModel
         type(UserDefEventModel)::newUserDefEventModel
         type(UserDefObjectCollection)::tempUserDefObjectCollection
@@ -551,7 +634,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                                     Finded = .true.
                                     !---The Assignment(=) had been overrided---
                                     newUserDefEventModel%RelativeData(1) = tempUserDefObjectCollection
-                                    break
+                                    exit
                                 end if
                             END DO
 
@@ -582,7 +665,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                                     Finded = .true.
                                     !---The Assignment(=) had been overrided---
                                     newUserDefEventModel%RelativeData(1) = tempUserDefObjectCollection
-                                    break
+                                    exit
                                 end if
                             END DO
 
@@ -603,12 +686,19 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                                     Finded = .true.
                                     !---The Assignment(=) had been overrided---
                                     newUserDefEventModel%RelativeData(2) = tempUserDefObjectCollection
-                                    break
+                                    exit
                                 end if
                             END DO
 
                             if(.not. Finded) then
                                 write(*,*) "MCPSCUERROR: The ObjectCollection used had not been defineded: ",STRTMP(4)
+                                pause
+                                stop
+                            end if
+
+                            if(ISSTREQUAL(newUserDefEventModel%RelativeData(1)%GetObjectCollectionCode(),newUserDefEventModel%RelativeData(2)%GetObjectCollectionCode())) then
+                                write(*,*) "MCPSCUERROR: The two relative data for corss event is same."
+                                write(*,*) STR
                                 pause
                                 stop
                             end if
@@ -716,6 +806,13 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
 
                         if(.not. Finded) then
                             write(*,*) "MCPSCUERROR: The Model used had not been defineded: ",ModelsName(I)(1:LENTRIM(ModelsName(I)))
+                            pause
+                            stop
+                        end if
+
+                        if(newUserDefEventModel%GetEventModelType() .eq. p_ModelType_Cross) then
+                            write(*,*) "MCPSCUERROR: The models names head cannot include cross event."
+                            write(*,*) newUserDefEventModel%GetEventModelSymbol()
                             pause
                             stop
                         end if
@@ -833,6 +930,14 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                         stop
                     end if
 
+                    if(newEventsModelsPair%SubjectEventsModelDef%GetEventModelType() .eq. p_ModelType_Cross) then
+                        write(*,*) "The subject event model cannot be type of cross event."
+                        write(*,*) newEventsModelsPair%SubjectEventsModelDef%GetEventModelType()
+                        write(*,*) STR
+                        pause
+                        stop
+                    end if
+
                     !---Check whether is located in MODELSNAMEHEAD----
                     Finded = .false.
 
@@ -901,7 +1006,8 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
                         newEventsModelsPair%ObjectEventsModelDef = HeadCodeList%GetValueByListIndex(I)
 
                         if(newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .eq. newEventsModelsPair%ObjectEventsModelDef%GetEventModelCode()) then
-                            if(newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .ne. newEventsModelsPair%CrossEventsModelDef%GetEventModelCode()) then
+                            if(newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode() .ne. newEventsModelsPair%CrossEventsModelDef%GetEventModelCode() .or. &
+                               newEventsModelsPair%CrossEventsModelDef%GetEventModelType() .eq. p_ModelType_Cross) then
                                 write(*,*) "MCPSCUERROR: It is impossible that the cross event is not same with subject and object events when subject and object events is same."
                                 write(*,*) "Subject: ",adjustl(trim(newEventsModelsPair%SubjectEventsModelDef%GetEventModelSymbol)), newEventsModelsPair%SubjectEventsModelDef%GetEventModelCode()
                                 write(*,*) "Object: ",adjustl(trim(newEventsModelsPair%ObjectEventsModelDef%GetEventModelSymbol)), newEventsModelsPair%ObjectEventsModelDef%GetEventModelCode()
