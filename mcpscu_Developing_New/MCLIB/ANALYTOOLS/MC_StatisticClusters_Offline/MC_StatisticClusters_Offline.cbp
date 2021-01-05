@@ -11,7 +11,7 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhailei/Cascade1Box5000LU_NBox800/SampleSetup.dat" />
+				<Option parameters="/scratch/110doc01/ZhaiLei/MC_CascadeEvolution/UseNNDR/MultiBatch/300K/50KeV_OneDim/InitLocally_AllTime/CalLimit/Cascade1Box200LU_NBox800/SampleSetup.dat" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-Mcuda=cuda10.1,cc75,nodebug,nollvm -Mnollvm" />

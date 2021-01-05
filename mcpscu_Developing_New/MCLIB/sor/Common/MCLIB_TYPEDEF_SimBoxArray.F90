@@ -3094,11 +3094,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 VectorLen = VectorLen + this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(I)**2
             END DO
 
-            if(VectorLen*TENPOWEIGHT .LT. 1) then
-                write(*,*) "MCPSCUERROR: The one-dimension diffusion vector cannot less than 0"
-                write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection
-                pause
-                stop
+            if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+               this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+                if(VectorLen*TENPOWEIGHT .LT. 0.D0) then
+                    write(*,*) "MCPSCUERROR: The one-dimension diffusion vector cannot less than 0"
+                    write(*,*) this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection
+                    write(*,*) STR
+                    pause
+                    stop
+                end if
             end if
 
             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection/DSQRT(VectorLen)
