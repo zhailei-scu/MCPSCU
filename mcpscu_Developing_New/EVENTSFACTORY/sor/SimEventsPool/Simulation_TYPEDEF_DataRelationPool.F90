@@ -25,6 +25,7 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
         contains
         procedure,public,non_overridable,pass::Init=>InitDataRelationPool
         procedure,public,non_overridable,pass::RegisterOne=>RegisterOneDataRelation
+        procedure,public,non_overridable,pass::GetOneByName=>GetOneDataRelationByName
         procedure,public,non_overridable,pass::CopyFromOther=>CopyDataRelationPool
         procedure,public,non_overridable,pass::Clean=>Clean_DataRelationPool
         Generic::Assignment(=)=>CopyDataRelationPool
@@ -36,6 +37,7 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
     private::CleanObjectsCollectionRegister
     private::InitDataRelationPool
     private::RegisterOneDataRelation
+    private::GetOneDataRelationByName
     private::CopyDataRelationPool
     private::CleanDataRelationPool
 
@@ -127,6 +129,36 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
 
         return
     end subroutine RegisterOneDataRelation
+
+    !************************************************
+    function GetOneDataRelationByName(this,TheName) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        Class(DataRelationPool)::this
+        character*(*),intent(in)::TheName
+        type(DataRelationRegister),intent(out)::TheResult
+        !---Local Vars---
+        integer::I
+        logical::Finded
+        !---Body---
+        Finded = .false.
+        DO I = 1,this%TheDataRelationRegisterList%GetListCount()
+            TheResult = this%TheDataRelationRegisterList%GetValueByListIndex(I)
+
+            if(ISSTREQUAL(TheResult%TheName,adjustl(trim(TheName)))) then
+                Finded = .true.
+                exit
+            end if
+        END DO
+
+        if(.not. Finded) then
+            write(*,*) "MCPSCUERROR: The data realtionship had not been registed",adjustl(trim(TheName))
+            pause
+            stop
+        end if
+
+        return
+    end function GetOneDataRelationByName
 
     !************************************************
     subroutine CopyDataRelationPool(this,other)

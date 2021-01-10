@@ -23,7 +23,7 @@
     procedure,non_overridable,public,pass::MoveToListPosByIndex=>MoveToPosByList##Name##Index[ENTER] \
     procedure,non_overridable,public,pass::GetValueByListIndex=>GetValueBy##Name##ListIndex[ENTER] \
     procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListHeaderP[ENTER] \
-    procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListTailP[ENTER] \
+    procedure,non_overridable,public,pass::GetListTailP=>Get##Name##ListTailP[ENTER] \
     procedure,non_overridable,public,pass::GetListCount=>Get##Name##List_Count[ENTER] \
     procedure,non_overridable,public,pass::CleanList=>Clean_##Name##List[ENTER] \
     Generic::Assignment(=)=>Copy##Name##ListFromOther[ENTER] \
@@ -35,7 +35,7 @@
     procedure,non_overridable,public,pass::MoveToListPosByIndex=>MoveToPosByList##Name##Index[ENTER] \
     procedure,non_overridable,public,pass::GetValueByListIndex=>GetValueBy##Name##ListIndex[ENTER] \
     procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListHeaderP[ENTER] \
-    procedure,non_overridable,public,pass::GetListHeaderP=>Get##Name##ListTailP[ENTER] \
+    procedure,non_overridable,public,pass::GetListTailP=>Get##Name##ListTailP[ENTER] \
     procedure,non_overridable,public,pass::GetListCount=>Get##Name##List_Count[ENTER] \
     procedure,non_overridable,public,pass::CleanList=>Clean_##Name##List[ENTER] \
     Generic::Assignment(=)=>Copy##Name##ListFromOther[ENTER] \

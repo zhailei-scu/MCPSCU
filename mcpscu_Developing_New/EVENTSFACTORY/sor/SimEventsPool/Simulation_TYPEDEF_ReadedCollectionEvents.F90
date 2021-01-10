@@ -1,5 +1,5 @@
 #include "../../../MACRO/Macro"
-module SIMULATION_TYPEDEF_READEDEVENTSMODELS
+module SIMULATION_TYPEDEF_READEDCOLLECTIONEVENTS
     use MiniUtilities,only:EXTRACT_SUBSTR,ISTR,GETKEYWORD
     use COMMONLIB_UTILITIES
     implicit none
@@ -64,7 +64,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     DefGeneralList(EventsModelsPairList,type(EventsModelsPair))
 
     !**************************************************************************************
-    type,public::ReadedEventsModels
+    type,public::ReadedCollectionEvents
         type(UserDefObjectCollectionsList),private::TheUserDefObjectCollectionsList
         type(UserDefEventModelsList),private::TheUserDefEventModelsList
 
@@ -72,16 +72,16 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
 
         contains
 
-        procedure,non_overridable,public,pass::Load_ReadedEventsModels
+        procedure,non_overridable,public,pass::Load_ReadedCollectionEvents
         procedure,non_overridable,private,pass::Load_UDefObjectCollections
         procedure,non_overridable,private,pass::Load_UDefEventsModels
         procedure,non_overridable,private,pass::LoadOne_ReadedEventsModelsActions
         procedure,non_overridable,private,pass::Load_OneRowEventsModelsActions
-        procedure,non_overridable,public,pass::CopyFormOther=>CopyReadedEventsModelsFormOther
-        procedure,non_overridable,public,pass::Clean=>CleanReadedEventsModels
-        Generic::Assignment(=)=>CopyReadedEventsModelsFormOther
-        Final::Clean_ReadedEventsModels
-    end type ReadedEventsModels
+        procedure,non_overridable,public,pass::CopyFormOther=>CopyReadedCollectionEventsFormOther
+        procedure,non_overridable,public,pass::Clean=>CleanReadedCollectionEvents
+        Generic::Assignment(=)=>CopyReadedCollectionEventsFormOther
+        Final::Clean_ReadedCollectionEvents
+    end type ReadedCollectionEvents
 
 
     private::GetObjectCollectionSymbol
@@ -103,14 +103,14 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     private::CopyEventsModelsPairFormOther
     private::CleanEventsModelsPair
     private::Clean_EventsModelsPair
-    private::Load_ReadedEventsModels
+    private::Load_ReadedCollectionEvents
     private::Load_UDefObjectCollections
     private::Load_UDefEventsModels
     private::LoadOne_ReadedEventsModelsActions
     private::Load_OneRowEventsModelsActions
-    private::CopyReadedEventsModelsFormOther
-    private::CleanReadedEventsModels
-    private::Clean_ReadedEventsModels
+    private::CopyReadedCollectionEventsFormOther
+    private::CleanReadedCollectionEvents
+    private::Clean_ReadedCollectionEvents
 
     contains
 
@@ -363,10 +363,10 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     DefGeneralListFuncSpan_WithValueCleanMethod(EventsModelsPairList,type(EventsModelsPair),Clean)
 
     !*****************************************************
-    subroutine Load_ReadedEventsModels(this,hFile)
+    subroutine Load_ReadedCollectionEvents(this,hFile)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadedEventsModels)::this
+        CLASS(ReadedCollectionEvents)::this
         integer,intent(in)::hFile
         !---Local Vars---
         integer::LINE
@@ -423,14 +423,14 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
             write(*,*) STR
             pause
             stop
-    end subroutine Load_ReadedEventsModels
+    end subroutine Load_ReadedCollectionEvents
 
 
     !******************************************************************
     subroutine Load_UDefObjectCollections(this,hFile,*)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadedEventsModels)::this
+        CLASS(ReadedCollectionEvents)::this
         integer,intent(in)::hFile
         !---Local Vars---
         integer::LINE
@@ -513,7 +513,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     subroutine Load_UDefEventsModels(this,hFile,*)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadedEventsModels)::this
+        CLASS(ReadedCollectionEvents)::this
         integer,intent(in)::hFile
         !---Local Vars---
         integer::LINE
@@ -727,7 +727,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     subroutine LoadOne_ReadedEventsModelsActions(this,hFile,*)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadedEventsModels)::this
+        CLASS(ReadedCollectionEvents)::this
         integer,intent(in)::hFile
         !---Local Vars---
         integer::LINE
@@ -861,7 +861,7 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     subroutine Load_OneRowEventsModelsActions(this,hFile,HeadCodeList,*)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadedEventsModels)::this
+        CLASS(ReadedCollectionEvents)::this
         integer,intent(in)::hFile
         type(UserDefEventModelsList),target::HeadCodeList
         !---Local Vars---
@@ -1067,40 +1067,40 @@ module SIMULATION_TYPEDEF_READEDEVENTSMODELS
     end subroutine Load_OneRowEventsModelsActions
 
     !******************************************************************
-    subroutine CopyReadedEventsModelsFormOther(this,other)
+    subroutine CopyReadedCollectionEventsFormOther(this,other)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadedEventsModels),intent(out)::this
-        CLASS(ReadedEventsModels),intent(in)::other
+        CLASS(ReadedCollectionEvents),intent(out)::this
+        CLASS(ReadedCollectionEvents),intent(in)::other
         !---Body---
         !---Assignment(=) had been overrided-------
         this%TheUserDefObjectCollectionsList = other%TheUserDefObjectCollectionsList
         this%TheUserDefEventModelsList = other%TheUserDefEventModelsList
         this%TheEventsModelsPairList = other%TheEventsModelsPairList
         return
-    end subroutine CopyReadedEventsModelsFormOther
+    end subroutine CopyReadedCollectionEventsFormOther
 
     !***************************************************
-    subroutine CleanReadedEventsModels(this)
+    subroutine CleanReadedCollectionEvents(this)
         implicit none
         !---Dummy Vars---
-        CLASS(ReadedEventsModels)::this
+        CLASS(ReadedCollectionEvents)::this
         !---Body---
         call this%TheUserDefObjectCollectionsList%CleanList()
         call this%TheUserDefEventModelsList%CleanList()
         call this%TheEventsModelsPairList%CleanList()
         return
-    end subroutine CleanReadedEventsModels
+    end subroutine CleanReadedCollectionEvents
 
     !***************************************************
-    subroutine Clean_ReadedEventsModels(this)
+    subroutine Clean_ReadedCollectionEvents(this)
         implicit none
         !---Dummy Vars---
-        type(ReadedEventsModels)::this
+        type(ReadedCollectionEvents)::this
         !---Local Vars---
         call this%Clean()
 
         return
-    end subroutine Clean_ReadedEventsModels
+    end subroutine Clean_ReadedCollectionEvents
 
-end module SIMULATION_TYPEDEF_READEDEVENTSMODELS
+end module SIMULATION_TYPEDEF_READEDCOLLECTIONEVENTS

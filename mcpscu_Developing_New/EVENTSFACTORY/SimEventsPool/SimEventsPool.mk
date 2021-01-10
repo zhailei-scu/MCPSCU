@@ -28,7 +28,7 @@ tgt  := $(LIBDIRD)
 libname  := lib_$(objname).$(LIB_EXT)
 
 #######################################################          
-nlist    :=  Simulation_TYPEDEF_ReadedEventsModels		\
+nlist    :=  Simulation_TYPEDEF_ReadedCollectionEvents		\
 			 Simulation_TYPEDEF_DataRelationPool		\
 			 Simulation_TYPEDEF_CollectionEventsRegisterCenter				\
 			 Simulation_TYPEDEF_CollectionEventManager
@@ -44,11 +44,11 @@ $(libname) : $(objects)
 	ar -rcs $(libname) $(objects)
 	mv $(libname) $(tgt)
 
-$(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.o : $(sor)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.F90
-	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90
-	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90
-	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90
-	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.f90 -o $@
+$(tgt)$(Segment)Simulation_TYPEDEF_ReadedCollectionEvents.o : $(sor)$(Segment)Simulation_TYPEDEF_ReadedCollectionEvents.F90
+	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_ReadedCollectionEvents.f90
+	sed -i '/^#\ \([0-9]\)/d' $(tgt)$(Segment)Simulation_TYPEDEF_ReadedCollectionEvents.f90
+	sed -i 's/\[ENTER\]/\n/g' $(tgt)$(Segment)Simulation_TYPEDEF_ReadedCollectionEvents.f90
+	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_ReadedCollectionEvents.f90 -o $@
 
 $(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.o : $(sor)$(Segment)Simulation_TYPEDEF_DataRelationPool.F90
 	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.f90
@@ -64,7 +64,7 @@ $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.o : $(sor)$(Se
 	$(comp) -c $(oflags_this) -cpp -I$(incdir) -module $(tgt) $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.f90 -o $@
 
 $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventManager.o : $(sor)$(Segment)Simulation_TYPEDEF_CollectionEventManager.F90 \
-															$(tgt)$(Segment)Simulation_TYPEDEF_ReadedEventsModels.o \
+															$(tgt)$(Segment)Simulation_TYPEDEF_ReadedCollectionEvents.o \
 															$(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventsRegisterCenter.o \
 															$(tgt)$(Segment)Simulation_TYPEDEF_DataRelationPool.o
 	$(comp) -E $(oflags_this) -I$(incdir) $< > $(tgt)$(Segment)Simulation_TYPEDEF_CollectionEventManager.f90
