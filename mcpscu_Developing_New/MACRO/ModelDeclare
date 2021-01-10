@@ -1,0 +1,8 @@
+#include "ModelMacroTemplate"
+
+
+#define ModelDefine ModelDefineTemplate(MC_MIGCOALE_CLUSTER_GPU)
+
+#define ModelRegister ModelRegisterTemplate(MC_MIGCOALE_CLUSTER_GPU)
+
+#define ModelTypeAdjustl ModelTypeAdjustlTemplate(MC_MIGCOALE_CLUSTER_GPU)

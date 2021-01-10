@@ -1,0 +1,7 @@
+#define ModelDefineTemplate(ModelType) type(ModelType),pointer,public::m_##ModelType##=>null()
+
+#define ModelRegisterTemplate(ModelType) call this%RegisterOne(#ModelType,m_##ModelType##)
+
+#define ModelTypeAdjustlTemplate(ModelType) type is(ModelType)[ENTER] \
+                                        allocate(ModelType::TheCollectionEventAllias)[ENTER] \
+                                        call TheCollectionEventAllias%TheDefSingleCollectionEventonstructProc()

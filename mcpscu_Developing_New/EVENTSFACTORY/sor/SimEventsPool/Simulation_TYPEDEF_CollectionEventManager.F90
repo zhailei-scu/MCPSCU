@@ -105,9 +105,10 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
                 Associate(TheCollectionEventAllias=>tempCollectionEventRegister%TheCollectionEvent)
                     if(.not. associated(TheCollectionEventAllias)) then
                         select type(TheCollectionEventAllias)
-                            type is(MC_MIGCOALE_CLUSTER_GPU)
-                                allocate(MC_MIGCOALE_CLUSTER_GPU::TheCollectionEventAllias)
-                                call TheCollectionEventAllias%TheDefSingleCollectionEventonstructProc()
+                            ModelTypeAdjustl
+                            !type is(MC_MIGCOALE_CLUSTER_GPU)
+                            !    allocate(MC_MIGCOALE_CLUSTER_GPU::TheCollectionEventAllias)
+                            !    call TheCollectionEventAllias%TheDefSingleCollectionEventonstructProc()
                         end select
                     end if
                 End Associate
@@ -120,15 +121,16 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
                 Associate(TheCollectionAllias=>tempLeftDataRelationRegister%TheObjectsCollection)
                     if(.not. associated(TheCollectionAllias)) then
                         select type(TheCollectionAllias)
-                            type is(SimulationBoxes)
-                                allocate(SimulationBoxes::TheCollectionAllias)
+                            !type is(SimulationBoxes)
+                            !    allocate(SimulationBoxes::TheCollectionAllias)
+                            DataTypeAdjustl
                         end select
                     end if
                 End Associate
 
                 cursorSingleCollectionEvent%TheValue%TheCollection=>tempLeftDataRelationRegister%TheObjectsCollection
 
-                
+
                 
                 cursorSingleCollectionEvent=>cursorSingleCollectionEvent%next
             else

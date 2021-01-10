@@ -3,7 +3,8 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTSREGISTERCENTER
     use MC_CollectionEvent_MIGCOALE_CLUSTER_GPU
     implicit none
 
-    type(MC_MIGCOALE_CLUSTER_GPU),pointer,public::m_MC_MIGCOALE_CLUSTER_GPU=>null()
+    !type(MC_MIGCOALE_CLUSTER_GPU),pointer,public::m_MC_MIGCOALE_CLUSTER_GPU=>null()
+    ModelDefine
 
     type,public::CollectionEventRegister
         Class(CollectionEvent),pointer::TheCollectionEvent=>null()
@@ -92,7 +93,8 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTSREGISTERCENTER
         call this%Clean()
 
         !---User need to register each event model---
-        call this%RegisterOne("MC_MIGCOALE_CLUSTER_GPU",m_MC_MIGCOALE_CLUSTER_GPU)
+        !call this%RegisterOne("MC_MIGCOALE_CLUSTER_GPU",m_MC_MIGCOALE_CLUSTER_GPU)
+        ModelRegister
 
         return
     end subroutine InitCollectionEventsRegisterCenter

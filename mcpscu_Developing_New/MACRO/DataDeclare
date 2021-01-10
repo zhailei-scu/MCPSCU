@@ -1,0 +1,8 @@
+#include "DataMacroTemplate"
+
+
+#define DataDefine DataDefineTemplate(SimulationBoxes)
+
+#define DataRegister DataRegisterTemplate(SimulationBoxes)
+
+#define DataTypeAdjustl DataAdjustlTemplate(SimulationBoxes)

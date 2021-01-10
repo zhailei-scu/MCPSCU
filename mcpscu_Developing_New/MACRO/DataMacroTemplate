@@ -1,0 +1,6 @@
+#define DataDefineTemplate(DataType) CLASS(DataType),pointer,public::m_##DataType##=>null()
+
+#define DataRegisterTemplate(DataType) call this%RegisterOne(#DataType,m_##DataType##)
+
+#define DataAdjustlTemplate(DataType) type is(DataType)[ENTER] \
+                                        allocate(DataType::TheCollectionAllias)

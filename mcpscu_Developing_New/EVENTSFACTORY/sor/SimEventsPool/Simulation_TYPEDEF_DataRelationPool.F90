@@ -3,7 +3,8 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
     use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     implicit none
 
-    CLASS(SimulationBoxes),pointer,private::m_MC_SimulationBox=>null()
+    !CLASS(SimulationBoxes),pointer,private::m_MC_SimulationBox=>null()
+    DataDefine
 
     type,public::DataRelationRegister
         Class(ObjectsCollection),pointer::TheObjectsCollection=>null()
@@ -93,7 +94,8 @@ module SIMULATION_TYPEDEF_DATARELATIONPOOL
         call this%Clean()
 
         !---User need to register each event model---
-        call this%RegisterOne("MC_SimulationBox",m_MC_SimulationBox)
+        !call this%RegisterOne("MC_SimulationBox",m_MC_SimulationBox)
+        DataRegister
 
         return
     end subroutine InitDataRelationPool
