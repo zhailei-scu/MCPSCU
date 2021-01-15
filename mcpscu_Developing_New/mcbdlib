@@ -68,6 +68,9 @@ if [ "$operateSystem" = "CYGWIN" ];then
   mcworkspace=`cygpath -p $mcworkspace -m -a`;
 fi
 
+#execute some script
+./Scripts/MacroScripts
+
 if [ "$operateSystem" = "LINUX" ];then
     export LIB_EXT=a
     export Segment="/"

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+grep -Eo 'ModelDefineAll\(*\)' MACRO/ModelDeclare
+#sed -i 's/ModelDefineAll/' MACRO/ModelDeclare

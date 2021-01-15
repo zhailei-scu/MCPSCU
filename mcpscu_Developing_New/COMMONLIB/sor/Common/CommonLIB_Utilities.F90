@@ -94,7 +94,6 @@ module COMMONLIB_UTILITIES
 
   contains
 
-
   !*************************************************************
   subroutine AllocateOneDimi_Host(Array,Length,Name)
     implicit none
