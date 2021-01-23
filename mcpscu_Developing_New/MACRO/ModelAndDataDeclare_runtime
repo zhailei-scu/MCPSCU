@@ -1,0 +1,14 @@
+#include "ModelMacroTemplate"
+#include "DataMacroTemplate"
+#define ModelDefine ModelDefineTemplate(MC_MIGCOALE_CLUSTER_GPU)
+#define ModelRegister ModelRegisterTemplate(MC_MIGCOALE_CLUSTER_GPU)
+#define ModelTypeAdjustl ModelTypeAdjustlTemplate(MC_MIGCOALE_CLUSTER_GPU)
+#define ModelDefine ModelDefineTemplate(MC_MIGCOALE_CLUSTER_GPU1)
+#define ModelRegister ModelRegisterTemplate(MC_MIGCOALE_CLUSTER_GPU1)
+#define ModelTypeAdjustl ModelTypeAdjustlTemplate(MC_MIGCOALE_CLUSTER_GPU1)
+#define DataDefine DataDefineTemplate(SimulationBoxes)
+#define DataRegister DataRegisterTemplate(SimulationBoxes)
+#define DataTypeAdjustl DataAdjustlTemplate(SimulationBoxes)
+#define DataDefine DataDefineTemplate(SimulationBoxes1)
+#define DataRegister DataRegisterTemplate(SimulationBoxes1)
+#define DataTypeAdjustl DataAdjustlTemplate(SimulationBoxes1)

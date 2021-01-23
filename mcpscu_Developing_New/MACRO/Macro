@@ -1,4 +1,3 @@
 #include "GeneralMacro"
 #include "ListMacro"
-#include "ModelDeclare"
-#include "DataDeclare"
+#include "ModelAndDataDeclare_runtime"

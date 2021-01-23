@@ -1,4 +1,46 @@
 #!/bin/bash
 
-grep -Eo 'ModelDefineAll\(*\)' MACRO/ModelDeclare
-#sed -i 's/ModelDefineAll/' MACRO/ModelDeclare
+tempFile="MACRO/ModelAndDataDeclare_runtime"
+if [ -f $tempFile ];then
+    rm $tempFile
+fi
+
+touch $tempFile
+: > $tempFile
+
+echo "#include \"ModelMacroTemplate\"" >> $tempFile
+echo "#include \"DataMacroTemplate\"" >> $tempFile
+
+#For all models
+AllModelName=$(cat MACRO/ModelAndDataDeclare| 
+    grep -Eo 'ModelDefineAll\(([a-z]|[A-Z]|_|[0-9])+\)'| 
+        grep -Eo '\(([a-z]|[A-Z]|_|[0-9])+\)'|
+            grep -Eo '([a-z]|[A-Z]|_|[0-9])+')
+
+for ModelName in  $AllModelName
+do
+    echo "Model: " $ModelName "would be registered."
+
+    echo "#define ModelDefine ModelDefineTemplate($ModelName)" >> $tempFile
+
+    echo "#define ModelRegister ModelRegisterTemplate($ModelName)" >> $tempFile
+
+    echo "#define ModelTypeAdjustl ModelTypeAdjustlTemplate($ModelName)" >> $tempFile
+done
+
+#For all datas
+AllDataName=$(cat MACRO/ModelAndDataDeclare|
+    grep -Eo 'DataDefineAll\(([a-z]|[A-Z]|_|[0-9])+\)'|
+        grep -Eo '\(([a-z]|[A-Z]|_|[0-9])+\)'|
+            grep -Eo '([a-z]|[A-Z]|_|[0-9])+')
+
+for DataName in  $AllDataName
+do
+    echo "Data: " $DataName "would be registered."
+
+    echo "#define DataDefine DataDefineTemplate($DataName)" >> $tempFile
+
+    echo "#define DataRegister DataRegisterTemplate($DataName)" >> $tempFile
+
+    echo "#define DataTypeAdjustl DataAdjustlTemplate($DataName)" >> $tempFile
+done
