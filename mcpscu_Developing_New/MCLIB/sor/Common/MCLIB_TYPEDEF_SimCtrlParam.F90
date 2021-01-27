@@ -1715,7 +1715,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    call EXTRACT_SUBSTR(STR,1,N,STRNUMB)
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
                     if(N .LT. 1) then
                         write(*,*) "MCPSCUERROR: You must special whether diffusants are independent in time."
                         pause
@@ -1767,7 +1767,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    call EXTRACT_SUBSTR(STR,1,N,STRNUMB)
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
                     if(N .LT. 1) then
                         write(*,*) "MCPSCUERROR: You must special whether diffusants are independent in time."
                         pause
