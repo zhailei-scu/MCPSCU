@@ -834,7 +834,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                     BlockNumEachBox,                               &
-                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,Host_SimuCtrlParam%m_ChangedTStepFactor)
     else
         call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -842,7 +842,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                     BlockNumEachBox,                               &
-                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps)
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,Host_SimuCtrlParam%m_ChangedTStepFactor)
     end if
 
     #ifdef MC_PROFILING
@@ -853,7 +853,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
   end subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex
 
   !******************************************************************************************
-  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps)
+  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps,ChangeTStepFactor)
     !***  PURPOSE:  to update the neighbore list of atoms(multiBox and block share tech is used)
     !             NNearestNeighbor      , the user defined number of nearest neighborhood
     !             Dev_Clusters          , clusters array
@@ -870,6 +870,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer,device::INDI(:,:)
     integer,value::BlockNumEachBox
     real(kind=KINDDF),device::MinTSteps(:)
+    real(kind=KINDDF),value::ChangeTStepFactor
     !---Local Vars---
     integer::tid,bid,IC0,cid,IB
     integer::scid,ecid
@@ -977,7 +978,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
                   DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
 
-                  reactTime = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
+                  reactTime = ChangeTStepFactor*(DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
 
 
                   if(reactTime .LE. MinT ) then

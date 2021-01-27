@@ -931,7 +931,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
                                                                 Dev_ClusterInfo_GPU%dm_KVOIS,                &
                                                                 Dev_ClusterInfo_GPU%dm_INDI,                 &
-                                                                Dev_ClusterInfo_GPU%dm_MinTSteps)
+                                                                Dev_ClusterInfo_GPU%dm_MinTSteps,Host_SimuCtrlParam%m_ChangedTStepFactor)
         else
             call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                                  &
                                                                 Dev_ClusterInfo_GPU%dm_Clusters,             &
@@ -1094,7 +1094,7 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine Merge_PreJudge_Kernel
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel_NNDR(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps)
+  attributes(global) subroutine Merge_PreJudge_Kernel_NNDR(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,ChangeTStepFactor)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -1105,6 +1105,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::Neighbor_KVOIS(:)
     integer,device::Neighbor_INDI(:,:)
     real(kind=KINDDF),device::MinTSteps(:)
+    real(kind=KINDDF),value::ChangeTStepFactor
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -1202,7 +1203,7 @@ module MIGCOALE_EVOLUTION_GPU
 
                 DIST2 = max(Dist - RR,0.E0)
 
-                tTemp = (DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))
+                tTemp = ChangeTStepFactor*(DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))
 
                 if(tTemp .LE. MinT ) then
                     MinT = tTemp

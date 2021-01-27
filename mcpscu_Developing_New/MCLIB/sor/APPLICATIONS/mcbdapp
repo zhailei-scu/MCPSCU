@@ -1,12 +1,12 @@
 #!/bin/bash
-version=Developing_New
-mcpscusor=/home/zhail/Development/public/mcpscu_2019_07_01
-tccpath=/home/zhail/Development/public/tcc-0.9.27/
-mcworkspace=/home/zhail/Development/public/mcworkspace/mcpscu_2019_07_01
-cudaVersion=cuda8.0
-computerCapability=cc35
+version=CalCapture_2020_12_01
+mcpscusor=/home/zhailei/mcpscu_CalCapture_2020_12_01
+tccpath=/home/zhailei/tcc-0.9.27/
+mcworkspace=/home/zhailei/mcworkspace/mcpscu_CalCapture_2020_12_01
+cudaVersion=cuda10.0
+computerCapability=cc70
 operateSystem=LINUX
-source $HOME/.bashrc
+export PATH=$PATH:/opt/pgi/linux86-64/19.4/bin:/opt/pgi/linux86-64/2019/include; export PGI=/opt/pgi
 hostllvm=-Mnollvm
 
 

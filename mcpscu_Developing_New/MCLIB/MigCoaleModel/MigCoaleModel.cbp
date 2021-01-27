@@ -15,7 +15,7 @@
 				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
+					<Add option="-Mcuda=cuda10.0,cc70,nodebug,nollvm -Mnollvm" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -27,7 +27,7 @@
 				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-fast" />
-					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35,nollvm" />
+					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda10.0,cc70,nollvm -Mnollvm" />
 				</Compiler>
 			</Target>
 		</Build>
@@ -53,7 +53,7 @@
 			<Option weight="0" />
 		</Unit>
 		<Unit filename="../sor/MigCoaleModel/MigCoale_TYPEDEF_CaptureCal_GPU.F90">
-			<Option weight="0" />
+			<Option weight="1" />
 		</Unit>
 		<Unit filename="../sor/MigCoaleModel/MigCoale_TYPEDEF_SimRecord.F90">
 			<Option weight="0" />

@@ -7,8 +7,9 @@
 #---- Some Vars that users can modify ----
 TINYCCPATH=$PWD/tcc-0.9.27/
 
+
 #------------------------------
-VER=CalCapture_2020_12_01
+VER=CalCapture_2020_12_01_Test_ChangeTStep
 FULLNAME=mcpscu_$VER 
 tar -xvf $FULLNAME.tar.bz2
 
