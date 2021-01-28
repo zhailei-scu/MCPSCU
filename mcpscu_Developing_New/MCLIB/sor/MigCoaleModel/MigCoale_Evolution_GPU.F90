@@ -1719,7 +1719,9 @@ module MIGCOALE_EVOLUTION_GPU
                                                                 Dev_ClusterInfo_GPU%dm_MergeKVOIS,           &
                                                                 Dev_ClusterInfo_GPU%dm_KVOIS,                &
                                                                 Dev_ClusterInfo_GPU%dm_INDI,                 &
-                                                                Dev_ClusterInfo_GPU%dm_MinTSteps,Host_SimuCtrlParam%m_ChangedTStepFactor)
+                                                                Dev_ClusterInfo_GPU%dm_MinTSteps,            &
+                                                                Host_SimuCtrlParam%m_ChangedTStepFactor,     &
+                                                                Host_SimuCtrlParam%LowerLimitLength)
         else
             call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                                  &
                                                                 Dev_ClusterInfo_GPU%dm_Clusters,             &
@@ -1882,7 +1884,7 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine Merge_PreJudge_Kernel
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel_NNDR(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,ChangeTStepFactor)
+  attributes(global) subroutine Merge_PreJudge_Kernel_NNDR(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,ChangeTStepFactor,LowerLimitLength)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -1894,6 +1896,7 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::Neighbor_INDI(:,:)
     real(kind=KINDDF),device::MinTSteps(:)
     real(kind=KINDDF),value::ChangeTStepFactor
+    real(kind=KINDDF),value::LowerLimitLength
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -1911,6 +1914,7 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::DiffB
     integer::NSIAIC,NVACIC
     integer::NSIAJC,NVACJC
+    real(kind=KINDDF)::LowerLimitTime
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -2015,6 +2019,10 @@ module MIGCOALE_EVOLUTION_GPU
             END DO
 
             MergeTable_KVOIS(IC) = NN
+
+            LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
+
+            MinT = max(MinT,LowerLimitTime)
 
             MinTSteps(IC) = MinT
 

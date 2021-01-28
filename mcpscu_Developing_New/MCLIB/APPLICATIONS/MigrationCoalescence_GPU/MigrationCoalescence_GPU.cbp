@@ -25,8 +25,8 @@
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommonGPU.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libTCCLIB.a" />
-					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
-					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc.a" />
+					<Add library="/home/zhailei/Development/CalCapture_Test_ChangeTStep/tcc-0.9.27/libtcc1.a" />
+					<Add library="/home/zhailei/Development/CalCapture_Test_ChangeTStep/tcc-0.9.27/libtcc.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMODELDATABASE.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMSMLIB.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRunningProfile.a" />
@@ -55,8 +55,8 @@
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommonGPU.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libTCCLIB.a" />
-					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc.a" />
-					<Add library="/home/zhailei/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
+					<Add library="/home/zhailei/Development/CalCapture_Test_ChangeTStep/tcc-0.9.27/libtcc.a" />
+					<Add library="/home/zhailei/Development/CalCapture_Test_ChangeTStep/tcc-0.9.27/libtcc1.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMODELDATABASE.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCudaRanGenerator.a" />
 					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMiniUtilities.a" />

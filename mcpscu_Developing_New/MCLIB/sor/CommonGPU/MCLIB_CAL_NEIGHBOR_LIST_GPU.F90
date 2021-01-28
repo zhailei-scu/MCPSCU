@@ -834,7 +834,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                     BlockNumEachBox,                               &
-                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,Host_SimuCtrlParam%m_ChangedTStepFactor)
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                    Host_SimuCtrlParam%m_ChangedTStepFactor,       &
+                                                                                    Host_SimuCtrlParam%LowerLimitLength)
     else
         call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -842,7 +844,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                     BlockNumEachBox,                               &
-                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,Host_SimuCtrlParam%m_ChangedTStepFactor)
+                                                                                    Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                    Host_SimuCtrlParam%m_ChangedTStepFactor,       &
+                                                                                    Host_SimuCtrlParam%LowerLimitLength)
     end if
 
     #ifdef MC_PROFILING
@@ -853,7 +857,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
   end subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex
 
   !******************************************************************************************
-  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps,ChangeTStepFactor)
+  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps,ChangeTStepFactor,LowerLimitLength)
     !***  PURPOSE:  to update the neighbore list of atoms(multiBox and block share tech is used)
     !             NNearestNeighbor      , the user defined number of nearest neighborhood
     !             Dev_Clusters          , clusters array
@@ -871,6 +875,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer,value::BlockNumEachBox
     real(kind=KINDDF),device::MinTSteps(:)
     real(kind=KINDDF),value::ChangeTStepFactor
+    real(kind=KINDDF),value::LowerLimitLength
     !---Local Vars---
     integer::tid,bid,IC0,cid,IB
     integer::scid,ecid
@@ -895,6 +900,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::NN
     integer::NSIAIC,NVACIC
     integer::NSIAJC,NVACJC
+    real(kind=KINDDF)::LowerLimitTime
     !---Body---
     tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
     bid = (blockidx%y-1)*griddim%x +  blockidx%x         ! the index of block
@@ -1027,6 +1033,11 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     END DO
 
     if(IC .LE. ecid) then
+
+        LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
+
+        MinT = max(MinT,LowerLimitTime)
+
         MinTSteps(IC) = MinT
     end if
 
