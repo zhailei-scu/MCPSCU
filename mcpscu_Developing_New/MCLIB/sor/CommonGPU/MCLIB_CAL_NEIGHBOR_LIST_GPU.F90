@@ -956,7 +956,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
        IF(IC .LE. ecid .AND. (STATU .EQ. p_ACTIVEFREE_STATU .or. STATU .EQ. p_ACTIVEINGB_STATU)) THEN
 
-        LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
+         if(NSIAIC .GT. 0) then
+            LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
+         end if
 
          DO I = ICFROM, ICTO    ! mutual
 

@@ -2021,7 +2021,9 @@ module MIGCOALE_EVOLUTION_GPU
 
             MergeTable_KVOIS(IC) = NN
 
-            LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
+            if(NSIAIC .GT. 0) then
+                LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
+            end if
 
             MinT = max(MinT,LowerLimitTime)
 
