@@ -936,6 +936,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     ICFROM = scid
     ICTO = min(ICFROM+p_BLOCKSIZE-1,ecid)
 
+    LowerLimitTime = 1.D32
+
     MinT = 1.D32
 
     DO while(ICTO .GE. ICFROM)
@@ -953,6 +955,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
        call syncthreads()
 
        IF(IC .LE. ecid .AND. (STATU .EQ. p_ACTIVEFREE_STATU .or. STATU .EQ. p_ACTIVEINGB_STATU)) THEN
+
+        LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
 
          DO I = ICFROM, ICTO    ! mutual
 
@@ -1033,8 +1037,6 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     END DO
 
     if(IC .LE. ecid) then
-
-        LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
 
         MinT = max(MinT,LowerLimitTime)
 

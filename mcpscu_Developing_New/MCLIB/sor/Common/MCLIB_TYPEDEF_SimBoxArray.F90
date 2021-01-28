@@ -2331,7 +2331,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(hFile,FMT="(A)") OKMC_OUTCFG_FORMAT18
 
     KEYWORD = "&VERSION"
-    write(hFile,FMT="(A,1x,A30)") KEYWORD(1:LENTRIM(KEYWORD)),adjustl(trim(mp_Version))
+    write(hFile,FMT="(A,1x,A100)") KEYWORD(1:LENTRIM(KEYWORD)),adjustl(trim(mp_Version))
 
     if(associated(SimuRecord%GetUDefReadWriteRecord_List())) then
 
@@ -2629,7 +2629,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     !---Local Vars---
     character*1000::STR
     character*32::KEYWORD
-    character*32::STRTMP(20)
+    character*100::STRTMP(20)
     integer::N
     type(UDefReadWriteRecordList),pointer::cursor=>null()
     !---Body---

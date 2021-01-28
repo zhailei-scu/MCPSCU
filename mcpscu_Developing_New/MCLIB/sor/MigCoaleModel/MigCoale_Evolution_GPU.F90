@@ -1930,6 +1930,7 @@ module MIGCOALE_EVOLUTION_GPU
 
     IC = scid + (cid - bid0*p_BlockSize -1)
 
+    LowerLimitTime = 1.D32
 
     MinT = 1.D32
 
