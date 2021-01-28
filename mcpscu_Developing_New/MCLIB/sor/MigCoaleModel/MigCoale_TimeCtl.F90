@@ -6,6 +6,7 @@ module MIGCOALE_TIMECTL
     use MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     use MIGCOALE_TYPEDEF_STATISTICINFO
     use MCLIB_CAL_NEIGHBOR_LIST_GPU
+    use MIGCOALE_TYPEDEF_CAPTURECAL_GPU
     implicit none
 
 
@@ -14,7 +15,7 @@ module MIGCOALE_TIMECTL
     contains
 
     !**************************************************************
-    subroutine UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record,TSTEP)
+    subroutine UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record,TSTEP,CapCal_Dev)
         ! To automatically determine the time step
         !  Host_Boxes: the boxes info in host
         !       INPUT: DIF - the diffusion coefficient
@@ -27,6 +28,7 @@ module MIGCOALE_TIMECTL
         type(MigCoaleStatisticInfo_Expd)::TheMigCoaleStatisticInfo
         CLASS(SimulationRecord)::Record
         real(kind=KINDDF)::TSTEP
+        type(CaptureCal_Dev)::CapCal_Dev
         !---Local Vars---
         real(kind=KINDDF)::SEP, DIF
         integer::NCActFree
@@ -44,9 +46,12 @@ module MIGCOALE_TIMECTL
         select case(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY)
             case(mp_SelfAdjustlStep_NearestSep)
                 if(Dev_Boxes%dm_ClusterInfo_GPU%GetNLUpdateCount_Dev() .LE. 0) then
-                    call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                                max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU)),&
-                                                MaxDiffuse=max(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                    call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,  &
+                                               CapCal_Dev%dm_CascadeCenter,                     &
+                                               CapCal_Dev%dm_ROutAbsorbToCent,                  &
+                                               IfDirectly=.true.,RMAX=                          &
+                                               max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU)),&
+                                               MaxDiffuse=max(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU), &
                                                                TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU)))
                 end if
 
@@ -167,7 +172,7 @@ module MIGCOALE_TIMECTL
     end subroutine UpdateTimeStep_MigCoal
 
     !*********************************************************
-    function Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record,ImplantedNumEachBox) result(TheVerifyTime)
+    function Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatisticInfo,Record,ImplantedNumEachBox,CapCal_Dev) result(TheVerifyTime)
         implicit none
         !---Dummy Vars---
         type(SimulationBoxes)::Host_Boxes
@@ -176,6 +181,7 @@ module MIGCOALE_TIMECTL
         type(MigCoaleStatisticInfo_Virtual)::TheMigCoaleStatisticInfo
         CLASS(SimulationRecord)::Record
         integer,intent(in)::ImplantedNumEachBox
+        type(CaptureCal_Dev)::CapCal_Dev
         real(kind=KINDDF),intent(out)::TheVerifyTime
         !---Local Vars---
         real(kind=KINDDF)::SEP, DIF
@@ -197,7 +203,10 @@ module MIGCOALE_TIMECTL
         select case(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY)
             case(mp_SelfAdjustlStep_NearestSep)
                 if(Dev_Boxes%dm_ClusterInfo_GPU%GetNLUpdateCount_Dev() .LE. 0) then
-                    call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
+                    call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,  &
+                                               CapCal_Dev%dm_CascadeCenter,                     &
+                                               CapCal_Dev%dm_ROutAbsorbToCent,                  &
+                                               IfDirectly=.true.,RMAX=                          &
                                                 max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU)),&
                                                 MaxDiffuse=max(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU), &
                                                                TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU)))

@@ -24,13 +24,15 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
   contains
   !**********************************************************************************
-  subroutine Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly,RMAX,MaxDiffuse)
+  subroutine Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,Dev_CascadeCent,Dev_ROutAbsorbRadius,IfDirectly,RMAX,MaxDiffuse)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes), intent(in)::Host_Boxes
     type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
     CLASS(SimulationRecord)::Record
+    real(kind=KINDDF),device,allocatable::Dev_CascadeCent(:,:)
+    real(kind=KINDDF),device,allocatable::Dev_ROutAbsorbRadius(:)
     logical,optional::IfDirectly
     real(kind=KINDDF),optional::RMAX
     real(kind=KINDDF),optional::MaxDiffuse
@@ -74,9 +76,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
            select case(Host_SimuCtrlParam%NEIGHBORCALWAY)
                 case(mp_CalcNeighborList_NNEAREST)
-                    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+                    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_CascadeCent,Dev_ROutAbsorbRadius)
                 case(mp_CalcNeighborList_RCUT)
-                    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+                    call Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_CascadeCent,Dev_ROutAbsorbRadius)
                 case default
                     write(*,*) "MCPSCUERROR: Unknown strategy to update neighbor-list."
                     pause
@@ -773,12 +775,14 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
   end subroutine Kernel_NeighborList_Nearest_WithOutActiveIndex
 
   !**********************************************************************************
-  subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes)
+  subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_CascadeCent,Dev_ROutAbsorbRadius)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes), intent(in)::Host_Boxes
     type(SimulationCtrlParam),intent(in)::Host_SimuCtrlParam
     type(SimulationBoxes_GPU)::Dev_Boxes
+    real(kind=KINDDF),device,allocatable::Dev_CascadeCent(:,:)
+    real(kind=KINDDF),device,allocatable::Dev_ROutAbsorbRadius(:)
     !---Local Vars---
     integer::MULTIBOX
     integer::NNearestNeighbor
@@ -830,11 +834,13 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     if(ChangedToUsedIndex .eq. .false.) then
         call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
-                                                                                    Dev_Boxes%dm_SEExpdIndexBox,                  &
+                                                                                    Dev_Boxes%dm_SEExpdIndexBox,                   &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_KVOIS,         &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                     BlockNumEachBox,                               &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                    Dev_CascadeCent,                               &
+                                                                                    Dev_ROutAbsorbRadius,                          &
                                                                                     Host_SimuCtrlParam%m_ChangedTStepFactor,       &
                                                                                     Host_SimuCtrlParam%LowerLimitLength)
     else
@@ -845,6 +851,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                     BlockNumEachBox,                               &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
+                                                                                    Dev_CascadeCent,                                &
+                                                                                    Dev_ROutAbsorbRadius,                           &
                                                                                     Host_SimuCtrlParam%m_ChangedTStepFactor,       &
                                                                                     Host_SimuCtrlParam%LowerLimitLength)
     end if
@@ -857,7 +865,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
   end subroutine Cal_Neighbore_Table_GPU_TimeNearest_WithOutActiveIndex
 
   !******************************************************************************************
-  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps,ChangeTStepFactor,LowerLimitLength)
+  attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps,&
+                                                                                    Dev_CascadeCent,Dev_ROutAbsorbRadius,ChangeTStepFactor,LowerLimitLength)
     !***  PURPOSE:  to update the neighbore list of atoms(multiBox and block share tech is used)
     !             NNearestNeighbor      , the user defined number of nearest neighborhood
     !             Dev_Clusters          , clusters array
@@ -874,6 +883,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer,device::INDI(:,:)
     integer,value::BlockNumEachBox
     real(kind=KINDDF),device::MinTSteps(:)
+    real(kind=KINDDF),device::Dev_CascadeCent(:,:)
+    real(kind=KINDDF),device::Dev_ROutAbsorbRadius(:)
     real(kind=KINDDF),value::ChangeTStepFactor
     real(kind=KINDDF),value::LowerLimitLength
     !---Local Vars---
@@ -901,6 +912,10 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     integer::NSIAIC,NVACIC
     integer::NSIAJC,NVACJC
     real(kind=KINDDF)::LowerLimitTime
+    real(kind=KINDDF)::reactTimeWitOutAbsorber
+    real(kind=KINDDF)::DistToCent
+    real(kind=KINDDF)::DistToOuter
+    real(kind=KINDDF)::CascadeCenter(3)
     !---Body---
     tid = (threadidx%y-1)*blockdim%x + threadidx%x       ! the thread index inner this block
     bid = (blockidx%y-1)*griddim%x +  blockidx%x         ! the index of block
@@ -958,6 +973,19 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
          if(NSIAIC .GT. 0) then
             LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
+
+            CascadeCenter(1) = Dev_CascadeCent(IB,1)
+            CascadeCenter(2) = Dev_CascadeCent(IB,2)
+            CascadeCenter(3) = Dev_CascadeCent(IB,3)
+
+            DistToCent = (Pos_x - CascadeCenter(1))*(Pos_x- CascadeCenter(1)) + &
+                         (Pos_y - CascadeCenter(2))*(Pos_y- CascadeCenter(2)) + &
+                         (Pos_z - CascadeCenter(3))*(Pos_z- CascadeCenter(3))
+
+            DistToOuter = Dev_ROutAbsorbRadius(IB) - DSQRT(DistToCent)
+
+            reactTimeWitOutAbsorber = ChangeTStepFactor*(DistToOuter*DistToOuter)/(6.D0*DiffA)
+
          end if
 
          DO I = ICFROM, ICTO    ! mutual
@@ -991,7 +1019,6 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                   DIST2 = max(SQRT(DIST2) - RADA - RADB,0.E0)
 
                   reactTime = ChangeTStepFactor*(DIST2*DIST2)*(1.D0/6.D0)/(DiffA + DiffB + 2*SQRT(DiffA*DiffB))  ! time
-
 
                   if(reactTime .LE. MinT ) then
                     MinT = reactTime
@@ -1039,6 +1066,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     END DO
 
     if(IC .LE. ecid) then
+
+        MinT = min(MinT,reactTimeWitOutAbsorber)
 
         MinT = max(MinT,LowerLimitTime)
 

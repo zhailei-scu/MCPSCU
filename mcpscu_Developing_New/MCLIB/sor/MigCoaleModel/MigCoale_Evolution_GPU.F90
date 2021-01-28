@@ -1656,7 +1656,7 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine WalkOneStep_Kernel_NNDR_LastPassage_Diffusant_Independent_Time
 
   !********************************************************
-  subroutine MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+  subroutine MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP,CapCal_Dev)
     implicit none
     !---Dummy Vars---
     type(SimulationBoxes)::Host_Boxes
@@ -1664,6 +1664,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(SimulationBoxes_GPU)::Dev_Boxes
     type(MigCoale_GVarsDev)::Dev_MigCoaleGVars
     real(kind=KINDDF)::TSTEP
+    type(CaptureCal_Dev)::CapCal_Dev
     !---Local Vars---
     integer::MULTIBOX
     integer::BlockNumEachBox
@@ -1720,6 +1721,8 @@ module MIGCOALE_EVOLUTION_GPU
                                                                 Dev_ClusterInfo_GPU%dm_KVOIS,                &
                                                                 Dev_ClusterInfo_GPU%dm_INDI,                 &
                                                                 Dev_ClusterInfo_GPU%dm_MinTSteps,            &
+                                                                CapCal_Dev%dm_CascadeCenter,                 &
+                                                                CapCal_Dev%dm_ROutAbsorbToCent,              &
                                                                 Host_SimuCtrlParam%m_ChangedTStepFactor,     &
                                                                 Host_SimuCtrlParam%LowerLimitLength)
         else
@@ -1884,7 +1887,8 @@ module MIGCOALE_EVOLUTION_GPU
   end subroutine Merge_PreJudge_Kernel
 
   !********************************************************
-  attributes(global) subroutine Merge_PreJudge_Kernel_NNDR(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,ChangeTStepFactor,LowerLimitLength)
+  attributes(global) subroutine Merge_PreJudge_Kernel_NNDR(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,&
+                                                           Dev_CascadeCent,Dev_ROutAbsorbRadius,ChangeTStepFactor,LowerLimitLength)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -1895,6 +1899,8 @@ module MIGCOALE_EVOLUTION_GPU
     integer,device::Neighbor_KVOIS(:)
     integer,device::Neighbor_INDI(:,:)
     real(kind=KINDDF),device::MinTSteps(:)
+    real(kind=KINDDF),device::Dev_CascadeCent(:,:)
+    real(kind=KINDDF),device::Dev_ROutAbsorbRadius(:)
     real(kind=KINDDF),value::ChangeTStepFactor
     real(kind=KINDDF),value::LowerLimitLength
     !---Local Vars---
@@ -1915,6 +1921,10 @@ module MIGCOALE_EVOLUTION_GPU
     integer::NSIAIC,NVACIC
     integer::NSIAJC,NVACJC
     real(kind=KINDDF)::LowerLimitTime
+    real(kind=KINDDF)::reactTimeWitOutAbsorber
+    real(kind=KINDDF)::DistToCent
+    real(kind=KINDDF)::DistToOuter
+    real(kind=KINDDF)::CascadeCenter(3)
     !---Body---
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
     bid = (blockidx%y  - 1)*griddim%x  + blockidx%x
@@ -2023,8 +2033,23 @@ module MIGCOALE_EVOLUTION_GPU
 
             if(NSIAIC .GT. 0) then
                 LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
+
+
+                CascadeCenter(1) = Dev_CascadeCent(IBox,1)
+                CascadeCenter(2) = Dev_CascadeCent(IBox,2)
+                CascadeCenter(3) = Dev_CascadeCent(IBox,3)
+
+                DistToCent = (Pos_X - CascadeCenter(1))*(Pos_X- CascadeCenter(1)) + &
+                             (Pos_Y - CascadeCenter(2))*(Pos_Y- CascadeCenter(2)) + &
+                             (Pos_Z - CascadeCenter(3))*(Pos_Z- CascadeCenter(3))
+
+                DistToOuter = Dev_ROutAbsorbRadius(IBox) - DSQRT(DistToCent)
+
+                reactTimeWitOutAbsorber = ChangeTStepFactor*(DistToOuter*DistToOuter)/(6.D0*DiffA)
+
             end if
 
+            MinT = min(MinT,reactTimeWitOutAbsorber)
             MinT = max(MinT,LowerLimitTime)
 
             MinTSteps(IC) = MinT
