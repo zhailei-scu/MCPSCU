@@ -402,10 +402,13 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         Associate(Host_ClustesInfo=>Host_Boxes%m_ClustersInfo_CPU,Dev_ClustesInfo=>Dev_Boxes%dm_ClusterInfo_GPU, &
               TBasicInfo=>Host_Boxes%m_BoxesBasicStatistic%BoxesStatis_Integral)
 
-            call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                       max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                           TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
-                                           MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+            call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,  &
+                                       CapCal_Dev%dm_CascadeCenter,                     &
+                                       CapCal_Dev%dm_ROutAbsorbToCent,                  &
+                                       IfDirectly=.true.,RMAX=                          &
+                                        max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                            TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                            MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
                                                           TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
             DO WHILE(.TRUE.)
@@ -433,9 +436,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 NAct = TBasicInfo%NC(p_ACTIVEFREE_STATU)+TBasicInfo%NC(p_ACTIVEINGB_STATU)
 
-                call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.false.,RMAX= &
-                                           max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                           TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,  &
+                                           CapCal_Dev%dm_CascadeCenter,                     &
+                                           CapCal_Dev%dm_ROutAbsorbToCent,                  &
+                                           IfDirectly=.false.,RMAX=                         &
+                                             max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                                 TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
                                            MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
                                                           TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
@@ -476,12 +482,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::I
         !---Body---
 
-        call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
+        call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP,CapCal_Dev)
 
         curosr=>ImplantSectionList
         DO I = 1,ImplantSectionList%ListCount
             if(curosr%TheImplantSection%InsertCountOneBatch .GT. 0.D0) then
-                call curosr%TheImplantSection%Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,m_FREESURDIFPRE,m_GBSURDIFPRE)
+                call curosr%TheImplantSection%Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,m_FREESURDIFPRE,m_GBSURDIFPRE,CapCal_Dev)
             end if
 
             curosr=>curosr%next
@@ -490,7 +496,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         call WalkOneStep(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,Record,TSTEP,CapCal_Dev)
 
         if(Host_SimuCtrlParam%FreeDiffusion .ne. .true.) then
-            call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP)
+            call MergeClusters(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TSTEP,CapCal_Dev)
         end if
 
         call Record%IncreaseOneSimuStep()

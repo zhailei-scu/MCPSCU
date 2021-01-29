@@ -53,6 +53,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      real(kind=KINDDF),dimension(:),allocatable::FocusedTimePoints      ! the focused time points
 
 
+
+
      integer::UPDATETSTEPSTRATEGY = mp_SelfAdjustlStep_NearestSep       ! flag = 0 the time step is determined by average distance of nearest cluster
                                                                         ! flag = 1 is by fixed time-step
                                                                         ! flag = 2 the time step is determined by volume average distance and suppose the clusters distribute uniform in the box
@@ -60,6 +62,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      real::EnlageTStepScale = 0.01                                      ! adjustl time-step enlarge-scale mp_SelfAdjustlStep_NearestSep strategy and mp_SelfAdjustlStep_AveSep
      real(kind=KINDDF)::LowerLimitLength = 2.74D-8                      ! The lower limit length of NDDR_S4 algorithm
      integer::LastPassageFactor = 5                                     ! The last passage factor
+
+     real(kind=KINDDF),public::m_ChangedTStepFactor = 1.D0
+
+     logical,public::m_NNDR_Diffusant_Independent_Time = .false.
 
      integer::TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps   ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s)
      real::TUpdateStatisValue = 10                                      ! the time interval to update statistic
@@ -352,14 +358,19 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                     cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%EnlageTStepScale
 
             case(mp_SelfAdjustlStep_NNDR)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "Use Time-update step strategy =, the correspond value =", &
-                                                                    cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%LowerLimitLength
+                write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE16.8),2x,L10)") "Use Time-update step strategy =, the correspond value =", &
+                                                                    cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY, &
+                                                                    cursor%theSimulationCtrlParam%LowerLimitLength, &
+                                                                    cursor%theSimulationCtrlParam%m_ChangedTStepFactor, &
+                                                                    cursor%theSimulationCtrlParam%m_NNDR_Diffusant_Independent_Time
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,I10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = .", &
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,I10,2x,1PE16.8,2x,L10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = .", &
                                                                               cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY, &
                                                                               cursor%theSimulationCtrlParam%LowerLimitLength, &
-                                                                              cursor%theSimulationCtrlParam%LastPassageFactor
+                                                                              cursor%theSimulationCtrlParam%LastPassageFactor, &
+                                                                              cursor%theSimulationCtrlParam%m_ChangedTStepFactor, &
+                                                                              cursor%theSimulationCtrlParam%m_NNDR_Diffusant_Independent_Time
         end select
 
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "The update statistic frequency flag =, the correspond value = ",cursor%theSimulationCtrlParam%TUpdateStatisFlag,cursor%theSimulationCtrlParam%TUpdateStatisValue
@@ -693,7 +704,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
             if(size(otherOne%FocusedTimePoints) .ne. otherOne%NFocusedTimePoint) then
                 write(*,*) "MCPSCURROR: It is seems like that the dimension of FocusedTimePoints is: ", size(otherOne%FocusedTimePoints)
-                write(*,*) "Bu the NFocusedTimePoint is : ",otherOne%NFocusedTimePoint
+                write(*,*) "But the NFocusedTimePoint is : ",otherOne%NFocusedTimePoint
                 pause
                 stop
             end if
@@ -714,6 +725,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     this%EnlageTStepScale = otherOne%EnlageTStepScale
     this%LowerLimitLength = otherOne%LowerLimitLength
     this%LastPassageFactor = otherOne%LastPassageFactor
+
+    this%m_ChangedTStepFactor = otherOne%m_ChangedTStepFactor
+    this%m_NNDR_Diffusant_Independent_Time = otherOne%m_NNDR_Diffusant_Independent_Time
 
     this%TUpdateStatisFlag = otherOne%TUpdateStatisFlag
     this%TUpdateStatisValue = otherOne%TUpdateStatisValue
@@ -814,6 +828,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%EnlageTStepScale = 0.01
      this%LowerLimitLength = 2.74D-8
      this%LastPassageFactor = 5
+
+     this%m_ChangedTStepFactor = 1.D0
+     this%m_NNDR_Diffusant_Independent_Time = .false.
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -971,6 +988,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      this%EnlageTStepScale = 0.01
      this%LowerLimitLength = 2.74D-8
      this%LastPassageFactor = 5
+
+     this%m_ChangedTStepFactor = 1.D0
+     this%m_NNDR_Diffusant_Independent_Time = .false.
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -1525,6 +1545,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(20)
+    character*32::STRTMP(20)
     integer::I
     integer::IStatu
     character*32::OneContent
@@ -1670,12 +1691,12 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     end if
 
                 case(mp_SelfAdjustlStep_NNDR)
-                    call EXTRACT_NUMB(STR,2,N,STRNUMB)
+                    call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
-                    if(N .LT. 2) then
+                    if(N .LT. 3) then
                         write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
                         write(*,*) "At control file line: ",LINE
-                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the low limit time  =  '."
+                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the low limit time  =  , the change time step factor = '."
                         pause
                         stop
                     end if
@@ -1687,13 +1708,40 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                    call EXTRACT_NUMB(STR,3,N,STRNUMB)
+                    this%m_ChangedTStepFactor = DRSTR(STRNUMB(3))
+                    if(this%m_ChangedTStepFactor .LT. 0) then
+                        write(*,*) "MCPSCU ERROR: The change time step factor cannot less than 0.",this%m_ChangedTStepFactor
+                        pause
+                        stop
+                    end if
 
-                    if(N .LT. 3) then
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special whether diffusants are independent in time."
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        this%m_NNDR_Diffusant_Independent_Time = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        this%m_NNDR_Diffusant_Independent_Time = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether diffusants are independent in time."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
+                    call EXTRACT_NUMB(STR,4,N,STRNUMB)
+
+                    if(N .LT. 4) then
                         write(*,*) "MCPSCU ERROR: Too Few Parameters for TSTEPSTRATEGY Setting."
                         write(*,*) "At control file line: ",LINE
-                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the  LowerLimit Length = , the last passage factor = '."
+                        write(*,*) "Should be '&TSTEPSTRATEGY The update time-step strategy = , the  LowerLimit Length = , the last passage factor = , the change time step factor = '."
                         pause
                         stop
                     end if
@@ -1708,6 +1756,33 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     this%LastPassageFactor = ISTR(STRNUMB(3))
                     if(this%LastPassageFactor .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The last passage factor cannot less than 0.",this%LastPassageFactor
+                        pause
+                        stop
+                    end if
+
+                    this%m_ChangedTStepFactor = DRSTR(STRNUMB(4))
+                    if(this%m_ChangedTStepFactor .LT. 0) then
+                        write(*,*) "MCPSCU ERROR: The change time step factor cannot less than 0.",this%m_ChangedTStepFactor
+                        pause
+                        stop
+                    end if
+
+                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
+                    if(N .LT. 1) then
+                        write(*,*) "MCPSCUERROR: You must special whether diffusants are independent in time."
+                        pause
+                        stop
+                    end if
+                    STRTMP(1) = adjustl(trim(STRTMP(1)))
+                    call UPCASE(STRTMP(1))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(1))),"YES")) then
+                        this%m_NNDR_Diffusant_Independent_Time = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(1))),"NO")) then
+                        this%m_NNDR_Diffusant_Independent_Time = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether diffusants are independent in time."
+                        write(*,*) "However, what you used is: ",STRTMP(1)
                         pause
                         stop
                     end if

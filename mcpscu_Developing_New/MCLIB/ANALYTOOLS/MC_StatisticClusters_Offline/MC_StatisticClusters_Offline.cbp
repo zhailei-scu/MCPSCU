@@ -11,29 +11,29 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Debug/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/Cascade1Box5000LU_NBox800/SampleSetup.dat" />
+				<Option parameters="/home/zhailei/Cascade1Box5000LU_NBox800/SampleSetup.dat" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
-					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug" />
+					<Add option="-Mcuda=cuda10.0,cc70,nodebug,nollvm -Mnollvm" />
+					<Add directory="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug" />
 				</Compiler>
 				<Linker>
-					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libAppShell.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libInletModel.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMigCoaleModel.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommonGPU.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libTCCLIB.a" />
-					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
-					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMODELDATABASE.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMSMLIB.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMiniUtilities.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCudaRanGenerator.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRandGenerators.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRunningProfile.a" />
-					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Debug" />
+					<Add option="-Mcuda=cuda10.0,cc70,nodebug,nollvm -Mnollvm" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libAppShell.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libInletModel.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMigCoaleModel.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommon.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCommonGPU.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libTCCLIB.a" />
+					<Add library="/home/zhailei/Development/CalCapture_Test_ChangeTStep/tcc-0.9.27/libtcc1.a" />
+					<Add library="/home/zhailei/Development/CalCapture_Test_ChangeTStep/tcc-0.9.27/libtcc.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMODELDATABASE.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMSMLIB.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libMiniUtilities.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libCudaRanGenerator.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRandGenerators.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug/libRunningProfile.a" />
+					<Add directory="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Debug" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -41,29 +41,29 @@
 				<Option object_output="~/mcworkspace/mcpscu_Developing_New/ANALYTOOLS/Release/" />
 				<Option type="1" />
 				<Option compiler="pgifortran" />
-				<Option parameters="/home/zhail/Cascade1Box5000LU_NBox800/SampleSetup.dat" />
+				<Option parameters="/home/zhailei/Cascade1Box5000LU_NBox800/SampleSetup.dat" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35,nollvm" />
-					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release" />
+					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda10.0,cc70,nollvm -Mnollvm" />
+					<Add directory="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release" />
 				</Compiler>
 				<Linker>
-					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda8.0,cc35" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libAppShell.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libInletModel.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMigCoaleModel.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommonGPU.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libTCCLIB.a" />
-					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc1.a" />
-					<Add library="/home/zhail/Development/Developing_New/tcc-0.9.27/libtcc.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMODELDATABASE.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMiniUtilities.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libMSMLIB.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libCudaRanGenerator.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libRandGenerators.a" />
-					<Add library="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release/libRunningProfile.a" />
-					<Add directory="/home/zhail/mcworkspace/mcpscu_Developing_New/LIB/Release" />
+					<Add option="-tp sandybridge-64 -Mvect=sse,simd -Minform=warn -Minfo=all -Mcuda=fastmath,cuda10.0,cc70,nollvm -Mnollvm -ldl -lm -lstdc++" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libAppShell.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libInletModel.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMigCoaleModel.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommon.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCommonGPU.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libTCCLIB.a" />
+					<Add library="/home/zhailei/Development/CalCapture_Test_ChangeTStep/tcc-0.9.27/libtcc1.a" />
+					<Add library="/home/zhailei/Development/CalCapture_Test_ChangeTStep/tcc-0.9.27/libtcc.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMODELDATABASE.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMiniUtilities.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libMSMLIB.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libCudaRanGenerator.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libRandGenerators.a" />
+					<Add library="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release/libRunningProfile.a" />
+					<Add directory="/home/zhailei/mcworkspace/mcpscu_Developing_New/LIB/Release" />
 				</Linker>
 			</Target>
 		</Build>

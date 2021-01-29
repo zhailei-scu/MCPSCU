@@ -1530,7 +1530,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine ReadImplantClusterDepthDist_Simple
 
     !*********************************************************************
-    subroutine Implant(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    subroutine Implant(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB,CapCal_Dev)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
@@ -1543,13 +1543,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF)::TSTEP
         real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
         real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
+        type(CaptureCal_Dev)::CapCal_Dev
         !---Body---
 
         select case(this%InsertCountModel)
             case(p_InsertCountModel_ByClusterNum)
-                call this%ImplantClusters_Contiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP)
+                call this%ImplantClusters_Contiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,CapCal_Dev)
             case(p_InsertCountModel_ByConfigNum)
-                call this%ImplantClusters_BatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
+                call this%ImplantClusters_BatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB,CapCal_Dev)
             case default
                 write(*,*) "MCPSCUERROR: Unknown insert count model : ", this%InsertCountModel
                 pause
@@ -1560,7 +1561,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine
 
     !*********************************************************************
-    subroutine ImplantClusters_BatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB)
+    subroutine ImplantClusters_BatchFromConfig(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,SURDIFPRE_FREE,SURDIFPRE_INGB,CapCal_Dev)
         use RAND32_MODULE
         implicit none
         !---Dummy Vars---
@@ -1574,6 +1575,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF)::TSTEP
         real(kind=KINDDF),intent(in)::SURDIFPRE_FREE
         real(kind=KINDDF),intent(in)::SURDIFPRE_INGB
+        type(CaptureCal_Dev)::CapCal_Dev
         !---Local Vars---
         integer::I
         type(MigCoalClusterRecord)::tempRecord
@@ -1678,13 +1680,16 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 call Record%SetLastUpdateStatisTime(Record%GetSimuTimes() + TSTEP)
             end if
 
-            call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                      max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)), &
-                                          MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
-                                                         TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
+            call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,  &
+                                       CapCal_Dev%dm_CascadeCenter,                     &
+                                       CapCal_Dev%dm_ROutAbsorbToCent,                  &
+                                       IfDirectly=.true.,RMAX= &
+                                         max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                             TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)), &
+                                             MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+                                                            TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
-            call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP)
+            call UpdateTimeStep_MigCoal(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record,TSTEP,CapCal_Dev)
 
 
             Dev_Boxes%dm_SEUsedIndexBox = Host_Boxes%m_BoxesInfo%SEUsedIndexBox
@@ -1770,7 +1775,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end function Check_ImplantBatchFromConfig
 
     !*********************************************************************
-    subroutine ImplantClusters_Contiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP)
+    subroutine ImplantClusters_Contiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,TheMigCoaleStatInfoWrap,Record,TSTEP,CapCal_Dev)
         use RAND32_MODULE
         implicit none
         !---Dummy Vars---
@@ -1782,6 +1787,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
         type(MigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
+        type(CaptureCal_Dev)::CapCal_Dev
         !---Local Vars---
         integer::err
         integer::MultiBox
@@ -1807,7 +1813,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         MultiBox = Host_SimuCtrlParam%MultiBox
 
-        call this%AdjustTimeStep_ImplantContiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP,ImplantNumEachBox_Ceiling)
+        call this%AdjustTimeStep_ImplantContiune(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP,ImplantNumEachBox_Ceiling,CapCal_Dev)
 
         DO IBox = 1,MultiBox
             if((Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) + ImplantNumEachBox_Ceiling) .GT. Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2)) then
@@ -1883,10 +1889,13 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 call Record%SetLastUpdateStatisTime(Record%GetSimuTimes() + TSTEP)
             end if
 
-            call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
-                                      max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
-                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
-                                          MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
+            call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,  &
+                                       CapCal_Dev%dm_CascadeCenter,                     &
+                                       CapCal_Dev%dm_ROutAbsorbToCent,                  &
+                                       IfDirectly=.true.,RMAX=                          &
+                                         max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
+                                            TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)),&
+                                       MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
                                                          TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEINGB_STATU)))
 
         else
@@ -1917,7 +1926,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     call Record%SetLastUpdateStatisTime(Record%GetSimuTimes() + TSTEP)
                 end if
 
-                call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
+                call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,  &
+                                           CapCal_Dev%dm_CascadeCenter,                     &
+                                           CapCal_Dev%dm_ROutAbsorbToCent,                  &
+                                           IfDirectly=.true.,RMAX= &
                                             max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
                                                 TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEINGB_STATU)), &
                                                 MaxDiffuse=max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%DiffusorValueMax(p_ACTIVEFREE_STATU), &
@@ -1967,7 +1979,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
     end subroutine ImplantClusters_Contiune
 
     !*********************************************
-    subroutine AdjustTimeStep_ImplantContiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP,ImplantNumEachBox_Ceiling)
+    subroutine AdjustTimeStep_ImplantContiune(this,Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap,Record,TSTEP,ImplantNumEachBox_Ceiling,CapCal_Dev)
         implicit none
         !---Dummy Vars---
         CLASS(ImplantSection)::this
@@ -1978,6 +1990,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(MigCoalClusterRecord)::Record
         real(kind=KINDDF)::TSTEP
         integer::ImplantNumEachBox_Ceiling
+        type(CaptureCal_Dev)::CapCal_Dev
         !---Local Vars---
         integer::ImplantNumEachBox
         real(kind=KINDDF)::VerifyTime
@@ -1989,7 +2002,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             DO While(.true.)
 
-                VerifyTime = Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record,ImplantNumEachBox_Ceiling)
+                VerifyTime = Cal_VerifyTime_Implant(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual,Record,ImplantNumEachBox_Ceiling,CapCal_Dev)
 
                 if(VerifyTime .LT. TSTEP*0.95) then
                     TSTEP = TSTEP*0.95
