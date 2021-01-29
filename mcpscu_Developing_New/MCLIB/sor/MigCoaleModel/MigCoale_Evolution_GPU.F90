@@ -88,7 +88,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                                         Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
                                                                         Dev_DiffusorMap%Dev_TypesEntities,           &
                                                                         Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
-                                                                        Dev_ClusterInfo_GPU%dm_MinTSteps,                                       &
+                                                                        Dev_ClusterInfo_GPU%dm_MinTSteps,            &
                                                                         Host_SimuCtrlParam%LowerLimitLength,         &
                                                                         Host_SimuCtrlParam%LastPassageFactor,        &
                                                                         CapCal_Dev%dm_CascadeCenter,                 &
@@ -145,7 +145,7 @@ module MIGCOALE_EVOLUTION_GPU
                                                             Dev_Boxes%dm_GrainBoundary%dm_GrainSeeds,    &
                                                             Dev_DiffusorMap%Dev_TypesEntities,           &
                                                             Dev_DiffusorMap%Dev_SingleAtomsDivideArrays, &
-                                                            Dev_ClusterInfo_GPU%dm_MinTSteps,                                       &
+                                                            Dev_ClusterInfo_GPU%dm_MinTSteps,            &
                                                             CapCal_Dev%dm_CascadeCenter,                 &
                                                             CapCal_Dev%dm_ROutAbsorbToCent)
             else
@@ -1941,6 +1941,8 @@ module MIGCOALE_EVOLUTION_GPU
     IC = scid + (cid - bid0*p_BlockSize -1)
 
     LowerLimitTime = 1.D32
+
+    reactTimeWitOutAbsorber = 1.D32
 
     MinT = 1.D32
 

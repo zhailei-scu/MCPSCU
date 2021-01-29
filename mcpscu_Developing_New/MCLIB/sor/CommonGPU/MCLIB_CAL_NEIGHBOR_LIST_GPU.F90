@@ -953,6 +953,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     LowerLimitTime = 1.D32
 
+    reactTimeWitOutAbsorber = 1.D32
+
     MinT = 1.D32
 
     DO while(ICTO .GE. ICFROM)

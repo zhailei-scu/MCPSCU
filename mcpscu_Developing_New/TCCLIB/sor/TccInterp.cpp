@@ -2,15 +2,15 @@
 //we fix the following macro. While we public the package, these should be remove because when we
 //use the makefile instead of code::block IDE, we can define these macro while installing and building
 #ifndef LIBTCCPATH
-#define LIBTCCPATH "/home/ZhaiLei/tcc-0.9.27/"
+#define LIBTCCPATH "/home/zhail/Development/CalCapture/tcc-0.9.27/"
 #endif
 
 #ifndef LIBTCCHEADERF
-#define LIBTCCHEADERF "/home/zhailei/tcc-0.9.27/libtcc.h"
+#define LIBTCCHEADERF "/home/zhail/Development/CalCapture/tcc-0.9.27/libtcc.h"
 #endif
 
 #ifndef DIFFUSORDEFPATH
-#define DIFFUSORDEFPATH "/home/zhailei/Development/Developing_New/mcpscu_Developing_New/TCCLIB/sor/"
+#define DIFFUSORDEFPATH "/home/zhailei/Development/CalCapture/mcpscu_Developing_New/TCCLIB/sor/"
 #endif
 
 #include LIBTCCHEADERF
