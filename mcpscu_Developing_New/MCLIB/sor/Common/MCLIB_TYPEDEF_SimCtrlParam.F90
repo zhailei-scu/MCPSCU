@@ -365,7 +365,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                     cursor%theSimulationCtrlParam%m_NNDR_Diffusant_Independent_Time
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE16.8),2x,I10,2x,L10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = .", &
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,I10,2x,1PE16.8,2x,L10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = .", &
                                                                               cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY, &
                                                                               cursor%theSimulationCtrlParam%LowerLimitLength, &
                                                                               cursor%theSimulationCtrlParam%LastPassageFactor, &

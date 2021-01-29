@@ -2329,7 +2329,7 @@ module MIGCOALE_EVOLUTION_GPU
           if( Dev_Clusters(IC)%m_Atoms(dm_SIA_Index_W)%m_NA .GT. 0) then
              temp = JC
              JC = IC
-             IC = JC
+             IC = temp
           end if
 
           Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
@@ -2614,7 +2614,7 @@ module MIGCOALE_EVOLUTION_GPU
          if( Dev_Clusters(IC)%m_Atoms(dm_SIA_Index_W)%m_NA .GT. 0) then
              temp = JC
              JC = IC
-             IC = JC
+             IC = temp
           end if
 
           Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
