@@ -1,0 +1,503 @@
+module MC_CascadeShapeRecognize
+    use MCLIB_GLOBAL
+    use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
+    use MIGCOALE_TYPEDEF_SIMRECORD
+    use MIGCOALE_ADDONDATA_HOST
+    use MCLIB_UTILITIES
+    use RAND32_MODULE
+    use RAND32SEEDLIB_MODULE
+    use MIGCOALE_TYPEDEF_CAPTURECAL_CPU
+    implicit none
+
+    contains
+
+    !*****************************************************
+    subroutine CascadeShapeRecognize(TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+        implicit none
+        !---Dummy Vars---
+        type(CaptureCal)::TheCaptureCal
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParamList)::Host_SimuCtrlParamList
+        type(MigCoalClusterRecord)::Record
+        !---Local Vars---
+        character*1000::OutFolder
+        character*1000::InfoOut
+        character*30::TheVersion
+        integer::hOutInfo
+        integer::processid
+        integer::ISEED0,ISEED(2)
+        !-----------Body--------------
+        processid = 0
+
+        !*********Create/Open log file********************
+        call OpenLogFile(m_hFILELOG)
+
+        !********Load Global vars from input file**************
+        call Initialize_Global_Variables(Host_SimuCtrlParamList,Host_Boxes)
+
+
+        ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1)
+        call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+        ISEED0 = ISEED0 + processid - 1
+        call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+        call DRAND32_PUTSEED(ISEED)
+
+        call Print_Global_Variables(6,Host_SimuCtrlParamList,Host_Boxes)
+
+        OutFolder = CreateDataFolder(adjustl(trim(Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath))//"CaptureBox/")
+
+        Host_SimuCtrlParamList%theSimulationCtrlParam%OutFilePath = trim(adjustl(OutFolder))
+
+        InfoOut = OutFolder(1:LENTRIM(OutFolder))//FolderSpe//"CaptureBoxShapeRecognize.dat"
+
+        hOutInfo = CreateNewFile(InfoOut)
+
+        call Host_Boxes%m_ClustersInfo_CPU%Clean()
+
+        call Host_Boxes%InitSimulationBox(Host_SimuCtrlParamList%theSimulationCtrlParam)
+
+        call Record%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+
+        call TheCaptureCal%Init(Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
+
+        call TheCaptureCal%ResolveCapCtrlFile(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
+
+        call Cal_CascadeShapeRecognize(hOutInfo,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+
+        return
+    end subroutine CascadeShapeRecognize
+
+    !***************************************************************
+    subroutine Cal_CascadeShapeRecognize(hOutInfo,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+        implicit none
+        !---Dummy Vars---
+        integer,intent(in)::hOutInfo
+        type(CaptureCal)::TheCaptureCal
+        type(SimulationBoxes)::Host_Boxes
+        type(SimulationCtrlParamList)::Host_SimuCtrlParamList
+        type(MigCoalClusterRecord)::Record
+        !---Local Vars---
+        integer::MultiBox
+        integer::IBox
+        integer::IC
+        integer::ICFrom
+        integer::ICTo
+        integer::SIAIndex
+        integer::VacancyIndex
+        real(kind=KINDDF)::SEP(3)
+        real(kind=KINDDF)::Distance
+        integer::I
+        integer::J
+        real(kind=KINDDF)::Sep_X
+        real(kind=KINDDF)::Sep_Y
+        real(kind=KINDDF)::Sep_Z
+        real(kind=KINDDF)::RadSum
+        real(kind=KINDDF)::Dist
+        type(DiffusorValue)::TheDiffusorValue
+        integer::NCUsed
+        integer::NC
+        integer::RecordIndex
+        character*30::TheVersion
+        real(kind=KINDDF)::ArrowLen
+        real(kind=KINDDF)::Vector(3)
+        logical::exitFlag
+        real(kind=KINDDF)::maxSEP_Dim3(3)
+        real(kind=KINDDF)::maxSEP_Dim2(3)
+        real(kind=KINDDF)::maxSEP_Dim1(3)
+        real(kind=KINDDF)::maxLenPW2(3)
+        real(kind=KINDDF)::tempSep(3)
+        real(kind=KINDDF),dimension(:,:),allocatable::projectPos_Dim2
+        real(kind=KINDDF),dimension(:,:),allocatable::projectPos_Dim1
+        real(kind=KINDDF)::Ratio
+        real(kind=KINDDF)::maxDistance_Dim3
+        integer::IDLeftMaxDist_Dim3
+        integer::IDRightMaxDist_Dim3
+        real(kind=KINDDF)::maxDistance_Dim2
+        integer::IDLeftMaxDist_Dim2
+        integer::IDRightMaxDist_Dim2
+        real(kind=KINDDF)::maxDistance_Dim1
+        integer::IDLeftMaxDist_Dim1
+        integer::IDRightMaxDist_Dim1
+        integer::JC
+        real(kind=KINDDF)::threshold
+        integer::SortedDimIndex(3)
+        integer,dimension(:),allocatable::EffectDim
+        real(kind=KINDDF),dimension(:),allocatable::EffectDimLength
+        integer::TotalEffectDim
+        integer::tempIndex
+        real(kind=KINDDF)::gap
+        character*10::CNUM
+        character*256::TheFormat
+        !-----------Body--------------
+
+        threshold = 0.2D0
+
+        if(.not. allocated(TheCaptureCal%m_CascadeCenter) .or. &
+           .not. allocated(TheCaptureCal%m_maxDistance) .or.   &
+           .not. allocated(TheCaptureCal%m_NVACInEachBox) .or. &
+           .not. allocated(TheCaptureCal%m_RSIADistributeToCent) .or. &
+           .not. allocated(TheCaptureCal%m_ROutAbsorbToCent)) then
+           write(*,*) "MCPSCUERROR: You must initial the CaptureCal object before Generate the capture configuration file"
+           pause
+           stop
+        end if
+
+        call resolveAddOnData(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
+        call resolveModelRelativeData(Host_SimuCtrlParamList%theSimulationCtrlParam%ModelData,Host_Boxes%Atoms_list)
+
+        call Host_Boxes%Putin_OKMC_OUTCFG_FORMAT18(TheCaptureCal%MCCfgPath,Host_SimuCtrlParamList%theSimulationCtrlParam,Record,TheVersion,m_FREESURDIFPRE,m_GBSURDIFPRE,AsInitial=.true.,&
+                                                   CheckBoxSize = .false., &
+                                                   TargetTotalBoxNum = TheCaptureCal%TargetTotalBoxNum, &
+                                                   ChooseBoxStartIdx = TheCaptureCal%StartBoxIdx,  &
+                                                   ChooseBoxEndIdx = TheCaptureCal%EndBoxIdx)
+
+        write(*,*) "The KMC Configuration version is: ",TheVersion
+
+        MultiBox = Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
+        if(MultiBox .LE. 0) then
+            write(*,*) "MCPSCUERROR: The box number less than 1"
+            pause
+            stop
+        end if
+
+
+        write(hOutInfo, fmt="(130(A30,1x))") "IBox",                    &
+                                             "DimLength1(LU)",          &
+                                             "DimLength2(LU)",          &
+                                             "DimLength3(LU)",          &
+                                             "Num_EffectDim",           &
+                                             "EffectDimLength1(LU)",    &
+                                             "EffectDimLength2(LU)",    &
+                                             "EffectDimLength3(LU)"
+
+
+
+        !********Sweep the SIA and inactive clusters***************
+        SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
+        VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
+
+        DO IBox = 1,MultiBox
+            ICFrom = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
+            ICTo = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+
+            DO IC = ICFrom,ICTo
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0 .AND. &
+                   (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = p_ABSORBED_STATU
+                end if
+
+            END DO
+        END DO
+
+        call Host_Boxes%SweepUnActiveMemory_CPU(Host_SimuCtrlParamList%theSimulationCtrlParam)
+
+
+        !*******Get Information from configuration ****************************************
+        DO IBox = 1,MultiBox
+            ICFrom = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
+            ICTo = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+
+            if((ICTo - ICFrom) .GE. 0) then
+                call DeAllocateArray_Host(projectPos_Dim2,"projectPos_Dim2")
+                call AllocateArray_Host(projectPos_Dim2,ICTo - ICFrom + 1,3,"projectPos_Dim2")
+
+                call DeAllocateArray_Host(projectPos_Dim1,"projectPos_Dim1")
+                call AllocateArray_Host(projectPos_Dim1,ICTo - ICFrom + 1,3,"projectPos_Dim1")
+            end if
+
+            TheCaptureCal%m_NVACInEachBox(IBox) = 0
+            TheCaptureCal%m_CascadeCenter(IBox,1:3) = 0.D0
+            DO IC = ICFrom,ICTo
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                   (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                    DO I = 1,3
+                        TheCaptureCal%m_CascadeCenter(IBox,I) = TheCaptureCal%m_CascadeCenter(IBox,I) + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I)
+                    END DO
+
+                    TheCaptureCal%m_NVACInEachBox(IBox) = TheCaptureCal%m_NVACInEachBox(IBox) + 1
+                end if
+
+            END DO
+
+            if(TheCaptureCal%m_NVACInEachBox(IBox) .GT. 0) then
+                TheCaptureCal%m_CascadeCenter(IBox,1:3) = TheCaptureCal%m_CascadeCenter(IBox,1:3)/TheCaptureCal%m_NVACInEachBox(IBox)
+            end if
+
+            TheCaptureCal%m_maxDistance(IBox) = -1
+            DO IC = ICFrom,ICTo
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                   (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                    SEP = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - TheCaptureCal%m_CascadeCenter(IBox,1:3)
+
+                    Distance = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
+                    Distance = DSQRT(Distance)
+
+                    if(Distance .GT. TheCaptureCal%m_maxDistance(IBox)) then
+                        TheCaptureCal%m_maxDistance(IBox) = Distance
+                    end if
+                end if
+            END DO
+        END DO
+
+        !***************************************************************
+
+        DO IBox = 1,MultiBox
+
+            !************************Dim3**************************
+            maxDistance_Dim3 = -1.D0
+            IDLeftMaxDist_Dim3 = 0
+            IDRightMaxDist_Dim3 = 0
+
+            ICFrom = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
+            ICTo = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+
+            DO IC = ICFrom,ICTo
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                   (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                    DO JC = IC+1,ICTo
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                            (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                            SEP = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_POS
+                            Distance = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
+                            Distance = DSQRT(Distance)
+
+                            if(Distance .GT. maxDistance_Dim3) then
+                                maxDistance_Dim3 = Distance
+                                IDLeftMaxDist_Dim3 = IC
+                                IDRightMaxDist_Dim3 = JC
+                            end if
+
+                        end if
+
+                    END DO
+
+                end if
+            END DO
+
+            maxSEP_Dim3 = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IDLeftMaxDist_Dim3)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IDRightMaxDist_Dim3)%m_POS
+
+            maxLenPW2(3) = sum(maxSEP_Dim3**2)
+
+            DO IC = ICFrom,ICTo
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                   (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                    tempSep = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IDLeftMaxDist_Dim3)%m_POS - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS
+
+                    Ratio = sum(maxSEP_Dim3*tempSep)/maxLenPW2(3)
+
+                    projectPos_Dim2(IC-ICFrom+1,1:3) = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS + Ratio*maxSEP_Dim3
+                end if
+
+            END DO
+
+
+            !************************Dim2**************************
+            maxDistance_Dim2 = -1.D0
+            IDLeftMaxDist_Dim2 = 0
+            IDRightMaxDist_Dim2 = 0
+
+            DO IC = ICFrom,ICTo
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                   (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                    DO JC = IC+1,ICTo
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                            (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                            SEP = projectPos_Dim2(IC-ICFrom+1,1:3) - projectPos_Dim2(JC-ICFrom+1,1:3)
+                            Distance = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
+                            Distance = DSQRT(Distance)
+
+                            if(Distance .GT. maxDistance_Dim2) then
+                                maxDistance_Dim2 = Distance
+                                IDLeftMaxDist_Dim2 = IC - ICFrom + 1
+                                IDRightMaxDist_Dim2 = JC - ICFrom + 1
+                            end if
+
+                        end if
+
+                    END DO
+
+                end if
+            END DO
+
+            maxSEP_Dim2 = projectPos_Dim2(IDLeftMaxDist_Dim2,1:3) - projectPos_Dim2(IDRightMaxDist_Dim2,1:3)
+
+            maxLenPW2(2) = sum(maxSEP_Dim2**2)
+
+            DO IC = ICFrom,ICTo
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                   (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                    tempSep = projectPos_Dim2(IDLeftMaxDist_Dim2,1:3) - projectPos_Dim2(IC - ICFrom + 1,1:3)
+
+                    Ratio = sum(maxSEP_Dim2*tempSep)/maxLenPW2(2)
+
+                    projectPos_Dim1(IC-ICFrom+1,1:3) = projectPos_Dim2(IC - ICFrom + 1,1:3) + Ratio*maxSEP_Dim2
+                end if
+
+            END DO
+
+
+            !************************Dim1**************************
+            maxDistance_Dim1 = -1.D0
+            IDLeftMaxDist_Dim1 = 0
+            IDRightMaxDist_Dim1 = 0
+
+            DO IC = ICFrom,ICTo
+                if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                   (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                    DO JC = IC+1,ICTo
+                        if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
+                            (Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                             Host_Boxes%m_ClustersInfo_CPU%m_Clusters(JC)%m_Statu .eq. p_ACTIVEINGB_STATU)) then
+
+                            SEP = projectPos_Dim1(IC-ICFrom+1,1:3) - projectPos_Dim1(JC-ICFrom+1,1:3)
+                            Distance = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
+                            Distance = DSQRT(Distance)
+
+                            if(Distance .GT. maxDistance_Dim1) then
+                                maxDistance_Dim1 = Distance
+                                IDLeftMaxDist_Dim1 = IC - ICFrom + 1
+                                IDRightMaxDist_Dim1 = JC - ICFrom + 1
+                            end if
+
+                        end if
+
+                    END DO
+
+                end if
+            END DO
+
+            maxSEP_Dim1 = projectPos_Dim1(IDLeftMaxDist_Dim1,1:3) - projectPos_Dim1(IDRightMaxDist_Dim1,1:3)
+
+            maxLenPW2(1) = sum(maxSEP_Dim1**2)
+
+
+            DO I = 1,size(maxLenPW2)
+                SortedDimIndex(I) = I
+            END DO
+
+
+            DO I = 1,size(maxLenPW2)
+
+                DO J = 1,size(maxLenPW2) - 1
+
+                    if(maxLenPW2(SortedDimIndex(J)) .LT. maxLenPW2(SortedDimIndex(J+1))) then
+                        tempIndex = SortedDimIndex(J+1)
+                        SortedDimIndex(J+1) = SortedDimIndex(J)
+                        SortedDimIndex(J) = tempIndex
+                    end if
+                END DO
+            END DO
+
+            TotalEffectDim = 1
+            DO I = 1,size(maxLenPW2) - 1
+                gap = maxLenPW2(SortedDimIndex(I)) - maxLenPW2(SortedDimIndex(I+1))
+
+                if(abs(gap)/maxLenPW2(SortedDimIndex(I)) .GT. threshold) then
+                    TotalEffectDim = TotalEffectDim + 1
+                end if
+            END DO
+
+            call AllocateArray_Host(EffectDim,TotalEffectDim,"EffectDim")
+            call AllocateArray_Host(EffectDimLength,TotalEffectDim,"EffectDimLength")
+
+            tempIndex = 1
+            DO I = 1,size(maxLenPW2) - 1
+                gap = maxLenPW2(SortedDimIndex(I)) - maxLenPW2(SortedDimIndex(I+1))
+
+                if(abs(gap)/maxLenPW2(SortedDimIndex(I)) .LT. threshold) then
+                    EffectDim(tempIndex) = SortedDimIndex(I+1)
+                    EffectDimLength(tempIndex) = maxLenPW2(SortedDimIndex(I+1))
+                    tempIndex = tempIndex + 1
+                end if
+            END DO
+
+            write(CNUM,*) TotalEffectDim
+            CNUM = adjustl(CNUM)
+            TheFormat = "(I30,1x,3(1PE30.10,1x),I30,1x,"//CNUM(1:LENTRIM(CNUM))//"(1PE30.10,1x))"
+            TheFormat = adjustl(TheFormat)
+            write(hOutInfo,fmt=TheFormat(1:LENTRIM(TheFormat))) IBox,                                           &
+                                                                maxLenPW2(1:3)/Host_Boxes%LatticeLength,        &
+                                                                TotalEffectDim,                                 &
+                                                                EffectDimLength(1:TotalEffectDim)
+
+            call DeAllocateArray_Host(projectPos_Dim2,"projectPos_Dim2")
+            call DeAllocateArray_Host(projectPos_Dim1,"projectPos_Dim1")
+            call DeAllocateArray_Host(EffectDim,"EffectDim")
+            call DeAllocateArray_Host(EffectDimLength,"EffectDimLength")
+        END DO
+
+
+        !************Out the Capture info***************
+
+
+        DO IBox = 1,MultiBox
+
+        END DO
+
+
+        call Host_Boxes%Clean()
+
+
+        close(hOutInfo)
+
+        return
+    end subroutine Cal_CascadeShapeRecognize
+
+end module MC_CascadeShapeRecognize
+
+
+
+program Main_MC_CascadeShapeRecognize
+    use MC_CascadeShapeRecognize
+    use MCLIB_GLOBAL
+    use MCLIB_UTILITIES
+    use MIGCOALE_TYPEDEF_CAPTURECAL_CPU
+    !---Local Vars
+    integer::arg_Num
+    character*1000::SampleFile
+    character*1000::ARG
+    type(CaptureCal)::m_CaptureCal
+    type(SimulationBoxes)::m_Boxes
+    type(SimulationCtrlParamList)::m_SimuCtrlParamList
+    type(MigCoalClusterRecord)::m_Record
+    !--Body---
+    arg_Num = Command_Argument_Count()
+
+    if(arg_Num .LT. 1) then
+        write(*,*) "MCPSCUERROR: You must special the sample file"
+        pause
+        stop
+    end if
+
+    call Get_Command_Argument(0,ARG)
+
+    call Get_Command_Argument(1,ARG)
+    Read(ARG,fmt="(A256)") SampleFile
+    write(*,*) "The Sample file is: ",SampleFile
+
+    call CascadeShapeRecognize(m_CaptureCal,m_Boxes,m_SimuCtrlParamList,m_Record)
+
+
+    return
+
+end program Main_MC_CascadeShapeRecognize
