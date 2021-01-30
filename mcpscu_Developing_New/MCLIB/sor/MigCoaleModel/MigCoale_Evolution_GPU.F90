@@ -2102,6 +2102,8 @@ module MIGCOALE_EVOLUTION_GPU
     integer::ObjectNANum
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     integer::temp
+    integer::NSIAIC
+    integer::NSIAJC
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -2136,15 +2138,22 @@ module MIGCOALE_EVOLUTION_GPU
             cycle
           end if
 
+          NSIAIC = Dev_Clusters(IC)%m_Atoms(dm_SIA_Index_W)%m_NA
+          NSIAJC = Dev_Clusters(JC)%m_Atoms(dm_SIA_Index_W)%m_NA
+
           !---Step 1: Self check and lock
-          if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
-            return
+          if(NSIAIC .GT. 0) then
+            if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
+                return
+            end if
           end if
 
           !--Step 2: Object check and lock
-          if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
-            S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
-            cycle
+          if(NSIAJC .GT. 0) then
+            if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
+                S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+                cycle
+            end if
           end if
 
           !---Step 3:Do something
@@ -2332,16 +2341,20 @@ module MIGCOALE_EVOLUTION_GPU
              temp = JC
              JC = IC
              IC = temp
+
+             temp = NSIAJC
+             NSIAJC = NSIAIC
+             NSIAIC = temp
           end if
 
           Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
           Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
 
           !---Step 4:Release self
-          Dev_Clusters(IC)%m_Statu = SubjectStatu
-
-          S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
-
+          if(NSIAIC .GT. 0) then
+            Dev_Clusters(IC)%m_Statu = SubjectStatu
+            S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+          end if
         end if
       END DO
     end if
@@ -2388,6 +2401,8 @@ module MIGCOALE_EVOLUTION_GPU
     integer::ObjectNANum
     integer::ATOMS(p_ATOMS_GROUPS_NUMBER)
     integer::temp
+    integer::NSIAIC
+    integer::NSIAJC
     !---Body---
 
     tid = (threadidx%y - 1)*blockdim%x + threadidx%x
@@ -2422,15 +2437,22 @@ module MIGCOALE_EVOLUTION_GPU
             cycle
           end if
 
+          NSIAIC = Dev_Clusters(IC)%m_Atoms(dm_SIA_Index_W)%m_NA
+          NSIAJC = Dev_Clusters(JC)%m_Atoms(dm_SIA_Index_W)%m_NA
+
           !---Step 1: Self check and lock
-          if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
-            return
+          if(NSIAIC .GT. 0) then
+            if(atomiccas(Dev_ActiveStatu(IC),SubjectStatu,p_ABSORBED_STATU) .NE. SubjectStatu) then
+                return
+            end if
           end if
 
           !--Step 2: Object check and lock
-          if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
-            S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
-            cycle
+          if(NSIAJC .GT. 0) then
+            if(atomiccas(Dev_ActiveStatu(JC),ObjectStatu,p_ABSORBED_STATU) .NE. ObjectStatu) then
+                S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+                cycle
+            end if
           end if
 
           !---Step 3:Do something
@@ -2617,15 +2639,20 @@ module MIGCOALE_EVOLUTION_GPU
              temp = JC
              JC = IC
              IC = temp
+
+             temp = NSIAJC
+             NSIAJC = NSIAIC
+             NSIAIC = temp
           end if
 
           Dev_Clusters(JC)%m_Statu = p_ABSORBED_STATU
           Dev_Clusters(JC)%m_Record(2) = Dev_Clusters(IC)%m_Record(1) ! record the absorbed of the cluster
 
           !---Step 4:Release self
-          Dev_Clusters(IC)%m_Statu = SubjectStatu
-
-          S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+          if(NSIAIC .GT. 0) then
+            Dev_Clusters(IC)%m_Statu = SubjectStatu
+            S = atomiccas(Dev_ActiveStatu(IC),p_ABSORBED_STATU,SubjectStatu)
+          end if
 
         end if
       END DO
