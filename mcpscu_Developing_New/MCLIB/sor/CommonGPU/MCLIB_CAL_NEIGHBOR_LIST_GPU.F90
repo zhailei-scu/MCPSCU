@@ -842,7 +842,8 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_CascadeCent,                               &
                                                                                     Dev_ROutAbsorbRadius,                          &
                                                                                     Host_SimuCtrlParam%m_ChangedTStepFactor,       &
-                                                                                    Host_SimuCtrlParam%LowerLimitLength)
+                                                                                    Host_SimuCtrlParam%LowerLimitLength,           &
+                                                                                    Host_SimuCtrlParam%m_ConsiderOutTime)
     else
         call Kernel_NeighborList_TimeNearest_WithOutActiveIndex<<<blocks,threads>>>(NNearestNeighbor,                              &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_Clusters,      &
@@ -851,10 +852,11 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_INDI,          &
                                                                                     BlockNumEachBox,                               &
                                                                                     Dev_Boxes%dm_ClusterInfo_GPU%dm_MinTSteps,     &
-                                                                                    Dev_CascadeCent,                                &
-                                                                                    Dev_ROutAbsorbRadius,                           &
+                                                                                    Dev_CascadeCent,                               &
+                                                                                    Dev_ROutAbsorbRadius,                          &
                                                                                     Host_SimuCtrlParam%m_ChangedTStepFactor,       &
-                                                                                    Host_SimuCtrlParam%LowerLimitLength)
+                                                                                    Host_SimuCtrlParam%LowerLimitLength,           &
+                                                                                    Host_SimuCtrlParam%m_ConsiderOutTime)
     end if
 
     #ifdef MC_PROFILING
@@ -866,7 +868,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
   !******************************************************************************************
   attributes(global) subroutine Kernel_NeighborList_TimeNearest_WithOutActiveIndex(NNearestNeighbor,Dev_Clusters,Dev_SEExpdIndexBox,KVOIS,INDI,BlockNumEachBox,MinTSteps,&
-                                                                                    Dev_CascadeCent,Dev_ROutAbsorbRadius,ChangeTStepFactor,LowerLimitLength)
+                                                                                    Dev_CascadeCent,Dev_ROutAbsorbRadius,ChangeTStepFactor,LowerLimitLength,ConsiderOutTime)
     !***  PURPOSE:  to update the neighbore list of atoms(multiBox and block share tech is used)
     !             NNearestNeighbor      , the user defined number of nearest neighborhood
     !             Dev_Clusters          , clusters array
@@ -887,6 +889,7 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
     real(kind=KINDDF),device::Dev_ROutAbsorbRadius(:)
     real(kind=KINDDF),value::ChangeTStepFactor
     real(kind=KINDDF),value::LowerLimitLength
+    logical,value::ConsiderOutTime
     !---Local Vars---
     integer::tid,bid,IC0,cid,IB
     integer::scid,ecid
@@ -976,17 +979,21 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
          if(NSIAIC .GT. 0) then
             LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
 
-            CascadeCenter(1) = Dev_CascadeCent(IB,1)
-            CascadeCenter(2) = Dev_CascadeCent(IB,2)
-            CascadeCenter(3) = Dev_CascadeCent(IB,3)
 
-            DistToCent = (Pos_x - CascadeCenter(1))*(Pos_x- CascadeCenter(1)) + &
-                         (Pos_y - CascadeCenter(2))*(Pos_y- CascadeCenter(2)) + &
-                         (Pos_z - CascadeCenter(3))*(Pos_z- CascadeCenter(3))
+            if(ConsiderOutTime .eq. .true.) then
 
-            DistToOuter = Dev_ROutAbsorbRadius(IB) - DSQRT(DistToCent)
+                CascadeCenter(1) = Dev_CascadeCent(IB,1)
+                CascadeCenter(2) = Dev_CascadeCent(IB,2)
+                CascadeCenter(3) = Dev_CascadeCent(IB,3)
 
-            reactTimeWitOutAbsorber = ChangeTStepFactor*(DistToOuter*DistToOuter)/(6.D0*DiffA)
+                DistToCent = (Pos_x - CascadeCenter(1))*(Pos_x- CascadeCenter(1)) + &
+                             (Pos_y - CascadeCenter(2))*(Pos_y- CascadeCenter(2)) + &
+                             (Pos_z - CascadeCenter(3))*(Pos_z- CascadeCenter(3))
+
+                DistToOuter = Dev_ROutAbsorbRadius(IB) - DSQRT(DistToCent)
+
+                reactTimeWitOutAbsorber = ChangeTStepFactor*(DistToOuter*DistToOuter)/(6.D0*DiffA)
+            end if
 
          end if
 
@@ -1069,7 +1076,9 @@ module MCLIB_CAL_NEIGHBOR_LIST_GPU
 
     if(IC .LE. ecid) then
 
-        MinT = min(MinT,reactTimeWitOutAbsorber)
+        if(ConsiderOutTime .eq. .true.) then
+            MinT = min(MinT,reactTimeWitOutAbsorber)
+        end if
 
         MinT = max(MinT,LowerLimitTime)
 

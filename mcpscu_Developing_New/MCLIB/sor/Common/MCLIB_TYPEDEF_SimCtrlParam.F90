@@ -67,6 +67,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      logical,public::m_NNDR_Diffusant_Independent_Time = .false.
 
+     logical,public::m_ConsiderOutTime = .true.
+
      integer::TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps   ! flag = 0 for output each interval steps,flag = 1 for output each interval time(s)
      real::TUpdateStatisValue = 10                                      ! the time interval to update statistic
 
@@ -358,19 +360,21 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                                                                     cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY,cursor%theSimulationCtrlParam%EnlageTStepScale
 
             case(mp_SelfAdjustlStep_NNDR)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE16.8),2x,L10)") "Use Time-update step strategy =, the correspond value =", &
+                write(hFile,fmt="('!',A70,'!',2x,I10,2(2x,1PE16.8),2(2x,L10))") "Use Time-update step strategy =, the correspond value =", &
                                                                     cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY, &
                                                                     cursor%theSimulationCtrlParam%LowerLimitLength, &
                                                                     cursor%theSimulationCtrlParam%m_ChangedTStepFactor, &
-                                                                    cursor%theSimulationCtrlParam%m_NNDR_Diffusant_Independent_Time
+                                                                    cursor%theSimulationCtrlParam%m_NNDR_Diffusant_Independent_Time, &
+                                                                    cursor%theSimulationCtrlParam%m_ConsiderOutTime
 
             case(mp_SelfAdjustlStep_NNDR_LastPassage_Integer)
-                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,I10,2x,1PE16.8,2x,L10)") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = .", &
+                write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8,2x,I10,2x,1PE16.8,2(2x,L10))") "Use Time-update step strategy =, the correspond value one  = , the correspond value two = .", &
                                                                               cursor%theSimulationCtrlParam%UPDATETSTEPSTRATEGY, &
                                                                               cursor%theSimulationCtrlParam%LowerLimitLength, &
                                                                               cursor%theSimulationCtrlParam%LastPassageFactor, &
                                                                               cursor%theSimulationCtrlParam%m_ChangedTStepFactor, &
-                                                                              cursor%theSimulationCtrlParam%m_NNDR_Diffusant_Independent_Time
+                                                                              cursor%theSimulationCtrlParam%m_NNDR_Diffusant_Independent_Time, &
+                                                                              cursor%theSimulationCtrlParam%m_ConsiderOutTime
         end select
 
         write(hFile,fmt="('!',A70,'!',2x,I10,2x,1PE16.8)") "The update statistic frequency flag =, the correspond value = ",cursor%theSimulationCtrlParam%TUpdateStatisFlag,cursor%theSimulationCtrlParam%TUpdateStatisValue
@@ -728,6 +732,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
     this%m_ChangedTStepFactor = otherOne%m_ChangedTStepFactor
     this%m_NNDR_Diffusant_Independent_Time = otherOne%m_NNDR_Diffusant_Independent_Time
+    this%m_ConsiderOutTime = otherOne%m_ConsiderOutTime
 
     this%TUpdateStatisFlag = otherOne%TUpdateStatisFlag
     this%TUpdateStatisValue = otherOne%TUpdateStatisValue
@@ -831,6 +836,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      this%m_ChangedTStepFactor = 1.D0
      this%m_NNDR_Diffusant_Independent_Time = .false.
+     this%m_ConsiderOutTime = .true.
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -991,6 +997,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
      this%m_ChangedTStepFactor = 1.D0
      this%m_NNDR_Diffusant_Independent_Time = .false.
+     this%m_ConsiderOutTime = .true.
 
      this%TUpdateStatisFlag = mp_UpdateStatisFlag_ByIntervalSteps
      this%TUpdateStatisValue = 10
@@ -1715,9 +1722,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special whether diffusants are independent in time."
+                    call EXTRACT_SUBSTR(STR,2,N,STRTMP)
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: You must special whether diffusants are independent in time and whether consider out absorber time limit."
                         pause
                         stop
                     end if
@@ -1731,6 +1738,20 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     else
                         write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether diffusants are independent in time."
                         write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    STRTMP(2) = adjustl(trim(STRTMP(2)))
+                    call UPCASE(STRTMP(2))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(2))),"YES")) then
+                        this%m_ConsiderOutTime = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(2))),"NO")) then
+                        this%m_ConsiderOutTime = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether consider out absorber time limit."
+                        write(*,*) "However, what you used is: ",STRTMP(2)
                         pause
                         stop
                     end if
@@ -1767,9 +1788,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    call EXTRACT_SUBSTR(STR,1,N,STRTMP)
-                    if(N .LT. 1) then
-                        write(*,*) "MCPSCUERROR: You must special whether diffusants are independent in time."
+                    call EXTRACT_SUBSTR(STR,2,N,STRTMP)
+                    if(N .LT. 2) then
+                        write(*,*) "MCPSCUERROR: You must special whether diffusants are independent in time and whether consider out absorber time limit."
                         pause
                         stop
                     end if
@@ -1783,6 +1804,20 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     else
                         write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether diffusants are independent in time."
                         write(*,*) "However, what you used is: ",STRTMP(1)
+                        pause
+                        stop
+                    end if
+
+                    STRTMP(2) = adjustl(trim(STRTMP(2)))
+                    call UPCASE(STRTMP(2))
+
+                    if(IsStrEqual(adjustl(trim(STRTMP(2))),"YES")) then
+                        this%m_ConsiderOutTime = .true.
+                    else if(IsStrEqual(adjustl(trim(STRTMP(2))),"NO")) then
+                        this%m_ConsiderOutTime = .false.
+                    else
+                        write(*,*) "MCPSUCERROR: You should special 'YES' or 'NO' to determine whether consider out absorber time limit."
+                        write(*,*) "However, what you used is: ",STRTMP(2)
                         pause
                         stop
                     end if

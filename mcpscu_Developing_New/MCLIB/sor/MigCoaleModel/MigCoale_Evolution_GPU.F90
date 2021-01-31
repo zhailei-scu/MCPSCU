@@ -1724,7 +1724,8 @@ module MIGCOALE_EVOLUTION_GPU
                                                                 CapCal_Dev%dm_CascadeCenter,                 &
                                                                 CapCal_Dev%dm_ROutAbsorbToCent,              &
                                                                 Host_SimuCtrlParam%m_ChangedTStepFactor,     &
-                                                                Host_SimuCtrlParam%LowerLimitLength)
+                                                                Host_SimuCtrlParam%LowerLimitLength,         &
+                                                                Host_SimuCtrlParam%m_ConsiderOutTime)
         else
             call Merge_PreJudge_Kernel<<<blocks,threads>>>(BlockNumEachBox,                                  &
                                                                 Dev_ClusterInfo_GPU%dm_Clusters,             &
@@ -1888,7 +1889,7 @@ module MIGCOALE_EVOLUTION_GPU
 
   !********************************************************
   attributes(global) subroutine Merge_PreJudge_Kernel_NNDR(BlockNumEachBox,Dev_Clusters,Dev_SEUsedIndexBox,MergeTable_INDI,MergeTable_KVOIS,Neighbor_KVOIS,Neighbor_INDI,MinTSteps,&
-                                                           Dev_CascadeCent,Dev_ROutAbsorbRadius,ChangeTStepFactor,LowerLimitLength)
+                                                           Dev_CascadeCent,Dev_ROutAbsorbRadius,ChangeTStepFactor,LowerLimitLength,ConsiderOutTime)
     implicit none
     !---Dummy Vars---
     integer,value::BlockNumEachBox
@@ -1903,6 +1904,7 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF),device::Dev_ROutAbsorbRadius(:)
     real(kind=KINDDF),value::ChangeTStepFactor
     real(kind=KINDDF),value::LowerLimitLength
+    logical,value::ConsiderOutTime
     !---Local Vars---
     integer::tid,bid,bid0,cid
     integer::IC
@@ -2036,22 +2038,26 @@ module MIGCOALE_EVOLUTION_GPU
             if(NSIAIC .GT. 0) then
                 LowerLimitTime = dble(LowerLimitLength*LowerLimitLength/(6.D0*DiffA))
 
+                if(ConsiderOutTime .eq. .true.) then
 
-                CascadeCenter(1) = Dev_CascadeCent(IBox,1)
-                CascadeCenter(2) = Dev_CascadeCent(IBox,2)
-                CascadeCenter(3) = Dev_CascadeCent(IBox,3)
+                    CascadeCenter(1) = Dev_CascadeCent(IBox,1)
+                    CascadeCenter(2) = Dev_CascadeCent(IBox,2)
+                    CascadeCenter(3) = Dev_CascadeCent(IBox,3)
 
-                DistToCent = (Pos_X - CascadeCenter(1))*(Pos_X- CascadeCenter(1)) + &
-                             (Pos_Y - CascadeCenter(2))*(Pos_Y- CascadeCenter(2)) + &
-                             (Pos_Z - CascadeCenter(3))*(Pos_Z- CascadeCenter(3))
+                    DistToCent = (Pos_X - CascadeCenter(1))*(Pos_X- CascadeCenter(1)) + &
+                                 (Pos_Y - CascadeCenter(2))*(Pos_Y- CascadeCenter(2)) + &
+                                 (Pos_Z - CascadeCenter(3))*(Pos_Z- CascadeCenter(3))
 
-                DistToOuter = Dev_ROutAbsorbRadius(IBox) - DSQRT(DistToCent)
+                    DistToOuter = Dev_ROutAbsorbRadius(IBox) - DSQRT(DistToCent)
 
-                reactTimeWitOutAbsorber = ChangeTStepFactor*(DistToOuter*DistToOuter)/(6.D0*DiffA)
-
+                    reactTimeWitOutAbsorber = ChangeTStepFactor*(DistToOuter*DistToOuter)/(6.D0*DiffA)
+                end if
             end if
 
-            MinT = min(MinT,reactTimeWitOutAbsorber)
+            if(ConsiderOutTime .eq. .true.) then
+                MinT = min(MinT,reactTimeWitOutAbsorber)
+            end if
+
             MinT = max(MinT,LowerLimitTime)
 
             MinTSteps(IC) = MinT
