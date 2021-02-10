@@ -173,9 +173,31 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
 
                 tempCollectionEventRegister = this%TheCollectionEventsRegisterCenter%GetOneCollectionEventRegisterByName(tempEventModelSymbol)
 
+                Associate(TheCollectionEventAllias=>tempCollectionEventRegister%TheCollectionEvent)
+                    if(.not. associated(TheCollectionEventAllias)) then
+                        select type(TheCollectionEventAllias)
+                            ModelTypeAdjustl
+                            !type is(MC_MIGCOALE_CLUSTER_GPU)
+                            !    allocate(MC_MIGCOALE_CLUSTER_GPU::TheCollectionEventAllias)
+                            !    call TheCollectionEventAllias%TheDefSingleCollectionEventonstructProc()
+                        end select
+                    end if
+                End Associate
+
                 call c_f_pointer(c_loc(tempCollectionEventRegister%TheCollectionEvent),cursorSingleCollectionEvent%TheValue)
 
                 tempLeftDataRelationRegister = this%TheDataRelationPool%GetOneByName(tempEventsModelsPair%SubjectEventsModelDef%RelativeData(1)%GetObjectCollectionSymbol())
+
+                Associate(TheCollectionAllias=>tempLeftDataRelationRegister%TheObjectsCollection)
+                    if(.not. associated(TheCollectionAllias)) then
+                        select type(TheCollectionAllias)
+                            !type is(SimulationBoxes)
+                            !    allocate(SimulationBoxes::TheCollectionAllias)
+                            DataTypeAdjustl
+                        end select
+                    end if
+                End Associate
+
 
                 cursorSingleCollectionEvent%TheValue%TheCollection=>tempLeftDataRelationRegister%TheObjectsCollection
 
@@ -189,9 +211,32 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
 
                 tempCollectionEventRegister = this%TheCollectionEventsRegisterCenter%GetOneCollectionEventRegisterByName(tempEventModelSymbol)
 
+                Associate(TheCollectionEventAllias=>tempCollectionEventRegister%TheCollectionEvent)
+                    if(.not. associated(TheCollectionEventAllias)) then
+                        select type(TheCollectionEventAllias)
+                            ModelTypeAdjustl
+                            !type is(MC_MIGCOALE_CLUSTER_GPU)
+                            !    allocate(MC_MIGCOALE_CLUSTER_GPU::TheCollectionEventAllias)
+                            !    call TheCollectionEventAllias%TheDefSingleCollectionEventonstructProc()
+                        end select
+                    end if
+                End Associate
+
+
                 call c_f_pointer(c_loc(tempCollectionEventRegister%TheCollectionEvent),cursorSingleCollectionEvent%TheValue)
 
                 tempLeftDataRelationRegister = this%TheDataRelationPool%GetOneByName(tempEventsModelsPair%SubjectEventsModelDef%RelativeData(1)%GetObjectCollectionSymbol())
+
+                Associate(TheCollectionAllias=>tempLeftDataRelationRegister%TheObjectsCollection)
+                    if(.not. associated(TheCollectionAllias)) then
+                        select type(TheCollectionAllias)
+                            !type is(SimulationBoxes)
+                            !    allocate(SimulationBoxes::TheCollectionAllias)
+                            DataTypeAdjustl
+                        end select
+                    end if
+                End Associate
+
 
                 cursorSingleCollectionEvent%TheValue%TheCollection=>tempLeftDataRelationRegister%TheObjectsCollection
 
@@ -204,13 +249,44 @@ module SIMULATION_TYPEDEF_COLLECTIONEVENTMANAGER
 
                 tempCollectionEventRegister = this%TheCollectionEventsRegisterCenter%GetOneCollectionEventRegisterByName(tempEventModelSymbol)
 
+                Associate(TheCollectionEventAllias=>tempCollectionEventRegister%TheCollectionEvent)
+                    if(.not. associated(TheCollectionEventAllias)) then
+                        select type(TheCollectionEventAllias)
+                            ModelTypeAdjustl
+                            !type is(MC_MIGCOALE_CLUSTER_GPU)
+                            !    allocate(MC_MIGCOALE_CLUSTER_GPU::TheCollectionEventAllias)
+                            !    call TheCollectionEventAllias%TheDefSingleCollectionEventonstructProc()
+                        end select
+                    end if
+                End Associate
+
                 call c_f_pointer(c_loc(tempCollectionEventRegister%TheCollectionEvent),cursorCrossCollectionEvent%TheValue)
 
                 tempLeftDataRelationRegister = this%TheDataRelationPool%GetOneByName(tempEventsModelsPair%SubjectEventsModelDef%RelativeData(1)%GetObjectCollectionSymbol())
 
+                Associate(TheCollectionAllias=>tempLeftDataRelationRegister%TheObjectsCollection)
+                    if(.not. associated(TheCollectionAllias)) then
+                        select type(TheCollectionAllias)
+                            !type is(SimulationBoxes)
+                            !    allocate(SimulationBoxes::TheCollectionAllias)
+                            DataTypeAdjustl
+                        end select
+                    end if
+                End Associate
+
                 cursorCrossCollectionEvent%TheValue%TheLeftObjectsCollection=>tempLeftDataRelationRegister%TheObjectsCollection
 
                 tempRightDataRelationRegister = this%TheDataRelationPool%GetOneByName(tempEventsModelsPair%SubjectEventsModelDef%RelativeData(2)%GetObjectCollectionSymbol())
+
+                Associate(TheCollectionAllias=>tempRightDataRelationRegister%TheObjectsCollection)
+                    if(.not. associated(TheCollectionAllias)) then
+                        select type(TheCollectionAllias)
+                            !type is(SimulationBoxes)
+                            !    allocate(SimulationBoxes::TheCollectionAllias)
+                            DataTypeAdjustl
+                        end select
+                    end if
+                End Associate
 
                 cursorCrossCollectionEvent%TheValue%TheRightObjectsCollection=>tempRightDataRelationRegister%TheObjectsCollection
 

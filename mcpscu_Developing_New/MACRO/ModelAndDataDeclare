@@ -1,4 +1,2 @@
 ModelDefineAll(MC_MIGCOALE_CLUSTER_GPU)
-ModelDefineAll(MC_MIGCOALE_CLUSTER_GPU1)
 DataDefineAll(SimulationBoxes)
-DataDefineAll(SimulationBoxes1)
