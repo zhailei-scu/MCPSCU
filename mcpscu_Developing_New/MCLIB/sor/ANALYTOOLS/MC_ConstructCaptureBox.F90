@@ -992,11 +992,11 @@ module MC_ConstructCaptureBox
         real(kind=KINDDF)::maxLength
         integer::IIC
         integer::NCUSed
-        integer::RecordIndex
         integer::NC
         logical::exitFlag
         real(kind=KINDDF)::judgement
         integer::ICase
+        integer::ICenter
         !-----------Body--------------
         if(.not. allocated(TheCaptureCal%m_CascadeCenter) .or. &
            .not. allocated(TheCaptureCal%m_maxDistance) .or.   &
@@ -1771,11 +1771,6 @@ module MC_ConstructCaptureBox
                 NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
             end if
 
-            RecordIndex = 0
-            if(NCUsed .GT. 0) then
-                RecordIndex = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
-            end if
-
             if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
                 NC = 0
             else
@@ -1874,6 +1869,9 @@ module MC_ConstructCaptureBox
 
                         END DO
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                     case(Capture_SIASPaceModel_Type_UniformOutRSIA)
 
                         exitFlag = .false.
@@ -1935,6 +1933,9 @@ module MC_ConstructCaptureBox
 
                         END DO
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
 
                     case(Capture_SIASPaceModel_Type_UniformWholeBox)
 
@@ -1988,6 +1989,66 @@ module MC_ConstructCaptureBox
 
                         END DO
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+                    case(Capture_SIASPaceModel_Type_UnderSphereFaceAndSpecialCenter)
+
+                        ICenter = mod(IC-ICFrom,TheCaptureCal%SIASPaceNum) + 1
+
+                        exitFlag = .false.
+                        DO while(exitFlag .eq. .false.)
+
+                            ArrowLen = 0.D0
+                            DO I = 1,3
+                                Vector(I) = DRAND32() - 0.5D0
+                                ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                            END DO
+                            ArrowLen = DSQRT(ArrowLen)
+
+                            DO I = 1,3
+                                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_SIASPaceCenter(ICenter,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                            END DO
+
+                            exitFlag = .true.
+
+                            DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
+                                Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                    Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                end if
+
+                                if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                    Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                end if
+
+                                if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                    Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                end if
+
+                                Sep_X = ABS(Sep_X)
+                                Sep_Y = ABS(Sep_Y)
+                                Sep_Z = ABS(Sep_Z)
+
+                                RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                if(DIST .LE. RadSum ) then
+                                    exitFlag = .false.
+                                    exit
+                                end if
+
+                            END DO
+
+                        END DO
+
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICenter
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                     case default
                         write(*,*) "MCPSCUERROR: Unknown SIA space distribution model: ",TheCaptureCal%SIASPaceModel
                         pause
@@ -1996,8 +2057,6 @@ module MC_ConstructCaptureBox
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
                 DO I = 1,3
                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
@@ -2030,11 +2089,6 @@ module MC_ConstructCaptureBox
                 NCUsed = 0
             else
                 NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
-            end if
-
-            RecordIndex = 0
-            if(NCUsed .GT. 0) then
-                RecordIndex = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
             end if
 
             if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
@@ -2147,6 +2201,10 @@ module MC_ConstructCaptureBox
                                 END DO
 
                             END DO
+
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                         case(Capture_SIASPaceModel_Type_UniformOutRSIA)
 
                             exitFlag = .false.
@@ -2208,6 +2266,9 @@ module MC_ConstructCaptureBox
 
                             END DO
 
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
 
                         case(Capture_SIASPaceModel_Type_UniformWholeBox)
 
@@ -2261,6 +2322,66 @@ module MC_ConstructCaptureBox
 
                             END DO
 
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+                        case(Capture_SIASPaceModel_Type_UnderSphereFaceAndSpecialCenter)
+
+                            ICenter = mod(IC-ICFrom,TheCaptureCal%SIASPaceNum) + 1
+
+                            exitFlag = .false.
+                            DO while(exitFlag .eq. .false.)
+
+                                ArrowLen = 0.D0
+                                DO I = 1,3
+                                    Vector(I) = DRAND32() - 0.5D0
+                                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                                END DO
+                                ArrowLen = DSQRT(ArrowLen)
+
+                                DO I = 1,3
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_SIASPaceCenter(ICenter,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                                END DO
+
+                                exitFlag = .true.
+
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
+                                    end if
+
+                                END DO
+
+                            END DO
+
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICenter
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                         case default
                             write(*,*) "MCPSCUERROR: Unknown SIA space distribution model: ",TheCaptureCal%SIASPaceModel
                             pause
@@ -2270,8 +2391,7 @@ module MC_ConstructCaptureBox
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = &
                         Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
 
                     DO I = 1,3
                         if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
@@ -2364,11 +2484,11 @@ module MC_ConstructCaptureBox
         type(DiffusorValue)::TheDiffusorValue
         integer::NCUsed
         integer::NC
-        integer::RecordIndex
         character*30::TheVersion
         real(kind=KINDDF)::ArrowLen
         real(kind=KINDDF)::Vector(3)
         logical::exitFlag
+        integer::ICenter
         !-----------Body--------------
         if(.not. allocated(TheCaptureCal%m_CascadeCenter) .or. &
            .not. allocated(TheCaptureCal%m_maxDistance) .or.   &
@@ -2542,10 +2662,6 @@ module MC_ConstructCaptureBox
                 NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
             end if
 
-            RecordIndex = 0
-            if(NCUsed .GT. 0) then
-                RecordIndex = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
-            end if
 
             if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
                 NC = 0
@@ -2645,6 +2761,10 @@ module MC_ConstructCaptureBox
                             END DO
 
                         END DO
+
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                     case(Capture_SIASPaceModel_Type_UniformOutRSIA)
 
                         exitFlag = .false.
@@ -2706,6 +2826,9 @@ module MC_ConstructCaptureBox
 
                         END DO
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
 
                     case(Capture_SIASPaceModel_Type_UniformWholeBox)
 
@@ -2759,6 +2882,66 @@ module MC_ConstructCaptureBox
 
                         END DO
 
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                        Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+                    case(Capture_SIASPaceModel_Type_UnderSphereFaceAndSpecialCenter)
+
+                            ICenter = mod(IC-ICFrom,TheCaptureCal%SIASPaceNum) + 1
+
+                            exitFlag = .false.
+                            DO while(exitFlag .eq. .false.)
+
+                                ArrowLen = 0.D0
+                                DO I = 1,3
+                                    Vector(I) = DRAND32() - 0.5D0
+                                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                                END DO
+                                ArrowLen = DSQRT(ArrowLen)
+
+                                DO I = 1,3
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_SIASPaceCenter(ICenter,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                                END DO
+
+                                exitFlag = .true.
+
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
+                                    end if
+
+                                END DO
+
+                            END DO
+
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICenter
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                     case default
                         write(*,*) "MCPSCUERROR: Unknown SIA space distribution model: ",TheCaptureCal%SIASPaceModel
                         pause
@@ -2767,9 +2950,6 @@ module MC_ConstructCaptureBox
 
 
                 Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
-
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
-                Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
                 DO I = 1,3
                     if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &
@@ -2802,11 +2982,6 @@ module MC_ConstructCaptureBox
                 NCUsed = 0
             else
                 NCUsed = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) - Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + 1
-            end if
-
-            RecordIndex = 0
-            if(NCUsed .GT. 0) then
-                RecordIndex = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
             end if
 
             if(Host_Boxes%m_BoxesInfo%SEVirtualIndexBox(IBox,2) .LE. 0) then
@@ -2921,6 +3096,9 @@ module MC_ConstructCaptureBox
 
                             END DO
 
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                         case(Capture_SIASPaceModel_Type_UniformOutRSIA)
 
                             exitFlag = .false.
@@ -2982,6 +3160,9 @@ module MC_ConstructCaptureBox
 
                             END DO
 
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
 
                         case(Capture_SIASPaceModel_Type_UniformWholeBox)
 
@@ -3035,6 +3216,66 @@ module MC_ConstructCaptureBox
 
                             END DO
 
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = 1
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
+                        case(Capture_SIASPaceModel_Type_UnderSphereFaceAndSpecialCenter)
+
+                            ICenter = mod(IC-ICFrom,TheCaptureCal%SIASPaceNum) + 1
+
+                            exitFlag = .false.
+                            DO while(exitFlag .eq. .false.)
+
+                                ArrowLen = 0.D0
+                                DO I = 1,3
+                                    Vector(I) = DRAND32() - 0.5D0
+                                    ArrowLen = ArrowLen + Vector(I)*Vector(I)
+                                END DO
+                                ArrowLen = DSQRT(ArrowLen)
+
+                                DO I = 1,3
+                                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = TheCaptureCal%m_SIASPaceCenter(ICenter,I) + TheCaptureCal%m_RSIADistributeToCent(IBox)*Vector(I)/ArrowLen
+                                END DO
+
+                                exitFlag = .true.
+
+                                DO J = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1),Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) + NCUsed - 1
+                                    Sep_X = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(1)
+                                    Sep_Y = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(2) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(2)
+                                    Sep_Z = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(3) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_POS(3)
+
+                                    if(ABS(Sep_X) .GT. Host_Boxes%HBOXSIZE(1) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(1)) then
+                                        Sep_X = Sep_X - SIGN(Host_Boxes%BOXSIZE(1),Sep_X)
+                                    end if
+
+                                    if(ABS(Sep_Y) .GT. Host_Boxes%HBOXSIZE(2) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(2)) then
+                                        Sep_Y = Sep_Y - SIGN(Host_Boxes%BOXSIZE(2),Sep_Y)
+                                    end if
+
+                                    if(ABS(Sep_Z) .GT. Host_Boxes%HBOXSIZE(3) .AND. Host_SimuCtrlParamList%theSimulationCtrlParam%PERIOD(3)) then
+                                        Sep_Z = Sep_Z - SIGN(Host_Boxes%BOXSIZE(3),Sep_Z)
+                                    end if
+
+                                    Sep_X = ABS(Sep_X)
+                                    Sep_Y = ABS(Sep_Y)
+                                    Sep_Z = ABS(Sep_Z)
+
+                                    RadSum = Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD + Host_Boxes%m_ClustersInfo_CPU%m_Clusters(J)%m_RAD
+
+                                    DIST = SQRT(Sep_X*Sep_X + Sep_Y*Sep_Y + Sep_Z*Sep_Z)
+
+                                    if(DIST .LE. RadSum ) then
+                                        exitFlag = .false.
+                                        exit
+                                    end if
+
+                                END DO
+
+                            END DO
+
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ICenter
+                            Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
+
                         case default
                             write(*,*) "MCPSCUERROR: Unknown SIA space distribution model: ",TheCaptureCal%SIASPaceModel
                             pause
@@ -3043,9 +3284,6 @@ module MC_ConstructCaptureBox
 
 
                     Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = Host_Boxes%m_GrainBoundary%GrainBelongsTo(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS,Host_Boxes%HBOXSIZE,Host_Boxes%BOXSIZE,Host_SimuCtrlParamList%theSimulationCtrlParam)
-
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = RecordIndex + 1
-                    Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = 0
 
                     DO I = 1,3
                         if((Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) - Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_RAD) .LT. Host_Boxes%BOXBOUNDARY(I,1) .or. &

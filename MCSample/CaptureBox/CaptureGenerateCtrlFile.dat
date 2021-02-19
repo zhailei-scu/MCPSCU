@@ -1,7 +1,8 @@
 &GENERATEWAY                the cascade generate way = 1                    ! (0 by Locally ,center uniform way; 1 by from MC configuration,Directly)
 &SIANUMBER		    the SIA number = 1
 &SIASIZE		    the SIA SIZE = 1
-&SIASPACEMODEL		    the SIA distribution space model = 0            ! 0 for in speicaled RSIATOCENTER sphere face , 1 for distribute uniform in box but out the RSIATOCENTER, 2 for uniform in whole box  
+&SIASPACEMODEL		    the SIA distribution space model = 3          ! 0 for in speicaled RSIATOCENTER sphere face , 1 for distribute uniform in box but out the RSIATOCENTER, 2 for uniform in whole box , 3 for distribution from given center and in speicaled RSIATOCENTER sphere face 
+&SIASPACENUMANDCENTER       the SIA sphere face number = 2 , the center is = ( 0.25D0 , 0.5D0, 0.5D0 ) , ( 0.75D0 , 0.5D0, 0.5D0 ) ! as the unit of the ratio of box size length
 &RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 &ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 200  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 &SIASAMEBETWEENBOX          whether SIA distribution same between different boxes = "NO"   ! "YES or NO"
@@ -29,7 +30,8 @@
 												 ! for "CYLINDER" , you need to special the bottom radius and high 
 												 ! for "ELLIPSOID" , you need to special the  a,b,c for x ,y and z axis
 !&CASCADECENTERPOS	    the cascade center position = ( 0.25D0 , 0.5D0 , 0.5D0 ) , ( 0.75D0 , 0.5D0 , 0.5D0 ) ! as the unit of the ratio of box size length
-!&SIASPACEMODEL		    the SIA distribution space model = 0          ! 0 for in speicaled RSIATOCENTER sphere face , 1 for distribute uniform in box but out the RSIATOCENTER, 2 for uniform in whole box  
+&SIASPACEMODEL		    the SIA distribution space model = 3          ! 0 for in speicaled RSIATOCENTER sphere face , 1 for distribute uniform in box but out the RSIATOCENTER, 2 for uniform in whole box , 3 for distribution from given center and in speicaled RSIATOCENTER sphere face 
+&SIASPACENUMANDCENTER       the SIA sphere face number = 2 , the center is = ( 0.25D0 , 0.5D0, 0.5D0 ) , ( 0.75D0 , 0.5D0, 0.5D0 ) ! as the unit of the ratio of box size length
 !&RSIATOCENTER		    the distance radius from cascade center to SIA distributed sphere type = 0 , the value = 100  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 !&ROUTABSORB		    the out absorb sphere radius (from center) type = 0 , the value = 200  ! 0 for fixed value, 1 for out from mout out vac, the valuein Unit of lattice unit (LU)
 !&SIASAMEBETWEENBOX         whether SIA distribution same between different boxes = "NO"   ! "YES or NO"

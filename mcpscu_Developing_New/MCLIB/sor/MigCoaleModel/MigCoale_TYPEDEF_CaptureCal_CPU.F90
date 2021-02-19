@@ -11,6 +11,7 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
     integer,parameter::Capture_SIASPaceModel_Type_UnderSphereFace = 0
     integer,parameter::Capture_SIASPaceModel_Type_UniformOutRSIA = 1
     integer,parameter::Capture_SIASPaceModel_Type_UniformWholeBox = 2
+    integer,parameter::Capture_SIASPaceModel_Type_UnderSphereFaceAndSpecialCenter = 3
 
     integer,parameter::Capture_RSIADistributeToCent_Type_FixedValue = 0
     integer,parameter::Capture_RSIADistributeToCent_Type_OutFromMostOutVAC = 1
@@ -36,6 +37,8 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         logical::VACDistSameBetweenCasese = .false.
 
         integer::SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
+        integer::SIASPaceNum = 1
+        real(kind=KINDDF),dimension(:,:),allocatable::m_SIASPaceCenter
 
         integer::RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
         real(kind=KINDDF)::RSIADistributeToCent_Value = 0.D0
@@ -151,6 +154,9 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         integer::N
         integer::CaptureGenerateWay
         logical::Finded
+        integer::I
+        integer::J
+        character*20,dimension(:),allocatable::STRTMPPos
         !---Body---
         if(.not. allocated(this%m_CascadeCenter) .or. &
            .not. allocated(this%m_maxDistance) .or.   &
@@ -314,9 +320,10 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                     end if
                     this%SIASPACEMODEL = ISTR(STRTMP(1))
 
-                    if(this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UnderSphereFace .AND. &
-                       this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UniformOutRSIA .AND.  &
-                       this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UniformWholeBox) then
+                    if(this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UnderSphereFace .AND.  &
+                       this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UniformOutRSIA  .AND.  &
+                       this%SIASPACEMODEL .ne. Capture_SIASPaceModel_Type_UniformWholeBox .AND.  &
+                       this%SIASPaceModel .ne. Capture_SIASPaceModel_Type_UnderSphereFaceAndSpecialCenter) then
                         write(*,*) "MCPSCUERROR: Unknown SIA distribution space model: ",this%SIASPACEMODEL
                         pause
                         stop
@@ -333,6 +340,81 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         end if
 
 
+        if(this%SIASPaceModel .eq. Capture_SIASPaceModel_Type_UnderSphereFaceAndSpecialCenter) then
+
+            LINE = 0
+            Finded = .false.
+            rewind(hFile)
+            Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
+                LINE = LINE + 1
+                STR = adjustl(STR)
+                call RemoveComments(STR,"!")
+
+                if(LENTRIM(STR) .LE. 0) then
+                    cycle
+                end if
+
+                call GETKEYWORD("&",STR,KEYWORD)
+
+                call UPCASE(KEYWORD)
+
+                select case(KEYWORD(1:LENTRIM(KEYWORD)))
+                    case("&SIASPACENUMANDCENTER")
+                        call EXTRACT_NUMB(STR,1,N,STRTMP)
+                        if(N .LT. 1) then
+                            write(*,*) "MCPSCUERROR: You must special the SIA sphere face number and center when SIA distribution type is ",Capture_SIASPaceModel_Type_UnderSphereFaceAndSpecialCenter
+                            pause
+                            stop
+                        end if
+                        this%SIASPACENUM = ISTR(STRTMP(1))
+
+                        if(this%SIASPACENUM .LT. 1) then
+                            write(*,*) "MCPSCUERROR: the SIA sphere face number cannot less than 1: ",this%SIASPACENUM
+                            write(*,*) STR
+                            pause
+                            stop
+                        end if
+
+                        if(allocated(STRTMPPos)) deallocate(STRTMPPos)
+                        allocate(STRTMPPos(3*this%SIASPACENUM))
+                        STRTMPPos = ""
+
+                        call AllocateArray_Host(this%m_SIASPaceCenter,this%SIASPACENUM,3,"this%m_SIASPaceCenter")
+
+                        call EXTRACT_NUMB(STR,3*this%SIASPACENUM,N,STRTMPPos)
+                        if((N-1) .LT. 3*this%SIASPACENUM) then
+                            write(*,*) "MCPSCUERROR: You must special ",3*this%SIASPACENUM," SIA sphere face for ",this%SIASPACENUM," SIA sphere face number ."
+                            write(*,*) "However, you only specialed ",N-1," position."
+                            pause
+                            stop
+                        end if
+
+                        DO I = 1,this%SIASPACENUM
+                            DO J = 1,3
+                                this%m_SIASPaceCenter(I,J) = DRSTR(STRTMPPos((I - 1)*3 + J + 1))*Host_Boxes%BOXSIZE(J) +  Host_Boxes%BOXBOUNDARY(J,1)
+
+                                if(this%m_SIASPaceCenter(I,J) .LT.  Host_Boxes%BOXBOUNDARY(J,1) .or. this%m_SIASPaceCenter(I,J) .GT.  Host_Boxes%BOXBOUNDARY(J,2)) then
+                                    write(*,*) "MCPSCUERROR: the SIASpaceCenter existed box boundary: ",this%m_SIASPaceCenter(I,J)
+                                    write(*,*) Host_Boxes%BOXBOUNDARY(J,1),Host_Boxes%BOXBOUNDARY(J,2)
+                                    pause
+                                    stop
+                                end if
+                            END DO
+                        END DO
+
+                        if(allocated(STRTMPPos)) deallocate(STRTMPPos)
+
+                        Finded = .true.
+                end select
+            END DO
+
+            if(Finded .eq. .false.) then
+                write(*,*) "MCPSCUERROR:  You must special the SIA sphere face number and center."
+                pause
+                stop
+            end if
+
+        end if
 
 
 
@@ -1581,6 +1663,13 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%VACDistSameBetweenCasese = other%VACDistSameBetweenCasese
 
         this%SIASPaceModel = other%SIASPaceModel
+
+        this%SIASPaceNum = other%SIASPaceNum
+        call DeAllocateArray_Host(this%m_SIASPaceCenter,"this%m_SIASPaceCenter")
+        call AllocateArray_Host(this%m_SIASPaceCenter,size(other%m_SIASPaceCenter,dim=1),size(other%m_SIASPaceCenter,dim=2),"this%m_SIASPaceCenter")
+        this%m_SIASPaceCenter = other%m_SIASPaceCenter
+
+
         this%RSIADistributeToCent_Type = other%RSIADistributeToCent_Type
         this%RSIADistributeToCent_Value = other%RSIADistributeToCent_Value
 
@@ -1643,6 +1732,11 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
         this%VACDistSameBetweenCasese = .false.
 
         this%SIASPaceModel = Capture_SIASPaceModel_Type_UnderSphereFace
+
+        this%SIASPaceNum = 1
+        call DeAllocateArray_Host(this%m_SIASPaceCenter,"this%m_SIASPaceCenter")
+
+
         this%RSIADistributeToCent_Type = Capture_RSIADistributeToCent_Type_FixedValue
         this%RSIADistributeToCent_Value = 0.D0
 
