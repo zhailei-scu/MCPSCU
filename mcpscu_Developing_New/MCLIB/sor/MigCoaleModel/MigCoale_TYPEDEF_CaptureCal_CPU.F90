@@ -376,12 +376,12 @@ module MIGCOALE_TYPEDEF_CAPTURECAL_CPU
                         end if
 
                         if(allocated(STRTMPPos)) deallocate(STRTMPPos)
-                        allocate(STRTMPPos(3*this%SIASPACENUM))
+                        allocate(STRTMPPos(3*this%SIASPACENUM+1))
                         STRTMPPos = ""
 
                         call AllocateArray_Host(this%m_SIASPaceCenter,this%SIASPACENUM,3,"this%m_SIASPaceCenter")
 
-                        call EXTRACT_NUMB(STR,3*this%SIASPACENUM,N,STRTMPPos)
+                        call EXTRACT_NUMB(STR,3*this%SIASPACENUM+1,N,STRTMPPos)
                         if((N-1) .LT. 3*this%SIASPACENUM) then
                             write(*,*) "MCPSCUERROR: You must special ",3*this%SIASPACENUM," SIA sphere face for ",this%SIASPACENUM," SIA sphere face number ."
                             write(*,*) "However, you only specialed ",N-1," position."
