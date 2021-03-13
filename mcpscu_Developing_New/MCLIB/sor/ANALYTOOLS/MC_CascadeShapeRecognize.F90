@@ -12,9 +12,10 @@ module MC_CascadeShapeRecognize
     contains
 
     !*****************************************************
-    subroutine CascadeShapeRecognize(TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+    subroutine CascadeShapeRecognize(ConfigFile,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
         implicit none
         !---Dummy Vars---
+        character*(*)::ConfigFile
         type(CaptureCal)::TheCaptureCal
         type(SimulationBoxes)::Host_Boxes
         type(SimulationCtrlParamList)::Host_SimuCtrlParamList
@@ -62,15 +63,16 @@ module MC_CascadeShapeRecognize
 
         call TheCaptureCal%ResolveCapCtrlFile(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
 
-        call Cal_CascadeShapeRecognize(hOutInfo,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+        call Cal_CascadeShapeRecognize(ConfigFile,hOutInfo,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
 
         return
     end subroutine CascadeShapeRecognize
 
     !***************************************************************
-    subroutine Cal_CascadeShapeRecognize(hOutInfo,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
+    subroutine Cal_CascadeShapeRecognize(ConfigFile,hOutInfo,TheCaptureCal,Host_Boxes,Host_SimuCtrlParamList,Record)
         implicit none
         !---Dummy Vars---
+        character*(*)::ConfigFile
         integer,intent(in)::hOutInfo
         type(CaptureCal)::TheCaptureCal
         type(SimulationBoxes)::Host_Boxes
@@ -145,7 +147,7 @@ module MC_CascadeShapeRecognize
         call resolveAddOnData(Host_Boxes,Host_SimuCtrlParamList%theSimulationCtrlParam)
         call resolveModelRelativeData(Host_SimuCtrlParamList%theSimulationCtrlParam%ModelData,Host_Boxes%Atoms_list)
 
-        call Host_Boxes%Putin_OKMC_OUTCFG_FORMAT18(TheCaptureCal%MCCfgPath,Host_SimuCtrlParamList%theSimulationCtrlParam,Record,TheVersion,m_FREESURDIFPRE,m_GBSURDIFPRE,AsInitial=.true.,&
+        call Host_Boxes%Putin_OKMC_OUTCFG_FORMAT18(adjustl(trim(ConfigFile)),Host_SimuCtrlParamList%theSimulationCtrlParam,Record,TheVersion,m_FREESURDIFPRE,m_GBSURDIFPRE,AsInitial=.true.,&
                                                    CheckBoxSize = .false., &
                                                    TargetTotalBoxNum = TheCaptureCal%TargetTotalBoxNum, &
                                                    ChooseBoxStartIdx = TheCaptureCal%StartBoxIdx,  &
@@ -475,6 +477,7 @@ program Main_MC_CascadeShapeRecognize
     !---Local Vars
     integer::arg_Num
     character*1000::SampleFile
+    character*1000::ConfigFile
     character*1000::ARG
     type(CaptureCal)::m_CaptureCal
     type(SimulationBoxes)::m_Boxes
@@ -483,8 +486,8 @@ program Main_MC_CascadeShapeRecognize
     !--Body---
     arg_Num = Command_Argument_Count()
 
-    if(arg_Num .LT. 1) then
-        write(*,*) "MCPSCUERROR: You must special the sample file"
+    if(arg_Num .LT. 2) then
+        write(*,*) "MCPSCUERROR: You must special the sample file and MC configuration file."
         pause
         stop
     end if
@@ -492,10 +495,15 @@ program Main_MC_CascadeShapeRecognize
     call Get_Command_Argument(0,ARG)
 
     call Get_Command_Argument(1,ARG)
+
     Read(ARG,fmt="(A256)") SampleFile
     write(*,*) "The Sample file is: ",SampleFile
 
-    call CascadeShapeRecognize(m_CaptureCal,m_Boxes,m_SimuCtrlParamList,m_Record)
+    call Get_Command_Argument(2,ARG)
+    Read(ARG,fmt="(A256)") ConfigFile
+    write(*,*) "The Configuration file is: ",ConfigFile
+
+    call CascadeShapeRecognize(ConfigFile,m_CaptureCal,m_Boxes,m_SimuCtrlParamList,m_Record)
 
 
     return
