@@ -15,7 +15,7 @@
 				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-Mcuda=cuda10.0,cc70,nodebug,nollvm -Mnollvm" />
+					<Add option="-Mcuda=cuda8.0,cc35,nodebug,nollvm" />
 				</Compiler>
 			</Target>
 			<Target title="Release">

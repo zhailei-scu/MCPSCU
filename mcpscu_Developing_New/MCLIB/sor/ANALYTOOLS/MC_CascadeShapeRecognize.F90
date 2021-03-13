@@ -107,6 +107,7 @@ module MC_CascadeShapeRecognize
         real(kind=KINDDF)::maxSEP_Dim2(3)
         real(kind=KINDDF)::maxSEP_Dim1(3)
         real(kind=KINDDF)::maxLenPW2(3)
+        real(kind=KINDDF)::maxLen(3)
         real(kind=KINDDF)::tempSep(3)
         real(kind=KINDDF),dimension(:,:),allocatable::projectPos_Dim2
         real(kind=KINDDF),dimension(:,:),allocatable::projectPos_Dim1
@@ -122,13 +123,9 @@ module MC_CascadeShapeRecognize
         integer::IDRightMaxDist_Dim1
         integer::JC
         real(kind=KINDDF)::threshold
-        integer::SortedDimIndex(3)
-        integer,dimension(:),allocatable::EffectDim
-        real(kind=KINDDF),dimension(:),allocatable::EffectDimLength
         integer::TotalEffectDim
-        integer::tempIndex
+        real(kind=KINDDF)::tempValue
         real(kind=KINDDF)::gap
-        character*10::CNUM
         character*256::TheFormat
         !-----------Body--------------
 
@@ -148,10 +145,7 @@ module MC_CascadeShapeRecognize
         call resolveModelRelativeData(Host_SimuCtrlParamList%theSimulationCtrlParam%ModelData,Host_Boxes%Atoms_list)
 
         call Host_Boxes%Putin_OKMC_OUTCFG_FORMAT18(adjustl(trim(ConfigFile)),Host_SimuCtrlParamList%theSimulationCtrlParam,Record,TheVersion,m_FREESURDIFPRE,m_GBSURDIFPRE,AsInitial=.true.,&
-                                                   CheckBoxSize = .false., &
-                                                   TargetTotalBoxNum = TheCaptureCal%TargetTotalBoxNum, &
-                                                   ChooseBoxStartIdx = TheCaptureCal%StartBoxIdx,  &
-                                                   ChooseBoxEndIdx = TheCaptureCal%EndBoxIdx)
+                                                   CheckBoxSize = .false.)
 
         write(*,*) "The KMC Configuration version is: ",TheVersion
 
@@ -168,9 +162,7 @@ module MC_CascadeShapeRecognize
                                              "DimLength2(LU)",          &
                                              "DimLength3(LU)",          &
                                              "Num_EffectDim",           &
-                                             "EffectDimLength1(LU)",    &
-                                             "EffectDimLength2(LU)",    &
-                                             "EffectDimLength3(LU)"
+                                             "threshold"
 
 
 
@@ -201,13 +193,7 @@ module MC_CascadeShapeRecognize
             ICFrom = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTo = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
 
-            if((ICTo - ICFrom) .GE. 0) then
-                call DeAllocateArray_Host(projectPos_Dim2,"projectPos_Dim2")
-                call AllocateArray_Host(projectPos_Dim2,ICTo - ICFrom + 1,3,"projectPos_Dim2")
 
-                call DeAllocateArray_Host(projectPos_Dim1,"projectPos_Dim1")
-                call AllocateArray_Host(projectPos_Dim1,ICTo - ICFrom + 1,3,"projectPos_Dim1")
-            end if
 
             TheCaptureCal%m_NVACInEachBox(IBox) = 0
             TheCaptureCal%m_CascadeCenter(IBox,1:3) = 0.D0
@@ -258,6 +244,14 @@ module MC_CascadeShapeRecognize
 
             ICFrom = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTo = Host_Boxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+
+            if((ICTo - ICFrom) .GE. 0) then
+                call DeAllocateArray_Host(projectPos_Dim2,"projectPos_Dim2")
+                call AllocateArray_Host(projectPos_Dim2,ICTo - ICFrom + 1,3,"projectPos_Dim2")
+
+                call DeAllocateArray_Host(projectPos_Dim1,"projectPos_Dim1")
+                call AllocateArray_Host(projectPos_Dim1,ICTo - ICFrom + 1,3,"projectPos_Dim1")
+            end if
 
             DO IC = ICFrom,ICTo
                 if(Host_Boxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(VacancyIndex)%m_NA .GT. 0 .AND. &
@@ -392,60 +386,40 @@ module MC_CascadeShapeRecognize
 
             maxLenPW2(1) = sum(maxSEP_Dim1**2)
 
-
-            DO I = 1,size(maxLenPW2)
-                SortedDimIndex(I) = I
-            END DO
+            maxLen = DSQRT(maxLenPW2)
 
 
-            DO I = 1,size(maxLenPW2)
+            DO I = 1,size(maxLen)
 
-                DO J = 1,size(maxLenPW2) - 1
+                DO J = 1,size(maxLen) - 1
 
-                    if(maxLenPW2(SortedDimIndex(J)) .LT. maxLenPW2(SortedDimIndex(J+1))) then
-                        tempIndex = SortedDimIndex(J+1)
-                        SortedDimIndex(J+1) = SortedDimIndex(J)
-                        SortedDimIndex(J) = tempIndex
+                    if(maxLen(J) .LT. maxLen(J+1)) then
+                        tempValue = maxLen(J+1)
+                        maxLen(J+1) = maxLen(J)
+                        maxLen(J) = tempValue
                     end if
                 END DO
             END DO
 
             TotalEffectDim = 1
-            DO I = 1,size(maxLenPW2) - 1
-                gap = maxLenPW2(SortedDimIndex(I)) - maxLenPW2(SortedDimIndex(I+1))
+            DO I = 1,size(maxLen) - 1
+                gap = maxLen(I) - maxLen(I+1)
 
-                if(abs(gap)/maxLenPW2(SortedDimIndex(I)) .GT. threshold) then
+                if(abs(gap)/maxLen(I) .GT. threshold) then
                     TotalEffectDim = TotalEffectDim + 1
                 end if
             END DO
 
-            call AllocateArray_Host(EffectDim,TotalEffectDim,"EffectDim")
-            call AllocateArray_Host(EffectDimLength,TotalEffectDim,"EffectDimLength")
 
-            tempIndex = 1
-            DO I = 1,size(maxLenPW2) - 1
-                gap = maxLenPW2(SortedDimIndex(I)) - maxLenPW2(SortedDimIndex(I+1))
-
-                if(abs(gap)/maxLenPW2(SortedDimIndex(I)) .LT. threshold) then
-                    EffectDim(tempIndex) = SortedDimIndex(I+1)
-                    EffectDimLength(tempIndex) = maxLenPW2(SortedDimIndex(I+1))
-                    tempIndex = tempIndex + 1
-                end if
-            END DO
-
-            write(CNUM,*) TotalEffectDim
-            CNUM = adjustl(CNUM)
-            TheFormat = "(I30,1x,3(1PE30.10,1x),I30,1x,"//CNUM(1:LENTRIM(CNUM))//"(1PE30.10,1x))"
+            TheFormat = "(I30,1x,3(1PE30.10,1x),I30,1x,1(1PE30.10,1x))"
             TheFormat = adjustl(TheFormat)
-            write(hOutInfo,fmt=TheFormat(1:LENTRIM(TheFormat))) IBox,                                           &
-                                                                maxLenPW2(1:3)/Host_Boxes%LatticeLength,        &
-                                                                TotalEffectDim,                                 &
-                                                                EffectDimLength(1:TotalEffectDim)
+            write(hOutInfo,fmt=TheFormat(1:LENTRIM(TheFormat))) IBox,                                        &
+                                                                maxLen(1:3)/Host_Boxes%LatticeLength,        &
+                                                                TotalEffectDim,                              &
+                                                                threshold
 
             call DeAllocateArray_Host(projectPos_Dim2,"projectPos_Dim2")
             call DeAllocateArray_Host(projectPos_Dim1,"projectPos_Dim1")
-            call DeAllocateArray_Host(EffectDim,"EffectDim")
-            call DeAllocateArray_Host(EffectDimLength,"EffectDimLength")
         END DO
 
 

@@ -10,7 +10,7 @@
 #endif
 
 #ifndef DIFFUSORDEFPATH
-#define DIFFUSORDEFPATH "/home/zhailei/Development/CalCapture/mcpscu_Developing_New/TCCLIB/sor/"
+#define DIFFUSORDEFPATH "/home/zhail/Development/CalCapture/mcpscu_Developing_New/TCCLIB/sor/"
 #endif
 
 #include LIBTCCHEADERF
