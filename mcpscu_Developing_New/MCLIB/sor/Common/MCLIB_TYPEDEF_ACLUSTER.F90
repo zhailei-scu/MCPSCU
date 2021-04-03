@@ -47,6 +47,7 @@ module MCLIB_TYPEDEF_ACLUSTER
          contains
          procedure,non_overridable,pass,public::CopyClusterFromOther
          procedure,non_overridable,pass,public::Clean_Cluster
+         procedure,non_overridable,pass,public::IsSameKindCluster
          Generic::Assignment(=)=>CopyClusterFromOther
          !*********Important note: The PGI CUDA Fortran not support the Final symbol, the final symbol would cause the
          !*********Compiler error************
@@ -55,7 +56,7 @@ module MCLIB_TYPEDEF_ACLUSTER
 
     TYPE,PUBLIC::AClusterList
         type(ACluster),public::TheCluster
-        real(kind=KINDDF),public::quantififyValue = 0   ! This value is used to record some quantifify value such as counts or concentrate in some application
+        integer,public::quantififyValue = 0   ! This value is used to record some quantifify value such as counts or concentrate in some application
 
 
         integer,private::ListCount = 0
@@ -73,6 +74,7 @@ module MCLIB_TYPEDEF_ACLUSTER
 
     private::CopyClusterFromOther
     private::Clean_Cluster
+    private::IsSameKindCluster
     private::CleanCluster
     private::ReleaseSetsRange
     private::PermutationAtomsSetRange2ClusterList
@@ -166,6 +168,30 @@ module MCLIB_TYPEDEF_ACLUSTER
         return
     end subroutine
 
+    function IsSameKindCluster(this,OtherCluster) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        CLASS(ACluster)::this
+        type(ACluster)::OtherCluster
+        logical,intent(out)::TheResult
+        !---Local Vars---
+        integer::IElement
+        !---Body---
+        TheResult = .true.
+
+        DO IElement = 1,p_ATOMS_GROUPS_NUMBER
+
+            if(this%m_Atoms(IElement)%m_ID .ne. OtherCluster%m_Atoms(IElement)%m_ID .or. &
+               this%m_Atoms(IElement)%m_NA .ne. OtherCluster%m_Atoms(IElement)%m_NA) then
+                TheResult = .false.
+                exit
+            end if
+
+        END DO
+
+        return
+    end function IsSameKindCluster
+
     subroutine CleanCluster(this)
         implicit none
         !---Dummy Vars---
@@ -250,11 +276,12 @@ module MCLIB_TYPEDEF_ACLUSTER
     end subroutine
 
     !***************************************
-    subroutine AppendOneCluster(this,newOne)
+    subroutine AppendOneCluster(this,newOne,theQuantififyValue)
         implicit none
         !---Dummy Vars---
         CLASS(AClusterList),target::this
         type(ACluster)::newOne
+        integer,optional::theQuantififyValue
         !---Local Vars---
         type(AClusterList),pointer::cursor=>null(),cursorP=>null()
         !---Body---
@@ -270,6 +297,9 @@ module MCLIB_TYPEDEF_ACLUSTER
         if(this%GetList_Count() .LE. 0) then
             this%ListCount = 1
             this%TheCluster = newOne
+            if(present(theQuantififyValue)) then
+                this%quantififyValue = theQuantififyValue
+            end if
         else
             cursor=>this%next
             cursorP=>this
@@ -286,6 +316,10 @@ module MCLIB_TYPEDEF_ACLUSTER
             cursor%next=>null()
             ! The assignment(=) had been overrided
             cursor%TheCluster = newOne
+            if(present(theQuantififyValue)) then
+                cursor%quantififyValue = theQuantififyValue
+            end if
+
             cursorP%next=>cursor
         end if
 
@@ -325,7 +359,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         end if
 
         DO While(associated(cursorOther))
-            call this%AppendOneCluster(cursorOther%TheCluster)
+            call this%AppendOneCluster(cursorOther%TheCluster,cursorOther%quantififyValue)
             cursorOther=>cursorOther%next
         END DO
 
