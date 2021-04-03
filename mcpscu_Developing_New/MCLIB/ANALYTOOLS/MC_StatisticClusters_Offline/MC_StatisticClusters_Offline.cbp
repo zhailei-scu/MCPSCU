@@ -73,6 +73,7 @@
 		<Unit filename="../../sor/ANALYTOOLS/MC_StatisticClusters_Offline.F90">
 			<Option weight="0" />
 		</Unit>
+		<Unit filename="../../sor/AppShell/MCRT_Method_MIGCOALE_CLUSTER_CPU.F90" />
 		<Extensions>
 			<envvars />
 			<code_completion />
