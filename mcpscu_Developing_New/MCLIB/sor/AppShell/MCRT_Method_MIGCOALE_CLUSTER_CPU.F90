@@ -272,13 +272,13 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         real(kind=KMCDF)::SFlux
         real(kind=KMCDF)::MaxConcent
         real(kind=KMCDF)::MaxChangeRate
+        integer::SIAIndex
+        integer::VacancyIndex
+        type(AClusterList),pointer::ICursor=>null()
+        type(AClusterList),pointer::JCursor=>null()
         !---Body---
         SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
         VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
-
-
-        CKind = Host_SimBoxes%CKind
-        NNodes = Host_SimBoxes%NNodes
 
         allocate(tempNBPVChangeRate(NNodes,CKind))
 
@@ -296,7 +296,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
         DO While(.true.)
 
-          Associate(Collections=>Host_MFCollections%Collections,SEIndex=>Host_MFCollections%SEIndexBox)
+          Associate(Collections=>Host_MFCollections%Collections)
 
             call Record%IncreaseOneSimuStep()
 
@@ -304,17 +304,18 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
             DO IBox = 1,MultiBox
 
-                IKindFrom = SEIndex(IBox,1)
-                IKindTo   = SEIndex(IBox,2)
+                ICursor=>Collections(IBox)
 
-                DO IKind = IKindFrom,IKindTo
+                DO While(associated(ICursor))
 
-                    if(Collections(IKind)%ACluster%m_Atoms(SIAIndex)%m_NA .GT . 0) then
+                    if(ICursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT . 0) then
 
-                        DO JKind = IKind,IKindTo
-                            if(Collections(JKind)%ACluster%m_Atoms(SIAIndex)%m_NA .GT . 0) then
+                        JCursor=>ICursor
 
-                                TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(Collections(IKind)%ACluster,Collections(JKind)%ACluster)
+                        DO While(associated(JCursor))
+                            if(JCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT . 0) then
+
+                                TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(ICursor%TheCluster,JCursor%TheCluster)
 
                                 ReactionCoeff = 0.D0
                                 select case(TheReactionValue%ReactionCoefficientType)
@@ -326,9 +327,9 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                                 if(ReactionCoeff .GE. DRAND32()) then
 
-                                    deta = Dumplicate*4*PI*Concent(INode,IKind)*Concent(INode,JKind)* &
-                                             (ClustersKind(IKind)%m_RAD + ClustersKind(JKind)%m_RAD)* &
-                                             (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(JKind)%m_DiffCoeff)
+                                    deta = Dumplicate*4*PI*ICursor%quantififyValue*JCursor%quantififyValue* &
+                                             (ICursor%TheCluster%m_RAD + JCursor%TheCluster%m_RAD)*         &
+                                             (ICursor%TheCluster%m_DiffCoeff + JCursor%TheCluster%m_DiffCoeff)
 
                                     if(IKind .eq. JKind) then
 

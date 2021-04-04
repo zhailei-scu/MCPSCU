@@ -56,7 +56,7 @@ module MCLIB_TYPEDEF_ACLUSTER
 
     TYPE,PUBLIC::AClusterList
         type(ACluster),public::TheCluster
-        integer,public::quantififyValue = 0   ! This value is used to record some quantifify value such as counts or concentrate in some application
+        real(kind=KINDDF),public::quantififyValue = 0.D0   ! This value is used to record some quantifify value such as counts or concentrate in some application
 
 
         integer,private::ListCount = 0
