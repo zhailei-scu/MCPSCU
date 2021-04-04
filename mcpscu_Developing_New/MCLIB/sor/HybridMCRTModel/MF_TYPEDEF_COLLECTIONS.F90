@@ -136,45 +136,116 @@ module MF_TYPEDEF_COLLECTIONS
         integer::ICFROM
         integer::ICTO
         integer::IC
-        type(AClusterList),target::ClusterKindList
+        integer::IKind
+        integer::IKindFrom
+        integer::IKindTo
+        integer::NOccur
+        type(AClusterList),dimension(:),allocatable::ClusterKindLists
         type(AClusterList),pointer::cursor=>null()
         !---Body---
-        call ClusterKindList%Clean_ClusterList()
 
         MultiBox = Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
 
         call DeAllocateArray_Host(this%SEIndexBox,"this%SEIndexBox")
         call AllocateArray_Host(this%SEIndexBox,MultiBox,2,"this%SEIndexBox")
 
+        allocate(ClusterKindLists,MultiBox)
+
         this%SEIndexBox = 0
+
+        TotalSize = 0
 
         DO IBox = 1,MultiBox
 
+            call ClusterKindLists(IBox)%Clean_ClusterList()
+
             ICFROM = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTO = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+
+            if(IBox .ne. 1) then
+                IKindFrom = this%SEIndexBox(IBox-1,2) + 1
+            else
+                IKindFrom = 1
+            end if
+            NOccur = 0
 
             DO IC = ICFROM,ICTO
 
                 if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
                    Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
-                    if(ClusterKindList%GetList_Count() .GT. 0) then
-                        cursor=>ClusterKindList
+                    Finded = .false.
+
+                    if(ClusterKindLists(IBox)%GetList_Count() .GT. 0) then
+                        cursor=>ClusterKindLists(IBox)
                         DO While(associated(cursor))
-                            if(cursor%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .false.) then
-                                call ClusterKindList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1)
-                            else
+                            if(cursor%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
                                 cursor%quantififyValue = cursor%quantififyValue + 1
+                                Finded = .true.
                             end if
 
                             cursor=>cursor%next
                         END DO
                     end if
 
+                    if(Finded .eq. .false.) then
+                        call ClusterKindLists(IBox)%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1)
+                        NOccur = NOccur + 1
+                        TotalSize = TotalSize + 1
+                    end if
+
                 end if
 
             END DO
+
+
+            this%SEIndexBox(IBox,1) = IKindFrom
+            this%SEIndexBox(IBox,2) = IKindFrom + NOccur - 1
+
         END DO
+
+        if(TotalSize .ne. (Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(MutliBox,2) - Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(1,1) + 1)) then
+            write(*,*) "MCPSCUERROR: The calculated total kinds are not right, please check the program"
+            write(*,*) TotalSize,Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(MutliBox,2) - Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(1,1) + 1
+            pause
+            stop
+        end if
+
+
+        if(TotalSize .GT. 0) then
+            allocate(this%Collections(TotalSize))
+        end if
+
+        DO IBox = 1,MultiBox
+
+            IKindFrom = this%SEIndexBox(IBox,1)
+            IKindTo = this%SEIndexBox(IBox,2)
+
+            if((IKindTo-IKindFrom+1) .ne. ClusterKindLists(IBox)%GetList_Count()) then
+                write(*,*) "MCPSCUERROR: The calculated total kinds are not right in box " ,IBox, " please check the program"
+                write(*,*) IKindTo-IKindFrom+1,ClusterKindLists(IBox)%GetList_Count()
+            end if
+
+            if((IKindTo-IKindFrom+1) .GT. 0) then
+                cursor=>ClusterKindLists(IBox)
+
+                DO IKind = IKindFrom,IKindTo
+                    this%Collections(IKind)%ACluster = cursor%TheCluster
+                    this%Collections(IKind)%Concentrate = cursor%quantififyValue
+                    cursor=>cursor%next
+                END DO
+
+            end if
+
+        END Do
+
+        if(allocated(ClusterKindLists)) then
+            DO IBox = 1,MultiBox
+                call ClusterKindLists(IBox)%Clean_ClusterList()
+            END DO
+
+            deallocate(ClusterKindLists)
+        end if
 
         Nullify(cursor)
         cursor=>null()
