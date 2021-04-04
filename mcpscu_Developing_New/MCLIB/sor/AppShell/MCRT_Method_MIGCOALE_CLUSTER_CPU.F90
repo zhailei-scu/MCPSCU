@@ -413,8 +413,13 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                                     generatedCluster%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
 
+                                    visitCursor=>tempNBPVChangeRate(IBox)%Contains(generatedCluster)
 
-                                    if(tempNBPVChangeRate(IBox)%Contains(generatedCluster))
+                                    if(associated(visitCursor)) then
+
+                                    else
+
+                                    end if
 
 
 
