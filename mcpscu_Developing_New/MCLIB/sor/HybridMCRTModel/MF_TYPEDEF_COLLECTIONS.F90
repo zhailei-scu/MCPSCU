@@ -146,6 +146,8 @@ module MF_TYPEDEF_COLLECTIONS
         call DeAllocateArray_Host(this%SEIndexBox,"this%SEIndexBox")
         call AllocateArray_Host(this%SEIndexBox,MultiBox,2,"this%SEIndexBox")
 
+        this%SEIndexBox = 0
+
         DO IBox = 1,MultiBox
 
             ICFROM = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
