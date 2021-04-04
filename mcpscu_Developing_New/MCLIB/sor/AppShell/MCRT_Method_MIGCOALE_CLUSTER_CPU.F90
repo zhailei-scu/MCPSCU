@@ -239,60 +239,56 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         type(MigCoalClusterRecord)::Record
         type(ImplantSection)::TheImplantSection
         !---Local Vars---
-        integer::CKind
-        integer::IKind
-        integer::JKind
-        real(kind=KMCDF)::TSTEP
-        real(kind=KMCDF)::deta
-        real(kind=KMCDF),dimension(:,:),allocatable::tempNBPVChangeRate
-        real(kind=KMCDF)::NPOWER0Ave
-        real(kind=KMCDF)::NPOWER1DIV2Ave
-        real(kind=KMCDF)::NPOWER1Ave
-        real(kind=KMCDF)::NPOWER3DIV2Ave
-        real(kind=KMCDF)::N1
-        real(kind=KMCDF)::N2
-        real(kind=KMCDF)::N3
-        real(kind=KMCDF)::Rave
-        real(kind=KMCDF),dimension(:,:),allocatable::ImplantedRate
+        integer::MultiBox
+        real(kind=KINDDF)::TSTEP
+        real(kind=KINDDF)::deta
+        type(AClusterList),dimension(:),pointer::tempNBPVChangeRate
+        real(kind=KINDDF)::NPOWER0Ave
+        real(kind=KINDDF)::NPOWER1DIV2Ave
+        real(kind=KINDDF)::NPOWER1Ave
+        real(kind=KINDDF)::NPOWER3DIV2Ave
+        real(kind=KINDDF)::N1
+        real(kind=KINDDF)::N2
+        real(kind=KINDDF)::N3
+        real(kind=KINDDF)::Rave
         integer::I
         integer::INode
         integer::NNodes
-        real(kind=KMCDF)::Factor
-        real(kind=KMCDF)::tempTimeStep
-        real(kind=KMCDF)::DiffGradient1
-        real(kind=KMCDF)::DiffGradient2
-        integer::IImplantLayer
+        real(kind=KINDDF)::Factor
+        real(kind=KINDDF)::tempTimeStep
+        real(kind=KINDDF)::DiffGradient1
+        real(kind=KINDDF)::DiffGradient2
         type(DiffusorValue)::TheDiffusorValue
         integer::AtomuNumbSubject
         integer::AtomuNumbObject
         integer::AtomuNumbProductor
-        real(kind=KMCDF)::ConCentrat0
         type(ReactionValue)::TheReactionValue
-        real(kind=KMCDF)::ReactionCoeff
-        real(kind=KMCDF)::SFlux
-        real(kind=KMCDF)::MaxConcent
-        real(kind=KMCDF)::MaxChangeRate
+        real(kind=KINDDF)::ReactionCoeff
+        real(kind=KINDDF)::SFlux
+        real(kind=KINDDF)::MaxConcent
+        real(kind=KINDDF)::MaxChangeRate
         integer::SIAIndex
         integer::VacancyIndex
-        type(AClusterList),pointer::ICursor=>null()
-        type(AClusterList),pointer::JCursor=>null()
+        type(AClusterList),pointer::IKindCursor=>null()
+        type(AClusterList),pointer::JKindCursor=>null()
+
+        type(AClusterList),pointer::IChangeRateCursor=>null()
+        type(AClusterList),pointer::JChangeRateCursor=>null()
+        type(ACluster)::generatedCluster
         !---Body---
-        SIAIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("W")
-        VacancyIndex = Host_Boxes%Atoms_list%FindIndexBySymbol("VC")
+        MultiBox = Host_SimuCtrlParam%MultiBox
 
-        allocate(tempNBPVChangeRate(NNodes,CKind))
+        SIAIndex = Host_SimBoxes%Atoms_list%FindIndexBySymbol("W")
+        VacancyIndex = Host_SimBoxes%Atoms_list%FindIndexBySymbol("VC")
 
-        allocate(ImplantedRate(NNodes,CKind))
+        allocate(tempNBPVChangeRate(MultiBox))
+
+        DO IBox = 1,MultiBox
+            !--The Assignment(=) had been overrided---
+            tempNBPVChangeRate(IBox) = Host_MFCollections%Collections(IBox)
+        END DO
 
         TSTEP = 0.01
-
-        call Cal_Statistic_IMPLANT(Host_SimBoxes,Host_SimuCtrlParam,NPOWER0Ave,NPOWER1DIV2Ave,NPOWER1Ave,NPOWER3DIV2Ave)
-
-        ConCentrat0 = sum(Host_SimBoxes%m_ClustersInfo_CPU%Concentrate)
-
-        ImplantedRate = 0.D0
-
-        call TheImplantSection%Cal_ImplantClustersRate(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record,ImplantedRate)
 
         DO While(.true.)
 
@@ -300,22 +296,24 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
             call Record%IncreaseOneSimuStep()
 
-            tempNBPVChangeRate = 0.D0
-
             DO IBox = 1,MultiBox
 
-                ICursor=>Collections(IBox)
+                IKindCursor=>Collections(IBox)
 
-                DO While(associated(ICursor))
+                IChangeRateCursor=>tempNBPVChangeRate(IBox)
 
-                    if(ICursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT . 0) then
+                DO While(associated(IKindCursor))
 
-                        JCursor=>ICursor
+                    if(IKindCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT. 0) then
 
-                        DO While(associated(JCursor))
-                            if(JCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT . 0) then
+                        JKindCursor=>IKindCursor
 
-                                TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(ICursor%TheCluster,JCursor%TheCluster)
+                        JChangeRateCursor=>IChangeRateCursor
+
+                        DO While(associated(JKindCursor))
+                            if(JKindCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT. 0) then
+
+                                TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(IKindCursor%TheCluster,JKindCursor%TheCluster)
 
                                 ReactionCoeff = 0.D0
                                 select case(TheReactionValue%ReactionCoefficientType)
@@ -327,45 +325,117 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                                 if(ReactionCoeff .GE. DRAND32()) then
 
-                                    deta = Dumplicate*4*PI*ICursor%quantififyValue*JCursor%quantififyValue* &
-                                             (ICursor%TheCluster%m_RAD + JCursor%TheCluster%m_RAD)*         &
-                                             (ICursor%TheCluster%m_DiffCoeff + JCursor%TheCluster%m_DiffCoeff)
+                                    deta = Dumplicate*4*PI*IKindCursor%quantififyValue*JKindCursor%quantififyValue* &
+                                             (IKindCursor%TheCluster%m_RAD + JKindCursor%TheCluster%m_RAD)*         &
+                                             (IKindCursor%TheCluster%m_DiffCoeff + JKindCursor%TheCluster%m_DiffCoeff)
 
                                     if(IKind .eq. JKind) then
 
                                         Factor = 0.5D0
 
-                                        tempNBPVChangeRate(INode,IKind) =  tempNBPVChangeRate(INode,IKind) - deta
+                                        IChangeRateCursor%quantififyValue =  IChangeRateCursor%quantififyValue - deta
                                     else
                                         Factor = 1.D0
 
-                                        tempNBPVChangeRate(INode,IKind) =  tempNBPVChangeRate(INode,IKind) - deta
+                                        IChangeRateCursor%quantififyValue =  IChangeRateCursor%quantififyValue - deta
 
-                                        tempNBPVChangeRate(INode,JKind) =  tempNBPVChangeRate(INode,JKind) - deta
+                                        JChangeRateCursor%quantififyValue =  JChangeRateCursor%quantififyValue - deta
                                     end if
 
-                                    if((IKind + JKind) .LE. CKind) then
+                                    select case(TheReactionValue%ProductionType)
+                                        case(p_ProductionType_BySimplePlus)
+                                            generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  IKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                                                      JKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
 
-                                        AtomuNumbSubject = sum(ClustersKind(IKind)%m_Atoms(:)%m_NA)
-                                        AtomuNumbObject = sum(ClustersKind(JKind)%m_Atoms(:)%m_NA)
-                                        AtomuNumbProductor = sum(ClustersKind(IKind+JKind)%m_Atoms(:)%m_NA)
+                                        case(p_ProductionType_BySubtract)
 
-                                        tempNBPVChangeRate(INode,IKind + JKind) = tempNBPVChangeRate(INode,IKind + JKind) + &
+                                            SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
+                                            ObjectElementIndex = TheReactionValue%ElemetIndex_Object
+
+                                            generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = IKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                                                     JKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                                            SubjectNANum = generatedCluster%m_Atoms(SubjectElementIndex)%m_NA
+                                            ObjectNANum  = generatedCluster%m_Atoms(ObjectElementIndex)%m_NA
+
+                                            generatedCluster%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
+
+                                            generatedCluster%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
+
+                                            if(sum(generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
+                                                generatedCluster%m_Statu = p_ANNIHILATE_STATU
+                                            end if
+                                        case default
+                                            write(*,*) "MCPSCUERROR: Unknown reaction type",TheReactionValue%ProductionType
+                                            pause
+                                            stop
+
+                                    end select
+
+                                    TheDiffusorValue = Host_SimBoxes%m_DiffusorTypesMap%Get(generatedCluster)
+
+                                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                                    !---you should init the distribution by external file---
+                                    select case(TheDiffusorValue%ECRValueType_Free)
+                                        case(p_ECR_ByValue)
+                                            generatedCluster%m_RAD = TheDiffusorValue%ECR_Free
+                                        case default
+                                            generatedCluster%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,        &
+                                                                     Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA, &
+                                                                     Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,               &
+                                                                     Host_SimBoxes%LatticeLength)
+                                    end select
+
+                                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                                        case(p_DiffuseCoefficient_ByValue)
+                                            generatedCluster%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                                        case(p_DiffuseCoefficient_ByArrhenius)
+                                            HgeneratedCluster%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                                        case(p_DiffuseCoefficient_ByBCluster)
+                                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                                            generatedCluster%m_DiffCoeff = m_FREESURDIFPRE*(generatedCluster%m_RAD**(-p_GAMMA))
+                                        case(p_DiffuseCoefficient_BySIACluster)
+                                            generatedCluster%m_DiffCoeff = (sum(generatedCluster%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                                        case(p_DiffuseCoefficient_ByVcCluster)
+                                            generatedCluster%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(generatedCluster%m_Atoms(:)%m_NA)))* &
+                                                                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                                    end select
+
+                                    generatedCluster%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
+                                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                                        DO TheDim = 1,3
+                                            generatedCluster%m_DiffuseDirection(TheDim) = generatedCluster%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                                        END DO
+                                        generatedCluster%m_DiffCoeff = generatedCluster%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                                    end if
+
+                                    generatedCluster%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+
+
+                                    if(tempNBPVChangeRate(IBox)%Contains(generatedCluster))
+
+
+
+                                    AtomuNumbSubject = sum(ClustersKind(IKind)%m_Atoms(:)%m_NA)
+                                    AtomuNumbObject = sum(ClustersKind(JKind)%m_Atoms(:)%m_NA)
+                                    AtomuNumbProductor = sum(ClustersKind(IKind+JKind)%m_Atoms(:)%m_NA)
+
+                                    tempNBPVChangeRate(INode,IKind + JKind) = tempNBPVChangeRate(INode,IKind + JKind) + &
                                                                             Factor*deta*(AtomuNumbSubject+AtomuNumbObject)/AtomuNumbProductor
-                                    end if
-
-                        end if
+                                end if
                             end if
+
+                            JKindCursor=>JKindCursor%next
+
+                            JChangeRateCursor=>JChangeRateCursor%Next
                         END DO
 
                     end if
 
-
-
-
-
-                    END DO
-
+                    IKindCursor=>IKindCursor%next
+                    IChangeRateCursor=>IChangeRateCursor%Next
                 END DO
             END DO
 
@@ -766,44 +836,44 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         integer::CKind
         integer::IKind
         integer::JKind
-        real(kind=KMCDF)::TSTEP
-        real(kind=KMCDF)::deta
-        real(kind=KMCDF),dimension(:,:),allocatable::tempNBPVChangeRate
-        real(kind=KMCDF)::NPOWER0Ave
-        real(kind=KMCDF)::NPOWER1DIV2Ave
-        real(kind=KMCDF)::NPOWER1Ave
-        real(kind=KMCDF)::NPOWER3DIV2Ave
-        real(kind=KMCDF)::N1
-        real(kind=KMCDF)::N2
-        real(kind=KMCDF)::N3
-        real(kind=KMCDF)::Rave
-        real(kind=KMCDF),dimension(:,:),allocatable::ImplantedRate
-        real(kind=KMCDF),dimension(:),allocatable::FSurfAccum
-        real(kind=KMCDF),dimension(:),allocatable::FOutAccum
-        real(kind=KMCDF),dimension(:),allocatable::CSurfAccum
-        real(kind=KMCDF),dimension(:),allocatable::COutAccum
-        real(kind=KMCDF),dimension(:),allocatable::FSurfEachStep
-        real(kind=KMCDF),dimension(:),allocatable::FOutEachStep
-        real(kind=KMCDF),dimension(:),allocatable::CSurfEachStep
-        real(kind=KMCDF),dimension(:),allocatable::COutEachStep
+        real(kind=KINDDF)::TSTEP
+        real(kind=KINDDF)::deta
+        real(kind=KINDDF),dimension(:,:),allocatable::tempNBPVChangeRate
+        real(kind=KINDDF)::NPOWER0Ave
+        real(kind=KINDDF)::NPOWER1DIV2Ave
+        real(kind=KINDDF)::NPOWER1Ave
+        real(kind=KINDDF)::NPOWER3DIV2Ave
+        real(kind=KINDDF)::N1
+        real(kind=KINDDF)::N2
+        real(kind=KINDDF)::N3
+        real(kind=KINDDF)::Rave
+        real(kind=KINDDF),dimension(:,:),allocatable::ImplantedRate
+        real(kind=KINDDF),dimension(:),allocatable::FSurfAccum
+        real(kind=KINDDF),dimension(:),allocatable::FOutAccum
+        real(kind=KINDDF),dimension(:),allocatable::CSurfAccum
+        real(kind=KINDDF),dimension(:),allocatable::COutAccum
+        real(kind=KINDDF),dimension(:),allocatable::FSurfEachStep
+        real(kind=KINDDF),dimension(:),allocatable::FOutEachStep
+        real(kind=KINDDF),dimension(:),allocatable::CSurfEachStep
+        real(kind=KINDDF),dimension(:),allocatable::COutEachStep
         integer::I
         integer::INode
         integer::NNodes
-        real(kind=KMCDF)::Factor
-        real(kind=KMCDF)::tempTimeStep
-        real(kind=KMCDF)::DiffGradient1
-        real(kind=KMCDF)::DiffGradient2
+        real(kind=KINDDF)::Factor
+        real(kind=KINDDF)::tempTimeStep
+        real(kind=KINDDF)::DiffGradient1
+        real(kind=KINDDF)::DiffGradient2
         integer::IImplantLayer
         type(DiffusorValue)::TheDiffusorValue
         integer::AtomuNumbSubject
         integer::AtomuNumbObject
         integer::AtomuNumbProductor
-        real(kind=KMCDF)::ConCentrat0
+        real(kind=KINDDF)::ConCentrat0
         type(ReactionValue)::TheReactionValue
-        real(kind=KMCDF)::ReactionCoeff
-        real(kind=KMCDF)::SFlux
-        real(kind=KMCDF)::MaxConcent
-        real(kind=KMCDF)::MaxChangeRate
+        real(kind=KINDDF)::ReactionCoeff
+        real(kind=KINDDF)::SFlux
+        real(kind=KINDDF)::MaxConcent
+        real(kind=KINDDF)::MaxChangeRate
         !---Body---
         CKind = Host_SimBoxes%CKind
         NNodes = Host_SimBoxes%NNodes

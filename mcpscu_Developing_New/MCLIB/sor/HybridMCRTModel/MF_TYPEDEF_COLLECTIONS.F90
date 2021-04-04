@@ -5,7 +5,7 @@ module MF_TYPEDEF_COLLECTIONS
     implicit none
 
     type,public::MFCOLLECTIONS
-        type(AClusterList),dimension(:),allocatable::Collections
+        type(AClusterList),dimension(:),pointer::Collections=>null()
         contains
         procedure,non_overridable,pass,public::CopyMFCollectionsFromOther
         procedure,non_overridable,pass,public::Clean_MFCollections
@@ -89,6 +89,7 @@ module MF_TYPEDEF_COLLECTIONS
         integer::ICTO
         integer::IC
         real(kind=KINDDF)::BoxVolum
+        logical::Finded
         type(AClusterList),pointer::cursor=>null()
         !---Body---
 

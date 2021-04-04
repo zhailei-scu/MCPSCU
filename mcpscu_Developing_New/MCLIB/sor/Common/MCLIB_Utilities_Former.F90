@@ -24,6 +24,22 @@ module MCLIB_UTILITIES_FORMER
     Final::CleanSTRList
   END TYPE
 
+  TYPE,public::DRList
+    real(kind=KINDDF)::TheValue
+    integer::ListCount = 0
+    type(DRList),pointer::Next=>null()
+
+    contains
+    procedure,non_overridable,public,pass::CopyDRListFromOther
+    procedure,non_overridable,public,pass::AppendOne_DRList
+    procedure,non_overridable,public,pass::AppendArray_DRList
+    procedure,non_overridable,public,pass::GetValueByDRListIndex
+    procedure,non_overridable,public,pass::GetDRList_Count
+    procedure,non_overridable,public,pass::Clean_DRList
+    Generic::Assignment(=)=>CopyDRListFromOther
+    Final::CleanDRList
+  END TYPE
+
   private::CopySTRListFromOther
   private::AppendOne_STRList
   private::AppendArray_STRList
@@ -31,6 +47,14 @@ module MCLIB_UTILITIES_FORMER
   private::GetSTRList_Count
   private::Clean_STRList
   private::CleanSTRList
+
+  private::CopyDRListFromOther
+  private::AppendOne_DRList
+  private::AppendArray_DRList
+  private::GetValueByDRListIndex
+  private::GetDRList_Count
+  private::Clean_DRList
+  private::CleanDRList
 
   contains
 
@@ -286,6 +310,261 @@ module MCLIB_UTILITIES_FORMER
     return
   end subroutine CleanSTRList
 
+
+!***************************************
+  subroutine CopyDRListFromOther(this,otherOne)
+    implicit none
+    !---Dummy Vars---
+    CLASS(DRList),intent(out),target::this
+    type(DRList),target,intent(in)::otherOne
+    !---Local Vars---
+    type(DRList),pointer::cursorOfOthers=>null()
+    type(DRList),pointer::cursorOfSelf=>null()
+    type(DRList),pointer::cursorOfSelfP=>null()
+    !---Body---
+    cursorOfSelf=>this
+    if(.not. associated(cursorOfSelf)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the DRList first!"
+        pause
+        stop
+    end if
+
+    cursorOfOthers=>otherOne
+    if(.not. associated(cursorOfOthers)) then
+        Nullify(cursorOfSelf)
+        return
+    end if
+
+    call this%Clean_DRList()
+
+    this%TheValue = otherOne%TheValue
+
+    cursorOfOthers=>otherOne%next
+    cursorOfSelfP=>this
+    cursorOfSelf=>this%next
+    DO While(associated(cursorOfOthers))
+        allocate(cursorOfSelf)
+        cursorOfSelf%TheValue = cursorOfOthers%TheValue
+        cursorOfSelfP%next=>cursorOfSelf
+
+        cursorOfOthers=>cursorOfOthers%next
+        cursorOfSelfP=>cursorOfSelfP%next
+        cursorOfSelf=>cursorOfSelf%next
+    END DO
+    this%ListCount = otherOne%GetDRList_Count()
+
+    Nullify(cursorOfSelfP)
+    cursorOfSelfP=>null()
+    Nullify(cursorOfSelf)
+    cursorOfSelf=>null()
+    Nullify(cursorOfOthers)
+    cursorOfOthers=>null()
+    return
+  end subroutine CopyDRListFromOther
+
+  !***************************************
+  subroutine AppendOne_DRList(this,newOne)
+    implicit none
+    !---Dummy Vars---
+    CLASS(DRList),target::this
+    real(kind=KINDDF)::newOne
+    !---Local Vars---
+    type(DRList),pointer::cursor=>null(),cursorP=>null()
+    !---Body---
+    cursorP=>this
+    if(.not. associated(cursorP)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the DRList first!"
+        pause
+        stop
+    end if
+
+    if(this%GetDRList_Count() .LE. 0) then
+        this%ListCount = 1
+        this%TheValue = newOne
+    else
+        cursor=>this%next
+        cursorP=>this
+
+        DO while(associated(cursor))
+            cursor=>cursor%next
+            cursorP=>cursorP%next
+        END DO
+
+        this%ListCount = this%ListCount + 1
+
+        allocate(cursor)
+        NUllify(cursor%next)
+        cursor%next=>null()
+        cursor%TheValue = newOne
+        cursorP%next=>cursor
+    end if
+
+    Nullify(cursorP)
+    cursorP=>null()
+    Nullify(cursor)
+    cursor=>null()
+    return
+  end subroutine AppendOne_DRList
+
+  !***************************************
+  subroutine AppendArray_DRList(this,TheArray,ArraySize)
+    implicit none
+    !---Dummy Vars---
+    CLASS(DRList),target::this
+    real(kind=KINDDF)::TheArray(:)
+    integer,intent(in)::ArraySize
+    !---Local Vars---
+    integer::I
+    type(DRList),pointer::cursor=>null(),cursorP=>null()
+    !---Body---
+    cursorP=>this
+    if(.not. associated(cursorP)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the DRList first!"
+        pause
+        stop
+    end if
+
+    if(ArraySize  .LE. 0 .or. size(TheArray) .LE. 0) then
+        write(*,*) "MCPSCUWARNING: No array would be appended to DRList"
+        return
+    end if
+
+    if(ArraySize .GT. size(TheArray)) then
+        write(*,*) "MCPSCUERROR: The aimmed size to appended to the DRLIST is greater than the Array size",ArraySize,size(TheArray)
+        pause
+        stop
+    end if
+
+
+    DO I=1,ArraySize
+        call this%AppendOne_DRList(TheArray(I))
+    END DO
+
+    return
+  end subroutine AppendArray_DRList
+
+  !**************************************
+  function GetValueByDRListIndex(this,ListIndex) result(TheValue)
+    implicit none
+    !---Dummy Vars---
+    CLASS(DRList),target::this
+    integer,intent(in)::ListIndex
+    real(kind=KINDDF),intent(out)::TheValue
+    !---Local Vars---
+    integer::tempIndex
+    type(DRList),pointer::cursor=>null()
+    !---Body---
+    cursor=>this
+    if(.not. associated(cursor)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the DRList first!"
+        pause
+        stop
+    end if
+
+    tempIndex = 0
+
+    DO while(associated(cursor))
+
+        tempIndex = tempIndex + 1
+
+        if(tempIndex .eq. ListIndex) then
+            TheValue = cursor%TheValue
+            exit
+        end if
+
+        cursor=>cursor%next
+
+    END DO
+
+    if(ListIndex .ne. tempIndex) then
+        write(*,*) "MCPSCUERROR: Cannot get the Value form DRList by index: ",ListIndex
+        pause
+        stop
+    end if
+
+    Nullify(cursor)
+    cursor=>null()
+    return
+  end function GetValueByDRListIndex
+
+  !**************************************
+  integer function GetDRList_Count(this)
+    implicit none
+    !---Dummy Vars---
+    CLASS(DRList),target::this
+    !---Local Vars---
+    type(DRList),pointer::cursor=>null()
+    !---Body---
+    cursor=>this
+    if(.not. associated(cursor)) then
+        write(*,*) "MCPSCUERROR: You need to allocate the DRList first!"
+        pause
+        stop
+    end if
+
+    GetDRList_Count = this%ListCount
+
+    Nullify(cursor)
+    cursor=>null()
+
+    return
+  end function GetDRList_Count
+
+  !**************************************
+  subroutine Clean_DRList(this)
+    implicit none
+    !---Dummy Vars---
+    CLASS(DRList),target::this
+    !---Local Vars---
+    type(DRList),pointer::cursor=>null()
+    type(DRList),pointer::next=>null()
+    !---Body---
+    cursor=>this
+
+    if(.not. associated(cursor)) then
+        return
+    end if
+
+    if(cursor%GetDRList_Count() .LE. 0) then
+        return
+    end if
+
+    cursor=>this%next
+
+    this%TheValue = 0.D0
+
+    DO While(associated(cursor))
+        next=>cursor%next
+        cursor%TheValue = 0.D0
+        cursor%next=>null()
+        deallocate(cursor)
+        Nullify(cursor)
+        cursor=>next
+    END DO
+
+    this%next=>null()
+
+    this%ListCount = 0
+
+    Nullify(cursor)
+    Nullify(next)
+    cursor=>null()
+    next=>null()
+
+    return
+  end subroutine Clean_DRList
+
+  !************************************
+  subroutine CleanDRList(this)
+    implicit none
+    !---Dummy Vars---
+    type(DRList)::this
+    !---Body---
+
+    call this%Clean_DRList()
+
+    return
+  end subroutine CleanDRList
 
   !************************************************************
   function INQUIREFILE(fileName,parentPath) result(truePath)

@@ -281,7 +281,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         !---Dummy Vars---
         CLASS(AClusterList),target::this
         type(ACluster)::newOne
-        integer,optional::theQuantififyValue
+        real(kind=KINDDF),optional::theQuantififyValue
         !---Local Vars---
         type(AClusterList),pointer::cursor=>null(),cursorP=>null()
         !---Body---
