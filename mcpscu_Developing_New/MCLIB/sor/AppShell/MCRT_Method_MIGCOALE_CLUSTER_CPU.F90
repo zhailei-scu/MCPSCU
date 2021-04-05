@@ -275,6 +275,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         type(AClusterList),pointer::IChangeRateCursor=>null()
         type(AClusterList),pointer::JChangeRateCursor=>null()
         type(ACluster)::generatedCluster
+        type(AClusterList),pointer::visitCursor=>null()
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -413,7 +414,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                                     generatedCluster%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
 
-                                    visitCursor=>tempNBPVChangeRate(IBox)%Contains(generatedCluster)
+                                    visitCursor=>tempNBPVChangeRate(IBox)%Find(generatedCluster)
 
                                     if(associated(visitCursor)) then
 

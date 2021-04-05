@@ -66,6 +66,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         procedure,public,pass,non_overridable::AppendOneCluster
         procedure,public,pass,non_overridable::AppendOtherClusterList
         procedure,public,pass,non_overridable::GetList_Count=>GetClustersList_Count
+        procedure,public,pass,non_overridable::Find=>FindCluster
         procedure,public,pass,non_overridable::CopyClustersListFromOther
         procedure,public,pass,non_overridable::Clean_ClusterList
         Generic::Assignment(=)=>CopyClustersListFromOther
@@ -82,6 +83,7 @@ module MCLIB_TYPEDEF_ACLUSTER
     private::AppendOneCluster
     private::AppendOtherClusterList
     private::GetClustersList_Count
+    private::FindCluster
     private::CopyClustersListFromOther
     private::Clean_ClusterList
     private::CleanClusterList
@@ -385,7 +387,49 @@ module MCLIB_TYPEDEF_ACLUSTER
 
         GetClustersList_Count = this%ListCount
 
+        Nullify(cursor)
+        cursor=>null()
+
         return
+    end function
+
+    !********************************************
+    function FindCluster(this,targetClusterType) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        CLASS(AClusterList),target::this
+        type(ACluster),intent(in)::targetClusterType
+        type(AClusterList),pointer::TheResult
+        !---Local Vars---
+        logical::Finded
+        !---Body---
+
+        TheResult=>null()
+
+        TheResult=>this
+        if(.not. associated(TheResult)) then
+            write(*,*) "MCPSCUERROR: you need to init the AClusterList first!"
+            pause
+            stop
+        end if
+
+        Finded = .false.
+
+        DO while(associated(TheResult))
+
+            if(TheResult%TheCluster%IsSameKindCluster(targetClusterType) .eq. .true.) then
+                Finded = .true.
+                exit
+            end if
+
+            TheResult=>TheResult%next
+        END DO
+
+        if(Finded .eq. .false.) then
+            Nullify(TheResult)
+            TheResult=>null()
+        end if
+
     end function
 
     !**************************************
