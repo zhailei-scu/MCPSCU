@@ -189,7 +189,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                 call resolveModelRelativeData(cursor%theSimulationCtrlParam%ModelData,Host_SimBoxes%Atoms_list)
                 call InitSimulationBoxesConfig(Host_SimBoxes,cursor%theSimulationCtrlParam,m_InitBoxSimCfgList,m_MigCoaleStatInfoWrap,m_MigCoalClusterRecord)
 
-                call m_MFCollections%TransformMCToRT(Host_SimBoxes,Host_SimuCtrlParamList)
+                call TransformMCToRT(m_MFCollections,Host_SimBoxes,Host_SimuCtrlParamList)
             end if
 
             DO While(.true.)
@@ -225,6 +225,92 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         return
 
     end subroutine For_One_Test
+
+
+    !************************************************
+    subroutine TransformMCToRT(Host_MFCollections,Host_SimBoxes,Host_SimuCtrlParamList)
+        implicit none
+        !--Dummy Vars---
+        Class(MFCOLLECTIONS)::Host_MFCollections
+        type(SimulationBoxes)::Host_SimBoxes
+        type(SimulationCtrlParamList),target::Host_SimuCtrlParamList
+        !---Local Vars---
+        integer::MultiBox
+        integer::IBox
+        integer::ICFROM
+        integer::ICTO
+        integer::IC
+        real(kind=KINDDF)::BoxVolum
+        logical::Finded
+        type(AClusterList),pointer::cursor=>null()
+        integer::MaxGroupNum
+        !---Body---
+
+        MultiBox = Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
+
+        BoxVolum = Host_SimBoxes%BOXSIZE(1)*Host_SimBoxes%BOXSIZE(2)*Host_SimBoxes%BOXSIZE(3)
+
+        MaxGroupNum = 0
+
+        DO IBox = 1,MultiBox
+            RecordIndex = 0
+            if(Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GE. Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) .AND. &
+                Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GT. 0) then
+                if(MaxGroupNum .LT. Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)) then
+                    MaxGroupNum = Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
+                end if
+
+            end if
+
+        END DO
+
+        !---One cascade own 1 SIAs group and 1 CECR group, two cascades own 1 SIAs group and 2 CECR groups
+        MaxGroupNum = MaxGroupNum + 1
+
+        call Host_MFCollections%Clean_MFCollections()
+        allocate(Host_MFCollections%Collections(MultiBox,MaxGroupNum))
+
+        DO IBox = 1,MultiBox
+
+            call this%Collections(IBox)%Clean_ClusterList()
+
+            ICFROM = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
+            ICTO = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+
+            DO IC = ICFROM,ICTO
+
+                if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                   Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+
+                    Finded = .false.
+
+                    if(this%Collections(IBox)%GetList_Count() .GT. 0) then
+                        cursor=>this%Collections(IBox)
+                        DO While(associated(cursor))
+                            if(cursor%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
+                                cursor%quantififyValue = cursor%quantififyValue + 1.D0/BoxVolum
+                                Finded = .true.
+                            end if
+
+                            cursor=>cursor%next
+                        END DO
+                    end if
+
+                    if(Finded .eq. .false.) then
+                        call this%Collections(IBox)%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
+                    end if
+
+                end if
+
+            END DO
+
+        END DO
+
+        Nullify(cursor)
+        cursor=>null()
+
+        return
+    end subroutine
 
 
     !***************************************************
@@ -271,11 +357,11 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         integer::VacancyIndex
         type(AClusterList),pointer::IKindCursor=>null()
         type(AClusterList),pointer::JKindCursor=>null()
-
         type(AClusterList),pointer::IChangeRateCursor=>null()
         type(AClusterList),pointer::JChangeRateCursor=>null()
         type(ACluster)::generatedCluster
         type(AClusterList),pointer::visitCursor=>null()
+        real(kind=KINDDF)::deta_Final
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -303,7 +389,9 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                 IChangeRateCursor=>tempNBPVChangeRate(IBox)
 
-                DO While(associated(IKindCursor))
+                tempCount = tempNBPVChangeRate(IBox)%GetList_Count()
+
+                DO ILoop = 1,tempCount
 
                     if(IKindCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT. 0) then
 
@@ -311,7 +399,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                         JChangeRateCursor=>IChangeRateCursor
 
-                        DO While(associated(JKindCursor))
+                        DO JLoop = ILoop,tempCount
                             if(JKindCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT. 0) then
 
                                 TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(IKindCursor%TheCluster,JKindCursor%TheCluster)
@@ -343,10 +431,15 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                         JChangeRateCursor%quantififyValue =  JChangeRateCursor%quantififyValue - deta
                                     end if
 
+                                    call generatedCluster%Clean_Cluster()
+
                                     select case(TheReactionValue%ProductionType)
                                         case(p_ProductionType_BySimplePlus)
                                             generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  IKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
                                                                                                       JKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                                            !---Should consider atomic number conservation
+                                            deta_Final = deta*Factor
 
                                         case(p_ProductionType_BySubtract)
 
@@ -366,6 +459,9 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                             if(sum(generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
                                                 generatedCluster%m_Statu = p_ANNIHILATE_STATU
                                             end if
+
+                                            !---Not consider atomic number conservation
+                                            deta_Final = deta
                                         case default
                                             write(*,*) "MCPSCUERROR: Unknown reaction type",TheReactionValue%ProductionType
                                             pause
@@ -383,7 +479,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                         case default
                                             generatedCluster%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,        &
                                                                      Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA, &
-                                                                     Host_SimuCtrlParamList%theSimulationCtrlParam%TKB,               &
+                                                                     Host_SimuCtrlParam%TKB,               &
                                                                      Host_SimBoxes%LatticeLength)
                                     end select
 
@@ -391,16 +487,16 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                         case(p_DiffuseCoefficient_ByValue)
                                             generatedCluster%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
                                         case(p_DiffuseCoefficient_ByArrhenius)
-                                            HgeneratedCluster%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                                            generatedCluster%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                                         case(p_DiffuseCoefficient_ByBCluster)
                                             ! Here we adopt a model that D=D0*(1/R)**Gama
                                             generatedCluster%m_DiffCoeff = m_FREESURDIFPRE*(generatedCluster%m_RAD**(-p_GAMMA))
                                         case(p_DiffuseCoefficient_BySIACluster)
                                             generatedCluster%m_DiffCoeff = (sum(generatedCluster%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                                                TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                                                                                TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                                         case(p_DiffuseCoefficient_ByVcCluster)
                                             generatedCluster%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(generatedCluster%m_Atoms(:)%m_NA)))* &
-                                                                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                                                                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
                                     end select
 
                                     generatedCluster%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
@@ -412,24 +508,22 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                         generatedCluster%m_DiffCoeff = generatedCluster%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
                                     end if
 
-                                    generatedCluster%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParamList%theSimulationCtrlParam%TKB)
+                                    generatedCluster%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
 
                                     visitCursor=>tempNBPVChangeRate(IBox)%Find(generatedCluster)
 
                                     if(associated(visitCursor)) then
-
+                                        visitCursor%quantififyValue = visitCursor%quantififyValue  + deta_Final
                                     else
-
+                                        call tempNBPVChangeRate(IBox)%AppendOneCluster(generatedCluster,deta_Final)
                                     end if
 
-
-
-                                    AtomuNumbSubject = sum(ClustersKind(IKind)%m_Atoms(:)%m_NA)
-                                    AtomuNumbObject = sum(ClustersKind(JKind)%m_Atoms(:)%m_NA)
-                                    AtomuNumbProductor = sum(ClustersKind(IKind+JKind)%m_Atoms(:)%m_NA)
-
-                                    tempNBPVChangeRate(INode,IKind + JKind) = tempNBPVChangeRate(INode,IKind + JKind) + &
-                                                                            Factor*deta*(AtomuNumbSubject+AtomuNumbObject)/AtomuNumbProductor
+!                                    AtomuNumbSubject = sum(ClustersKind(IKind)%m_Atoms(:)%m_NA)
+!                                    AtomuNumbObject = sum(ClustersKind(JKind)%m_Atoms(:)%m_NA)
+!                                    AtomuNumbProductor = sum(ClustersKind(IKind+JKind)%m_Atoms(:)%m_NA)
+!
+!                                    tempNBPVChangeRate(INode,IKind + JKind) = tempNBPVChangeRate(INode,IKind + JKind) + &
+!                                                                            Factor*deta*(AtomuNumbSubject+AtomuNumbObject)/AtomuNumbProductor
                                 end if
                             end if
 
