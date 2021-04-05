@@ -73,6 +73,25 @@ module MCLIB_TYPEDEF_ACLUSTER
         Final::CleanClusterList
     END TYPE
 
+    TYPE,public::SecondOrder_AClusterLists
+        type(AClusterList),public::TheList
+        integer,public::Identify = 0
+
+        integer,private::ListCount = 0
+        type(SecondOrder_AClusterLists),pointer::next=>null()
+
+        contains
+        procedure,public,pass,non_overridable::AppendOneClusterList
+        procedure,public,pass,non_overridable::AppendOtherSecondOrder_AClusterLists
+        procedure,public,pass,non_overridable::GetList_Count=>GetSecondOrder_AClusterLists_Count
+        procedure,public,pass,non_overridable::Find=>FindClusterListByIdentify
+        procedure,public,pass,non_overridable::CopySecondOrder_AClusterListsFromOther
+        procedure,public,pass,non_overridable::Clean_SecondOrder_AClusterLists
+        Generic::Assignment(=)=>CopySecondOrder_AClusterListsFromOther
+        Final::CleanSecondOrder_AClusterLists
+
+    END TYPE
+
     private::CopyClusterFromOther
     private::Clean_Cluster
     private::IsSameKindCluster
@@ -87,6 +106,13 @@ module MCLIB_TYPEDEF_ACLUSTER
     private::CopyClustersListFromOther
     private::Clean_ClusterList
     private::CleanClusterList
+    private::AppendOneClusterList
+    private::AppendOtherSecondOrder_AClusterLists
+    private::GetSecondOrder_AClusterLists_Count
+    private::FindClusterListByIdentify
+    private::CopySecondOrder_AClusterListsFromOther
+    private::Clean_SecondOrder_AClusterLists
+    private::CleanSecondOrder_AClusterLists
 
     contains
 
@@ -430,7 +456,7 @@ module MCLIB_TYPEDEF_ACLUSTER
             TheResult=>null()
         end if
 
-    end function
+    end function FindCluster
 
     !**************************************
     subroutine CopyClustersListFromOther(this,other)
@@ -554,5 +580,286 @@ module MCLIB_TYPEDEF_ACLUSTER
 
         return
     end subroutine CleanClusterList
+
+    !***************************************
+    subroutine AppendOneClusterList(this,newOne,theIdentify)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_AClusterLists),target::this
+        type(AClusterList)::newOne
+        integer,optional,intent(in)::theIdentify
+        !---Local Vars---
+        type(SecondOrder_AClusterLists),pointer::cursor=>null(),cursorP=>null()
+        !---Body---
+
+        cursorP=>this
+
+        if(.not. associated(cursorP)) then
+            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_AClusterLists first!"
+            pause
+            stop
+        end if
+
+        if(this%GetList_Count() .LE. 0) then
+            this%ListCount = 1
+            !---The Assignment(=) had been overrided---
+            this%TheList = newOne
+
+            if(present(theIdentify)) then
+                this%Identify = theIdentify
+            end if
+        else
+            cursor=>this%next
+            cursorP=>this
+
+            DO while(associated(cursor))
+                cursor=>cursor%next
+                cursorP=>cursorP%next
+            END DO
+
+            this%ListCount = this%ListCount + 1
+
+            allocate(cursor)
+            NUllify(cursor%next)
+            cursor%next=>null()
+            ! The assignment(=) had been overrided
+            cursor%TheList = newOne
+
+            if(present(theIdentify)) then
+                cursor%Identify = theIdentify
+            end if
+
+            cursorP%next=>cursor
+        end if
+
+        Nullify(cursorP)
+        cursorP=>null()
+        Nullify(cursor)
+        cursor=>null()
+        return
+    end subroutine AppendOneClusterList
+
+    !**************************************
+    subroutine AppendOtherSecondOrder_AClusterLists(this,OtherList)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_AClusterLists),target::this
+        type(SecondOrder_AClusterLists),target::OtherList
+        !---Local Vars---
+        type(SecondOrder_AClusterLists),pointer::cursorThis=>null()
+        type(SecondOrder_AClusterLists),pointer::cursorOther=>null()
+        !---Body---
+        cursorThis=>this
+
+        if(.not. associated(cursorThis)) then
+            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_AClusterLists first!"
+            pause
+            stop
+        end if
+
+        cursorOther=>OtherList
+
+        if(.not. associated(cursorOther)) then
+            return
+        end if
+
+        if(cursorOther%GetList_Count() .LE. 0) then
+            return
+        end if
+
+        DO While(associated(cursorOther))
+            call this%AppendOneClusterList(cursorOther%TheList,cursorOther%Identify)
+            cursorOther=>cursorOther%next
+        END DO
+
+        return
+    end subroutine AppendOtherSecondOrder_AClusterLists
+
+    !**************************************
+    integer function GetSecondOrder_AClusterLists_Count(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_AClusterLists),target::this
+        !---Local Vars---
+        type(SecondOrder_AClusterLists),pointer::cursor=>null()
+        !---Body---
+
+        cursor=>this
+
+        if(.not. associated(cursor)) then
+            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_AClusterLists first!"
+            pause
+            stop
+        end if
+
+        GetSecondOrder_AClusterLists_Count = this%ListCount
+
+        Nullify(cursor)
+        cursor=>null()
+
+        return
+    end function GetSecondOrder_AClusterLists_Count
+
+    !*************************************************************
+    function FindClusterListByIdentify(this,theID) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_AClusterLists),target::this
+        integer,intent(in)::theID
+        type(SecondOrder_AClusterLists),pointer::TheResult
+        !---Local Vars---
+        logical::Finded
+        !---Body---
+
+        TheResult=>null()
+
+        TheResult=>this
+        if(.not. associated(TheResult)) then
+            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_AClusterLists first!"
+            pause
+            stop
+        end if
+
+        Finded = .false.
+
+        DO while(associated(TheResult))
+
+            if(TheResult%Identify .eq. theID) then
+                Finded = .true.
+                exit
+            end if
+
+            TheResult=>TheResult%next
+        END DO
+
+        if(Finded .eq. .false.) then
+            Nullify(TheResult)
+            TheResult=>null()
+        end if
+
+    end function FindClusterListByIdentify
+
+    !*************************************************************
+    subroutine CopySecondOrder_AClusterListsFromOther(this,other)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_AClusterLists),intent(out),target::this
+        CLASS(SecondOrder_AClusterLists),intent(in),target::other
+        !---Local Vars---
+        type(SecondOrder_AClusterLists),pointer::thisCursor=>null()
+        type(SecondOrder_AClusterLists),pointer::otherCursor=>null()
+        type(SecondOrder_AClusterLists),pointer::thisCursorP=>null()
+        type(SecondOrder_AClusterLists),pointer::otherCursorP=>null()
+        !---Body---
+
+        thisCursorP=>this
+        if(.not. associated(thisCursorP)) then
+            write(*,*) "MCPSCUERROR: You must allocate the list first !"
+            pause
+            stop
+        end if
+
+        call this%Clean_SecondOrder_AClusterLists()
+
+        otherCursorP=>other
+        if(.not. associated(otherCursorP)) then
+            return
+        end if
+
+        if(otherCursorP%GetList_Count() .LE. 0) then
+            return
+        end if
+
+        ! The assignment(=) had been override
+        thisCursorP%TheList = otherCursorP%TheList
+        thisCursorP%Identify = otherCursorP%Identify
+
+        this%ListCount = this%ListCount + 1
+
+        thisCursor=>thisCursorP%next
+        otherCursor=>otherCursorP%next
+        DO While(associated(otherCursor))
+
+            allocate(thisCursor)
+            ! The assignment(=) had been override
+            thisCursor%TheList = otherCursor%TheList
+            thisCursor%Identify = otherCursor%Identify
+
+            this%ListCount = this%ListCount + 1
+
+            thisCursorP%next=>thisCursor
+
+            thisCursorP=>thisCursor
+            otherCursorP=>otherCursor
+
+            otherCursor=>otherCursor%next
+            thisCursor=>thisCursor%next
+        END DO
+
+        Nullify(thisCursor)
+        thisCursor=>null()
+        Nullify(thisCursorP)
+        thisCursorP=>null()
+        Nullify(otherCursor)
+        otherCursor=>null()
+        Nullify(otherCursorP)
+        otherCursorP=>null()
+        return
+    end subroutine CopySecondOrder_AClusterListsFromOther
+
+    !**************************************
+    subroutine Clean_SecondOrder_AClusterLists(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_AClusterLists),target::this
+        !---Local Vars---
+        type(SecondOrder_AClusterLists),pointer::cursor=>null()
+        type(SecondOrder_AClusterLists),pointer::next=>null()
+        !---Body---
+
+        cursor=>this
+
+        if(.not. associated(cursor)) then
+            return
+        end if
+
+        cursor=>this%next
+
+        call this%TheList%Clean_ClusterList()
+        this%Identify = 0
+
+        DO While(associated(cursor))
+            next=>cursor%next
+            call CleanClusterList(cursor%TheList)
+            cursor%Identify = 0
+            cursor%next=>null()
+            deallocate(cursor)
+            Nullify(cursor)
+            cursor=>next
+        END DO
+
+        this%next=>null()
+
+        this%ListCount = 0
+
+        Nullify(cursor)
+        Nullify(next)
+        cursor=>null()
+        next=>null()
+
+        return
+    end subroutine Clean_SecondOrder_AClusterLists
+
+    !************************************
+    subroutine CleanSecondOrder_AClusterLists(this)
+        implicit none
+        !---Dummy Vars---
+        type(SecondOrder_AClusterLists)::this
+        !---Body---
+
+        call this%Clean_SecondOrder_AClusterLists()
+
+        return
+    end subroutine CleanSecondOrder_AClusterLists
 
 end module MCLIB_TYPEDEF_ACLUSTER

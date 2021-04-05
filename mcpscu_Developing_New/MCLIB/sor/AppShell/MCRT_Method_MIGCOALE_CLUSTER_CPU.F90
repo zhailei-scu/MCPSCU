@@ -243,36 +243,19 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         real(kind=KINDDF)::BoxVolum
         logical::Finded
         type(AClusterList),pointer::cursor=>null()
-        integer::MaxGroupNum
+        integer::cascadeID
         !---Body---
 
         MultiBox = Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
 
         BoxVolum = Host_SimBoxes%BOXSIZE(1)*Host_SimBoxes%BOXSIZE(2)*Host_SimBoxes%BOXSIZE(3)
 
-        MaxGroupNum = 0
-
-        DO IBox = 1,MultiBox
-            RecordIndex = 0
-            if(Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GE. Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,1) .AND. &
-                Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2) .GT. 0) then
-                if(MaxGroupNum .LT. Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)) then
-                    MaxGroupNum = Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2))%m_Record(1)
-                end if
-
-            end if
-
-        END DO
-
-        !---One cascade own 1 SIAs group and 1 CECR group, two cascades own 1 SIAs group and 2 CECR groups
-        MaxGroupNum = MaxGroupNum + 1
-
         call Host_MFCollections%Clean_MFCollections()
-        allocate(Host_MFCollections%Collections(MultiBox,MaxGroupNum))
+        allocate(Host_MFCollections%Collections(MultiBox))
 
         DO IBox = 1,MultiBox
 
-            call this%Collections(IBox)%Clean_ClusterList()
+            call Host_MFCollections%Collections(IBox)%Clean_SecondOrder_AClusterLists()
 
             ICFROM = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
             ICTO = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -284,8 +267,10 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                     Finded = .false.
 
-                    if(this%Collections(IBox)%GetList_Count() .GT. 0) then
-                        cursor=>this%Collections(IBox)
+                    cascadeID = Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1)
+
+                    if(Host_MFCollections%Collections(IBox)%GetList_Count() .GT. 0) then
+                        cursor=>Host_MFCollections%Collections(IBox)
                         DO While(associated(cursor))
                             if(cursor%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
                                 cursor%quantififyValue = cursor%quantififyValue + 1.D0/BoxVolum
@@ -297,7 +282,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                     end if
 
                     if(Finded .eq. .false.) then
-                        call this%Collections(IBox)%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
+                        call Host_MFCollections%Collections(IBox)%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
                     end if
 
                 end if

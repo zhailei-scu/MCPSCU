@@ -5,7 +5,7 @@ module MF_TYPEDEF_COLLECTIONS
     implicit none
 
     type,public::MFCOLLECTIONS
-        type(AClusterList),dimension(:,:),pointer::Collections=>null()   ! (IBox,IGroup)
+        type(SecondOrder_AClusterLists),dimension(:),pointer::Collections=>null()
         contains
         procedure,non_overridable,pass,public::CopyMFCollectionsFromOther
         procedure,non_overridable,pass,public::Clean_MFCollections
@@ -26,19 +26,16 @@ module MF_TYPEDEF_COLLECTIONS
         type(MFCOLLECTIONS),intent(in)::Other
         !---Local Vars---
         integer::I
-        integer::J
         !---Body---
 
         if(allocated(this%Collections)) deallocate(this%Collections)
 
         if(allocated(Other%Collections)) then
-            allocate(this%Collections(size(Other%Collections,dim=1),size(Other%Collections,dim=2)))
+            allocate(this%Collections(size(Other%Collections)))
 
-            DO I = 1,size(Other%Collections,dim=1)
-                DO J = 1,size(Other%Collections,dim=2)
-                    !---The Assignment(=) had been overrided
-                    this%Collections(I,J) = Other%Collections(I,J)
-                END DO
+            DO I = 1,size(Other%Collections)
+                !---The Assignment(=) had been overrided
+                this%Collections(I) = Other%Collections(I)
             END DO
         end if
 
@@ -52,13 +49,10 @@ module MF_TYPEDEF_COLLECTIONS
         Class(MFCOLLECTIONS)::this
         !---Local Vars---
         integer::I
-        integer::J
         !---Body---
         if(allocated(this%Collections)) then
-            DO I = 1,size(this%Collections,dim=1)
-                DO J = 1,size(this%Collections,dim=2)
-                    call this%Collections(I,J)%Clean_ClusterList()
-                END DO
+            DO I = 1,size(this%Collections)
+                call this%Collections(I)%Clean_SecondOrder_AClusterLists()
             END DO
         end if
 
