@@ -228,1169 +228,643 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
 
     !************************************************
-    subroutine TransformMCToRT(Host_MFCollections,Host_SimBoxes,Host_SimuCtrlParamList)
-        implicit none
-        !--Dummy Vars---
-        Class(MFCOLLECTIONS)::Host_MFCollections
-        type(SimulationBoxes)::Host_SimBoxes
-        type(SimulationCtrlParamList),target::Host_SimuCtrlParamList
-        !---Local Vars---
-        integer::MultiBox
-        integer::IBox
-        integer::ICFROM
-        integer::ICTO
-        integer::IC
-        real(kind=KINDDF)::BoxVolum
-        logical::Finded
-        type(SecondOrder_AClusterLists),pointer::cursor=>null()
-        type(AClusterList),pointer::cursorClusterList=>null()
-        type(AClusterList)::newOne
-        integer::cascadeID
-        !---Body---
-
-        MultiBox = Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
-
-        BoxVolum = Host_SimBoxes%BOXSIZE(1)*Host_SimBoxes%BOXSIZE(2)*Host_SimBoxes%BOXSIZE(3)
-
-        call Host_MFCollections%Clean_MFCollections()
-        allocate(Host_MFCollections%Collections(MultiBox))
-
-        DO IBox = 1,MultiBox
-
-            call Host_MFCollections%Collections(IBox)%Clean_SecondOrder_AClusterLists()
-
-            ICFROM = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
-            ICTO = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
-
-            DO IC = ICFROM,ICTO
-
-                if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
-                   Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
-
-                    Finded = .false.
-
-                    cascadeID = Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1)
-
-                    cursor=>Host_MFCollections%Collections(IBox)%Find(cascadeID)
-
-                    if(.not. associated(cursor)) then
-                        call newOne%Clean_ClusterList()
-                        cursor=>Host_MFCollections%Collections(IBox)%AppendOneClusterList(newOne,cascadeID)
-                    end if
-
-                    if(cursor%TheList%GetList_Count() .GT. 0) then
-                        cursorClusterList=>cursor%TheList
-                        DO While(associated(cursorClusterList))
-                            if(cursorClusterList%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
-                                cursorClusterList%quantififyValue = cursorClusterList%quantififyValue + 1.D0/BoxVolum
-                                Finded = .true.
-                            end if
-
-                            cursorClusterList=>cursorClusterList%next
-                        END DO
-                    end if
-
-                    if(Finded .eq. .false.) then
-                        call cursor%TheList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
-                    end if
-
-                end if
-
-            END DO
-
-        END DO
-
-        Nullify(cursor)
-        cursor=>null()
-
-        return
-    end subroutine TransformMCToRT
-
-
-    !***************************************************
-    subroutine NucleationSimu_NonSpaceDist_Balance_SimpleHybrid(Host_SimBoxes,Host_SimuCtrlParam,Host_MFCollections,TheMigCoaleStatInfoWrap,Record,TheImplantSection)
-        use RAND32_MODULE
-        implicit none
-        !---Dummy Vars---
-        type(SimulationBoxes)::Host_SimBoxes
-        type(SimulationCtrlParam),target::Host_SimuCtrlParam
-        type(MFCOLLECTIONS)::Host_MFCollections
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
-        type(ImplantSection)::TheImplantSection
-        !---Local Vars---
-        integer::MultiBox
-        real(kind=KINDDF)::TSTEP
-        real(kind=KINDDF)::deta
-        type(AClusterList),dimension(:),pointer::tempNBPVChangeRate
-        real(kind=KINDDF)::NPOWER0Ave
-        real(kind=KINDDF)::NPOWER1DIV2Ave
-        real(kind=KINDDF)::NPOWER1Ave
-        real(kind=KINDDF)::NPOWER3DIV2Ave
-        real(kind=KINDDF)::N1
-        real(kind=KINDDF)::N2
-        real(kind=KINDDF)::N3
-        real(kind=KINDDF)::Rave
-        integer::I
-        integer::INode
-        integer::NNodes
-        real(kind=KINDDF)::Factor
-        real(kind=KINDDF)::tempTimeStep
-        real(kind=KINDDF)::DiffGradient1
-        real(kind=KINDDF)::DiffGradient2
-        type(DiffusorValue)::TheDiffusorValue
-        integer::AtomuNumbSubject
-        integer::AtomuNumbObject
-        integer::AtomuNumbProductor
-        type(ReactionValue)::TheReactionValue
-        real(kind=KINDDF)::ReactionCoeff
-        real(kind=KINDDF)::SFlux
-        real(kind=KINDDF)::MaxConcent
-        real(kind=KINDDF)::MaxChangeRate
-        integer::SIAIndex
-        integer::VacancyIndex
-        type(AClusterList),pointer::IKindCursor=>null()
-        type(AClusterList),pointer::JKindCursor=>null()
-        type(AClusterList),pointer::IChangeRateCursor=>null()
-        type(AClusterList),pointer::JChangeRateCursor=>null()
-        type(ACluster)::generatedCluster
-        type(AClusterList),pointer::visitCursor=>null()
-        real(kind=KINDDF)::deta_Final
-        !---Body---
-        MultiBox = Host_SimuCtrlParam%MultiBox
-
-        SIAIndex = Host_SimBoxes%Atoms_list%FindIndexBySymbol("W")
-        VacancyIndex = Host_SimBoxes%Atoms_list%FindIndexBySymbol("VC")
-
-        allocate(tempNBPVChangeRate(MultiBox))
-
-        DO IBox = 1,MultiBox
-            !--The Assignment(=) had been overrided---
-            tempNBPVChangeRate(IBox) = Host_MFCollections%Collections(IBox)
-        END DO
-
-        TSTEP = 0.01
-
-        DO While(.true.)
-
-          Associate(Collections=>Host_MFCollections%Collections)
-
-            call Record%IncreaseOneSimuStep()
-
-            DO IBox = 1,MultiBox
-
-                IKindCursor=>Collections(IBox)
-
-                IChangeRateCursor=>tempNBPVChangeRate(IBox)
-
-                tempCount = tempNBPVChangeRate(IBox)%GetList_Count()
-
-                DO ILoop = 1,tempCount
-
-                    if(IKindCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT. 0) then
-
-                        JKindCursor=>IKindCursor
-
-                        JChangeRateCursor=>IChangeRateCursor
-
-                        DO JLoop = ILoop,tempCount
-                            if(JKindCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT. 0) then
-
-                                TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(IKindCursor%TheCluster,JKindCursor%TheCluster)
-
-                                ReactionCoeff = 0.D0
-                                select case(TheReactionValue%ReactionCoefficientType)
-                                    case(p_ReactionCoefficient_ByValue)
-                                        ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
-                                    case(p_ReactionCoefficient_ByArrhenius)
-                                        ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/Host_SimuCtrlParam%TKB)
-                                end select
-
-                                if(ReactionCoeff .GE. DRAND32()) then
-
-                                    deta = Dumplicate*4*PI*IKindCursor%quantififyValue*JKindCursor%quantififyValue* &
-                                             (IKindCursor%TheCluster%m_RAD + JKindCursor%TheCluster%m_RAD)*         &
-                                             (IKindCursor%TheCluster%m_DiffCoeff + JKindCursor%TheCluster%m_DiffCoeff)
-
-                                    if(IKind .eq. JKind) then
-
-                                        Factor = 0.5D0
-
-                                        IChangeRateCursor%quantififyValue =  IChangeRateCursor%quantififyValue - deta
-                                    else
-                                        Factor = 1.D0
-
-                                        IChangeRateCursor%quantififyValue =  IChangeRateCursor%quantififyValue - deta
-
-                                        JChangeRateCursor%quantififyValue =  JChangeRateCursor%quantififyValue - deta
-                                    end if
-
-                                    call generatedCluster%Clean_Cluster()
-
-                                    select case(TheReactionValue%ProductionType)
-                                        case(p_ProductionType_BySimplePlus)
-                                            generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  IKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
-                                                                                                      JKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-
-                                            !---Should consider atomic number conservation
-                                            deta_Final = deta*Factor
-
-                                        case(p_ProductionType_BySubtract)
-
-                                            SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
-                                            ObjectElementIndex = TheReactionValue%ElemetIndex_Object
-
-                                            generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = IKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
-                                                                                                     JKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-
-                                            SubjectNANum = generatedCluster%m_Atoms(SubjectElementIndex)%m_NA
-                                            ObjectNANum  = generatedCluster%m_Atoms(ObjectElementIndex)%m_NA
-
-                                            generatedCluster%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
-
-                                            generatedCluster%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
-
-                                            if(sum(generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
-                                                generatedCluster%m_Statu = p_ANNIHILATE_STATU
-                                            end if
-
-                                            !---Not consider atomic number conservation
-                                            deta_Final = deta
-                                        case default
-                                            write(*,*) "MCPSCUERROR: Unknown reaction type",TheReactionValue%ProductionType
-                                            pause
-                                            stop
-
-                                    end select
-
-                                    TheDiffusorValue = Host_SimBoxes%m_DiffusorTypesMap%Get(generatedCluster)
-
-                                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
-                                    !---you should init the distribution by external file---
-                                    select case(TheDiffusorValue%ECRValueType_Free)
-                                        case(p_ECR_ByValue)
-                                            generatedCluster%m_RAD = TheDiffusorValue%ECR_Free
-                                        case default
-                                            generatedCluster%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,        &
-                                                                     Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA, &
-                                                                     Host_SimuCtrlParam%TKB,               &
-                                                                     Host_SimBoxes%LatticeLength)
-                                    end select
-
-                                    select case(TheDiffusorValue%DiffusorValueType_Free)
-                                        case(p_DiffuseCoefficient_ByValue)
-                                            generatedCluster%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
-                                        case(p_DiffuseCoefficient_ByArrhenius)
-                                            generatedCluster%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
-                                        case(p_DiffuseCoefficient_ByBCluster)
-                                            ! Here we adopt a model that D=D0*(1/R)**Gama
-                                            generatedCluster%m_DiffCoeff = m_FREESURDIFPRE*(generatedCluster%m_RAD**(-p_GAMMA))
-                                        case(p_DiffuseCoefficient_BySIACluster)
-                                            generatedCluster%m_DiffCoeff = (sum(generatedCluster%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
-                                                                                TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
-                                        case(p_DiffuseCoefficient_ByVcCluster)
-                                            generatedCluster%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(generatedCluster%m_Atoms(:)%m_NA)))* &
-                                                                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
-                                    end select
-
-                                    generatedCluster%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
-
-                                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
-                                        DO TheDim = 1,3
-                                            generatedCluster%m_DiffuseDirection(TheDim) = generatedCluster%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
-                                        END DO
-                                        generatedCluster%m_DiffCoeff = generatedCluster%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
-                                    end if
-
-                                    generatedCluster%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
-
-                                    visitCursor=>tempNBPVChangeRate(IBox)%Find(generatedCluster)
-
-                                    if(associated(visitCursor)) then
-                                        visitCursor%quantififyValue = visitCursor%quantififyValue  + deta_Final
-                                    else
-                                        call tempNBPVChangeRate(IBox)%AppendOneCluster(generatedCluster,deta_Final)
-                                    end if
-
-!                                    AtomuNumbSubject = sum(ClustersKind(IKind)%m_Atoms(:)%m_NA)
-!                                    AtomuNumbObject = sum(ClustersKind(JKind)%m_Atoms(:)%m_NA)
-!                                    AtomuNumbProductor = sum(ClustersKind(IKind+JKind)%m_Atoms(:)%m_NA)
+!    subroutine TransformMCToRT_PackageVAC(Host_MFCollections,Host_SimBoxes,Host_SimuCtrlParamList)
+!        implicit none
+!        !--Dummy Vars---
+!        Class(MFCOLLECTIONS)::Host_MFCollections
+!        type(SimulationBoxes)::Host_SimBoxes
+!        type(SimulationCtrlParamList),target::Host_SimuCtrlParamList
+!        !---Local Vars---
+!        integer::MultiBox
+!        integer::IBox
+!        integer::ICFROM
+!        integer::ICTO
+!        integer::IC
+!        real(kind=KINDDF)::BoxVolum
+!        logical::Finded
+!        type(SecondOrder_AClusterLists),pointer::cursor=>null()
+!        type(AClusterList),pointer::cursorClusterList=>null()
+!        type(AClusterList)::newOne
+!        integer::cascadeID
+!        integer::SIAIndex
+!        integer::VacancyIndex
+!        !---Body---
 !
-!                                    tempNBPVChangeRate(INode,IKind + JKind) = tempNBPVChangeRate(INode,IKind + JKind) + &
-!                                                                            Factor*deta*(AtomuNumbSubject+AtomuNumbObject)/AtomuNumbProductor
-                                end if
-                            end if
-
-                            JKindCursor=>JKindCursor%next
-
-                            JChangeRateCursor=>JChangeRateCursor%Next
-                        END DO
-
-                    end if
-
-                    IKindCursor=>IKindCursor%next
-                    IChangeRateCursor=>IChangeRateCursor%Next
-                END DO
-            END DO
-
-            tempNBPVChangeRate = tempNBPVChangeRate + ImplantedRate
-
-            MaxConcent = maxval(Concent)
-            MaxChangeRate = maxval(dabs(tempNBPVChangeRate))
-
-            if(MaxConcent .GT. 0.D0 .AND. MaxChangeRate .GT. 0.D0) then
-                TSTEP = Host_SimuCtrlParam%MaxReactChangeRate*MaxConcent/MaxChangeRate
-            else
-                TSTEP = 1.D-10
-            end if
-
-            write(*,*) "!---------------------"
-            write(*,*) "TSTEP1",TSTEP
-            write(*,*) "maxval(Concent)",maxval(Concent)
-            write(*,*) "maxval(dabs(tempNBPVChangeRate))",maxval(dabs(tempNBPVChangeRate))
-            write(*,*) "maxloc(Concent)",maxloc(Concent)
-            write(*,*) "maxloc(dabs(tempNBPVChangeRate))",maxloc(dabs(tempNBPVChangeRate))
-            write(*,*) "maxloc(ImplantedRate)",maxloc(ImplantedRate)
-            write(*,*) "maxval(ImplantedRate)",maxval(ImplantedRate)
-
-            DO IKind = 1,CKind
-                DO INode = 1,NNodes
-                    tempTimeStep = Concent(INode,IKind)/dabs(tempNBPVChangeRate(INode,IKind))
-                    if(tempNBPVChangeRate(INode,IKind) .LT. 0.D0 .AND. Concent(INode,IKind) .GT. 0.D0) then
-                        TSTEP = min(TSTEP,tempTimeStep)
-                    end if
-
-                    if(INode .eq. 1) then  ! upper surface
-
-                        DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                        if(NNodes .LE. 1) then
-                            DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                            SFlux = DiffGradient1*Concent(INode,IKind) + DiffGradient2*Concent(INode,IKind)
-                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                            end if
-                        else
-                            DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
-
-                            SFlux = DiffGradient1*Concent(INode,IKind) - DiffGradient2*(Concent(INode+1,IKind) - Concent(INode,IKind))
-                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                            end if
-
-                        end if
-
-                    else if(INode .eq. NNodes) then  ! Low surface
-
-                        DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                        if(NNodes .LE. 1) then
-                            DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                            SFlux = DiffGradient1*Concent(INode,IKind) + DiffGradient2*Concent(INode,IKind)
-                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                            end if
-                        else
-                            DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
-
-                            SFlux = DiffGradient1*(Concent(INode,IKind) - Concent(INode-1,IKind)) + DiffGradient2*Concent(INode,IKind)
-                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                            end if
-                        end if
-
-                    else
-                        DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
-                        DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
-
-                        SFlux = DiffGradient1*(Concent(INode,IKind) - Concent(INode-1,IKind)) - DiffGradient2*(Concent(INode+1,IKind) - Concent(INode,IKind))
-                        if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                            TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                        end if
-                    end if
-
-                END DO
-            END DO
-
-            DO IKind = 1,CKind
-
-                MatA = 0.D0
-                MatB = 0.D0
-                MatC = 0.D0
-                MatD = 0.D0
-
-                DO INode = 1,NNodes
-                    if(INode .eq. 1) then  ! upper surface
-
-                        DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                        MatA(INode) = 0.D0
-                        if(NNodes .LE. 1) then
-                            DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                            select case(Host_SimuCtrlParam%BDCTYPE(3,1))
-                                case(p_Dirichlet_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
-                                case(p_Neumann_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP
-                                case default
-                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,1)
-                                    pause
-                                    stop
-                            end select
-
-                            MatC(INode) = 0.D0
-                        else
-                            DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
-
-                            select case(Host_SimuCtrlParam%BDCTYPE(3,1))
-                                case(p_Dirichlet_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
-                                case(p_Neumann_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient2
-                                case default
-                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,1)
-                                    pause
-                                    stop
-                            end select
-
-                            MatC(INode) = -DiffGradient2
-                        end if
-
-                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
-                    else if(INode .eq. NNodes) then  ! Low surface
-
-                        DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                        if(NNodes .LE. 1) then
-                            DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                            MatA(INode) = 0.D0
-
-                            select case(Host_SimuCtrlParam%BDCTYPE(3,2))
-                                case(p_Dirichlet_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
-                                case(p_Neumann_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP
-                                case default
-                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,2)
-                                    pause
-                                    stop
-                            end select
-                        else
-                            DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
-
-                            MatA(INode) = -DiffGradient1
-
-                            select case(Host_SimuCtrlParam%BDCTYPE(3,2))
-                                case(p_Dirichlet_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
-                                case(p_Neumann_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1
-                                case default
-                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,2)
-                                    pause
-                                    stop
-                            end select
-
-                        end if
-
-                        MatC(INode) = 0.D0
-                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
-                    else
-                        DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
-                        DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
-                        MatA(INode) = -DiffGradient1
-                        MatB(INode) = NodeSpace(INode)/TSTEP + (DiffGradient1 + DiffGradient2)
-                        MatC(INode) = -DiffGradient2
-                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
-                    end if
-
-                END DO
-
-                call SolveTridag(IKind,MatA,MatB,MatC,MatD,Concent,NNodes,MatW,MatH)
-
-!                DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(NNodes)
-!                FOutEachStep(IKind) = DiffGradient2*Concent(NNodes,IKind)
-!                COutEachStep(IKind) = DiffGradient2*Concent(NNodes,IKind)*TSTEP/NodeSpace(NNodes)
-!                FOutAccum(IKind) = FOutAccum(IKind) + FOutEachStep(IKind)
-!                COutAccum(IKind) = COutAccum(IKind) + COutEachStep(IKind)
+!        MultiBox = Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
 !
-!                DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(1)
-!                FSurfEachStep(IKind) = DiffGradient1*Concent(1,IKind)
-!                CSurfEachStep(IKind) = DiffGradient1*Concent(1,IKind)*TSTEP/NodeSpace(1)
-!                FSurfAccum(IKind) = FSurfAccum(IKind) + FSurfEachStep(IKind)
-!                CSurfAccum(IKind) = CSurfAccum(IKind) + CSurfEachStep(IKind)
-
-                if(IKind .eq. 1) then
-
-!                    write(*,*) "Accumulated out flux from up surface",FSurfAccum(IKind)
-!                    write(*,*) "Accumulated out concentrate from up surface",CSurfAccum(IKind)
-!                    write(*,*) "Out flux from up surface in current step",FSurfEachStep(IKind)
-!                    write(*,*) "Out concentrate from up surface in current step",CSurfEachStep(IKind)
+!        BoxVolum = Host_SimBoxes%BOXSIZE(1)*Host_SimBoxes%BOXSIZE(2)*Host_SimBoxes%BOXSIZE(3)
+!
+!        SIAIndex = Host_SimBoxes%Atoms_list%FindIndexBySymbol("W")
+!        VacancyIndex = Host_SimBoxes%Atoms_list%FindIndexBySymbol("VC")
+!
+!        call Host_MFCollections%Clean_MFCollections()
+!        allocate(Host_MFCollections%Collections(MultiBox))
+!
+!        DO IBox = 1,MultiBox
+!
+!            call Host_MFCollections%Collections(IBox)%Clean_SecondOrder_AClusterLists()
+!
+!            ICFROM = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,1)
+!            ICTO = Host_SimBoxes%m_BoxesInfo%SEUsedIndexBox(IBox,2)
+!
+!            DO IC = ICFROM,ICTO
+!
+!                if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+!                   Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu .eq. p_ACTIVEINGB_STATU) then
+!
+!                    Finded = .false.
+!
+!                    cascadeID = Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1)
+!
+!                    cursor=>Host_MFCollections%Collections(IBox)%Find(cascadeID)
+!
+!                    if(.not. associated(cursor)) then
+!                        call newOne%Clean_ClusterList()
+!                        cursor=>Host_MFCollections%Collections(IBox)%AppendOneClusterList(newOne,cascadeID)
+!                    end if
+!
+!                    if(cursor%TheList%GetList_Count() .GT. 0) then
+!                        cursorClusterList=>cursor%TheList
+!                        DO While(associated(cursorClusterList))
+!                            if(cursorClusterList%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
+!                                cursorClusterList%quantififyValue = cursorClusterList%quantififyValue + 1.D0/BoxVolum
+!                                Finded = .true.
+!                            end if
+!
+!                            cursorClusterList=>cursorClusterList%next
+!                        END DO
+!                    end if
+!
+!                    if(Finded .eq. .false.) then
+!                        call cursor%TheList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
+!                    end if
+!
+!                end if
+!
+!            END DO
+!
+!        END DO
+!
+!        Nullify(cursor)
+!        cursor=>null()
+!
+!        return
+!    end subroutine TransformMCToRT_PackageVAC
+!
+!
+!    !***************************************************
+!    subroutine NucleationSimu_NonSpaceDist_Balance_SimpleHybrid(Host_SimBoxes,Host_SimuCtrlParam,Host_MFCollections,TheMigCoaleStatInfoWrap,Record,TheImplantSection)
+!        use RAND32_MODULE
+!        implicit none
+!        !---Dummy Vars---
+!        type(SimulationBoxes)::Host_SimBoxes
+!        type(SimulationCtrlParam),target::Host_SimuCtrlParam
+!        type(MFCOLLECTIONS)::Host_MFCollections
+!        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
+!        type(MigCoalClusterRecord)::Record
+!        type(ImplantSection)::TheImplantSection
+!        !---Local Vars---
+!        integer::MultiBox
+!        real(kind=KINDDF)::TSTEP
+!        real(kind=KINDDF)::deta
+!        type(SecondOrder_AClusterLists),dimension(:),pointer::tempNBPVChangeRate
+!        real(kind=KINDDF)::NPOWER0Ave
+!        real(kind=KINDDF)::NPOWER1DIV2Ave
+!        real(kind=KINDDF)::NPOWER1Ave
+!        real(kind=KINDDF)::NPOWER3DIV2Ave
+!        real(kind=KINDDF)::N1
+!        real(kind=KINDDF)::N2
+!        real(kind=KINDDF)::N3
+!        real(kind=KINDDF)::Rave
+!        integer::I
+!        integer::INode
+!        integer::NNodes
+!        real(kind=KINDDF)::Factor
+!        real(kind=KINDDF)::tempTimeStep
+!        real(kind=KINDDF)::DiffGradient1
+!        real(kind=KINDDF)::DiffGradient2
+!        type(DiffusorValue)::TheDiffusorValue
+!        integer::AtomuNumbSubject
+!        integer::AtomuNumbObject
+!        integer::AtomuNumbProductor
+!        type(ReactionValue)::TheReactionValue
+!        real(kind=KINDDF)::ReactionCoeff
+!        real(kind=KINDDF)::SFlux
+!        real(kind=KINDDF)::MaxConcent
+!        real(kind=KINDDF)::MaxChangeRate
+!        integer::SIAIndex
+!        integer::VacancyIndex
+!        type(AClusterList),pointer::IKindCursor=>null()
+!        type(AClusterList),pointer::JKindCursor=>null()
+!        type(AClusterList),pointer::IChangeRateCursor=>null()
+!        type(AClusterList),pointer::JChangeRateCursor=>null()
+!        type(ACluster)::generatedCluster
+!        type(AClusterList),pointer::visitCursor=>null()
+!        real(kind=KINDDF)::deta_Final
+!        !---Body---
+!        MultiBox = Host_SimuCtrlParam%MultiBox
+!
+!        SIAIndex = Host_SimBoxes%Atoms_list%FindIndexBySymbol("W")
+!        VacancyIndex = Host_SimBoxes%Atoms_list%FindIndexBySymbol("VC")
+!
+!        allocate(tempNBPVChangeRate(MultiBox))
+!
+!        DO IBox = 1,MultiBox
+!            !--The Assignment(=) had been overrided---
+!            tempNBPVChangeRate(IBox) = Host_MFCollections%Collections(IBox)
+!        END DO
+!
+!        TSTEP = 0.01
+!
+!        DO While(.true.)
+!
+!          Associate(Collections=>Host_MFCollections%Collections)
+!
+!            call Record%IncreaseOneSimuStep()
+!
+!            DO IBox = 1,MultiBox
+!
+!                IKindCursor=>Collections(IBox)
+!
+!                IChangeRateCursor=>tempNBPVChangeRate(IBox)
+!
+!                tempCount = tempNBPVChangeRate(IBox)%GetList_Count()
+!
+!                DO ILoop = 1,tempCount
+!
+!                    if(IKindCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT. 0) then
+!
+!                        JKindCursor=>IKindCursor
+!
+!                        JChangeRateCursor=>IChangeRateCursor
+!
+!                        DO JLoop = ILoop,tempCount
+!                            if(JKindCursor%TheCluster%m_Atoms(SIAIndex)%m_NA .GT. 0) then
+!
+!                                TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(IKindCursor%TheCluster,JKindCursor%TheCluster)
+!
+!                                ReactionCoeff = 0.D0
+!                                select case(TheReactionValue%ReactionCoefficientType)
+!                                    case(p_ReactionCoefficient_ByValue)
+!                                        ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
+!                                    case(p_ReactionCoefficient_ByArrhenius)
+!                                        ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/Host_SimuCtrlParam%TKB)
+!                                end select
+!
+!                                if(ReactionCoeff .GE. DRAND32()) then
+!
+!                                    deta = Dumplicate*4*PI*IKindCursor%quantififyValue*JKindCursor%quantififyValue* &
+!                                             (IKindCursor%TheCluster%m_RAD + JKindCursor%TheCluster%m_RAD)*         &
+!                                             (IKindCursor%TheCluster%m_DiffCoeff + JKindCursor%TheCluster%m_DiffCoeff)
+!
+!                                    if(IKind .eq. JKind) then
+!
+!                                        Factor = 0.5D0
+!
+!                                        IChangeRateCursor%quantififyValue =  IChangeRateCursor%quantififyValue - deta
+!                                    else
+!                                        Factor = 1.D0
+!
+!                                        IChangeRateCursor%quantififyValue =  IChangeRateCursor%quantififyValue - deta
+!
+!                                        JChangeRateCursor%quantififyValue =  JChangeRateCursor%quantififyValue - deta
+!                                    end if
+!
+!                                    call generatedCluster%Clean_Cluster()
+!
+!                                    select case(TheReactionValue%ProductionType)
+!                                        case(p_ProductionType_BySimplePlus)
+!                                            generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  IKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+!                                                                                                      JKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!
+!                                            !---Should consider atomic number conservation
+!                                            deta_Final = deta*Factor
+!
+!                                        case(p_ProductionType_BySubtract)
+!
+!                                            SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
+!                                            ObjectElementIndex = TheReactionValue%ElemetIndex_Object
+!
+!                                            generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = IKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+!                                                                                                     JKindCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!
+!                                            SubjectNANum = generatedCluster%m_Atoms(SubjectElementIndex)%m_NA
+!                                            ObjectNANum  = generatedCluster%m_Atoms(ObjectElementIndex)%m_NA
+!
+!                                            generatedCluster%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
+!
+!                                            generatedCluster%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
+!
+!                                            if(sum(generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
+!                                                generatedCluster%m_Statu = p_ANNIHILATE_STATU
+!                                            end if
+!
+!                                            !---Not consider atomic number conservation
+!                                            deta_Final = deta
+!                                        case default
+!                                            write(*,*) "MCPSCUERROR: Unknown reaction type",TheReactionValue%ProductionType
+!                                            pause
+!                                            stop
+!
+!                                    end select
+!
+!                                    TheDiffusorValue = Host_SimBoxes%m_DiffusorTypesMap%Get(generatedCluster)
+!
+!                                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+!                                    !---you should init the distribution by external file---
+!                                    select case(TheDiffusorValue%ECRValueType_Free)
+!                                        case(p_ECR_ByValue)
+!                                            generatedCluster%m_RAD = TheDiffusorValue%ECR_Free
+!                                        case default
+!                                            generatedCluster%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,        &
+!                                                                     Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA, &
+!                                                                     Host_SimuCtrlParam%TKB,               &
+!                                                                     Host_SimBoxes%LatticeLength)
+!                                    end select
+!
+!                                    select case(TheDiffusorValue%DiffusorValueType_Free)
+!                                        case(p_DiffuseCoefficient_ByValue)
+!                                            generatedCluster%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+!                                        case(p_DiffuseCoefficient_ByArrhenius)
+!                                            generatedCluster%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+!                                        case(p_DiffuseCoefficient_ByBCluster)
+!                                            ! Here we adopt a model that D=D0*(1/R)**Gama
+!                                            generatedCluster%m_DiffCoeff = m_FREESURDIFPRE*(generatedCluster%m_RAD**(-p_GAMMA))
+!                                        case(p_DiffuseCoefficient_BySIACluster)
+!                                            generatedCluster%m_DiffCoeff = (sum(generatedCluster%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+!                                                                                TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+!                                        case(p_DiffuseCoefficient_ByVcCluster)
+!                                            generatedCluster%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(generatedCluster%m_Atoms(:)%m_NA)))* &
+!                                                                                                         TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+!                                    end select
+!
+!                                    generatedCluster%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+!
+!                                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+!                                        DO TheDim = 1,3
+!                                            generatedCluster%m_DiffuseDirection(TheDim) = generatedCluster%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+!                                        END DO
+!                                        generatedCluster%m_DiffCoeff = generatedCluster%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+!                                    end if
+!
+!                                    generatedCluster%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+!
+!                                    visitCursor=>tempNBPVChangeRate(IBox)%Find(generatedCluster)
+!
+!                                    if(associated(visitCursor)) then
+!                                        visitCursor%quantififyValue = visitCursor%quantififyValue  + deta_Final
+!                                    else
+!                                        call tempNBPVChangeRate(IBox)%AppendOneCluster(generatedCluster,deta_Final)
+!                                    end if
+!
+!!                                    AtomuNumbSubject = sum(ClustersKind(IKind)%m_Atoms(:)%m_NA)
+!!                                    AtomuNumbObject = sum(ClustersKind(JKind)%m_Atoms(:)%m_NA)
+!!                                    AtomuNumbProductor = sum(ClustersKind(IKind+JKind)%m_Atoms(:)%m_NA)
+!!
+!!                                    tempNBPVChangeRate(INode,IKind + JKind) = tempNBPVChangeRate(INode,IKind + JKind) + &
+!!                                                                            Factor*deta*(AtomuNumbSubject+AtomuNumbObject)/AtomuNumbProductor
+!                                end if
+!                            end if
+!
+!                            JKindCursor=>JKindCursor%next
+!
+!                            JChangeRateCursor=>JChangeRateCursor%Next
+!                        END DO
+!
+!                    end if
+!
+!                    IKindCursor=>IKindCursor%next
+!                    IChangeRateCursor=>IChangeRateCursor%Next
+!                END DO
+!            END DO
+!
+!            tempNBPVChangeRate = tempNBPVChangeRate + ImplantedRate
+!
+!            MaxConcent = maxval(Concent)
+!            MaxChangeRate = maxval(dabs(tempNBPVChangeRate))
+!
+!            if(MaxConcent .GT. 0.D0 .AND. MaxChangeRate .GT. 0.D0) then
+!                TSTEP = Host_SimuCtrlParam%MaxReactChangeRate*MaxConcent/MaxChangeRate
+!            else
+!                TSTEP = 1.D-10
+!            end if
+!
+!            write(*,*) "!---------------------"
+!            write(*,*) "TSTEP1",TSTEP
+!            write(*,*) "maxval(Concent)",maxval(Concent)
+!            write(*,*) "maxval(dabs(tempNBPVChangeRate))",maxval(dabs(tempNBPVChangeRate))
+!            write(*,*) "maxloc(Concent)",maxloc(Concent)
+!            write(*,*) "maxloc(dabs(tempNBPVChangeRate))",maxloc(dabs(tempNBPVChangeRate))
+!            write(*,*) "maxloc(ImplantedRate)",maxloc(ImplantedRate)
+!            write(*,*) "maxval(ImplantedRate)",maxval(ImplantedRate)
+!
+!            DO IKind = 1,CKind
+!                DO INode = 1,NNodes
+!                    tempTimeStep = Concent(INode,IKind)/dabs(tempNBPVChangeRate(INode,IKind))
+!                    if(tempNBPVChangeRate(INode,IKind) .LT. 0.D0 .AND. Concent(INode,IKind) .GT. 0.D0) then
+!                        TSTEP = min(TSTEP,tempTimeStep)
+!                    end if
+!
+!                    if(INode .eq. 1) then  ! upper surface
+!
+!                        DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
+!
+!                        if(NNodes .LE. 1) then
+!                            DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
+!
+!                            SFlux = DiffGradient1*Concent(INode,IKind) + DiffGradient2*Concent(INode,IKind)
+!                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
+!                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
+!                            end if
+!                        else
+!                            DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
+!
+!                            SFlux = DiffGradient1*Concent(INode,IKind) - DiffGradient2*(Concent(INode+1,IKind) - Concent(INode,IKind))
+!                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
+!                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
+!                            end if
+!
+!                        end if
+!
+!                    else if(INode .eq. NNodes) then  ! Low surface
+!
+!                        DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
+!
+!                        if(NNodes .LE. 1) then
+!                            DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
+!
+!                            SFlux = DiffGradient1*Concent(INode,IKind) + DiffGradient2*Concent(INode,IKind)
+!                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
+!                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
+!                            end if
+!                        else
+!                            DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
+!
+!                            SFlux = DiffGradient1*(Concent(INode,IKind) - Concent(INode-1,IKind)) + DiffGradient2*Concent(INode,IKind)
+!                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
+!                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
+!                            end if
+!                        end if
+!
+!                    else
+!                        DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
+!                        DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
+!
+!                        SFlux = DiffGradient1*(Concent(INode,IKind) - Concent(INode-1,IKind)) - DiffGradient2*(Concent(INode+1,IKind) - Concent(INode,IKind))
+!                        if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
+!                            TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
+!                        end if
+!                    end if
+!
+!                END DO
+!            END DO
+!
+!            DO IKind = 1,CKind
+!
+!                MatA = 0.D0
+!                MatB = 0.D0
+!                MatC = 0.D0
+!                MatD = 0.D0
+!
+!                DO INode = 1,NNodes
+!                    if(INode .eq. 1) then  ! upper surface
+!
+!                        DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
+!
+!                        MatA(INode) = 0.D0
+!                        if(NNodes .LE. 1) then
+!                            DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
+!
+!                            select case(Host_SimuCtrlParam%BDCTYPE(3,1))
+!                                case(p_Dirichlet_BDC)
+!                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
+!                                case(p_Neumann_BDC)
+!                                    MatB(INode) = NodeSpace(INode)/TSTEP
+!                                case default
+!                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,1)
+!                                    pause
+!                                    stop
+!                            end select
+!
+!                            MatC(INode) = 0.D0
+!                        else
+!                            DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
+!
+!                            select case(Host_SimuCtrlParam%BDCTYPE(3,1))
+!                                case(p_Dirichlet_BDC)
+!                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
+!                                case(p_Neumann_BDC)
+!                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient2
+!                                case default
+!                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,1)
+!                                    pause
+!                                    stop
+!                            end select
+!
+!                            MatC(INode) = -DiffGradient2
+!                        end if
+!
+!                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
+!                    else if(INode .eq. NNodes) then  ! Low surface
+!
+!                        DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
+!
+!                        if(NNodes .LE. 1) then
+!                            DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
+!
+!                            MatA(INode) = 0.D0
+!
+!                            select case(Host_SimuCtrlParam%BDCTYPE(3,2))
+!                                case(p_Dirichlet_BDC)
+!                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
+!                                case(p_Neumann_BDC)
+!                                    MatB(INode) = NodeSpace(INode)/TSTEP
+!                                case default
+!                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,2)
+!                                    pause
+!                                    stop
+!                            end select
+!                        else
+!                            DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
+!
+!                            MatA(INode) = -DiffGradient1
+!
+!                            select case(Host_SimuCtrlParam%BDCTYPE(3,2))
+!                                case(p_Dirichlet_BDC)
+!                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
+!                                case(p_Neumann_BDC)
+!                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1
+!                                case default
+!                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,2)
+!                                    pause
+!                                    stop
+!                            end select
+!
+!                        end if
+!
+!                        MatC(INode) = 0.D0
+!                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
+!                    else
+!                        DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
+!                        DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
+!                        MatA(INode) = -DiffGradient1
+!                        MatB(INode) = NodeSpace(INode)/TSTEP + (DiffGradient1 + DiffGradient2)
+!                        MatC(INode) = -DiffGradient2
+!                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
+!                    end if
+!
+!                END DO
+!
+!                call SolveTridag(IKind,MatA,MatB,MatC,MatD,Concent,NNodes,MatW,MatH)
+!
+!!                DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(NNodes)
+!!                FOutEachStep(IKind) = DiffGradient2*Concent(NNodes,IKind)
+!!                COutEachStep(IKind) = DiffGradient2*Concent(NNodes,IKind)*TSTEP/NodeSpace(NNodes)
+!!                FOutAccum(IKind) = FOutAccum(IKind) + FOutEachStep(IKind)
+!!                COutAccum(IKind) = COutAccum(IKind) + COutEachStep(IKind)
+!!
+!!                DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(1)
+!!                FSurfEachStep(IKind) = DiffGradient1*Concent(1,IKind)
+!!                CSurfEachStep(IKind) = DiffGradient1*Concent(1,IKind)*TSTEP/NodeSpace(1)
+!!                FSurfAccum(IKind) = FSurfAccum(IKind) + FSurfEachStep(IKind)
+!!                CSurfAccum(IKind) = CSurfAccum(IKind) + CSurfEachStep(IKind)
+!
+!                if(IKind .eq. 1) then
+!
+!!                    write(*,*) "Accumulated out flux from up surface",FSurfAccum(IKind)
+!!                    write(*,*) "Accumulated out concentrate from up surface",CSurfAccum(IKind)
+!!                    write(*,*) "Out flux from up surface in current step",FSurfEachStep(IKind)
+!!                    write(*,*) "Out concentrate from up surface in current step",CSurfEachStep(IKind)
+!!                    DO INode = 1,NNodes
+!!                        write(*,*) "INode",INode,"Concent(INode,1)",Concent(INode,1)
+!!                    END DO
+!!                    write(*,*) "Accumulated out flux from lower surface",FOutAccum(IKind)
+!!                    write(*,*) "Accumulated out concentrate from lower surface",COutAccum(IKind)
+!!                    write(*,*) "Out flux from lower surface in current step",FOutEachStep(IKind)
+!!                    write(*,*) "Out concentrate from lower surface in current step",COutEachStep(IKind)
+!!
+!!                    write(*,*) "----------------------------------------"
+!!                    write(*,*) "sum(Concent(:,1))",sum(Concent(:,1))
+!!                    write(*,*) "sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)",sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)
+!!                    write(*,*) "(sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1))/ConCentrat0",(ConCentrat0 - (sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)))/ConCentrat0
+!!                    write(*,*) "----------------------------------------"
+!                end if
+!
+!
+!            END DO
+!
+!            call Record%AddSimuTimes(TSTEP)
+!
+!            call OutPutCurrent(Host_SimBoxes,Host_SimuCtrlParam,Record)
+!
+!            if(mod(Record%GetSimuSteps(),1) .eq. 0) then
+!
+!                call Cal_Statistic_IMPLANT(Host_SimBoxes,Host_SimuCtrlParam,NPOWER0Ave,NPOWER1DIV2Ave,NPOWER1Ave,NPOWER3DIV2Ave)
+!
+!                call Put_Out_IMPLANT(Host_SimBoxes,Host_SimuCtrlParam,Record%GetSimuSteps(),Record%GetSimuTimes(),TSTEP,NPOWER0Ave,NPOWER1DIV2Ave,NPOWER1Ave,NPOWER3DIV2Ave,N1,N2,N3,Rave)
+!            end if
+!
+!            !if(Concent(CKind) .GT. 1.D-10) then
+!            if(DSQRT(dble(sum(ClustersKind(CKind)%m_Atoms(:)%m_NA)))*sum(Concent(1:NNodes,CKind)) .GT. &
+!               NPOWER1DIV2Ave*Host_SimuCtrlParam%DumplicateFactor) then
+!
+!               write(*,*) "---Expand Clusters kind---"
+!
+!                if(TheImplantSection%ImplantFlux .GT. 0.D0) then
+!                    call Host_SimBoxes%ReSizeClusterKind_CPU(Host_SimuCtrlParam,m_RNFACTOR,m_FREESURDIFPRE,CKind*2)
+!
+!                    CKind = CKind*2
+!                    NNodes = Host_SimBoxes%NNodes
+!
+!                    call DeAllocateArray_Host(tempNBPVChangeRate,"tempNBPVChangeRate")
+!                    call AllocateArray_Host(tempNBPVChangeRate,NNodes,CKind,"tempNBPVChangeRate")
+!                    tempNBPVChangeRate = 0.D0
+!
+!                    call DeAllocateArray_Host(ImplantedRate,"ImplantedRate")
+!                    call AllocateArray_Host(ImplantedRate,NNodes,CKind,"ImplantedRate")
+!                    ImplantedRate = 0.D0
+!
+!                    call TheImplantSection%Cal_ImplantClustersRate(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record,ImplantedRate)
+!
+!                    write(*,*) "Max clusters kind number: ",CKind
+!                else
+!
 !                    DO INode = 1,NNodes
-!                        write(*,*) "INode",INode,"Concent(INode,1)",Concent(INode,1)
+!
+!                        DO I = 1,(CKind -1)/2 + 1
+!                            if(2*I .LE. CKind) then
+!                                Concent(INode,I) = (Concent(INode,2*I-1)*sum(ClustersKind(2*I-1)%m_Atoms(:)%m_NA)+Concent(INode,2*I)*sum(ClustersKind(2*I)%m_Atoms(:)%m_NA)) &
+!                                                    /(2.D0*sum(ClustersKind(2*I)%m_Atoms(:)%m_NA))
+!                            else
+!                                Concent(INode,I) = Concent(INode,2*I - 1)
+!                            end if
+!                        END DO
+!
+!                        Concent(INode,(CKind -1)/2+2:CKind) = 0.D0
+!
 !                    END DO
-!                    write(*,*) "Accumulated out flux from lower surface",FOutAccum(IKind)
-!                    write(*,*) "Accumulated out concentrate from lower surface",COutAccum(IKind)
-!                    write(*,*) "Out flux from lower surface in current step",FOutEachStep(IKind)
-!                    write(*,*) "Out concentrate from lower surface in current step",COutEachStep(IKind)
 !
-!                    write(*,*) "----------------------------------------"
-!                    write(*,*) "sum(Concent(:,1))",sum(Concent(:,1))
-!                    write(*,*) "sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)",sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)
-!                    write(*,*) "(sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1))/ConCentrat0",(ConCentrat0 - (sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)))/ConCentrat0
-!                    write(*,*) "----------------------------------------"
-                end if
-
-
-            END DO
-
-            call Record%AddSimuTimes(TSTEP)
-
-            call OutPutCurrent(Host_SimBoxes,Host_SimuCtrlParam,Record)
-
-            if(mod(Record%GetSimuSteps(),1) .eq. 0) then
-
-                call Cal_Statistic_IMPLANT(Host_SimBoxes,Host_SimuCtrlParam,NPOWER0Ave,NPOWER1DIV2Ave,NPOWER1Ave,NPOWER3DIV2Ave)
-
-                call Put_Out_IMPLANT(Host_SimBoxes,Host_SimuCtrlParam,Record%GetSimuSteps(),Record%GetSimuTimes(),TSTEP,NPOWER0Ave,NPOWER1DIV2Ave,NPOWER1Ave,NPOWER3DIV2Ave,N1,N2,N3,Rave)
-            end if
-
-            !if(Concent(CKind) .GT. 1.D-10) then
-            if(DSQRT(dble(sum(ClustersKind(CKind)%m_Atoms(:)%m_NA)))*sum(Concent(1:NNodes,CKind)) .GT. &
-               NPOWER1DIV2Ave*Host_SimuCtrlParam%DumplicateFactor) then
-
-               write(*,*) "---Expand Clusters kind---"
-
-                if(TheImplantSection%ImplantFlux .GT. 0.D0) then
-                    call Host_SimBoxes%ReSizeClusterKind_CPU(Host_SimuCtrlParam,m_RNFACTOR,m_FREESURDIFPRE,CKind*2)
-
-                    CKind = CKind*2
-                    NNodes = Host_SimBoxes%NNodes
-
-                    call DeAllocateArray_Host(tempNBPVChangeRate,"tempNBPVChangeRate")
-                    call AllocateArray_Host(tempNBPVChangeRate,NNodes,CKind,"tempNBPVChangeRate")
-                    tempNBPVChangeRate = 0.D0
-
-                    call DeAllocateArray_Host(ImplantedRate,"ImplantedRate")
-                    call AllocateArray_Host(ImplantedRate,NNodes,CKind,"ImplantedRate")
-                    ImplantedRate = 0.D0
-
-                    call TheImplantSection%Cal_ImplantClustersRate(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record,ImplantedRate)
-
-                    write(*,*) "Max clusters kind number: ",CKind
-                else
-
-                    DO INode = 1,NNodes
-
-                        DO I = 1,(CKind -1)/2 + 1
-                            if(2*I .LE. CKind) then
-                                Concent(INode,I) = (Concent(INode,2*I-1)*sum(ClustersKind(2*I-1)%m_Atoms(:)%m_NA)+Concent(INode,2*I)*sum(ClustersKind(2*I)%m_Atoms(:)%m_NA)) &
-                                                    /(2.D0*sum(ClustersKind(2*I)%m_Atoms(:)%m_NA))
-                            else
-                                Concent(INode,I) = Concent(INode,2*I - 1)
-                            end if
-                        END DO
-
-                        Concent(INode,(CKind -1)/2+2:CKind) = 0.D0
-
-                    END DO
-
-                    DO I = 1,(CKind -1)/2 + 1
-                            if(2*I .LE. CKind) then
-                                ClustersKind(I) = ClustersKind(2*I)
-                            else
-                                ClustersKind(I) = ClustersKind(2*I - 1)
-                            end if
-                    END DO
-
-                    DO I = (CKind -1)/2 + 2,CKind
-                            ClustersKind(I)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = 2*ClustersKind(I)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                            TheDiffusorValue = Host_SimBoxes%m_DiffusorTypesMap%get(ClustersKind(I))
-
-                            select case(TheDiffusorValue%ECRValueType_Free)
-                                case(p_ECR_ByValue)
-                                    ClustersKind(I)%m_RAD = TheDiffusorValue%ECR_Free
-                                case(p_ECR_ByBCluster)
-                                    ClustersKind(I)%m_RAD = DSQRT(sum(ClustersKind(I)%m_Atoms(:)%m_NA)/m_RNFACTOR)
-                            end select
-
-                            select case(TheDiffusorValue%DiffusorValueType_Free)
-                                case(p_DiffuseCoefficient_ByValue)
-                                    ClustersKind(I)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
-                                case(p_DiffuseCoefficient_ByArrhenius)
-                                    ClustersKind(I)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
-                                case(p_DiffuseCoefficient_ByBCluster)
-                                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                                    ClustersKind(I)%m_DiffCoeff = m_FREESURDIFPRE*(ClustersKind(I)%m_RAD**(-p_GAMMA))
-                            end select
-                    END DO
-
-
-                    Dumplicate = Dumplicate*2
-                    write(*,*) "Dumplicate",Dumplicate
-                end if
-            end if
-
-            if(Record%GetSimuTimes() .GT. Host_SimuCtrlParam%TermTValue) then
-                exit
-            end if
-
-            TSTEP = TSTEP*1.5
-
-          END Associate
-        END DO
-
-    end subroutine NucleationSimu_NonSpaceDist_Balance_SimpleHybrid
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    subroutine InitSimu_SpaceDist(Host_Boxes,Host_SimuCtrlParam)
-        implicit none
-        !---Dummy Vars---
-        type(SimulationBoxes)::Host_Boxes
-        type(SimulationCtrlParam)::Host_SimuCtrlParam
-        integer::I
-        integer::NNodes
-        integer::CKind
-        !---Body---
-
-        NNodes = Host_Boxes%NNodes
-
-        CKind = Host_Boxes%CKind
-
-        if(allocated(MatA)) then
-            deallocate(MatA)
-        end if
-        allocate(MatA(NNodes))
-
-        if(allocated(MatB)) then
-            deallocate(MatB)
-        end if
-        allocate(MatB(NNodes))
-
-        if(allocated(MatC)) then
-            deallocate(MatC)
-        end if
-        allocate(MatC(NNodes))
-
-        if(allocated(MatD)) then
-            deallocate(MatD)
-        end if
-        allocate(MatD(NNodes))
-
-        if(allocated(MatW)) then
-            deallocate(MatW)
-        end if
-        allocate(MatW(NNodes))
-
-        if(allocated(MatH)) then
-            deallocate(MatH)
-        end if
-        allocate(MatH(NNodes))
-
-
-        call AvailableIOUnit(m_StatisticFile)
-
-        fileName = Host_SimuCtrlParam%OutFilePath(1:len_trim(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"Statistic.dat"
-
-        open(Unit=m_StatisticFile,file=fileName(1:len_trim(fileName)))
-
-        write(m_StatisticFile,FMT="(15(A15,1x))") "Step","Time","TStep","NPOWER0Ave","NPOWER1DIV2Ave","NPOWER1Ave","NPOWER3DIV2Ave","N1","N2","N3","Rave(nm)"
-
-        return
-    end subroutine InitSimu_SpaceDist
-
-
-    !***************************************************
-    subroutine NucleationSimu_SpaceDist_Balance_GrubDumplicate(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record,TheImplantSection)
-        use RAND32_MODULE
-        implicit none
-        !---Dummy Vars---
-        type(SimulationBoxes)::Host_SimBoxes
-        type(SimulationCtrlParam),target::Host_SimuCtrlParam
-        type(MigCoaleStatInfoWrap)::TheMigCoaleStatInfoWrap
-        type(MigCoalClusterRecord)::Record
-        type(ImplantSection)::TheImplantSection
-        !---Local Vars---
-        integer::CKind
-        integer::IKind
-        integer::JKind
-        real(kind=KINDDF)::TSTEP
-        real(kind=KINDDF)::deta
-        real(kind=KINDDF),dimension(:,:),allocatable::tempNBPVChangeRate
-        real(kind=KINDDF)::NPOWER0Ave
-        real(kind=KINDDF)::NPOWER1DIV2Ave
-        real(kind=KINDDF)::NPOWER1Ave
-        real(kind=KINDDF)::NPOWER3DIV2Ave
-        real(kind=KINDDF)::N1
-        real(kind=KINDDF)::N2
-        real(kind=KINDDF)::N3
-        real(kind=KINDDF)::Rave
-        real(kind=KINDDF),dimension(:,:),allocatable::ImplantedRate
-        real(kind=KINDDF),dimension(:),allocatable::FSurfAccum
-        real(kind=KINDDF),dimension(:),allocatable::FOutAccum
-        real(kind=KINDDF),dimension(:),allocatable::CSurfAccum
-        real(kind=KINDDF),dimension(:),allocatable::COutAccum
-        real(kind=KINDDF),dimension(:),allocatable::FSurfEachStep
-        real(kind=KINDDF),dimension(:),allocatable::FOutEachStep
-        real(kind=KINDDF),dimension(:),allocatable::CSurfEachStep
-        real(kind=KINDDF),dimension(:),allocatable::COutEachStep
-        integer::I
-        integer::INode
-        integer::NNodes
-        real(kind=KINDDF)::Factor
-        real(kind=KINDDF)::tempTimeStep
-        real(kind=KINDDF)::DiffGradient1
-        real(kind=KINDDF)::DiffGradient2
-        integer::IImplantLayer
-        type(DiffusorValue)::TheDiffusorValue
-        integer::AtomuNumbSubject
-        integer::AtomuNumbObject
-        integer::AtomuNumbProductor
-        real(kind=KINDDF)::ConCentrat0
-        type(ReactionValue)::TheReactionValue
-        real(kind=KINDDF)::ReactionCoeff
-        real(kind=KINDDF)::SFlux
-        real(kind=KINDDF)::MaxConcent
-        real(kind=KINDDF)::MaxChangeRate
-        !---Body---
-        CKind = Host_SimBoxes%CKind
-        NNodes = Host_SimBoxes%NNodes
-
-        allocate(tempNBPVChangeRate(NNodes,CKind))
-
-        allocate(ImplantedRate(NNodes,CKind))
-
-        allocate(FSurfAccum(NNodes))
-
-        allocate(FOutAccum(NNodes))
-
-        allocate(CSurfAccum(NNodes))
-
-        allocate(COutAccum(NNodes))
-
-        allocate(FSurfEachStep(NNodes))
-
-        allocate(FOutEachStep(NNodes))
-
-        allocate(CSurfEachStep(NNodes))
-
-        allocate(COutEachStep(NNodes))
-
-        TSTEP = 0.01
-
-        FSurfAccum = 0.D0
-
-        FOutAccum = 0.D0
-
-        CSurfAccum = 0.D0
-
-        COutAccum = 0.D0
-
-
-        call Cal_Statistic_IMPLANT(Host_SimBoxes,Host_SimuCtrlParam,NPOWER0Ave,NPOWER1DIV2Ave,NPOWER1Ave,NPOWER3DIV2Ave)
-
-        ConCentrat0 = sum(Host_SimBoxes%m_ClustersInfo_CPU%Concentrate)
-
-        ImplantedRate = 0.D0
-
-        call TheImplantSection%Cal_ImplantClustersRate(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record,ImplantedRate)
-
-        DO While(.true.)
-
-          Associate(ClustersKind=>Host_SimBoxes%m_ClustersInfo_CPU%ClustersKindArray,Concent=>Host_SimBoxes%m_ClustersInfo_CPU%Concentrate,NodeSpace=>Host_SimBoxes%NodeSpace)
-
-            call Record%IncreaseOneSimuStep()
-
-            tempNBPVChangeRate = 0.D0
-
-            FSurfEachStep = 0.D0
-
-            FOutEachStep = 0.D0
-
-            CSurfEachStep = 0.D0
-
-            COutEachStep = 0.D0
-
-            DO INode = 1,NNodes
-
-                DO IKind = 1,CKind
-
-                    DO JKind = IKind,CKind
-
-                        TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(ClustersKind(IKind),ClustersKind(JKind))
-
-                        ReactionCoeff = 0.D0
-                        select case(TheReactionValue%ReactionCoefficientType)
-                            case(p_ReactionCoefficient_ByValue)
-                                ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
-                            case(p_ReactionCoefficient_ByArrhenius)
-                                ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/Host_SimuCtrlParam%TKB)
-                        end select
-
-                        if(ReactionCoeff .GE. DRAND32()) then
-
-                            deta = Dumplicate*4*PI*Concent(INode,IKind)*Concent(INode,JKind)* &
-                                    (ClustersKind(IKind)%m_RAD + ClustersKind(JKind)%m_RAD)* &
-                                    (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(JKind)%m_DiffCoeff)
-
-                            if(IKind .eq. JKind) then
-
-                                Factor = 0.5D0
-
-                                tempNBPVChangeRate(INode,IKind) =  tempNBPVChangeRate(INode,IKind) - deta
-                            else
-                                Factor = 1.D0
-
-                                tempNBPVChangeRate(INode,IKind) =  tempNBPVChangeRate(INode,IKind) - deta
-
-                                tempNBPVChangeRate(INode,JKind) =  tempNBPVChangeRate(INode,JKind) - deta
-                            end if
-
-                            if((IKind + JKind) .LE. CKind) then
-
-                                AtomuNumbSubject = sum(ClustersKind(IKind)%m_Atoms(:)%m_NA)
-                                AtomuNumbObject = sum(ClustersKind(JKind)%m_Atoms(:)%m_NA)
-                                AtomuNumbProductor = sum(ClustersKind(IKind+JKind)%m_Atoms(:)%m_NA)
-
-                                tempNBPVChangeRate(INode,IKind + JKind) = tempNBPVChangeRate(INode,IKind + JKind) + &
-                                                                            Factor*deta*(AtomuNumbSubject+AtomuNumbObject)/AtomuNumbProductor
-                            end if
-
-                        end if
-
-                    END DO
-
-                END DO
-            END DO
-
-            tempNBPVChangeRate = tempNBPVChangeRate + ImplantedRate
-
-            MaxConcent = maxval(Concent)
-            MaxChangeRate = maxval(dabs(tempNBPVChangeRate))
-
-            if(MaxConcent .GT. 0.D0 .AND. MaxChangeRate .GT. 0.D0) then
-                TSTEP = Host_SimuCtrlParam%MaxReactChangeRate*MaxConcent/MaxChangeRate
-            else
-                TSTEP = 1.D-10
-            end if
-
-            write(*,*) "!---------------------"
-            write(*,*) "TSTEP1",TSTEP
-            write(*,*) "maxval(Concent)",maxval(Concent)
-            write(*,*) "maxval(dabs(tempNBPVChangeRate))",maxval(dabs(tempNBPVChangeRate))
-            write(*,*) "maxloc(Concent)",maxloc(Concent)
-            write(*,*) "maxloc(dabs(tempNBPVChangeRate))",maxloc(dabs(tempNBPVChangeRate))
-            write(*,*) "maxloc(ImplantedRate)",maxloc(ImplantedRate)
-            write(*,*) "maxval(ImplantedRate)",maxval(ImplantedRate)
-
-            DO IKind = 1,CKind
-                DO INode = 1,NNodes
-                    tempTimeStep = Concent(INode,IKind)/dabs(tempNBPVChangeRate(INode,IKind))
-                    if(tempNBPVChangeRate(INode,IKind) .LT. 0.D0 .AND. Concent(INode,IKind) .GT. 0.D0) then
-                        TSTEP = min(TSTEP,tempTimeStep)
-                    end if
-
-                    if(INode .eq. 1) then  ! upper surface
-
-                        DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                        if(NNodes .LE. 1) then
-                            DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                            SFlux = DiffGradient1*Concent(INode,IKind) + DiffGradient2*Concent(INode,IKind)
-                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                            end if
-                        else
-                            DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
-
-                            SFlux = DiffGradient1*Concent(INode,IKind) - DiffGradient2*(Concent(INode+1,IKind) - Concent(INode,IKind))
-                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                            end if
-
-                        end if
-
-                    else if(INode .eq. NNodes) then  ! Low surface
-
-                        DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                        if(NNodes .LE. 1) then
-                            DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                            SFlux = DiffGradient1*Concent(INode,IKind) + DiffGradient2*Concent(INode,IKind)
-                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                            end if
-                        else
-                            DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
-
-                            SFlux = DiffGradient1*(Concent(INode,IKind) - Concent(INode-1,IKind)) + DiffGradient2*Concent(INode,IKind)
-                            if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                                TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                            end if
-                        end if
-
-                    else
-                        DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
-                        DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
-
-                        SFlux = DiffGradient1*(Concent(INode,IKind) - Concent(INode-1,IKind)) - DiffGradient2*(Concent(INode+1,IKind) - Concent(INode,IKind))
-                        if(SFlux .GT. 0.D0 .AND. Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind) .GT. 0) then
-                            TSTEP = min(TSTEP,Host_SimuCtrlParam%MaxDiffuseChangeRate*Concent(INode,IKind)/(dabs(SFlux)/NodeSpace(INode)))
-                        end if
-                    end if
-
-                END DO
-            END DO
-
-            DO IKind = 1,CKind
-
-                MatA = 0.D0
-                MatB = 0.D0
-                MatC = 0.D0
-                MatD = 0.D0
-
-                DO INode = 1,NNodes
-                    if(INode .eq. 1) then  ! upper surface
-
-                        DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                        MatA(INode) = 0.D0
-                        if(NNodes .LE. 1) then
-                            DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                            select case(Host_SimuCtrlParam%BDCTYPE(3,1))
-                                case(p_Dirichlet_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
-                                case(p_Neumann_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP
-                                case default
-                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,1)
-                                    pause
-                                    stop
-                            end select
-
-                            MatC(INode) = 0.D0
-                        else
-                            DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
-
-                            select case(Host_SimuCtrlParam%BDCTYPE(3,1))
-                                case(p_Dirichlet_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
-                                case(p_Neumann_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient2
-                                case default
-                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,1)
-                                    pause
-                                    stop
-                            end select
-
-                            MatC(INode) = -DiffGradient2
-                        end if
-
-                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
-                    else if(INode .eq. NNodes) then  ! Low surface
-
-                        DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                        if(NNodes .LE. 1) then
-                            DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(INode)
-
-                            MatA(INode) = 0.D0
-
-                            select case(Host_SimuCtrlParam%BDCTYPE(3,2))
-                                case(p_Dirichlet_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
-                                case(p_Neumann_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP
-                                case default
-                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,2)
-                                    pause
-                                    stop
-                            end select
-                        else
-                            DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
-
-                            MatA(INode) = -DiffGradient1
-
-                            select case(Host_SimuCtrlParam%BDCTYPE(3,2))
-                                case(p_Dirichlet_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1 + DiffGradient2
-                                case(p_Neumann_BDC)
-                                    MatB(INode) = NodeSpace(INode)/TSTEP + DiffGradient1
-                                case default
-                                    write(*,*) "MFPSCUERROR: Unknown boundary condition ",Host_SimuCtrlParam%BDCTYPE(3,2)
-                                    pause
-                                    stop
-                            end select
-
-                        end if
-
-                        MatC(INode) = 0.D0
-                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
-                    else
-                        DiffGradient1 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode-1) + NodeSpace(INode))
-                        DiffGradient2 = (ClustersKind(IKind)%m_DiffCoeff + ClustersKind(IKind)%m_DiffCoeff)/(NodeSpace(INode) + NodeSpace(INode+1))
-                        MatA(INode) = -DiffGradient1
-                        MatB(INode) = NodeSpace(INode)/TSTEP + (DiffGradient1 + DiffGradient2)
-                        MatC(INode) = -DiffGradient2
-                        MatD(INode) = Concent(INode,IKind)*NodeSpace(INode)/TSTEP + tempNBPVChangeRate(INode,IKind)*NodeSpace(INode)
-                    end if
-
-                END DO
-
-                call SolveTridag(IKind,MatA,MatB,MatC,MatD,Concent,NNodes,MatW,MatH)
-
-!                DiffGradient2 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(NNodes)
-!                FOutEachStep(IKind) = DiffGradient2*Concent(NNodes,IKind)
-!                COutEachStep(IKind) = DiffGradient2*Concent(NNodes,IKind)*TSTEP/NodeSpace(NNodes)
-!                FOutAccum(IKind) = FOutAccum(IKind) + FOutEachStep(IKind)
-!                COutAccum(IKind) = COutAccum(IKind) + COutEachStep(IKind)
-!
-!                DiffGradient1 = ClustersKind(IKind)%m_DiffCoeff/NodeSpace(1)
-!                FSurfEachStep(IKind) = DiffGradient1*Concent(1,IKind)
-!                CSurfEachStep(IKind) = DiffGradient1*Concent(1,IKind)*TSTEP/NodeSpace(1)
-!                FSurfAccum(IKind) = FSurfAccum(IKind) + FSurfEachStep(IKind)
-!                CSurfAccum(IKind) = CSurfAccum(IKind) + CSurfEachStep(IKind)
-
-                if(IKind .eq. 1) then
-
-!                    write(*,*) "Accumulated out flux from up surface",FSurfAccum(IKind)
-!                    write(*,*) "Accumulated out concentrate from up surface",CSurfAccum(IKind)
-!                    write(*,*) "Out flux from up surface in current step",FSurfEachStep(IKind)
-!                    write(*,*) "Out concentrate from up surface in current step",CSurfEachStep(IKind)
-!                    DO INode = 1,NNodes
-!                        write(*,*) "INode",INode,"Concent(INode,1)",Concent(INode,1)
+!                    DO I = 1,(CKind -1)/2 + 1
+!                            if(2*I .LE. CKind) then
+!                                ClustersKind(I) = ClustersKind(2*I)
+!                            else
+!                                ClustersKind(I) = ClustersKind(2*I - 1)
+!                            end if
 !                    END DO
-!                    write(*,*) "Accumulated out flux from lower surface",FOutAccum(IKind)
-!                    write(*,*) "Accumulated out concentrate from lower surface",COutAccum(IKind)
-!                    write(*,*) "Out flux from lower surface in current step",FOutEachStep(IKind)
-!                    write(*,*) "Out concentrate from lower surface in current step",COutEachStep(IKind)
 !
-!                    write(*,*) "----------------------------------------"
-!                    write(*,*) "sum(Concent(:,1))",sum(Concent(:,1))
-!                    write(*,*) "sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)",sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)
-!                    write(*,*) "(sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1))/ConCentrat0",(ConCentrat0 - (sum(Concent(:,1)) + CSurfAccum(1) + COutAccum(1)))/ConCentrat0
-!                    write(*,*) "----------------------------------------"
-                end if
+!                    DO I = (CKind -1)/2 + 2,CKind
+!                            ClustersKind(I)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = 2*ClustersKind(I)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+!                            TheDiffusorValue = Host_SimBoxes%m_DiffusorTypesMap%get(ClustersKind(I))
+!
+!                            select case(TheDiffusorValue%ECRValueType_Free)
+!                                case(p_ECR_ByValue)
+!                                    ClustersKind(I)%m_RAD = TheDiffusorValue%ECR_Free
+!                                case(p_ECR_ByBCluster)
+!                                    ClustersKind(I)%m_RAD = DSQRT(sum(ClustersKind(I)%m_Atoms(:)%m_NA)/m_RNFACTOR)
+!                            end select
+!
+!                            select case(TheDiffusorValue%DiffusorValueType_Free)
+!                                case(p_DiffuseCoefficient_ByValue)
+!                                    ClustersKind(I)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+!                                case(p_DiffuseCoefficient_ByArrhenius)
+!                                    ClustersKind(I)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+!                                case(p_DiffuseCoefficient_ByBCluster)
+!                                    ! Here we adopt a model that D=D0*(1/R)**Gama
+!                                    ClustersKind(I)%m_DiffCoeff = m_FREESURDIFPRE*(ClustersKind(I)%m_RAD**(-p_GAMMA))
+!                            end select
+!                    END DO
+!
+!
+!                    Dumplicate = Dumplicate*2
+!                    write(*,*) "Dumplicate",Dumplicate
+!                end if
+!            end if
+!
+!            if(Record%GetSimuTimes() .GT. Host_SimuCtrlParam%TermTValue) then
+!                exit
+!            end if
+!
+!            TSTEP = TSTEP*1.5
+!
+!          END Associate
+!        END DO
+!
+!    end subroutine NucleationSimu_NonSpaceDist_Balance_SimpleHybrid
 
 
-            END DO
-
-            call Record%AddSimuTimes(TSTEP)
-
-            call OutPutCurrent(Host_SimBoxes,Host_SimuCtrlParam,Record)
-
-            if(mod(Record%GetSimuSteps(),1) .eq. 0) then
-
-                call Cal_Statistic_IMPLANT(Host_SimBoxes,Host_SimuCtrlParam,NPOWER0Ave,NPOWER1DIV2Ave,NPOWER1Ave,NPOWER3DIV2Ave)
-
-                call Put_Out_IMPLANT(Host_SimBoxes,Host_SimuCtrlParam,Record%GetSimuSteps(),Record%GetSimuTimes(),TSTEP,NPOWER0Ave,NPOWER1DIV2Ave,NPOWER1Ave,NPOWER3DIV2Ave,N1,N2,N3,Rave)
-            end if
-
-            !if(Concent(CKind) .GT. 1.D-10) then
-            if(DSQRT(dble(sum(ClustersKind(CKind)%m_Atoms(:)%m_NA)))*sum(Concent(1:NNodes,CKind)) .GT. &
-               NPOWER1DIV2Ave*Host_SimuCtrlParam%DumplicateFactor) then
-
-               write(*,*) "---Expand Clusters kind---"
-
-                if(TheImplantSection%ImplantFlux .GT. 0.D0) then
-                    call Host_SimBoxes%ReSizeClusterKind_CPU(Host_SimuCtrlParam,m_RNFACTOR,m_FREESURDIFPRE,CKind*2)
-
-                    CKind = CKind*2
-                    NNodes = Host_SimBoxes%NNodes
-
-                    call DeAllocateArray_Host(tempNBPVChangeRate,"tempNBPVChangeRate")
-                    call AllocateArray_Host(tempNBPVChangeRate,NNodes,CKind,"tempNBPVChangeRate")
-                    tempNBPVChangeRate = 0.D0
-
-                    call DeAllocateArray_Host(ImplantedRate,"ImplantedRate")
-                    call AllocateArray_Host(ImplantedRate,NNodes,CKind,"ImplantedRate")
-                    ImplantedRate = 0.D0
-
-                    call TheImplantSection%Cal_ImplantClustersRate(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap,Record,ImplantedRate)
-
-                    write(*,*) "Max clusters kind number: ",CKind
-                else
-
-                    DO INode = 1,NNodes
-
-                        DO I = 1,(CKind -1)/2 + 1
-                            if(2*I .LE. CKind) then
-                                Concent(INode,I) = (Concent(INode,2*I-1)*sum(ClustersKind(2*I-1)%m_Atoms(:)%m_NA)+Concent(INode,2*I)*sum(ClustersKind(2*I)%m_Atoms(:)%m_NA)) &
-                                                    /(2.D0*sum(ClustersKind(2*I)%m_Atoms(:)%m_NA))
-                            else
-                                Concent(INode,I) = Concent(INode,2*I - 1)
-                            end if
-                        END DO
-
-                        Concent(INode,(CKind -1)/2+2:CKind) = 0.D0
-
-                    END DO
-
-                    DO I = 1,(CKind -1)/2 + 1
-                            if(2*I .LE. CKind) then
-                                ClustersKind(I) = ClustersKind(2*I)
-                            else
-                                ClustersKind(I) = ClustersKind(2*I - 1)
-                            end if
-                    END DO
-
-                    DO I = (CKind -1)/2 + 2,CKind
-                            ClustersKind(I)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = 2*ClustersKind(I)%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
-                            TheDiffusorValue = Host_SimBoxes%m_DiffusorTypesMap%get(ClustersKind(I))
-
-                            select case(TheDiffusorValue%ECRValueType_Free)
-                                case(p_ECR_ByValue)
-                                    ClustersKind(I)%m_RAD = TheDiffusorValue%ECR_Free
-                                case(p_ECR_ByBCluster)
-                                    ClustersKind(I)%m_RAD = DSQRT(sum(ClustersKind(I)%m_Atoms(:)%m_NA)/m_RNFACTOR)
-                            end select
-
-                            select case(TheDiffusorValue%DiffusorValueType_Free)
-                                case(p_DiffuseCoefficient_ByValue)
-                                    ClustersKind(I)%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
-                                case(p_DiffuseCoefficient_ByArrhenius)
-                                    ClustersKind(I)%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
-                                case(p_DiffuseCoefficient_ByBCluster)
-                                    ! Here we adopt a model that D=D0*(1/R)**Gama
-                                    ClustersKind(I)%m_DiffCoeff = m_FREESURDIFPRE*(ClustersKind(I)%m_RAD**(-p_GAMMA))
-                            end select
-                    END DO
 
 
-                    Dumplicate = Dumplicate*2
-                    write(*,*) "Dumplicate",Dumplicate
-                end if
-            end if
 
-            if(Record%GetSimuTimes() .GT. Host_SimuCtrlParam%TermTValue) then
-                exit
-            end if
 
-            TSTEP = TSTEP*1.5
 
-          END Associate
-        END DO
 
-    end subroutine NucleationSimu_SpaceDist_Balance_GrubDumplicate
+
+
+
+
+
+
+
 
 
 
