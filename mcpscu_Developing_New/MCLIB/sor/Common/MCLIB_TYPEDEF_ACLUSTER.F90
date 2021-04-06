@@ -582,15 +582,18 @@ module MCLIB_TYPEDEF_ACLUSTER
     end subroutine CleanClusterList
 
     !***************************************
-    subroutine AppendOneClusterList(this,newOne,theIdentify)
+    function AppendOneClusterList(this,newOne,theIdentify) result(TheResult)
         implicit none
         !---Dummy Vars---
         CLASS(SecondOrder_AClusterLists),target::this
         type(AClusterList)::newOne
-        integer,optional,intent(in)::theIdentify
+        integer,intent(in)::theIdentify
+        type(SecondOrder_AClusterLists),pointer::TheResult
         !---Local Vars---
         type(SecondOrder_AClusterLists),pointer::cursor=>null(),cursorP=>null()
         !---Body---
+
+        TheResult=>null()
 
         cursorP=>this
 
@@ -605,10 +608,15 @@ module MCLIB_TYPEDEF_ACLUSTER
             !---The Assignment(=) had been overrided---
             this%TheList = newOne
 
-            if(present(theIdentify)) then
-                this%Identify = theIdentify
-            end if
+            this%Identify = theIdentify
         else
+
+            if(associated(this%Find(theIdentify))) then
+                write(*,*) "MCPSCUERROR: The ClusterList with ID: ",theIdentify," had existed , please do not overwrite it"
+                pause
+                stop
+            end if
+
             cursor=>this%next
             cursorP=>this
 
@@ -625,11 +633,11 @@ module MCLIB_TYPEDEF_ACLUSTER
             ! The assignment(=) had been overrided
             cursor%TheList = newOne
 
-            if(present(theIdentify)) then
-                cursor%Identify = theIdentify
-            end if
+            cursor%Identify = theIdentify
 
             cursorP%next=>cursor
+
+            TheResult=>cursor
         end if
 
         Nullify(cursorP)
@@ -637,7 +645,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         Nullify(cursor)
         cursor=>null()
         return
-    end subroutine AppendOneClusterList
+    end function AppendOneClusterList
 
     !**************************************
     subroutine AppendOtherSecondOrder_AClusterLists(this,OtherList)

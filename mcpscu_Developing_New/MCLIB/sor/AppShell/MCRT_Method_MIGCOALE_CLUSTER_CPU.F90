@@ -242,7 +242,9 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         integer::IC
         real(kind=KINDDF)::BoxVolum
         logical::Finded
-        type(AClusterList),pointer::cursor=>null()
+        type(SecondOrder_AClusterLists),pointer::cursor=>null()
+        type(AClusterList),pointer::cursorClusterList=>null()
+        type(AClusterList)::newOne
         integer::cascadeID
         !---Body---
 
@@ -269,20 +271,27 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                     cascadeID = Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1)
 
-                    if(Host_MFCollections%Collections(IBox)%GetList_Count() .GT. 0) then
-                        cursor=>Host_MFCollections%Collections(IBox)
-                        DO While(associated(cursor))
-                            if(cursor%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
-                                cursor%quantififyValue = cursor%quantififyValue + 1.D0/BoxVolum
+                    cursor=>Host_MFCollections%Collections(IBox)%Find(cascadeID)
+
+                    if(.not. associated(cursor)) then
+                        call newOne%Clean_ClusterList()
+                        cursor=>Host_MFCollections%Collections(IBox)%AppendOneClusterList(newOne,cascadeID)
+                    end if
+
+                    if(cursor%TheList%GetList_Count() .GT. 0) then
+                        cursorClusterList=>cursor%TheList
+                        DO While(associated(cursorClusterList))
+                            if(cursorClusterList%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
+                                cursorClusterList%quantififyValue = cursorClusterList%quantififyValue + 1.D0/BoxVolum
                                 Finded = .true.
                             end if
 
-                            cursor=>cursor%next
+                            cursorClusterList=>cursorClusterList%next
                         END DO
                     end if
 
                     if(Finded .eq. .false.) then
-                        call Host_MFCollections%Collections(IBox)%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
+                        call cursor%TheList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
                     end if
 
                 end if
@@ -295,7 +304,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         cursor=>null()
 
         return
-    end subroutine
+    end subroutine TransformMCToRT
 
 
     !***************************************************
