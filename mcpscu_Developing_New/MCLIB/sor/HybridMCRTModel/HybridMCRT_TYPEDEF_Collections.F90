@@ -1,60 +1,71 @@
-#include "../../../Macro"
-module MF_TYPEDEF_COLLECTIONS
+module HYBRIDMCRT_TYPEDEF_COLLECTIONS
     use MCLIB_TYPEDEF_ACLUSTER
-    use MCLIB_TYPEDEF_SIMULATIONBOXARRAY
+    use HYBRIDMCRT_TYPEDEF_EVCCLUSTER
     implicit none
 
-
-    TYPE,extends(ACluster),public::EVCCluster
-        type(AClusterList),public::TheList
+    type,public::Hybrid_ClusterListsFold
+        Class(SecondOrder_ClusterLists),pointer::Fold_List=>null()
+        contains
+        procedure,public,non_overridable,pass::CopyHybrid_ClusterListsFoldFromOther
+        procedure,public,non_overridable,pass::Clean_Hybrid_ClusterListsFold
+        Generic::Assignment(=)=>CopyHybrid_ClusterListsFoldFromOther
+        Final::CleanHybrid_ClusterListsFold
     end type
 
-    TYPE,extends(SecondOrder_ClusterLists),public::EVCClustersList
-        integer,public::Identify = 0
-
-        integer,private::ListCount = 0
-        type(EVCClustersList),pointer::next=>null()
-
+    !----------------------------------------
+    type,public::HybridCollections
+        type(Hybrid_ClusterListsFold),dimension(:),allocatable::Collections
         contains
+        procedure,non_overridable,pass,public::CopyHybridCollectionsFromOther
+        procedure,non_overridable,pass,public::Clean_HybridCollections
+        Generic::Assignment(=)=>CopyHybridCollectionsFromOther
+        Final::CleanHybridCollections
+    end type HybridCollections
 
-        procedure,public,pass,non_overridable::AppendOneEVCCluster
-        procedure,public,pass,non_overridable::AppendOtherEVCClustersList
-        procedure,public,pass,non_overridable::GetList_Count=>GetEVCClustersList_Count
-        procedure,public,pass,non_overridable::Find=>FindEVCClustersListByIdentify
-        procedure,public,pass,non_overridable::CopyEVCClustersListFromOther
-        procedure,public,pass,non_overridable::Clean_EVCClustersList
-        Generic::Assignment(=)=>CopyEVCClustersListFromOther
-        Final::CleanEVCClustersList
-    END TYPE EVCClustersList
+    private::CopyHybrid_ClusterListsFoldFromOther
+    private::Clean_Hybrid_ClusterListsFold
+    private::CleanHybrid_ClusterListsFold
+    private::CopyHybridCollectionsFromOther
+    private::Clean_HybridCollections
+    private::CleanHybridCollections
 
 
-    type,public::MFCOLLECTIONS
-        type(Pack_ClusterLists),dimension(:)::Collections=>null()
-        contains
-        procedure,non_overridable,pass,public::CopyMFCollectionsFromOther
-        procedure,non_overridable,pass,public::Clean_MFCollections
-        Generic::Assignment(=)=>CopyMFCollectionsFromOther
-        Final::CleanMFCollections
-    end type
-
-    private::CopyMFCollectionsFromOther
-    private::Clean_MFCollections
-    private::CleanMFCollections
-    private::AppendOneEVCCluster
-    private::AppendOtherEVCClustersList
-    private::GetEVCClustersList_Count
-    private::FindEVCClustersListByIdentify
-    private::CopyEVCClustersListFromOther
-    private::Clean_EVCClustersList
-    private::CleanEVCClustersList
     contains
 
     !*************************************************
-    subroutine CopyMFCollectionsFromOther(this,Other)
+    subroutine CopyHybrid_ClusterListsFoldFromOther(this,Other)
         implicit none
         !---Dummy Vars---
-        Class(MFCOLLECTIONS),intent(out)::this
-        type(MFCOLLECTIONS),intent(in)::Other
+        Class(Hybrid_ClusterListsFold),intent(out)::this
+        type(Hybrid_ClusterListsFold),intent(in)::Other
+
+        if(associated(this%Fold_List)) then
+
+            select type(this%Fold_List)
+
+                type is(SecondOrder_AClusterLists)
+                    call this%Fold_List%Clean
+            end select
+
+        end if
+
+
+        if(associated(Other%Fold_List)) then
+
+
+
+        end if
+
+        return
+    end subroutine
+
+
+    !*************************************************
+    subroutine CopyHybridCollectionsFromOther(this,Other)
+        implicit none
+        !---Dummy Vars---
+        Class(HybridCollections),intent(out)::this
+        type(HybridCollections),intent(in)::Other
         !---Local Vars---
         integer::I
         !---Body---
@@ -80,7 +91,7 @@ module MF_TYPEDEF_COLLECTIONS
                 !--- which means allocate(MC_MIGCOALE_CLUSTER_GPU::t) equal to C++ type convert  MC_MIGCOALE_CLUSTER_GPU *tt = new (MC_MIGCOALE_CLUSTER_GPU)t ,where t is type
                 !--- of class(CollectionEvent),pointer.
 
-                select type(this%Collections(I))
+                select type(this%Collections(I)%Pack_List)
                     type is(SecondOrder_AClusterLists)
                         !---The Assignment(=) had been overrided
                         call this%Collections(I)%CopySecondOrder_AClusterListsFromOther(Other%Collections(I))
@@ -91,10 +102,10 @@ module MF_TYPEDEF_COLLECTIONS
         end if
 
         return
-    end subroutine
+    end subroutine CopyHybridCollectionsFromOther
 
     !*************************************************
-    subroutine Clean_MFCollections(this)
+    subroutine Clean_HybridCollections(this)
         implicit none
         !--Dummy Vars---
         Class(MFCOLLECTIONS)::this
@@ -103,17 +114,17 @@ module MF_TYPEDEF_COLLECTIONS
         !---Body---
         if(allocated(this%Collections)) then
             DO I = 1,size(this%Collections)
-                call this%Collections(I)%
+                call this%Collections(I)%Clean_Pack_ClusterLists()
             END DO
         end if
 
         deallocate(this%Collections)
 
         return
-    end subroutine
+    end subroutine Clean_HybridCollections
 
     !*************************************************
-    subroutine CleanMFCollections(this)
+    subroutine CleanHybridCollections(this)
         implicit none
         !--Dummy Vars---
         type(MFCOLLECTIONS)::this
@@ -121,6 +132,7 @@ module MF_TYPEDEF_COLLECTIONS
         call this%Clean_MFCollections()
 
         return
-    end subroutine CleanMFCollections
+    end subroutine CleanHybridCollections
 
-end module
+
+end module HYBRIDMCRT_TYPEDEF_COLLECTIONS

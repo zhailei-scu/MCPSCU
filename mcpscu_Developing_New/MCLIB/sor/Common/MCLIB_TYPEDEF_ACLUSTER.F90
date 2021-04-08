@@ -80,16 +80,6 @@ module MCLIB_TYPEDEF_ACLUSTER
 
     end type
 
-
-    type,public::Pack_ClusterLists
-        Class(SecondOrder_ClusterLists),pointer::Pack_List=>null()
-        contains
-        procedure,public,non_overridable,pass::CopyPack_ClusterListsFromOther
-        procedure,public,non_overridable,pass::Clean_Pack_ClusterLists
-        Generic::Assignment(=)=>CopyPack_ClusterListsFromOther
-        Final::CleanPack_ClusterLists
-    end type
-
     TYPE,extends(SecondOrder_ClusterLists),public::SecondOrder_AClusterLists
         type(AClusterList),public::TheList
         integer,public::Identify = 0
@@ -124,6 +114,9 @@ module MCLIB_TYPEDEF_ACLUSTER
     private::CopyClustersListFromOther
     private::Clean_ClusterList
     private::CleanClusterList
+    private::CopyPack_ClusterListsFromOther
+    private::Clean_Pack_ClusterLists
+    private::CleanPack_ClusterLists
     private::AppendOneClusterList
     private::AppendOtherSecondOrder_AClusterLists
     private::GetSecondOrder_AClusterLists_Count

@@ -73,6 +73,8 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         Final::CleanInitBoxSimCfgList
     end type
 
+
+
     type(InitBoxSimCfgList),target::m_InitBoxSimCfgList
     type(ImplantList)::m_ImplantList
     type(MigCoalClusterRecord)::m_MigCoalClusterRecord
