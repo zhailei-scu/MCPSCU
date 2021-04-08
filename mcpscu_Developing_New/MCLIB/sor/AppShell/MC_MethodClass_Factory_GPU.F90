@@ -39,6 +39,7 @@ module MC_MethodClass_Factory_GPU
     !*********************************************
     subroutine Register_Method_Class(this,className,SimBoxes,SimCtrlParamsList)
         use MC_Method_MIGCOALE_CLUSTER_GPU, only:For_One_Test_MIGCOALE_CLUSTER_GPU => For_One_Test
+        use MC_Method_MIGCOALE_CLUSTER_GPU, only:For_One_Test_MCRT_MIGCOALE_CLUSTER => For_One_Test
         implicit none
         !---Dummy Vars---
         CLASS(MCMethodClassGPU)::this
@@ -54,6 +55,9 @@ module MC_MethodClass_Factory_GPU
             case("MIGCOALE_CLUSTER_GPU")
                 this%name = "MIGCOALE_CLUSTER_GPU"
                 this%ForOneTest=>For_One_Test_MIGCOALE_CLUSTER_GPU
+            case("MCRT_MIGCOALE_CLUSTER")
+                this%name = "MCRT_MIGCOALE_CLUSTER"
+                this%ForOneTest=>For_One_Test_MCRT_MIGCOALE_CLUSTER
             case default
                 write(*,*) "MCPSCUERROR: The unknown method name: ",className
                 pause

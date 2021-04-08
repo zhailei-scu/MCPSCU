@@ -6,10 +6,16 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
     type,public::Hybrid_ClusterListsFold
         Class(SecondOrder_ClusterLists),pointer::Fold_List=>null()
         contains
+        procedure,public,pass,non_overridable::AppendOneEntity=>
+        procedure,public,pass,non_overridable::AppendOtherFold_List
+        procedure,public,pass,non_overridable::GetList_Count=>GetFold_List_Count
         procedure,public,non_overridable,pass::CopyHybrid_ClusterListsFoldFromOther
         procedure,public,non_overridable,pass::Clean_Hybrid_ClusterListsFold
+        procedure,public,non_overridable,pass::Find=>FindFromTheFoldList
         Generic::Assignment(=)=>CopyHybrid_ClusterListsFoldFromOther
         Final::CleanHybrid_ClusterListsFold
+
+
     end type
 
     !----------------------------------------
