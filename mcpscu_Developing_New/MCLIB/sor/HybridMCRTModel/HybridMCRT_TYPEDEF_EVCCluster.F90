@@ -19,7 +19,7 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
     TYPE,extends(SecondOrder_ClusterLists),public::EVCClustersList
 
         type(EVCCluster)::TheEVCCluster
-        integer,public::Identify = 0
+        integer,public::Identify = -1
 
         integer,private::ListCount = 0
         type(EVCClustersList),pointer::next=>null()
@@ -374,12 +374,12 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         cursor=>this%next
 
         call this%TheEVCCluster%Clean_EVCCluster()
-        this%Identify = 0
+        this%Identify = -1
 
         DO While(associated(cursor))
             next=>cursor%next
             call CleanEVCCluster(cursor%TheEVCCluster)
-            cursor%Identify = 0
+            cursor%Identify = -1
             cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)

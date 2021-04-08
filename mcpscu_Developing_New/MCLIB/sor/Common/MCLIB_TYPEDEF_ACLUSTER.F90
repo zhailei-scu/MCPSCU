@@ -82,7 +82,7 @@ module MCLIB_TYPEDEF_ACLUSTER
 
     TYPE,extends(SecondOrder_ClusterLists),public::SecondOrder_AClusterLists
         type(AClusterList),public::TheList
-        integer,public::Identify = 0
+        integer,public::Identify = -1
 
         integer,private::ListCount = 0
         type(SecondOrder_AClusterLists),pointer::next=>null()
@@ -894,12 +894,12 @@ module MCLIB_TYPEDEF_ACLUSTER
         cursor=>this%next
 
         call this%TheList%Clean_ClusterList()
-        this%Identify = 0
+        this%Identify = -1
 
         DO While(associated(cursor))
             next=>cursor%next
             call CleanClusterList(cursor%TheList)
-            cursor%Identify = 0
+            cursor%Identify = -1
             cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)
