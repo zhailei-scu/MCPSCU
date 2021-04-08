@@ -13,7 +13,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
     use MIGCOALE_STATISTIC_CPU
     use MIGCOALE_TYPEDEF_SIMRECORD
     use INLET_TYPEDEF_IMPLANTLIST
-    use MF_TYPEDEF_COLLECTIONS
+    use HYBRIDMCRT_TYPEDEF_COLLECTIONS
     implicit none
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
@@ -80,7 +80,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
     type(MigCoalClusterRecord)::m_MigCoalClusterRecord
     type(MigCoaleStatInfoWrap),private::m_MigCoaleStatInfoWrap
     type(MigCoale_GVarsDev),private::m_MigCoale_GVarsDev
-    type(MFCOLLECTIONS),private::m_MFCollections
+    type(HybridCollections),private::m_MCRTHybridCollections
 
     private::CopyInitBoxSimCfgFromOther
     private::Clean_InitBoxSimCfg
@@ -191,7 +191,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                 call resolveModelRelativeData(cursor%theSimulationCtrlParam%ModelData,Host_SimBoxes%Atoms_list)
                 call InitSimulationBoxesConfig(Host_SimBoxes,cursor%theSimulationCtrlParam,m_InitBoxSimCfgList,m_MigCoaleStatInfoWrap,m_MigCoalClusterRecord)
 
-                call TransformMCToRT(m_MFCollections,Host_SimBoxes,Host_SimuCtrlParamList)
+                call TransformMCToRT(m_MCRTHybridCollections,Host_SimBoxes,Host_SimuCtrlParamList)
             end if
 
             DO While(.true.)
@@ -230,7 +230,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
 
     !************************************************
-!    subroutine TransformMCToRT_PackageVAC(Host_MFCollections,Host_SimBoxes,Host_SimuCtrlParamList)
+!    subroutine TransformMCToRT(Host_MFCollections,Host_SimBoxes,Host_SimuCtrlParamList)
 !        implicit none
 !        !--Dummy Vars---
 !        Class(MFCOLLECTIONS)::Host_MFCollections
@@ -311,7 +311,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 !        cursor=>null()
 !
 !        return
-!    end subroutine TransformMCToRT_PackageVAC
+!    end subroutine TransformMCToRT
 !
 !
 !    !***************************************************

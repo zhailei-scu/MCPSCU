@@ -93,6 +93,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         procedure,public,pass,non_overridable::GetList_Count=>GetSecondOrder_AClusterLists_Count
         procedure,public,pass,non_overridable::Find=>FindClusterListByIdentify
         procedure,public,pass,non_overridable::CopySecondOrder_AClusterListsFromOther
+        procedure,public,pass,non_overridable::CopySecondOrder_AClusterListsToOther
         procedure,public,pass,non_overridable::Clean_SecondOrder_AClusterLists
         Generic::Assignment(=)=>CopySecondOrder_AClusterListsFromOther
         Final::CleanSecondOrder_AClusterLists
@@ -114,14 +115,12 @@ module MCLIB_TYPEDEF_ACLUSTER
     private::CopyClustersListFromOther
     private::Clean_ClusterList
     private::CleanClusterList
-    private::CopyPack_ClusterListsFromOther
-    private::Clean_Pack_ClusterLists
-    private::CleanPack_ClusterLists
     private::AppendOneClusterList
     private::AppendOtherSecondOrder_AClusterLists
     private::GetSecondOrder_AClusterLists_Count
     private::FindClusterListByIdentify
     private::CopySecondOrder_AClusterListsFromOther
+    private::CopySecondOrder_AClusterListsToOther
     private::Clean_SecondOrder_AClusterLists
     private::CleanSecondOrder_AClusterLists
 
@@ -840,6 +839,41 @@ module MCLIB_TYPEDEF_ACLUSTER
         otherCursorP=>null()
         return
     end subroutine CopySecondOrder_AClusterListsFromOther
+
+    !*************************************************************
+    subroutine CopySecondOrder_AClusterListsToOther(this,other)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_AClusterLists),intent(in),target::this
+        CLASS(SecondOrder_AClusterLists),intent(out),target::other
+        !---Local Vars---
+        type(SecondOrder_AClusterLists),pointer::thisCursor=>null()
+        type(SecondOrder_AClusterLists),pointer::otherCursor=>null()
+        !---Body---
+
+        thisCursor=>this
+        if(.not. associated(thisCursor)) then
+            return
+        end if
+
+        otherCursor=>other
+        if(.not. associated(otherCursor)) then
+            write(*,*) "MCPSCUERROR: You must allocate the list first !"
+            pause
+            stop
+        end if
+
+        call other%Clean_SecondOrder_AClusterLists()
+
+        if(this%GetList_Count() .LE. 0) then
+            return
+        end if
+
+        !---The Assignment had been overried---
+        other = this
+
+        return
+    end subroutine CopySecondOrder_AClusterListsToOther
 
     !**************************************
     subroutine Clean_SecondOrder_AClusterLists(this)
