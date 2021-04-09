@@ -3,24 +3,21 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
     use HYBRIDMCRT_TYPEDEF_EVCCLUSTER
     implicit none
 
-    type,public::Hybrid_ClusterListsFold
+    type,public::Hybrid_ClusterFoldLists
         Class(SecondOrder_ClusterLists),pointer::Fold_List=>null()
         contains
-        procedure,public,pass,non_overridable::AppendOneEntity=>
-        procedure,public,pass,non_overridable::AppendOtherFold_List
-        procedure,public,pass,non_overridable::GetList_Count=>GetFold_List_Count
-        procedure,public,non_overridable,pass::CopyHybrid_ClusterListsFoldFromOther
-        procedure,public,non_overridable,pass::Clean_Hybrid_ClusterListsFold
-        procedure,public,non_overridable,pass::Find=>FindFromTheFoldList
-        Generic::Assignment(=)=>CopyHybrid_ClusterListsFoldFromOther
-        Final::CleanHybrid_ClusterListsFold
+        procedure,public,pass,non_overridable::AppendOne=>AppendOneFoldList
+        procedure,public,non_overridable,pass::CopyHybrid_ClusterFoldListsFromOther
+        procedure,public,non_overridable,pass::Clean_Hybrid_ClusterFoldLists
+        Generic::Assignment(=)=>CopyHybrid_ClusterFoldListsFromOther
+        Final::CleanHybrid_ClusterFoldLists
 
 
     end type
 
     !----------------------------------------
     type,public::HybridCollections
-        type(Hybrid_ClusterListsFold),dimension(:),allocatable::Collections
+        type(Hybrid_ClusterFoldLists),dimension(:),allocatable::Collections
         contains
         procedure,non_overridable,pass,public::CopyHybridCollectionsFromOther
         procedure,non_overridable,pass,public::Clean_HybridCollections
@@ -28,9 +25,10 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
         Final::CleanHybridCollections
     end type HybridCollections
 
-    private::CopyHybrid_ClusterListsFoldFromOther
-    private::Clean_Hybrid_ClusterListsFold
-    private::CleanHybrid_ClusterListsFold
+    private::AppendOneFoldList
+    private::CopyHybrid_ClusterFoldListsFromOther
+    private::Clean_Hybrid_ClusterFoldLists
+    private::CleanHybrid_ClusterFoldLists
     private::CopyHybridCollectionsFromOther
     private::Clean_HybridCollections
     private::CleanHybridCollections
@@ -39,11 +37,11 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
     contains
 
     !*************************************************
-    subroutine CopyHybrid_ClusterListsFoldFromOther(this,Other)
+    subroutine CopyHybrid_ClusterFoldListsFromOther(this,Other)
         implicit none
         !---Dummy Vars---
-        Class(Hybrid_ClusterListsFold),intent(out)::this
-        type(Hybrid_ClusterListsFold),intent(in)::Other
+        Class(Hybrid_ClusterFoldLists),intent(out)::this
+        type(Hybrid_ClusterFoldLists),intent(in)::Other
         !---Body---
 
         !---(1) Based on our test, if the select type(xxx) is used , PGI fortran not support xxx like that tempCollectionEventRegister%TheCollectionEvent
@@ -59,25 +57,7 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
         !--- t is not only included in the defination of CollectionEvent, but also child type MC_MIGCOALE_CLUSTER_GPU' members are also initialized!!!!!!!
         !--- which means allocate(MC_MIGCOALE_CLUSTER_GPU::t) equal to C++ type convert  MC_MIGCOALE_CLUSTER_GPU *tt = new (MC_MIGCOALE_CLUSTER_GPU)t ,where t is type
         !--- of class(CollectionEvent),pointer.
-        Associate(TheFoldList=>this%Fold_List)
-
-            if(associated(TheFoldList)) then
-
-                select type(TheFoldList)
-
-                    type is(SecondOrder_AClusterLists)
-                        call TheFoldList%Clean_SecondOrder_AClusterLists()
-                    type is(EVCClustersList)
-                        call TheFoldList%Clean_EVCClustersList()
-                end select
-
-                deallocate(TheFoldList)
-
-                Nullify(TheFoldList)
-                TheFoldList=>null()
-            end if
-
-        END Associate
+        call this%Clean_Hybrid_ClusterFoldLists()
 
         Associate(OtherFoldList=>Other%Fold_List)
             if(associated(OtherFoldList)) then
@@ -95,13 +75,13 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
         END Associate
 
         return
-    end subroutine CopyHybrid_ClusterListsFoldFromOther
+    end subroutine CopyHybrid_ClusterFoldListsFromOther
 
     !*************************************************
-    subroutine Clean_Hybrid_ClusterListsFold(this)
+    subroutine Clean_Hybrid_ClusterFoldLists(this)
         implicit none
         !---Dummy Vars---
-        Class(Hybrid_ClusterListsFold)::this
+        Class(Hybrid_ClusterFoldLists)::this
         !---Body---
 
         !---(1) Based on our test, if the select type(xxx) is used , PGI fortran not support xxx like that tempCollectionEventRegister%TheCollectionEvent
@@ -117,38 +97,60 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
         !--- t is not only included in the defination of CollectionEvent, but also child type MC_MIGCOALE_CLUSTER_GPU' members are also initialized!!!!!!!
         !--- which means allocate(MC_MIGCOALE_CLUSTER_GPU::t) equal to C++ type convert  MC_MIGCOALE_CLUSTER_GPU *tt = new (MC_MIGCOALE_CLUSTER_GPU)t ,where t is type
         !--- of class(CollectionEvent),pointer.
-        Associate(TheFoldList=>this%Fold_List)
-            if(associated(TheFoldList)) then
+        !---Dummy Vars---
+        CLASS(SecondOrder_AClusterLists),target::this
+        !---Local Vars---
+        CLASS(SecondOrder_ClusterLists),pointer::cursor=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::next=>null()
+        !---Body---
 
-                select type(TheFoldList)
+        cursor=>this
 
-                    type is(SecondOrder_AClusterLists)
-                        call TheFoldList%Clean_SecondOrder_AClusterLists()
-                    type is(EVCClustersList)
-                        call TheFoldList%Clean_EVCClustersList()
-                end select
+        if(.not. associated(cursor)) then
+            return
+        end if
 
-                deallocate(TheFoldList)
+        cursor=>this%next
 
-                Nullify(TheFoldList)
-                TheFoldList=>null()
-            end if
+        call this%TheList%Clean_ClusterList()
+        this%Identify = -1
 
-        END Associate
+        DO While(associated(cursor))
+            next=>cursor%next
+
+            select type(cursor)
+                type is(SecondOrder_AClusterLists)
+                    call CleanClusterList(cursor%TheList)
+            end select
+            cursor%Identify = -1
+            cursor%next=>null()
+            deallocate(cursor)
+            Nullify(cursor)
+            cursor=>next
+        END DO
+
+        this%next=>null()
+
+        this%ListCount = 0
+
+        Nullify(cursor)
+        Nullify(next)
+        cursor=>null()
+        next=>null()
 
         return
-    end subroutine
+    end subroutine Clean_Hybrid_ClusterFoldLists
 
     !*************************************************
-    subroutine CleanHybrid_ClusterListsFold(this)
+    subroutine CleanHybrid_ClusterFoldLists(this)
         implicit none
         !---Dummy Vars---
-        type(Hybrid_ClusterListsFold)::this
+        type(Hybrid_ClusterFoldLists)::this
         !---Body---
-        call this%Clean_Hybrid_ClusterListsFold()
+        call this%Clean_Hybrid_ClusterFoldLists()
 
         return
-    end subroutine CleanHybrid_ClusterListsFold
+    end subroutine CleanHybrid_ClusterFoldLists
 
     !*************************************************
     subroutine CopyHybridCollectionsFromOther(this,Other)
@@ -184,7 +186,7 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
         !---Body---
         if(allocated(this%Collections)) then
             DO I = 1,size(this%Collections)
-                call this%Collections(I)%Clean_Hybrid_ClusterListsFold()
+                call this%Collections(I)%Clean_Hybrid_ClusterFoldLists()
             END DO
         end if
 

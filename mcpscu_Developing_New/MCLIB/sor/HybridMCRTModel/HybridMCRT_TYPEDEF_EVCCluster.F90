@@ -19,17 +19,11 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
     TYPE,extends(SecondOrder_ClusterLists),public::EVCClustersList
 
         type(EVCCluster)::TheEVCCluster
-        integer,public::Identify = -1
-
-        integer,private::ListCount = 0
-        type(EVCClustersList),pointer::next=>null()
 
         contains
 
         procedure,public,pass,non_overridable::AppendOneEVCCluster
         procedure,public,pass,non_overridable::AppendOtherEVCClustersList
-        procedure,public,pass,non_overridable::GetList_Count=>GetEVCClustersList_Count
-        procedure,public,pass,non_overridable::Find=>FindEVCClustersListByIdentify
         procedure,public,pass,non_overridable::CopyEVCClustersListFromOther
         procedure,public,pass,non_overridable::CopyEVCClustersListToOther
         procedure,public,pass,non_overridable::Clean_EVCClustersList
@@ -42,8 +36,6 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
     private::CleanEVCCluster
     private::AppendOneEVCCluster
     private::AppendOtherEVCClustersList
-    private::GetEVCClustersList_Count
-    private::FindEVCClustersListByIdentify
     private::CopyEVCClustersListFromOther
     private::CopyEVCClustersListToOther
     private::Clean_EVCClustersList
@@ -93,9 +85,9 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         CLASS(EVCClustersList),target::this
         type(EVCCluster)::newOne
         integer,intent(in)::theIdentify
-        type(EVCClustersList),pointer::TheResult
+        Class(SecondOrder_ClusterLists),pointer::TheResult
         !---Local Vars---
-        type(EVCClustersList),pointer::cursor=>null(),cursorP=>null()
+        Class(SecondOrder_ClusterLists),pointer::cursor=>null(),cursorP=>null()
         !---Body---
 
         TheResult=>null()
@@ -132,11 +124,30 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
 
             this%ListCount = this%ListCount + 1
 
-            allocate(cursor)
+
+            !---(1) Based on our test, if the select type(xxx) is used , PGI fortran not support xxx like that tempCollectionEventRegister%TheCollectionEvent
+            !---so we have to use a alias scuh as TheCollectionEventAllias=>tempCollectionEventRegister%TheCollectionEvent to stand it, then use
+            !---select type(TheCollectionEventAllias),or we can use a pointer pp=>tempCollectionEventRegister%TheCollectionEvent, then use select type(pp)
+            !---(2) it is a amazing feature of select type(), for instance, here, the tempCollectionEventRegister%TheCollectionEvent is class(CollectionEvent),pointer
+            !--- and type(CollectionEvent) --extend to--> type,abstract(SingleCollectionEvent) --extend to--> type(MC_MIGCOALE_CLUSTER_GPU), which means CollectionEvent is
+            !--- the accent of MC_MIGCOALE_CLUSTER_GPU. And the function  TheDefSingleCollectionEventonstructProc is appear in child type SingleCollectionEvent and MC_MIGCOALE_CLUSTER_GPU.
+            !--- The amazing thing is: by the help of select type(), we can use tempCollectionEventRegister%TheCollectionEvent to visit the function definded in grandchildren class
+            !--- MC_MIGCOALE_CLUSTER_GPU !!!!! Which equal to c++ where the type convert from accent to child !!!!!!
+            !---(3) It is an other amazing feature for allocate(MC_MIGCOALE_CLUSTER_GPU::t), where t is defeined:: class(CollectionEvent),pointer::t
+            !--- based on our test, when use allocate(MC_MIGCOALE_CLUSTER_GPU::t), t is in fact instance as a type of MC_MIGCOALE_CLUSTER_GPU, which means all member in
+            !--- t is not only included in the defination of CollectionEvent, but also child type MC_MIGCOALE_CLUSTER_GPU' members are also initialized!!!!!!!
+            !--- which means allocate(MC_MIGCOALE_CLUSTER_GPU::t) equal to C++ type convert  MC_MIGCOALE_CLUSTER_GPU *tt = new (MC_MIGCOALE_CLUSTER_GPU)t ,where t is type
+            !--- of class(CollectionEvent),pointer.
+            allocate(EVCClustersList::cursor)
             NUllify(cursor%next)
             cursor%next=>null()
-            ! The assignment(=) had been overrided
-            cursor%TheEVCCluster = newOne
+
+            select type(cursor)
+                type is(EVCClustersList)
+                    ! The assignment(=) had been overrided
+                    cursor%TheEVCCluster = newOne
+
+            end select
 
             cursor%Identify = theIdentify
 
@@ -159,8 +170,8 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         CLASS(EVCClustersList),target::this
         type(EVCClustersList),target::OtherList
         !---Local Vars---
-        type(EVCClustersList),pointer::cursorThis=>null()
-        type(EVCClustersList),pointer::cursorOther=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::cursorThis=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::cursorOther=>null()
         !---Body---
         cursorThis=>this
 
@@ -181,76 +192,15 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         end if
 
         DO While(associated(cursorOther))
-            call this%AppendOneEVCCluster(cursorOther%TheEVCCluster,cursorOther%Identify)
+            select type(cursorOther)
+                type is(EVCClustersList)
+                    call this%AppendOneEVCCluster(cursorOther%TheEVCCluster,cursorOther%Identify)
+            end select
             cursorOther=>cursorOther%next
         END DO
 
         return
     end subroutine AppendOtherEVCClustersList
-
-    !**************************************
-    integer function GetEVCClustersList_Count(this)
-        implicit none
-        !---Dummy Vars---
-        CLASS(EVCClustersList),target::this
-        !---Local Vars---
-        type(EVCClustersList),pointer::cursor=>null()
-        !---Body---
-
-        cursor=>this
-
-        if(.not. associated(cursor)) then
-            write(*,*) "MCPSCUERROR: you need to init the EVCClustersList first!"
-            pause
-            stop
-        end if
-
-        GetEVCClustersList_Count = this%ListCount
-
-        Nullify(cursor)
-        cursor=>null()
-
-        return
-    end function GetEVCClustersList_Count
-
-    !*************************************************************
-    function FindEVCClustersListByIdentify(this,theID) result(TheResult)
-        implicit none
-        !---Dummy Vars---
-        CLASS(EVCClustersList),target::this
-        integer,intent(in)::theID
-        type(EVCClustersList),pointer::TheResult
-        !---Local Vars---
-        logical::Finded
-        !---Body---
-
-        TheResult=>null()
-
-        TheResult=>this
-        if(.not. associated(TheResult)) then
-            write(*,*) "MCPSCUERROR: you need to init the EVCClustersList first!"
-            pause
-            stop
-        end if
-
-        Finded = .false.
-
-        DO while(associated(TheResult))
-
-            if(TheResult%Identify .eq. theID) then
-                Finded = .true.
-                exit
-            end if
-
-            TheResult=>TheResult%next
-        END DO
-
-        if(Finded .eq. .false.) then
-            Nullify(TheResult)
-            TheResult=>null()
-        end if
-
-    end function FindEVCClustersListByIdentify
 
     !*************************************************************
     subroutine CopyEVCClustersListFromOther(this,other)
@@ -259,10 +209,10 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         CLASS(EVCClustersList),intent(out),target::this
         CLASS(EVCClustersList),intent(in),target::other
         !---Local Vars---
-        type(EVCClustersList),pointer::thisCursor=>null()
-        type(EVCClustersList),pointer::otherCursor=>null()
-        type(EVCClustersList),pointer::thisCursorP=>null()
-        type(EVCClustersList),pointer::otherCursorP=>null()
+        Class(SecondOrder_ClusterLists),pointer::thisCursor=>null()
+        Class(SecondOrder_ClusterLists),pointer::otherCursor=>null()
+        Class(SecondOrder_ClusterLists),pointer::thisCursorP=>null()
+        Class(SecondOrder_ClusterLists),pointer::otherCursorP=>null()
         !---Body---
 
         thisCursorP=>this
@@ -283,8 +233,15 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
             return
         end if
 
-        ! The assignment(=) had been override
-        thisCursorP%TheEVCCluster = otherCursorP%TheEVCCluster
+        select type(thisCursorP)
+            type is(EVCClustersList)
+                select type(otherCursorP)
+                    type is(EVCClustersList)
+                        ! The assignment(=) had been override
+                        thisCursorP%TheEVCCluster = otherCursorP%TheEVCCluster
+                end select
+        end select
+
         thisCursorP%Identify = otherCursorP%Identify
 
         this%ListCount = this%ListCount + 1
@@ -293,9 +250,15 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         otherCursor=>otherCursorP%next
         DO While(associated(otherCursor))
 
-            allocate(thisCursor)
+            allocate(EVCClustersList::thisCursor)
             ! The assignment(=) had been override
-            thisCursor%TheEVCCluster = otherCursor%TheEVCCluster
+            select type(thisCursor)
+                type is(EVCClustersList)
+                    select type(otherCursor)
+                        type is(EVCClustersList)
+                            thisCursor%TheEVCCluster = otherCursor%TheEVCCluster
+                    end select
+            end select
             thisCursor%Identify = otherCursor%Identify
 
             this%ListCount = this%ListCount + 1
@@ -361,8 +324,8 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         !---Dummy Vars---
         CLASS(EVCClustersList),target::this
         !---Local Vars---
-        type(EVCClustersList),pointer::cursor=>null()
-        type(EVCClustersList),pointer::next=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::cursor=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::next=>null()
         !---Body---
 
         cursor=>this
@@ -378,7 +341,11 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
 
         DO While(associated(cursor))
             next=>cursor%next
-            call CleanEVCCluster(cursor%TheEVCCluster)
+
+            select type(cursor)
+                type is(EVCClustersList)
+                    call CleanEVCCluster(cursor%TheEVCCluster)
+            end select
             cursor%Identify = -1
             cursor%next=>null()
             deallocate(cursor)

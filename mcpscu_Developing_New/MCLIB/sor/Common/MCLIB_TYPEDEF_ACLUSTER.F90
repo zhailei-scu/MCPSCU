@@ -76,22 +76,26 @@ module MCLIB_TYPEDEF_ACLUSTER
     END TYPE
 
     type,abstract::SecondOrder_ClusterLists
+        integer,public::Identify = -1
 
+        integer::ListCount = 0
+
+        Class(SecondOrder_ClusterLists),pointer::next=>null()
+
+        contains
+        procedure,public,pass,non_overridable::GetList_Count=>GetSecondOrder_ClusterLists_Count
+        procedure,public,pass,non_overridable::Find=>FindClusterListByIdentify
 
     end type
 
     TYPE,extends(SecondOrder_ClusterLists),public::SecondOrder_AClusterLists
         type(AClusterList),public::TheList
-        integer,public::Identify = -1
 
-        integer,private::ListCount = 0
-        type(SecondOrder_AClusterLists),pointer::next=>null()
+
 
         contains
         procedure,public,pass,non_overridable::AppendOneClusterList
         procedure,public,pass,non_overridable::AppendOtherSecondOrder_AClusterLists
-        procedure,public,pass,non_overridable::GetList_Count=>GetSecondOrder_AClusterLists_Count
-        procedure,public,pass,non_overridable::Find=>FindClusterListByIdentify
         procedure,public,pass,non_overridable::CopySecondOrder_AClusterListsFromOther
         procedure,public,pass,non_overridable::CopySecondOrder_AClusterListsToOther
         procedure,public,pass,non_overridable::Clean_SecondOrder_AClusterLists
@@ -117,7 +121,7 @@ module MCLIB_TYPEDEF_ACLUSTER
     private::CleanClusterList
     private::AppendOneClusterList
     private::AppendOtherSecondOrder_AClusterLists
-    private::GetSecondOrder_AClusterLists_Count
+    private::GetSecondOrder_ClusterLists_Count
     private::FindClusterListByIdentify
     private::CopySecondOrder_AClusterListsFromOther
     private::CopySecondOrder_AClusterListsToOther
@@ -606,6 +610,71 @@ module MCLIB_TYPEDEF_ACLUSTER
         return
     end subroutine CleanClusterList
 
+    !**************************************
+    integer function GetSecondOrder_ClusterLists_Count(this)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_ClusterLists),target::this
+        !---Local Vars---
+        CLASS(SecondOrder_ClusterLists),pointer::cursor=>null()
+        !---Body---
+
+        cursor=>this
+
+        if(.not. associated(cursor)) then
+            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_ClusterLists first!"
+            pause
+            stop
+        end if
+
+        GetSecondOrder_ClusterLists_Count = this%ListCount
+
+        Nullify(cursor)
+        cursor=>null()
+
+        return
+    end function GetSecondOrder_ClusterLists_Count
+
+    !*************************************************************
+    function FindClusterListByIdentify(this,theID) result(TheResult)
+        implicit none
+        !---Dummy Vars---
+        CLASS(SecondOrder_ClusterLists),target::this
+        integer,intent(in)::theID
+        CLASS(SecondOrder_ClusterLists),pointer::TheResult
+        !---Local Vars---
+        logical::Finded
+        !---Body---
+
+        TheResult=>null()
+
+        TheResult=>this
+        if(.not. associated(TheResult)) then
+            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_ClusterLists first!"
+            pause
+            stop
+        end if
+
+        Finded = .false.
+
+        DO while(associated(TheResult))
+
+            if(TheResult%Identify .eq. theID) then
+                Finded = .true.
+                exit
+            end if
+
+            TheResult=>TheResult%next
+        END DO
+
+        if(Finded .eq. .false.) then
+            Nullify(TheResult)
+            TheResult=>null()
+        end if
+
+    end function FindClusterListByIdentify
+
+
     !***************************************
     function AppendOneClusterList(this,newOne,theIdentify) result(TheResult)
         implicit none
@@ -613,9 +682,9 @@ module MCLIB_TYPEDEF_ACLUSTER
         CLASS(SecondOrder_AClusterLists),target::this
         type(AClusterList)::newOne
         integer,intent(in)::theIdentify
-        type(SecondOrder_AClusterLists),pointer::TheResult
+        Class(SecondOrder_ClusterLists),pointer::TheResult
         !---Local Vars---
-        type(SecondOrder_AClusterLists),pointer::cursor=>null(),cursorP=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::cursor=>null(),cursorP=>null()
         !---Body---
 
         TheResult=>null()
@@ -652,11 +721,28 @@ module MCLIB_TYPEDEF_ACLUSTER
 
             this%ListCount = this%ListCount + 1
 
-            allocate(cursor)
+            !---(1) Based on our test, if the select type(xxx) is used , PGI fortran not support xxx like that tempCollectionEventRegister%TheCollectionEvent
+            !---so we have to use a alias scuh as TheCollectionEventAllias=>tempCollectionEventRegister%TheCollectionEvent to stand it, then use
+            !---select type(TheCollectionEventAllias),or we can use a pointer pp=>tempCollectionEventRegister%TheCollectionEvent, then use select type(pp)
+            !---(2) it is a amazing feature of select type(), for instance, here, the tempCollectionEventRegister%TheCollectionEvent is class(CollectionEvent),pointer
+            !--- and type(CollectionEvent) --extend to--> type,abstract(SingleCollectionEvent) --extend to--> type(MC_MIGCOALE_CLUSTER_GPU), which means CollectionEvent is
+            !--- the accent of MC_MIGCOALE_CLUSTER_GPU. And the function  TheDefSingleCollectionEventonstructProc is appear in child type SingleCollectionEvent and MC_MIGCOALE_CLUSTER_GPU.
+            !--- The amazing thing is: by the help of select type(), we can use tempCollectionEventRegister%TheCollectionEvent to visit the function definded in grandchildren class
+            !--- MC_MIGCOALE_CLUSTER_GPU !!!!! Which equal to c++ where the type convert from accent to child !!!!!!
+            !---(3) It is an other amazing feature for allocate(MC_MIGCOALE_CLUSTER_GPU::t), where t is defeined:: class(CollectionEvent),pointer::t
+            !--- based on our test, when use allocate(MC_MIGCOALE_CLUSTER_GPU::t), t is in fact instance as a type of MC_MIGCOALE_CLUSTER_GPU, which means all member in
+            !--- t is not only included in the defination of CollectionEvent, but also child type MC_MIGCOALE_CLUSTER_GPU' members are also initialized!!!!!!!
+            !--- which means allocate(MC_MIGCOALE_CLUSTER_GPU::t) equal to C++ type convert  MC_MIGCOALE_CLUSTER_GPU *tt = new (MC_MIGCOALE_CLUSTER_GPU)t ,where t is type
+            !--- of class(CollectionEvent),pointer.
+            allocate(SecondOrder_AClusterLists::cursor)
             NUllify(cursor%next)
             cursor%next=>null()
-            ! The assignment(=) had been overrided
-            cursor%TheList = newOne
+
+            select type(cursor)
+                type is(SecondOrder_AClusterLists)
+                ! The assignment(=) had been overrided
+                cursor%TheList = newOne
+            end select
 
             cursor%Identify = theIdentify
 
@@ -679,8 +765,8 @@ module MCLIB_TYPEDEF_ACLUSTER
         CLASS(SecondOrder_AClusterLists),target::this
         type(SecondOrder_AClusterLists),target::OtherList
         !---Local Vars---
-        type(SecondOrder_AClusterLists),pointer::cursorThis=>null()
-        type(SecondOrder_AClusterLists),pointer::cursorOther=>null()
+        Class(SecondOrder_ClusterLists),pointer::cursorThis=>null()
+        Class(SecondOrder_ClusterLists),pointer::cursorOther=>null()
         !---Body---
         cursorThis=>this
 
@@ -701,88 +787,27 @@ module MCLIB_TYPEDEF_ACLUSTER
         end if
 
         DO While(associated(cursorOther))
-            call this%AppendOneClusterList(cursorOther%TheList,cursorOther%Identify)
+            select type(cursorOther)
+                type is(SecondOrder_AClusterLists)
+                    call this%AppendOneClusterList(cursorOther%TheList,cursorOther%Identify)
+            end select
             cursorOther=>cursorOther%next
         END DO
 
         return
     end subroutine AppendOtherSecondOrder_AClusterLists
 
-    !**************************************
-    integer function GetSecondOrder_AClusterLists_Count(this)
-        implicit none
-        !---Dummy Vars---
-        CLASS(SecondOrder_AClusterLists),target::this
-        !---Local Vars---
-        type(SecondOrder_AClusterLists),pointer::cursor=>null()
-        !---Body---
-
-        cursor=>this
-
-        if(.not. associated(cursor)) then
-            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_AClusterLists first!"
-            pause
-            stop
-        end if
-
-        GetSecondOrder_AClusterLists_Count = this%ListCount
-
-        Nullify(cursor)
-        cursor=>null()
-
-        return
-    end function GetSecondOrder_AClusterLists_Count
-
-    !*************************************************************
-    function FindClusterListByIdentify(this,theID) result(TheResult)
-        implicit none
-        !---Dummy Vars---
-        CLASS(SecondOrder_AClusterLists),target::this
-        integer,intent(in)::theID
-        type(SecondOrder_AClusterLists),pointer::TheResult
-        !---Local Vars---
-        logical::Finded
-        !---Body---
-
-        TheResult=>null()
-
-        TheResult=>this
-        if(.not. associated(TheResult)) then
-            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_AClusterLists first!"
-            pause
-            stop
-        end if
-
-        Finded = .false.
-
-        DO while(associated(TheResult))
-
-            if(TheResult%Identify .eq. theID) then
-                Finded = .true.
-                exit
-            end if
-
-            TheResult=>TheResult%next
-        END DO
-
-        if(Finded .eq. .false.) then
-            Nullify(TheResult)
-            TheResult=>null()
-        end if
-
-    end function FindClusterListByIdentify
-
     !*************************************************************
     subroutine CopySecondOrder_AClusterListsFromOther(this,other)
         implicit none
         !---Dummy Vars---
         CLASS(SecondOrder_AClusterLists),intent(out),target::this
-        CLASS(SecondOrder_AClusterLists),intent(in),target::other
+        type(SecondOrder_AClusterLists),intent(in),target::other
         !---Local Vars---
-        type(SecondOrder_AClusterLists),pointer::thisCursor=>null()
-        type(SecondOrder_AClusterLists),pointer::otherCursor=>null()
-        type(SecondOrder_AClusterLists),pointer::thisCursorP=>null()
-        type(SecondOrder_AClusterLists),pointer::otherCursorP=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::thisCursor=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::otherCursor=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::thisCursorP=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::otherCursorP=>null()
         !---Body---
 
         thisCursorP=>this
@@ -804,7 +829,14 @@ module MCLIB_TYPEDEF_ACLUSTER
         end if
 
         ! The assignment(=) had been override
-        thisCursorP%TheList = otherCursorP%TheList
+        select type(thisCursorP)
+            type is(SecondOrder_AClusterLists)
+                select type(otherCursorP)
+                    type is(SecondOrder_AClusterLists)
+                        thisCursorP%TheList = otherCursorP%TheList
+                end select
+        end select
+
         thisCursorP%Identify = otherCursorP%Identify
 
         this%ListCount = this%ListCount + 1
@@ -813,9 +845,15 @@ module MCLIB_TYPEDEF_ACLUSTER
         otherCursor=>otherCursorP%next
         DO While(associated(otherCursor))
 
-            allocate(thisCursor)
+            allocate(SecondOrder_AClusterLists::thisCursor)
             ! The assignment(=) had been override
-            thisCursor%TheList = otherCursor%TheList
+            select type(thisCursor)
+                type is(SecondOrder_AClusterLists)
+                    select type(otherCursor)
+                        type is(SecondOrder_AClusterLists)
+                            thisCursor%TheList = otherCursor%TheList
+                    end select
+            end select
             thisCursor%Identify = otherCursor%Identify
 
             this%ListCount = this%ListCount + 1
@@ -881,8 +919,8 @@ module MCLIB_TYPEDEF_ACLUSTER
         !---Dummy Vars---
         CLASS(SecondOrder_AClusterLists),target::this
         !---Local Vars---
-        type(SecondOrder_AClusterLists),pointer::cursor=>null()
-        type(SecondOrder_AClusterLists),pointer::next=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::cursor=>null()
+        CLASS(SecondOrder_ClusterLists),pointer::next=>null()
         !---Body---
 
         cursor=>this
@@ -898,7 +936,11 @@ module MCLIB_TYPEDEF_ACLUSTER
 
         DO While(associated(cursor))
             next=>cursor%next
-            call CleanClusterList(cursor%TheList)
+
+            select type(cursor)
+                type is(SecondOrder_AClusterLists)
+                    call CleanClusterList(cursor%TheList)
+            end select
             cursor%Identify = -1
             cursor%next=>null()
             deallocate(cursor)
