@@ -459,8 +459,6 @@ module MCLIB_TYPEDEF_ACLUSTER
         logical::Finded
         !---Body---
 
-        TheResult=>null()
-
         TheResult=>this
         if(.not. associated(TheResult)) then
             write(*,*) "MCPSCUERROR: you need to init the AClusterList first!"
@@ -646,8 +644,6 @@ module MCLIB_TYPEDEF_ACLUSTER
         logical::Finded
         !---Body---
 
-        TheResult=>null()
-
         TheResult=>this
         if(.not. associated(TheResult)) then
             write(*,*) "MCPSCUERROR: you need to init the SecondOrder_ClusterLists first!"
@@ -687,7 +683,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         CLASS(SecondOrder_ClusterLists),pointer::cursor=>null(),cursorP=>null()
         !---Body---
 
-        TheResult=>null()
+        TheResult=>this
 
         cursorP=>this
 

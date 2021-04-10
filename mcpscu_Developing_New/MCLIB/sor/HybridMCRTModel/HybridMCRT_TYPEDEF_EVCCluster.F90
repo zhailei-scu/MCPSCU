@@ -90,7 +90,7 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         Class(SecondOrder_ClusterLists),pointer::cursor=>null(),cursorP=>null()
         !---Body---
 
-        TheResult=>null()
+        TheResult=>this
 
         cursorP=>this
 
