@@ -245,7 +245,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         logical::Finded
         Class(SecondOrder_ClusterLists),pointer::cursor=>null()
         type(AClusterList),pointer::cursorClusterList=>null()
-        type(AClusterList)::newOne
+        Class(SecondOrder_ClusterLists),pointer::newOne=>null()
         integer::cascadeID
         integer::SIAIndex
         integer::VacancyIndex
@@ -276,7 +276,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                     Finded = .false.
 
 
-                    !---all SIA clusters for different cascade own same identify 0; while VAC in each cascade own identify = m_Record(1)
+                    !---all SIA clusters for different cascades own same identify 0; while VAC in each cascade own identify = m_Record(1)
                     if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
                         cascadeID = 0
                     else
@@ -286,25 +286,88 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                     cursor=>Host_HybridCollections%Collections(IBox)%Fold_List%Find(cascadeID)
 
                     if(.not. associated(cursor)) then
-                        call newOne%Clean_ClusterList()
-                        cursor=>Host_HybridCollections%Collections(IBox)%AppendOneClusterList(newOne,cascadeID)
+
+                        if(associated(newOne)) then
+                            select type(newOne)
+                                type is(SecondOrder_AClusterLists)
+                                    call newOne%Clean_SecondOrder_AClusterLists()
+                                type is(EVCClustersList)
+                                    call newOne%Clean_EVCClustersList()
+                            end select
+
+                            deallocate(newOne)
+                        end if
+
+                        if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
+                            allocate(SecondOrder_AClusterLists::newOne)
+                        else
+                            allocate(EVCClustersList::newOne)
+                        end if
+
+                        newOne%Identify = cascadeID
+
+                        cursor=>Host_HybridCollections%Collections(IBox)%AppendOne(newOne)
                     end if
 
-                    if(cursor%TheList%GetList_Count() .GT. 0) then
-                        cursorClusterList=>cursor%TheList
-                        DO While(associated(cursorClusterList))
-                            if(cursorClusterList%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
-                                cursorClusterList%quantififyValue = cursorClusterList%quantififyValue + 1.D0/BoxVolum
+                    select type(cursor)
+                        type is(SecondOrder_AClusterLists)
+                            if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .LE. 0 .or. cursor%Identify .ne. 0) then
+                                write(*,*) "MCPSCUERROR: Cluster is VACs, however, the object type is SecondOrder_AClusterLists(just for SIAs cluster)"
+                                write(*,*) "For cluster: ",IC
+                                pause
+                                stop
+                            end if
+
+                            if(cursor%TheList%GetList_Count() .GT. 0) then
+                                cursorClusterList=>cursor%TheList
+                                DO While(associated(cursorClusterList))
+                                    if(cursorClusterList%TheCluster%IsSameKindCluster((Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC))) .eq. .true.) then
+                                        cursorClusterList%quantififyValue = cursorClusterList%quantififyValue + 1.D0/BoxVolum
+                                        Finded = .true.
+                                    end if
+
+                                    cursorClusterList=>cursorClusterList%next
+                                END DO
+                            end if
+
+                            if(Finded .eq. .false.) then
+                                call cursor%TheList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
+                            end if
+
+                        type is(EVCClustersList)
+                            if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0 .or. cursor%Identify .eq. 0) then
+                                write(*,*) "MCPSCUERROR: Cluster is vacancies, however, the object type is EVCClustersList(just for EVC cluster)"
+                                write(*,*) "For cluster: ",IC
+                                pause
+                                stop
+                            end if
+
+                            if(cursor%TheEVCCluster%TheList%GetList_Count() .GT. 0) then
                                 Finded = .true.
                             end if
 
-                            cursorClusterList=>cursorClusterList%next
-                        END DO
-                    end if
+                            if(Finded .eq. .false.) then
 
-                    if(Finded .eq. .false.) then
-                        call cursor%TheList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
-                    end if
+                                cursor%TheEVCCluster%ACluster%m_Statu = p_ACTIVEFREE_STATU
+
+                                cursor%TheEVCCluster%ACluster%m_RAD =
+
+                                cursor%TheEVCCluster%ACluster%m_POS =
+
+                                cursor%TheEVCCluster%ACluster%m_DiffCoeff =
+
+                                cursor%TheEVCCluster%ACluster%m_DiffuseDirection =
+
+                                cursor%TheEVCCluster%ACluster%m_DiffuseRotateCoeff =
+
+                                cursor%TheEVCCluster%ACluster%m_Record =
+                            end if
+
+                            call cursor%TheEVCCluster%TheList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
+
+                            cursor%TheEVCCluster%TheList%quantififyValue = cursor%TheEVCCluster%TheList%quantififyValue + 1.D0/BoxVolum
+
+                    end select
 
                 end if
 

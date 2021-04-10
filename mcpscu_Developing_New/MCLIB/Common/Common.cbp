@@ -40,6 +40,9 @@
 		<Unit filename="../sor/Common/MCLIB_GLOBAL.F90">
 			<Option weight="6" />
 		</Unit>
+		<Unit filename="../sor/Common/MCLIB_Model_CECR.F90">
+			<Option weight="0" />
+		</Unit>
 		<Unit filename="../sor/Common/MCLIB_TYPEDEF_ACLUSTER.F90">
 			<Option weight="1" />
 		</Unit>

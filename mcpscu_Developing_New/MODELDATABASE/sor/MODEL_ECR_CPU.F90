@@ -4,7 +4,7 @@ module MODEL_ECR_CPU
     use MSM_TYPEDEF_InputPaser
     implicit none
 
-    integer,parameter::p_ECRTypesNum = 7
+    integer,parameter::p_ECRTypesNum = 8
     integer,parameter::p_ECR_ByValue = 1
     integer,parameter::p_ECR_ByBCluster = 2
     integer,parameter::p_ECR_SIACluster_W = 3
@@ -12,6 +12,7 @@ module MODEL_ECR_CPU
     integer,parameter::p_ECR_PureHeCluster_W = 5
     integer,parameter::p_ECR_HeVacancyCluster_W = 6
     integer,parameter::p_ECR_HeSIACluster_W = 7
+    integer,parameter::p_ECR_ByCECRModel = 8
 
     integer,public::m_H_Index
     integer,public::m_He_Index
