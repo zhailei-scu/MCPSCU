@@ -33,8 +33,93 @@ module HYBRIDMCRT_TYPEDEF_COLLECTIONS
     private::Clean_HybridCollections
     private::CleanHybridCollections
 
-
     contains
+
+    !*************************************************
+    function AppendOneFoldList(this,newOne) result
+        implicit none
+        !---Dummy Vars---
+        Class(Hybrid_ClusterFoldLists)::this
+        Class(SecondOrder_ClusterLists)::newOne
+        !---Body---
+        integer,intent(in)::theIdentify
+        Class(SecondOrder_ClusterLists),pointer::TheResult
+        !---Local Vars---
+        CLASS(SecondOrder_ClusterLists),pointer::cursor=>null(),cursorP=>null()
+        !---Body---
+
+        TheResult=>null()
+
+        cursorP=>this
+
+        if(.not. associated(cursorP)) then
+            write(*,*) "MCPSCUERROR: you need to init the SecondOrder_AClusterLists first!"
+            pause
+            stop
+        end if
+
+        if(this%GetList_Count() .LE. 0) then
+            this%ListCount = 1
+            !---The Assignment(=) had been overrided---
+            this%TheList = newOne
+
+            this%Identify = theIdentify
+        else
+
+            if(associated(this%Find(theIdentify))) then
+                write(*,*) "MCPSCUERROR: The ClusterList with ID: ",theIdentify," had existed , please do not overwrite it"
+                pause
+                stop
+            end if
+
+            cursor=>this%next
+            cursorP=>this
+
+            DO while(associated(cursor))
+                cursor=>cursor%next
+                cursorP=>cursorP%next
+            END DO
+
+            this%ListCount = this%ListCount + 1
+
+            !---(1) Based on our test, if the select type(xxx) is used , PGI fortran not support xxx like that tempCollectionEventRegister%TheCollectionEvent
+            !---so we have to use a alias scuh as TheCollectionEventAllias=>tempCollectionEventRegister%TheCollectionEvent to stand it, then use
+            !---select type(TheCollectionEventAllias),or we can use a pointer pp=>tempCollectionEventRegister%TheCollectionEvent, then use select type(pp)
+            !---(2) it is a amazing feature of select type(), for instance, here, the tempCollectionEventRegister%TheCollectionEvent is class(CollectionEvent),pointer
+            !--- and type(CollectionEvent) --extend to--> type,abstract(SingleCollectionEvent) --extend to--> type(MC_MIGCOALE_CLUSTER_GPU), which means CollectionEvent is
+            !--- the accent of MC_MIGCOALE_CLUSTER_GPU. And the function  TheDefSingleCollectionEventonstructProc is appear in child type SingleCollectionEvent and MC_MIGCOALE_CLUSTER_GPU.
+            !--- The amazing thing is: by the help of select type(), we can use tempCollectionEventRegister%TheCollectionEvent to visit the function definded in grandchildren class
+            !--- MC_MIGCOALE_CLUSTER_GPU !!!!! Which equal to c++ where the type convert from accent to child !!!!!!
+            !---(3) It is an other amazing feature for allocate(MC_MIGCOALE_CLUSTER_GPU::t), where t is defeined:: class(CollectionEvent),pointer::t
+            !--- based on our test, when use allocate(MC_MIGCOALE_CLUSTER_GPU::t), t is in fact instance as a type of MC_MIGCOALE_CLUSTER_GPU, which means all member in
+            !--- t is not only included in the defination of CollectionEvent, but also child type MC_MIGCOALE_CLUSTER_GPU' members are also initialized!!!!!!!
+            !--- which means allocate(MC_MIGCOALE_CLUSTER_GPU::t) equal to C++ type convert  MC_MIGCOALE_CLUSTER_GPU *tt = new (MC_MIGCOALE_CLUSTER_GPU)t ,where t is type
+            !--- of class(CollectionEvent),pointer.
+            allocate(SecondOrder_AClusterLists::cursor)
+            NUllify(cursor%next)
+            cursor%next=>null()
+
+            select type(cursor)
+                type is(SecondOrder_AClusterLists)
+                ! The assignment(=) had been overrided
+                cursor%TheList = newOne
+            end select
+
+            cursor%Identify = theIdentify
+
+            cursorP%next=>cursor
+
+            TheResult=>cursor
+        end if
+
+        Nullify(cursorP)
+        cursorP=>null()
+        Nullify(cursor)
+        cursor=>null()
+        return
+
+        return
+    end subroutine
 
     !*************************************************
     subroutine CopyHybrid_ClusterFoldListsFromOther(this,Other)
