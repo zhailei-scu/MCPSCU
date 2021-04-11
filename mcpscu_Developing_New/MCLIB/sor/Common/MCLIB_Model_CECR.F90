@@ -3,6 +3,10 @@ module MCLIB_MODEL_CECR
 
     implicit none
 
+    real(kind=KINDDF),parameter,private::a0 = 1.55888
+    real(kind=KINDDF),parameter,private::b0 = 0.18233
+    real(kind=KINDDF),parameter,private::c0 = 0.04502
+    real(kind=KINDDF),parameter,private::d0 = 6.86935
 
     contains
 
@@ -16,21 +20,21 @@ module MCLIB_MODEL_CECR
         real(kind=KINDDF)::TheDimLength(3)
         !---Body---
 
-        TheDimLength = Cal_CascadeShapeRecognize(TheClusterList)/LatticeLength
+        TheDimLength = Cal_CascadeShapeRecognize(TheClusterList,TheEffectCount)/LatticeLength
 
-        !---Shape adjust---
-        TheDimLength(1) = SQRT(((TheDimLength(1)**2)*(1+SQRT(1-(TheDimLength(2)/TheDimLength(1))**2)))/2);
-        TheDimLength(2) = SQRT(((TheDimLength(1)**2)*(1-SQRT(1-(TheDimLength(2)/TheDimLength(1))**2)))/2);
-        TheDimLength(3) = SQRT(((Col(D)^2)*(1-SQRT(1-(Col(E)/Col(D))^2)))/2);
+        if(TheEffectCount .LE. 0) then
+            TheECR = TheDimLength(1)*LatticeLength
+        else
+                    !---Shape adjust---
+            TheDimLength(1) = SQRT(((TheDimLength(1)**2)*(1+SQRT(1-(TheDimLength(2)/TheDimLength(1))**2)))/2);
+            TheDimLength(2) = SQRT(((TheDimLength(1)**2)*(1-SQRT(1-(TheDimLength(2)/TheDimLength(1))**2)))/2);
+            TheDimLength(3) = SQRT(((TheDimLength(2)**2)*(1-SQRT(1-(TheDimLength(3)/TheDimLength(2))**2)))/2);
 
-        TheECR = (a0*(Col(I)^(-b0/Col(J)-2*b0/(Col(K)/2))) + c0*((Col(J))^(-d0/Col(I)+1)+2*(Col(K)/2)^(-d0/Col(I)+1)))*(3-exp(-Col(J)*Col(I))-2*exp(-(Col(K)/2)*Col(I)));
+            TheECR = (a0*(TheEffectCount**(-b0/TheDimLength(1)-2*b0/(TheDimLength(2)/2))) + &
+                      c0*((TheDimLength(1))**(-d0/TheEffectCount+1)+2*(TheDimLength(2) /2)**(-d0/TheEffectCount+1)))* &
+                      (3-exp(-TheDimLength(1)*TheEffectCount)-2*exp(-(TheDimLength(2) /2)*TheEffectCount))
 
-double a0 = 1.55888;
-double b0 = 0.18233;
-double c0 = 0.04502;
-double d0 = 6.86935;
-
-
+        end if
 
         return
     end function Cal_ECR_ByCECRModel
