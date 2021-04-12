@@ -11,17 +11,18 @@ module MCLIB_MODEL_CECR
     contains
 
     !*************************************************************
-    function Cal_ECR_ByCECRModel(TheClusterList,LatticeLength) result(TheECR)
+    subroutine Cal_ECR_ByCECRModel(TheClusterList,LatticeLength,TheECR,TheCenter)
         !---Dummy Vars---
         type(AClusterList),intent(in)::TheClusterList
         real(kind=KINDDF),intent(in)::LatticeLength
-        real(kind=KINDDF)::TheECR
+        real(kind=KINDDF),intent(out)::TheECR
+        real(kind=KINDDF),intent(out)::TheCenter(3)
         !---Local Vars---
         real(kind=KINDDF)::TheDimLength(3)
         integer::TheEffectCount
         !---Body---
 
-        call Cal_CascadeShapeRecognize(TheClusterList,TheDimLength,TheEffectCount)
+        call Cal_CascadeShapeRecognize(TheClusterList,TheDimLength,TheEffectCount,TheCenter)
 
         TheDimLength = TheDimLength/LatticeLength
 
@@ -40,15 +41,16 @@ module MCLIB_MODEL_CECR
         end if
 
         return
-    end function Cal_ECR_ByCECRModel
+    end subroutine Cal_ECR_ByCECRModel
 
     !***************************************************************
-    subroutine Cal_CascadeShapeRecognize(TheClusterList,TheDimLength,TheEffectCount)
+    subroutine Cal_CascadeShapeRecognize(TheClusterList,TheDimLength,TheEffectCount,TheCenter)
         implicit none
         !---Dummy Vars---
         type(AClusterList),intent(in),target::TheClusterList
         real(kind=KINDDF)::TheDimLength(3)
         integer::TheEffectCount
+        real(kind=KINDDF),intent(out)::TheCenter(3)
         !---Local Vars---
         type(AClusterList),pointer::cursor=>null()
         type(AClusterList),pointer::cursorOther=>null()
@@ -59,7 +61,6 @@ module MCLIB_MODEL_CECR
         integer::IDLeftMaxDist_Dim1
         integer::IDRightMaxDist_Dim1
         type(AClusterList),target::tempClusterList
-
         real(kind=KINDDF)::SEP(3)
         real(kind=KINDDF)::Distance
         real(kind=KINDDF)::maxSEP_Dim3(3)
@@ -84,6 +85,8 @@ module MCLIB_MODEL_CECR
 
         TheEffectCount = 0
 
+        TheCenter = 0.D0
+
         cursor=>TheClusterList
 
         if(.not. associated(cursor)) then
@@ -97,11 +100,13 @@ module MCLIB_MODEL_CECR
         end if
 
         !*******Get Information from configuration ****************************************
+
         call tempClusterList%Clean_ClusterList()
         Do while(associated(cursor))
 
             if(cursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. cursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
                 call tempClusterList%AppendOneCluster(cursor%TheCluster)
+                TheCenter = TheCenter + cursor%TheCluster%m_POS
             end if
 
             cursor=>cursor%next
@@ -113,6 +118,9 @@ module MCLIB_MODEL_CECR
             TheDimLength = tempClusterList%TheCluster%m_RAD
             return
         end if
+
+
+        TheCenter = TheCenter/tempClusterList%GetList_Count()
 
         !************************Dim3**************************
         maxDistance_Dim3 = -1.D0

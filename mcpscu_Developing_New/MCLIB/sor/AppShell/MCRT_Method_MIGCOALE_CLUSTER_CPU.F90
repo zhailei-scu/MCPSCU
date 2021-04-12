@@ -14,6 +14,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
     use MIGCOALE_TYPEDEF_SIMRECORD
     use INLET_TYPEDEF_IMPLANTLIST
     use HYBRIDMCRT_TYPEDEF_COLLECTIONS
+    use MCLIB_MODEL_CECR
     implicit none
 
     integer, parameter, private::p_ClusterIniConfig_Simple = 0
@@ -249,6 +250,8 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         integer::cascadeID
         integer::SIAIndex
         integer::VacancyIndex
+        real(kind=KINDDF)::TheECR
+        real(kind=KINDDF)::TheCenter(3)
         !---Body---
 
         MultiBox = Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
@@ -348,24 +351,28 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                             if(Finded .eq. .false.) then
 
+                                call Cal_ECR_ByCECRModel(cursor%TheEVCCluster%TheList,Host_SimBoxes%LatticeLength,TheECR,TheCenter)
+
                                 cursor%TheEVCCluster%ACluster%m_Statu = p_ACTIVEFREE_STATU
 
-                                cursor%TheEVCCluster%ACluster%m_RAD =
+                                cursor%TheEVCCluster%ACluster%m_RAD = TheECR
 
-                                cursor%TheEVCCluster%ACluster%m_POS =
+                                cursor%TheEVCCluster%ACluster%m_POS = TheCenter
 
-                                cursor%TheEVCCluster%ACluster%m_DiffCoeff =
+                                cursor%TheEVCCluster%ACluster%m_DiffCoeff = 0.D0
 
-                                cursor%TheEVCCluster%ACluster%m_DiffuseDirection =
+                                cursor%TheEVCCluster%ACluster%m_DiffuseDirection = 0.D0
 
-                                cursor%TheEVCCluster%ACluster%m_DiffuseRotateCoeff =
+                                cursor%TheEVCCluster%ACluster%m_DiffuseRotateCoeff = 1.D32
 
-                                cursor%TheEVCCluster%ACluster%m_Record =
+                                cursor%TheEVCCluster%ACluster%m_Record(1) = 0
+
+                                cursor%TheEVCCluster%ACluster%m_Record(2) = 0
                             end if
 
-                            call cursor%TheEVCCluster%TheList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0/BoxVolum)
+                            call cursor%TheEVCCluster%TheList%AppendOneCluster(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC),1.D0)
 
-                            cursor%TheEVCCluster%TheList%quantififyValue = cursor%TheEVCCluster%TheList%quantififyValue + 1.D0/BoxVolum
+                            cursor%TheEVCCluster%TheList%quantififyValue = cursor%TheEVCCluster%TheList%quantififyValue + 1.D0
 
                     end select
 
@@ -377,13 +384,28 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
         Nullify(cursor)
         cursor=>null()
+        Nullify(cursorClusterList)
+        cursorClusterList=>null()
 
+
+        if(associated(newOne)) then
+            select type(newOne)
+                type is(SecondOrder_AClusterLists)
+                    call newOne%Clean_SecondOrder_AClusterLists()
+                type is(EVCClustersList)
+                call newOne%Clean_EVCClustersList()
+            end select
+
+            deallocate(newOne)
+        end if
+
+        Nullify(newOne)
+        newOne=>null()
         return
     end subroutine TransformMCToRT
 
-
     !***************************************************
-    subroutine NucleationSimu_NonSpaceDist_Balance_SimpleHybrid(Host_SimBoxes,Host_SimuCtrlParam,Host_MFCollections,TheMigCoaleStatInfoWrap,Record,TheImplantSection)
+    subroutine NucleationSimu_NonSpaceDist_Balance_SimpleHybrid(Host_SimBoxes,Host_SimuCtrlParam,Host_HybridCollections,TheMigCoaleStatInfoWrap,Record,TheImplantSection)
         use RAND32_MODULE
         implicit none
         !---Dummy Vars---
@@ -397,7 +419,11 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         integer::MultiBox
         real(kind=KINDDF)::TSTEP
         real(kind=KINDDF)::deta
-        type(SecondOrder_AClusterLists),dimension(:),pointer::tempNBPVChangeRate
+        type(Hybrid_ClusterFoldLists),dimension(:),allocatable::tempNBPVChangeRate
+        Class(SecondOrder_ClusterLists),pointer::ICollectionCursor=>null()
+        Class(SecondOrder_ClusterLists),pointer::JCollectionCursor=>null()
+        Class(SecondOrder_ClusterLists),pointer::IChangeRateCursor=>null()
+        Class(SecondOrder_ClusterLists),pointer::JChangeRateCursor=>null()
         real(kind=KINDDF)::NPOWER0Ave
         real(kind=KINDDF)::NPOWER1DIV2Ave
         real(kind=KINDDF)::NPOWER1Ave
@@ -424,10 +450,6 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         real(kind=KINDDF)::MaxChangeRate
         integer::SIAIndex
         integer::VacancyIndex
-        type(AClusterList),pointer::IKindCursor=>null()
-        type(AClusterList),pointer::JKindCursor=>null()
-        type(AClusterList),pointer::IChangeRateCursor=>null()
-        type(AClusterList),pointer::JChangeRateCursor=>null()
         type(ACluster)::generatedCluster
         type(AClusterList),pointer::visitCursor=>null()
         real(kind=KINDDF)::deta_Final
@@ -439,26 +461,69 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
         allocate(tempNBPVChangeRate(MultiBox))
 
-        DO IBox = 1,MultiBox
-            !--The Assignment(=) had been overrided---
-            tempNBPVChangeRate(IBox) = Host_MFCollections%Collections(IBox)
-        END DO
-
         TSTEP = 0.01
 
         DO While(.true.)
 
-          Associate(Collections=>Host_MFCollections%Collections)
+          Associate(Collections=>Host_HybridCollections%Collections)
 
             call Record%IncreaseOneSimuStep()
 
             DO IBox = 1,MultiBox
 
-                IKindCursor=>Collections(IBox)
+                call tempNBPVChangeRate(IBox)%Clean_Hybrid_ClusterFoldLists()
 
-                IChangeRateCursor=>tempNBPVChangeRate(IBox)
+                !---The Assignment had been overrided
+                tempNBPVChangeRate(IBox) = Collections(IBox)
 
-                tempCount = tempNBPVChangeRate(IBox)%GetList_Count()
+                ICollectionCursor=>Collections(IBox)%Fold_List
+
+                IChangeRateCursor=>tempNBPVChangeRate(IBox)%Fold_List
+
+
+                Do While(associated(ICollectionCursor))
+
+                    JCollectionCursor=>ICollectionCursor
+
+                    DO While(associated(JCollectionCursor))
+
+                        select type(ICollectionCursor)
+
+                            type is(SecondOrder_AClusterLists)  ! SIAs clusters
+
+                                select type(JCollectionCursor)
+
+                                    type is(SecondOrder_AClusterLists)
+
+                                    type is(EVCClustersList)
+
+                                end select
+
+                            type is(EVCClustersList) ! EVCClusterList
+
+                                select type(JCollectionCursor)
+
+                                    type is(SecondOrder_AClusterLists)
+
+                                    type is(EVCClustersList)
+
+                                end select
+
+                        end select
+
+
+
+                        JCollectionCursor=>JCollectionCursor%next
+
+                    END DO
+
+                    ICollectionCursor=>ICollectionCursor%next
+
+                End Do
+
+
+
+
 
                 DO ILoop = 1,tempCount
 
@@ -582,7 +647,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                     visitCursor=>tempNBPVChangeRate(IBox)%Find(generatedCluster)
 
                                     if(associated(visitCursor)) then
-                                        visitCursor%quantififyValue = visitCursor%quantififyValue  + deta_Final
+                                        visitCursor%quantififyValue = visitCursor%quantififyValue + deta_Final
                                     else
                                         call tempNBPVChangeRate(IBox)%AppendOneCluster(generatedCluster,deta_Final)
                                     end if
