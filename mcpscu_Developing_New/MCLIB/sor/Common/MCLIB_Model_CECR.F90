@@ -18,9 +18,12 @@ module MCLIB_MODEL_CECR
         real(kind=KINDDF)::TheECR
         !---Local Vars---
         real(kind=KINDDF)::TheDimLength(3)
+        integer::TheEffectCount
         !---Body---
 
-        TheDimLength = Cal_CascadeShapeRecognize(TheClusterList,TheEffectCount)/LatticeLength
+        call Cal_CascadeShapeRecognize(TheClusterList,TheDimLength,TheEffectCount)
+
+        TheDimLength = TheDimLength/LatticeLength
 
         if(TheEffectCount .LE. 0) then
             TheECR = TheDimLength(1)*LatticeLength
@@ -40,11 +43,12 @@ module MCLIB_MODEL_CECR
     end function Cal_ECR_ByCECRModel
 
     !***************************************************************
-    function Cal_CascadeShapeRecognize(TheClusterList) result(TheDimLength)
+    subroutine Cal_CascadeShapeRecognize(TheClusterList,TheDimLength,TheEffectCount)
         implicit none
         !---Dummy Vars---
         type(AClusterList),intent(in),target::TheClusterList
         real(kind=KINDDF)::TheDimLength(3)
+        integer::TheEffectCount
         !---Local Vars---
         type(AClusterList),pointer::cursor=>null()
         type(AClusterList),pointer::cursorOther=>null()
@@ -55,7 +59,7 @@ module MCLIB_MODEL_CECR
         integer::IDLeftMaxDist_Dim1
         integer::IDRightMaxDist_Dim1
         type(AClusterList),target::tempClusterList
-        integer::TheCount
+
         real(kind=KINDDF)::SEP(3)
         real(kind=KINDDF)::Distance
         real(kind=KINDDF)::maxSEP_Dim3(3)
@@ -77,6 +81,8 @@ module MCLIB_MODEL_CECR
         !-----------Body--------------
 
         TheDimLength = 0.D0
+
+        TheEffectCount = 0
 
         cursor=>TheClusterList
 
@@ -145,7 +151,7 @@ module MCLIB_MODEL_CECR
 
         maxLenPW2(3) = sum(maxSEP_Dim3**2)
 
-        TheCount = 0
+        TheEffectCount = 0
         cursor=>tempClusterList
         Do while(associated(cursor))
 
@@ -153,9 +159,9 @@ module MCLIB_MODEL_CECR
 
             Ratio = sum(maxSEP_Dim3*tempSep)/maxLenPW2(3)
 
-            TheCount = TheCount + 1
+            TheEffectCount = TheEffectCount + 1
 
-            projectPos_Dim2(TheCount,1:3) = cursor%TheCluster%m_POS + Ratio*maxSEP_Dim3
+            projectPos_Dim2(TheEffectCount,1:3) = cursor%TheCluster%m_POS + Ratio*maxSEP_Dim3
 
             cursor=>cursor%next
         END DO
@@ -165,9 +171,9 @@ module MCLIB_MODEL_CECR
         IDLeftMaxDist_Dim2 = 0
         IDRightMaxDist_Dim2 = 0
 
-        DO IC = 1,TheCount
+        DO IC = 1,TheEffectCount
 
-            DO JC = IC+1,TheCount
+            DO JC = IC+1,TheEffectCount
 
                 SEP = projectPos_Dim2(IC,1:3) - projectPos_Dim2(JC,1:3)
                 Distance = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
@@ -187,7 +193,7 @@ module MCLIB_MODEL_CECR
 
         maxLenPW2(2) = sum(maxSEP_Dim2**2)
 
-        DO IC = 1,TheCount
+        DO IC = 1,TheEffectCount
             tempSep = projectPos_Dim2(IDLeftMaxDist_Dim2,1:3) - projectPos_Dim2(IC,1:3)
 
             Ratio = sum(maxSEP_Dim2*tempSep)/maxLenPW2(2)
@@ -201,9 +207,9 @@ module MCLIB_MODEL_CECR
         IDLeftMaxDist_Dim1 = 0
         IDRightMaxDist_Dim1 = 0
 
-        DO IC = 1,TheCount
+        DO IC = 1,TheEffectCount
 
-            DO JC = IC+1,TheCount
+            DO JC = IC+1,TheEffectCount
 
                 SEP = projectPos_Dim1(IC,1:3) - projectPos_Dim1(JC,1:3)
                 Distance = SEP(1)*SEP(1) + SEP(2)*SEP(2) + SEP(3)*SEP(3)
@@ -248,7 +254,7 @@ module MCLIB_MODEL_CECR
         cursor_RightMaxDist_Dim3=>null()
 
         return
-    end function Cal_CascadeShapeRecognize
+    end subroutine Cal_CascadeShapeRecognize
 
 
 

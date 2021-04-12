@@ -79,6 +79,10 @@ all:
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)MigCoaleModel$(Segment)MigCoaleModel.mk
 #the inlet model library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)InletModel$(Segment)InletModel.mk
+#the HybridMCRT library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)HybridMCRTModel$(Segment)HybridMCRTModel.mk
+#the HybridMCSCD library
+	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)HybridMCSCDModel$(Segment)HybridMCSCDModel.mk
 #the BubbleGrowth mc library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)AppShell$(Segment)AppShell.mk
 
@@ -96,4 +100,6 @@ clean:
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)CommonGPU$(Segment)CommonGPU.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)MigCoaleModel$(Segment)MigCoaleModel.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)InletModel$(Segment)InletModel.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)HybridMCRTModel$(Segment)HybridMCRTModel.mk
+	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)HybridMCSCDModel$(Segment)HybridMCSCDModel.mk
 	$(MAKE) clean -f $(mcpscusor)$(Segment)MCLIB$(Segment)AppShell$(Segment)AppShell.mk
