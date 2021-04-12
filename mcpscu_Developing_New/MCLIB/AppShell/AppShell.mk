@@ -32,7 +32,8 @@ tgt  := $(LIBDIRD)
 libname  := libMC_$(objname).$(LIB_EXT)
 
 #######################################################
-nlist := MC_Method_MIGCOALE_CLUSTER_GPU  \
+nlist :=   MCRT_Method_MIGCOALE_CLUSTER_CPU \
+		   MC_Method_MIGCOALE_CLUSTER_GPU  \
 	       MC_MethodClass_Factory_GPU		   \
 	       MC_SimBoxArray_AppShell_GPU
                        
@@ -59,6 +60,8 @@ $(tgt)$(Segment)MC_MethodClass_Factory_GPU.o : $(sor)$(Segment)MC_MethodClass_Fa
 $(tgt)$(Segment)MC_Method_MIGCOALE_CLUSTER_GPU.o : $(sor)$(Segment)MC_Method_MIGCOALE_CLUSTER_GPU.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
+$(tgt)$(Segment)MCRT_Method_MIGCOALE_CLUSTER_CPU.o : $(sor)$(Segment)MCRT_Method_MIGCOALE_CLUSTER_CPU.F90
+	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 ######################################################################
 clean:
 	-rm $(objects) $(libname) $(modules) 

@@ -31,22 +31,23 @@ tgt  := $(LIBDIRD)
 libname  := libMC_$(objname).$(LIB_EXT)
 
 #######################################################          
-nlist    :=  MCLIB_CONSTANTS               	 \
-	     MCLIB_TYPEDEF_ACLUSTER        	 \
-             MCLIB_Utilities_Former		 \
-	     MCLIB_Utilities		 	 \
-	     MCLIB_TYPEDEF_DiffusorsValue        \
-             MCLIB_TYPEDEF_ReactionsValue        \
-             MCLIB_TYPEDEF_DiffusorPropList      \
-	     MCLIB_TYPEDEF_ReactionPropList      \
-	     MCLIB_TYPEDEF_Geometry		 \
-	     MCLIB_TYPEDEF_BASICRECORD		 \
-	     MCLIB_TYPEDEF_NEIGHBOR_LIST   	 \
-	     MCLIB_TYPEDEF_ClustersInfo_CPU      \
-	     MCLIB_TYPEDEF_SimCtrlParam    	 \
-	     MCLIB_TYPEDEF_SimBoxArray           \
-	     MCLIB_GLOBAL			 \
-	     MCLIB_CAL_NEIGHBOR_LIST
+nlist	:=  MCLIB_CONSTANTS               	 \
+	     	MCLIB_TYPEDEF_ACLUSTER        	 \
+            MCLIB_Utilities_Former		 \
+	     	MCLIB_Utilities		 	 \
+			MCLIB_Model_CECR		\
+	     	MCLIB_TYPEDEF_DiffusorsValue        \
+            MCLIB_TYPEDEF_ReactionsValue        \
+            MCLIB_TYPEDEF_DiffusorPropList      \
+	     	MCLIB_TYPEDEF_ReactionPropList      \
+	     	MCLIB_TYPEDEF_Geometry		 \
+	     	MCLIB_TYPEDEF_BASICRECORD		 \
+	     	MCLIB_TYPEDEF_NEIGHBOR_LIST   	 \
+	     	MCLIB_TYPEDEF_ClustersInfo_CPU      \
+	     	MCLIB_TYPEDEF_SimCtrlParam    	 \
+	     	MCLIB_TYPEDEF_SimBoxArray           \
+	     	MCLIB_GLOBAL			 \
+	     	MCLIB_CAL_NEIGHBOR_LIST
              
 objects  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
 modules  := $(foreach n, $(nlist), $(tgt)$(Segment)$(n).mod)
@@ -64,6 +65,10 @@ $(tgt)$(Segment)MCLIB_CONSTANTS.o : $(sor)$(Segment)MCLIB_CONSTANTS.F90
 
 $(tgt)$(Segment)MCLIB_TYPEDEF_ACLUSTER.o : $(sor)$(Segment)MCLIB_TYPEDEF_ACLUSTER.F90  \
 				           $(tgt)$(Segment)MCLIB_CONSTANTS.o
+	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
+
+$(tgt)$(Segment)MCLIB_Model_CECR.o : $(sor)$(Segment)MCLIB_Model_CECR.F90 \
+						   			 $(tgt)$(Segment)MCLIB_TYPEDEF_ACLUSTER.o
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
 $(tgt)$(Segment)MCLIB_Utilities_Former.o : $(sor)$(Segment)MCLIB_Utilities_Former.F90  \
