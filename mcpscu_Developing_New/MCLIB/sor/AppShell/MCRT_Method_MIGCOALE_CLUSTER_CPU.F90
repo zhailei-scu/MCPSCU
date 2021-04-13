@@ -424,6 +424,10 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
         Class(SecondOrder_ClusterLists),pointer::JCollectionCursor=>null()
         Class(SecondOrder_ClusterLists),pointer::IChangeRateCursor=>null()
         Class(SecondOrder_ClusterLists),pointer::JChangeRateCursor=>null()
+        type(AClusterList),pointer::IClusterListCursor=>null()
+        type(AClusterList),pointer::JClusterListCursor=>null()
+        type(AClusterList),pointer::IChangeRateClusterListCursor=>null()
+        type(AClusterList),pointer::JChangeRateClusterListCursor=>null()
         real(kind=KINDDF)::NPOWER0Ave
         real(kind=KINDDF)::NPOWER1DIV2Ave
         real(kind=KINDDF)::NPOWER1Ave
@@ -480,46 +484,227 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                 IChangeRateCursor=>tempNBPVChangeRate(IBox)%Fold_List
 
-
                 Do While(associated(ICollectionCursor))
 
                     JCollectionCursor=>ICollectionCursor
 
-                    DO While(associated(JCollectionCursor))
+                    JChangeRateCursor=>IChangeRateCursor
 
-                        select type(ICollectionCursor)
+                    select type(ICollectionCursor)
 
-                            type is(SecondOrder_AClusterLists)  ! SIAs clusters
+                        type is(SecondOrder_AClusterLists)  ! SIAs clusters
 
-                                select type(JCollectionCursor)
+                            IClusterListCursor=>ICollectionCursor%TheList
 
-                                    type is(SecondOrder_AClusterLists)
-
-                                    type is(EVCClustersList)
-
-                                end select
-
-                            type is(EVCClustersList) ! EVCClusterList
-
-                                select type(JCollectionCursor)
-
-                                    type is(SecondOrder_AClusterLists)
-
-                                    type is(EVCClustersList)
-
-                                end select
-
-                        end select
+                            select type(IChangeRateCursor)
+                                type is(SecondOrder_AClusterLists)
+                                    IChangeRateClusterListCursor=>IChangeRateCursor%TheList
+                            end select
 
 
+                            Do while(associated(IClusterListCursor))
 
-                        JCollectionCursor=>JCollectionCursor%next
 
-                    END DO
+                                DO While(associated(JCollectionCursor))
+
+                                    select type(JCollectionCursor)
+
+                                        type is(SecondOrder_AClusterLists)  ! SIAs clusters
+
+                                            JClusterListCursor=>JCollectionCursor%TheList
+
+                                            select type(JChangeRateCursor)
+                                                type is(SecondOrder_AClusterLists)
+                                                    JChangeRateClusterListCursor=>JChangeRateCursor%TheList
+                                            end select
+
+                                            Do while(associated(JClusterListCursor))
+
+                                                TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(IClusterListCursor%TheCluster,JClusterListCursor%TheCluster)
+
+                                                ReactionCoeff = 0.D0
+                                                select case(TheReactionValue%ReactionCoefficientType)
+                                                    case(p_ReactionCoefficient_ByValue)
+                                                        ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
+                                                    case(p_ReactionCoefficient_ByArrhenius)
+                                                        ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/Host_SimuCtrlParam%TKB)
+                                                end select
+
+                                                if(ReactionCoeff .GE. DRAND32()) then
+
+                                                    deta = Dumplicate*4*PI*IClusterListCursor%quantififyValue*JClusterListCursor%quantififyValue* &
+                                                            (IClusterListCursor%TheCluster%m_RAD + JClusterListCursor%TheCluster%m_RAD)*         &
+                                                            (IClusterListCursor%TheCluster%m_DiffCoeff + JClusterListCursor%TheCluster%m_DiffCoeff)
+
+                                                    if(IClusterListCursor%TheCluster%IsSameKindCluster(JClusterListCursor%TheCluster)) then
+
+                                                        Factor = 0.5D0
+
+                                                        IChangeRateClusterListCursor%quantififyValue =  IChangeRateClusterListCursor%quantififyValue - deta
+                                                    else
+                                                        Factor = 1.D0
+
+                                                        IChangeRateClusterListCursor%quantififyValue =  IChangeRateClusterListCursor%quantififyValue - deta
+
+                                                        JChangeRateClusterListCursor%quantififyValue =  JChangeRateClusterListCursor%quantififyValue - deta
+                                                    end if
+
+                                                    call generatedCluster%Clean_Cluster()
+
+                                                    select case(TheReactionValue%ProductionType)
+                                                        case(p_ProductionType_BySimplePlus)
+                                                            generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA =  IClusterListCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                                                                      JClusterListCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                                                            !---Should consider atomic number conservation
+                                                            deta_Final = deta*Factor
+
+                                                        case(p_ProductionType_BySubtract)
+
+                                                            SubjectElementIndex = TheReactionValue%ElemetIndex_Subject
+                                                            ObjectElementIndex = TheReactionValue%ElemetIndex_Object
+
+                                                            generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA = IClusterListCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA + &
+                                                                                                                     JClusterListCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA
+
+                                                            SubjectNANum = generatedCluster%m_Atoms(SubjectElementIndex)%m_NA
+                                                            ObjectNANum  = generatedCluster%m_Atoms(ObjectElementIndex)%m_NA
+
+                                                            generatedCluster%m_Atoms(SubjectElementIndex)%m_NA = max(SubjectNANum - ObjectNANum,0)
+
+                                                            generatedCluster%m_Atoms(ObjectElementIndex)%m_NA = max(ObjectNANum - SubjectNANum,0)
+
+                                                            if(sum(generatedCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA,dim=1) .EQ. 0) then
+                                                                generatedCluster%m_Statu = p_ANNIHILATE_STATU
+                                                            end if
+
+                                                            !---Not consider atomic number conservation
+                                                            deta_Final = deta
+                                                        case default
+                                                            write(*,*) "MCPSCUERROR: Unknown reaction type",TheReactionValue%ProductionType
+                                                            pause
+                                                            stop
+
+                                                    end select
+
+                                                    TheDiffusorValue = Host_SimBoxes%m_DiffusorTypesMap%Get(generatedCluster)
+
+                                                    !-- In Current application, the simple init distribution is only considered in free matrix, if you want to init the clusters in GB---
+                                                    !---you should init the distribution by external file---
+                                                    select case(TheDiffusorValue%ECRValueType_Free)
+                                                        case(p_ECR_ByValue)
+                                                            generatedCluster%m_RAD = TheDiffusorValue%ECR_Free
+                                                        case default
+                                                            generatedCluster%m_RAD = Cal_ECR_ModelDataBase(TheDiffusorValue%ECRValueType_Free,        &
+                                                                                     Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(:)%m_NA, &
+                                                                                     Host_SimuCtrlParam%TKB,                                          &
+                                                                                     Host_SimBoxes%LatticeLength)
+                                                    end select
+
+                                                    select case(TheDiffusorValue%DiffusorValueType_Free)
+                                                        case(p_DiffuseCoefficient_ByValue)
+                                                            generatedCluster%m_DiffCoeff = TheDiffusorValue%DiffuseCoefficient_Free_Value
+                                                        case(p_DiffuseCoefficient_ByArrhenius)
+                                                            generatedCluster%m_DiffCoeff = TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                        case(p_DiffuseCoefficient_ByBCluster)
+                                                            ! Here we adopt a model that D=D0*(1/R)**Gama
+                                                            generatedCluster%m_DiffCoeff = m_FREESURDIFPRE*(generatedCluster%m_RAD**(-p_GAMMA))
+                                                        case(p_DiffuseCoefficient_BySIACluster)
+                                                            generatedCluster%m_DiffCoeff = (sum(generatedCluster%m_Atoms(:)%m_NA)**(-TheDiffusorValue%PreFactorParameter_Free))* &
+                                                                                            TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                        case(p_DiffuseCoefficient_ByVcCluster)
+                                                            generatedCluster%m_DiffCoeff = ((TheDiffusorValue%PreFactorParameter_Free)**(1-sum(generatedCluster%m_Atoms(:)%m_NA)))* &
+                                                                                            TheDiffusorValue%PreFactor_Free*exp(-C_EV2ERG*TheDiffusorValue%ActEnergy_Free/Host_SimuCtrlParam%TKB)
+                                                    end select
+
+                                                    generatedCluster%m_DiffuseDirection = TheDiffusorValue%DiffuseDirection
+
+                                                    if(TheDiffusorValue%DiffuseDirectionType .eq. p_DiffuseDirection_OneDim) then
+                                                        DO TheDim = 1,3
+                                                            generatedCluster%m_DiffuseDirection(TheDim) = generatedCluster%m_DiffuseDirection(TheDim)*sign(1.D0,DRAND32() - 0.5D0)
+                                                        END DO
+                                                        generatedCluster%m_DiffCoeff = generatedCluster%m_DiffCoeff*1.D0/3.D0       ! All Diffusion coeff would be changed to 3-D formation
+                                                    end if
+
+                                                    generatedCluster%m_DiffuseRotateCoeff = TheDiffusorValue%DiffuseRotateAttempFrequence*exp(-C_EV2ERG*TheDiffusorValue%DiffuseRotateEnerg/Host_SimuCtrlParam%TKB)
+
+                                                    visitCursor=>IChangeRateCursor%TheList%Find(generatedCluster)
+
+                                    if(associated(visitCursor)) then
+                                        visitCursor%quantififyValue = visitCursor%quantififyValue + deta_Final
+                                    else
+                                        call tempNBPVChangeRate(IBox)%AppendOneCluster(generatedCluster,deta_Final)
+                                    end if
+
+!                                    AtomuNumbSubject = sum(ClustersKind(IKind)%m_Atoms(:)%m_NA)
+!                                    AtomuNumbObject = sum(ClustersKind(JKind)%m_Atoms(:)%m_NA)
+!                                    AtomuNumbProductor = sum(ClustersKind(IKind+JKind)%m_Atoms(:)%m_NA)
+!
+!                                    tempNBPVChangeRate(INode,IKind + JKind) = tempNBPVChangeRate(INode,IKind + JKind) + &
+!                                                                            Factor*deta*(AtomuNumbSubject+AtomuNumbObject)/AtomuNumbProductor
+                                end if
+
+
+
+
+
+                                                JClusterListCursor=>JClusterListCursor%next
+
+                                                JChangeRateClusterListCursor=>JChangeRateClusterListCursor%next
+                                            End Do
+
+                                        type is(EVCClustersList)
+
+                                    end select
+
+                                    JCollectionCursor=>JCollectionCursor%next
+
+                                    JChangeRateCursor=>JChangeRateCursor%next
+                                END DO
+
+                                IClusterListCursor=>IClusterListCursor%next
+
+                                IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
+                            End Do
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        type is(EVCClustersList)
+
+                            DO While(associated(JCollectionCursor))
+
+                                JCollectionCursor=>JCollectionCursor%next
+
+                                JChangeRateCursor=>JChangeRateCursor%next
+                            END DO
+
+                    end select
 
                     ICollectionCursor=>ICollectionCursor%next
 
-                End Do
+                    IChangeRateCursor=>IChangeRateCursor%next
+                END DO
+
+
+
+
+
+
+
+
+
+
 
 
 
