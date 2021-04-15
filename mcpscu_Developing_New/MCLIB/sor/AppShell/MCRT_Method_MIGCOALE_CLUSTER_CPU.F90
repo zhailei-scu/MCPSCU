@@ -735,14 +735,111 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                 End Do
 
 
+                        !***************************************************************************
                         type is(EVCClustersList)
+                            select type(IChangeRateCursor)
+                                type is(EVCClustersList)
+                                    IChangeRateClusterListCursor=>IChangeRateCursor%TheEVCCluster%TheList
+                            end select
 
                             DO While(associated(JCollectionCursor))
 
-                                JCollectionCursor=>JCollectionCursor%next
+                                select type(JCollectionCursor)
 
-                                JChangeRateCursor=>JChangeRateCursor%next
-                            END DO
+                                    type is(SecondOrder_AClusterLists)  ! SIAs clusters
+
+                                        JClusterListCursor=>JCollectionCursor%TheList
+
+                                        select type(JChangeRateCursor)
+                                            type is(SecondOrder_AClusterLists)
+                                                JChangeRateClusterListCursor=>JChangeRateCursor%TheList
+                                        end select
+
+                                        Do while(associated(JClusterListCursor))
+
+                                            TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(JClusterListCursor%TheCluster,ICollectionCursor%TheEVCCluster%ACluster)
+
+                                            ReactionCoeff = 0.D0
+                                            select case(TheReactionValue%ReactionCoefficientType)
+                                                case(p_ReactionCoefficient_ByValue)
+                                                    ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
+                                                case(p_ReactionCoefficient_ByArrhenius)
+                                                    ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/Host_SimuCtrlParam%TKB)
+                                            end select
+
+                                            if(ReactionCoeff .GE. DRAND32()) then
+
+                                                deta = Dumplicate*4*PI*JClusterListCursor%quantififyValue*(1.D0/BoxVolum)* &
+                                                            (JClusterListCursor%TheCluster%m_RAD + ICollectionCursor%TheEVCCluster%ACluster%m_RAD)*         &
+                                                            (JClusterListCursor%TheCluster%m_DiffCoeff + ICollectionCursor%TheEVCCluster%ACluster%m_DiffCoeff)
+
+                                                Factor = 1.D0
+
+                                                JChangeRateClusterListCursor%quantififyValue = JChangeRateClusterListCursor%quantififyValue - deta
+
+                                                if((deta*BoxVolum - floor(deta*BoxVolum)) .GT. DRAND32()/2.0) then
+                                                    NCReact = floor(deta*BoxVolum) + 1
+                                                else
+                                                    NCReact = floor(deta*BoxVolum)
+                                                end if
+
+                                                IChangeRateClusterListCursor%quantififyValue = IChangeRateClusterListCursor%quantififyValue - NCReact
+
+                                                tempCount = 0
+                                                Do while(associated(IChangeRateClusterListCursor))
+
+                                                    if(IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                                                        IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
+
+                                                        tempCount = tempCount + 1
+
+                                                    end if
+
+                                                    IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
+                                                End Do
+
+                                                DO I = 1,NCReact
+
+                                                    targetNum = tempCount*DRAND32()
+
+                                                    tempCount = 0
+
+                                                    select type(IChangeRateCursor)
+                                                        type is(EVCClustersList)
+                                                            IChangeRateClusterListCursor=>IChangeRateCursor%TheEVCCluster%TheList
+                                                    end select
+
+                                                    Do while(associated(IChangeRateClusterListCursor))
+
+                                                        if(IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                                                            IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
+
+                                                            tempCount = tempCount + 1
+
+                                                            if(tempCount .GE. targetNum) then
+                                                                IChangeRateClusterListCursor%TheCluster%m_Statu = p_ACTIVEFREE_STATU
+                                                            end if
+
+                                                        end if
+
+                                                        IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
+                                                    End Do
+
+                                                END DO
+
+                                            end if
+
+                                            JClusterListCursor=>JClusterListCursor%next
+
+                                            JChangeRateClusterListCursor=>JChangeRateClusterListCursor%next
+                                        End Do
+
+                                    end select
+
+                                    JCollectionCursor=>JCollectionCursor%next
+
+                                    JChangeRateCursor=>JChangeRateCursor%next
+                                END DO
 
                     end select
 
