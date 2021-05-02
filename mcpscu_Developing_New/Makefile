@@ -81,8 +81,6 @@ all:
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)InletModel$(Segment)InletModel.mk
 #the HybridMCRT library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)HybridMCRTModel$(Segment)HybridMCRTModel.mk
-#the HybridMCSCD library
-	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)HybridMCSCDModel$(Segment)HybridMCSCDModel.mk
 #the BubbleGrowth mc library
 	$(MAKE) -f $(mcpscusor)$(Segment)MCLIB$(Segment)AppShell$(Segment)AppShell.mk
 

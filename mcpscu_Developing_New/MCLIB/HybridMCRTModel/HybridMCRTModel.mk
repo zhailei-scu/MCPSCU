@@ -30,3 +30,14 @@ tgt := $(LIBDDIRD)
 #target lib name
 libname := libMC_$(objname).$(LIB_EXT)
 
+#######################################################
+nlist	:=	HybridMCRT_TYPEDEF_Collections	\
+			HybridMCRT_TYPEDEF_EVCCluster	\
+			HybridMCRT_Evolution_GPU
+
+objects		:= 	$(foreach n, $(nlist), $(tgt)$(Segment)$(n).o)
+modules		:= 	$(foreach n, $(nlist), $(tgt)$(Segment)$(n).mod)
+ffiles		:=	$(foreach n, $(nlist), $(tgt)$(Segment)$(n).f)
+fFiles		:=	$(foreach n, $(nlist), $(tgt)$(Segment)$(n).F)
+F90Files	:=	$(foreach n, $(nlist), $(tgt)$(Segment)$(n).F90)
+
