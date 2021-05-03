@@ -53,8 +53,5 @@ $(tgt)$(Segment)HybridMCRT_TYPEDEF_Collections.o : $(sor)$(Segment)HybridMCRT_TY
 												   $(tgt)$(Segment)HybridMCRT_TYPEDEF_EVCCluster.o 
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
 
-
-
-
 $(tgt)$(Segment)HybridMCRT_Evolution_GPU.o : $(sor)$(Segment)HybridMCRT_Evolution_GPU.F90
 	$(comp) -c $(oflags_this) -I$(incdir) -module $(tgt) $< -o $@
