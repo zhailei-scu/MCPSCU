@@ -710,7 +710,8 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                                             tempCount = tempCount + 1
 
                                                             if(tempCount .GE. targetNum) then
-                                                                JChangeRateClusterListCursor%TheCluster%m_Statu = p_ACTIVEFREE_STATU
+                                                                JChangeRateClusterListCursor%TheCluster%m_Statu = p_ABSORBED_STATU
+                                                                exit
                                                             end if
 
                                                         end if
@@ -817,7 +818,8 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                                             tempCount = tempCount + 1
 
                                                             if(tempCount .GE. targetNum) then
-                                                                IChangeRateClusterListCursor%TheCluster%m_Statu = p_ACTIVEFREE_STATU
+                                                                IChangeRateClusterListCursor%TheCluster%m_Statu = p_ABSORBED_STATU
+                                                                exit
                                                             end if
 
                                                         end if
@@ -971,7 +973,8 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                                             tempCount = tempCount + 1
 
                                                             if(tempCount .GE. targetNum) then
-                                                                IChangeRateClusterListCursor%TheCluster%m_Statu = p_ACTIVEFREE_STATU
+                                                                IChangeRateClusterListCursor%TheCluster%m_Statu = p_ABSORBED_STATU
+                                                                exit
                                                             end if
 
                                                         end if
