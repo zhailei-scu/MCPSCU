@@ -59,7 +59,7 @@ module MCLIB_TYPEDEF_ACLUSTER
     TYPE,PUBLIC::AClusterList
         type(ACluster),public::TheCluster
         real(kind=KINDDF),public::quantififyValue = 0.D0   ! This value is used to record some quantifify value such as counts or concentrate in some application
-
+        real(kind=KINDDF),public::LastQuantififyValue = 0.D0
 
         integer,private::ListCount = 0
         type(AClusterList),pointer::next=>null()
@@ -356,6 +356,7 @@ module MCLIB_TYPEDEF_ACLUSTER
             this%TheCluster = newOne
             if(present(theQuantififyValue)) then
                 this%quantififyValue = theQuantififyValue
+                this%LastQuantififyValue = this%quantififyValue
             end if
         else
             cursor=>this%next
@@ -375,6 +376,7 @@ module MCLIB_TYPEDEF_ACLUSTER
             cursor%TheCluster = newOne
             if(present(theQuantififyValue)) then
                 cursor%quantififyValue = theQuantififyValue
+                cursor%LastQuantififyValue = cursor%quantififyValue
             end if
 
             cursorP%next=>cursor
@@ -519,6 +521,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         ! The assignment(=) had been override
         thisCursorP%TheCluster = otherCursorP%TheCluster
         thisCursorP%quantififyValue = otherCursorP%quantififyValue
+        thisCursorP%LastQuantififyValue = thisCursorP%quantififyValue
 
         this%ListCount = this%ListCount + 1
 
@@ -530,6 +533,7 @@ module MCLIB_TYPEDEF_ACLUSTER
             ! The assignment(=) had been override
             thisCursor%TheCluster = otherCursor%TheCluster
             thisCursor%quantififyValue = otherCursor%quantififyValue
+            thisCursorP%LastQuantififyValue = thisCursorP%quantififyValue
 
             this%ListCount = this%ListCount + 1
 
@@ -573,11 +577,13 @@ module MCLIB_TYPEDEF_ACLUSTER
 
         call this%TheCluster%Clean_Cluster()
         this%quantififyValue = 0.D0
+        this%LastQuantififyValue = this%quantififyValue
 
         DO While(associated(cursor))
             next=>cursor%next
             call Clean_Cluster(cursor%TheCluster)
             cursor%quantififyValue = 0.D0
+            cursor%LastQuantififyValue = cursor%quantififyValue
             cursor%next=>null()
             deallocate(cursor)
             Nullify(cursor)
