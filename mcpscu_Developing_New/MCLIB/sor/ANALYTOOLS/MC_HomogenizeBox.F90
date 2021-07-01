@@ -5,6 +5,8 @@ module MC_HomogenizeBox
     use MIGCOALE_TYPEDEF_SIMRECORD
     use MIGCOALE_ADDONDATA_HOST
     use MCLIB_UTILITIES
+    use RAND32_MODULE
+    use RAND32SEEDLIB_MODULE
     implicit none
 
     contains
@@ -71,7 +73,11 @@ program Main_MC_HomogenizeBox
     character*1000::pathOut
     integer::hFileOut
     character*30::TheVersion
+    integer::processid
+    integer::ISEED0,ISEED(2)
     !--Body---
+    processid = 0
+
     arg_Num = Command_Argument_Count()
 
     if(arg_Num .LT. 2) then
@@ -95,6 +101,12 @@ program Main_MC_HomogenizeBox
 
     !********Load Global vars from input file**************
     call Initialize_Global_Variables(Host_SimuCtrlParamList,Host_Boxes)
+
+    ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1)
+    call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+    ISEED0 = ISEED0 + processid - 1
+    call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
+    call DRAND32_PUTSEED(ISEED)
 
     call Print_Global_Variables(6,Host_SimuCtrlParamList,Host_Boxes)
 
