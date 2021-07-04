@@ -678,56 +678,56 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                                 JChangeRateClusterListCursor%quantififyValue = JChangeRateClusterListCursor%quantififyValue - &
                                                                                                deta*BoxVolum*sum(IClusterListCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA)
 
-                                                tempCount = 0
-                                                Do while(associated(JChangeRateClusterListCursor))
+                                            !    !tempCount = 0
+                                            !    Do while(associated(JChangeRateClusterListCursor))
 
-                                                    if(JChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
-                                                       JChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
+                                            !        if(JChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                                            !           JChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
-                                                        tempCount = tempCount + 1
+                                            !            tempCount = tempCount + 1
 
-                                                    end if
+                                            !        end if
 
-                                                    JChangeRateClusterListCursor=>JChangeRateClusterListCursor%next
-                                                End Do
+                                            !        JChangeRateClusterListCursor=>JChangeRateClusterListCursor%next
+                                            !    End Do
 
-                                                NCReact = floor(JChangeRateClusterListCursor%LastQuantififyValue - JChangeRateClusterListCursor%quantififyValue)
+                                            !    NCReact = floor(JChangeRateClusterListCursor%LastQuantififyValue - JChangeRateClusterListCursor%quantififyValue)
 
-                                                if(NCReact .GE. 1.D0) then
+                                            !    if(NCReact .GE. 1.D0) then
 
-                                                    DO I = 1,NCReact
+                                            !        DO I = 1,NCReact
 
-                                                        targetNum = tempCount*DRAND32()
+                                            !            targetNum = tempCount*DRAND32()
 
-                                                        tempCount = 0
+                                            !            tempCount = 0
 
-                                                        select type(JChangeRateCursor)
-                                                            type is(EVCClustersList)
-                                                                JChangeRateClusterListCursor=>JChangeRateCursor%TheEVCCluster%TheList
-                                                        end select
+                                            !            select type(JChangeRateCursor)
+                                            !                type is(EVCClustersList)
+                                                !                JChangeRateClusterListCursor=>JChangeRateCursor%TheEVCCluster%TheList
+                                                !        end select
 
-                                                        Do while(associated(JChangeRateClusterListCursor))
+                                                !        Do while(associated(JChangeRateClusterListCursor))
 
-                                                            if(JChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
-                                                                JChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
+                                                !            if(JChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                                                !                JChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
-                                                                tempCount = tempCount + 1
+                                                !                tempCount = tempCount + 1
 
-                                                                if(tempCount .GE. targetNum) then
-                                                                    JChangeRateClusterListCursor%TheCluster%m_Statu = p_ABSORBED_STATU
-                                                                    exit
-                                                                end if
+                                                !                if(tempCount .GE. targetNum) then
+                                                !                    JChangeRateClusterListCursor%TheCluster%m_Statu = p_ABSORBED_STATU
+                                                !                    exit
+                                                !                end if
 
-                                                            end if
+                                                !            end if
 
-                                                            JChangeRateClusterListCursor=>JChangeRateClusterListCursor%next
-                                                        End Do
+                                                !            JChangeRateClusterListCursor=>JChangeRateClusterListCursor%next
+                                                !        End Do
 
-                                                    END DO
+                                                !    END DO
 
-                                                end if
+                                                !end if
 
-                                                JChangeRateClusterListCursor%LastQuantififyValue = JChangeRateClusterListCursor%quantififyValue
+                                                !JChangeRateClusterListCursor%LastQuantififyValue = JChangeRateClusterListCursor%quantififyValue
 
                                             end if
 
@@ -789,54 +789,54 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                                 IChangeRateClusterListCursor%quantififyValue = IChangeRateClusterListCursor%quantififyValue - &
                                                                         deta*BoxVolum*sum(JClusterListCursor%TheCluster%m_Atoms(1:p_ATOMS_GROUPS_NUMBER)%m_NA)
 
-                                                tempCount = 0
-                                                Do while(associated(IChangeRateClusterListCursor))
+                                            !    tempCount = 0
+                                            !    Do while(associated(IChangeRateClusterListCursor))
 
-                                                    if(IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
-                                                        IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
+                                            !        if(IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                                            !            IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
-                                                        tempCount = tempCount + 1
+                                            !            tempCount = tempCount + 1
 
-                                                    end if
+                                            !        end if
 
-                                                    IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
-                                                End Do
+                                            !        IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
+                                            !    End Do
 
-                                                NCReact = floor(IChangeRateClusterListCursor%LastQuantififyValue - IChangeRateClusterListCursor%quantififyValue)
+                                            !    NCReact = floor(IChangeRateClusterListCursor%LastQuantififyValue - IChangeRateClusterListCursor%quantififyValue)
 
-                                                if(NCReact .GE. 1.D0) then
-                                                    DO I = 1,NCReact
+                                            !    if(NCReact .GE. 1.D0) then
+                                            !        DO I = 1,NCReact
 
-                                                        targetNum = tempCount*DRAND32()
+                                            !            targetNum = tempCount*DRAND32()
 
-                                                        tempCount = 0
+                                            !            tempCount = 0
 
-                                                        select type(IChangeRateCursor)
-                                                            type is(EVCClustersList)
-                                                                IChangeRateClusterListCursor=>IChangeRateCursor%TheEVCCluster%TheList
-                                                        end select
+                                            !            select type(IChangeRateCursor)
+                                            !                type is(EVCClustersList)
+                                            !                    IChangeRateClusterListCursor=>IChangeRateCursor%TheEVCCluster%TheList
+                                            !            end select
 
-                                                        Do while(associated(IChangeRateClusterListCursor))
+                                            !            Do while(associated(IChangeRateClusterListCursor))
 
-                                                            if(IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
-                                                                IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
+                                            !                if(IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
+                                            !                    IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
 
-                                                                tempCount = tempCount + 1
+                                            !                    tempCount = tempCount + 1
 
-                                                                if(tempCount .GE. targetNum) then
-                                                                    IChangeRateClusterListCursor%TheCluster%m_Statu = p_ABSORBED_STATU
-                                                                    exit
-                                                                end if
+                                            !                    if(tempCount .GE. targetNum) then
+                                            !                        IChangeRateClusterListCursor%TheCluster%m_Statu = p_ABSORBED_STATU
+                                            !                        exit
+                                            !                    end if
 
-                                                            end if
+                                            !                end if
 
-                                                            IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
-                                                        End Do
+                                            !                IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
+                                            !            End Do
 
-                                                    END DO
+                                            !        END DO
 
-                                                    IChangeRateClusterListCursor%LastQuantififyValue = IChangeRateClusterListCursor%quantififyValue
-                                                end if
+                                            !        IChangeRateClusterListCursor%LastQuantififyValue = IChangeRateClusterListCursor%quantififyValue
+                                            !    end if
                                             end if
 
                                             JClusterListCursor=>JClusterListCursor%next
@@ -895,8 +895,8 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                             Do while(associated(IClusterListCursor))
 
-                                if((IClusterListCursor%quantififyValue - IChangeRateClusterListCursor%quantififyValue) .GT. 0) then
-                                    TAllowTemp = IClusterListCursor%quantififyValue/(IClusterListCursor%quantififyValue - IChangeRateClusterListCursor%quantififyValue)
+                                if(IChangeRateClusterListCursor%quantififyValue .LT. 0) then
+                                    TAllowTemp = IClusterListCursor%quantififyValue/(-1.D0*IChangeRateClusterListCursor%quantififyValue)
                                 end if
 
                                 if(TAllowTemp .LE. TAllowMax) then
@@ -916,106 +916,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                     IChangeRateClusterListCursor=>IChangeRateCursor%TheEVCCluster%TheList
                             end select
 
-                            DO While(associated(JCollectionCursor))
-
-                                select type(JCollectionCursor)
-
-                                    type is(SecondOrder_AClusterLists)  ! SIAs clusters
-
-                                        JClusterListCursor=>JCollectionCursor%TheList
-
-                                        select type(JChangeRateCursor)
-                                            type is(SecondOrder_AClusterLists)
-                                                JChangeRateClusterListCursor=>JChangeRateCursor%TheList
-                                        end select
-
-                                        Do while(associated(JClusterListCursor))
-
-                                            TheReactionValue = Host_SimBoxes%m_ReactionsMap%get(JClusterListCursor%TheCluster,ICollectionCursor%TheEVCCluster%ACluster)
-
-                                            ReactionCoeff = 0.D0
-                                            select case(TheReactionValue%ReactionCoefficientType)
-                                                case(p_ReactionCoefficient_ByValue)
-                                                    ReactionCoeff = TheReactionValue%ReactionCoefficient_Value
-                                                case(p_ReactionCoefficient_ByArrhenius)
-                                                    ReactionCoeff = TheReactionValue%PreFactor*exp(-C_EV2ERG*TheReactionValue%ActEnergy/Host_SimuCtrlParam%TKB)
-                                            end select
-
-                                            if(ReactionCoeff .GE. DRAND32()) then
-
-                                                deta = Dumplicate*4*PI*JClusterListCursor%quantififyValue*(1.D0/BoxVolum)* &
-                                                            (JClusterListCursor%TheCluster%m_RAD + ICollectionCursor%TheEVCCluster%ACluster%m_RAD)*         &
-                                                            (JClusterListCursor%TheCluster%m_DiffCoeff + ICollectionCursor%TheEVCCluster%ACluster%m_DiffCoeff)
-
-                                                Factor = 1.D0
-
-                                                JChangeRateClusterListCursor%quantififyValue = JChangeRateClusterListCursor%quantififyValue - deta
-
-                                                if((deta*BoxVolum - floor(deta*BoxVolum)) .GT. DRAND32()/2.0) then
-                                                    NCReact = floor(deta*BoxVolum) + 1
-                                                else
-                                                    NCReact = floor(deta*BoxVolum)
-                                                end if
-
-                                                IChangeRateClusterListCursor%quantififyValue = IChangeRateClusterListCursor%quantififyValue - NCReact
-
-                                                tempCount = 0
-                                                Do while(associated(IChangeRateClusterListCursor))
-
-                                                    if(IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
-                                                        IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
-
-                                                        tempCount = tempCount + 1
-
-                                                    end if
-
-                                                    IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
-                                                End Do
-
-                                                DO I = 1,NCReact
-
-                                                    targetNum = tempCount*DRAND32()
-
-                                                    tempCount = 0
-
-                                                    select type(IChangeRateCursor)
-                                                        type is(EVCClustersList)
-                                                            IChangeRateClusterListCursor=>IChangeRateCursor%TheEVCCluster%TheList
-                                                    end select
-
-                                                    Do while(associated(IChangeRateClusterListCursor))
-
-                                                        if(IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEFREE_STATU .or. &
-                                                            IChangeRateClusterListCursor%TheCluster%m_Statu .eq. p_ACTIVEINGB_STATU) then
-
-                                                            tempCount = tempCount + 1
-
-                                                            if(tempCount .GE. targetNum) then
-                                                                IChangeRateClusterListCursor%TheCluster%m_Statu = p_ABSORBED_STATU
-                                                                exit
-                                                            end if
-
-                                                        end if
-
-                                                        IChangeRateClusterListCursor=>IChangeRateClusterListCursor%next
-                                                    End Do
-
-                                                END DO
-
-                                            end if
-
-                                            JClusterListCursor=>JClusterListCursor%next
-
-                                            JChangeRateClusterListCursor=>JChangeRateClusterListCursor%next
-                                        End Do
-
-                                    end select
-
-                                    JCollectionCursor=>JCollectionCursor%next
-
-                                    JChangeRateCursor=>JChangeRateCursor%next
-                                END DO
-
+                            
                     end select
 
                     ICollectionCursor=>ICollectionCursor%next
