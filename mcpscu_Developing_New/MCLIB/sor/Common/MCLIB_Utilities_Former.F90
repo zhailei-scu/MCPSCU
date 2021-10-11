@@ -739,7 +739,7 @@ module MCLIB_UTILITIES_FORMER
 
     #ifdef CYGWIN
     if(Length .GE. 2) then
-        if(resultPath(2:2) .eq. ":") then
+        if(ThePath(2:2) .eq. ":") then
             INQUIRE(FILE=TempPath(1:2),EXIST=exits)
             if(.not. exits) then
                 write(*,fmt="(A,A,A)") "MCPSCUERROR: The derive :",TempPath(1:1)," is not exit."
