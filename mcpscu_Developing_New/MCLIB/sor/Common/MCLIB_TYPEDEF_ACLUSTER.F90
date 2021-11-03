@@ -85,20 +85,18 @@ module MCLIB_TYPEDEF_ACLUSTER
         contains
         procedure,public,pass,non_overridable::GetList_Count=>GetSecondOrder_ClusterLists_Count
         procedure,public,pass,non_overridable::Find=>FindClusterListByIdentify
-
+        procedure,public,pass::Clean=>CleanSecondOrder_ClusterLists
     end type
 
     TYPE,extends(SecondOrder_ClusterLists),public::SecondOrder_AClusterLists
         type(AClusterList),public::TheList
-
-
 
         contains
         procedure,public,pass,non_overridable::AppendOneClusterList
         procedure,public,pass,non_overridable::AppendOtherSecondOrder_AClusterLists
         procedure,public,pass,non_overridable::CopySecondOrder_AClusterListsFromOther
         procedure,public,pass,non_overridable::CopySecondOrder_AClusterListsToOther
-        procedure,public,pass,non_overridable::Clean_SecondOrder_AClusterLists
+        procedure,public,pass::Clean=>Clean_SecondOrder_AClusterLists
         Generic::Assignment(=)=>CopySecondOrder_AClusterListsFromOther
         Final::CleanSecondOrder_AClusterLists
 
@@ -123,6 +121,7 @@ module MCLIB_TYPEDEF_ACLUSTER
     private::AppendOtherSecondOrder_AClusterLists
     private::GetSecondOrder_ClusterLists_Count
     private::FindClusterListByIdentify
+    private::CleanSecondOrder_ClusterLists
     private::CopySecondOrder_AClusterListsFromOther
     private::CopySecondOrder_AClusterListsToOther
     private::Clean_SecondOrder_AClusterLists
@@ -678,6 +677,15 @@ module MCLIB_TYPEDEF_ACLUSTER
 
 
     !***************************************
+    subroutine CleanSecondOrder_ClusterLists(this)
+        implicit none
+        !---Dummy Vars---
+        Class(SecondOrder_ClusterLists),target::this
+
+
+    end subroutine
+
+    !***************************************
     function AppendOneClusterList(this,newOne,theIdentify) result(TheResult)
         implicit none
         !---Dummy Vars---
@@ -819,7 +827,7 @@ module MCLIB_TYPEDEF_ACLUSTER
             stop
         end if
 
-        call this%Clean_SecondOrder_AClusterLists()
+        call this%Clean()
 
         otherCursorP=>other
         if(.not. associated(otherCursorP)) then
@@ -903,7 +911,7 @@ module MCLIB_TYPEDEF_ACLUSTER
             stop
         end if
 
-        call other%Clean_SecondOrder_AClusterLists()
+        call other%Clean()
 
         if(this%GetList_Count() .LE. 0) then
             return
@@ -969,7 +977,7 @@ module MCLIB_TYPEDEF_ACLUSTER
         type(SecondOrder_AClusterLists)::this
         !---Body---
 
-        call this%Clean_SecondOrder_AClusterLists()
+        call this%Clean()
 
         return
     end subroutine CleanSecondOrder_AClusterLists

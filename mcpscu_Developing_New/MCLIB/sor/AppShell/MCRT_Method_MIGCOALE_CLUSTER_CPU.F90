@@ -288,18 +288,16 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
                     cursor=>Host_HybridCollections%Collections(IBox)%Fold_List%Find(cascadeID)
 
-                    if(.not. associated(cursor)) then
+                    if(associated(cursor)) then
 
-                        if(associated(newOne)) then
-                            select type(newOne)
-                                type is(SecondOrder_AClusterLists)
-                                    call newOne%Clean_SecondOrder_AClusterLists()
-                                type is(EVCClustersList)
-                                    call newOne%Clean_EVCClustersList()
-                            end select
-
-                            deallocate(newOne)
-                        end if
+                        call newOne%Clean()
+!                            select type(newOne)
+!                                type is(SecondOrder_AClusterLists)
+!                                    call newOne%Clean_SecondOrder_AClusterLists()
+!                                type is(EVCClustersList)
+!                                    call newOne%Clean_EVCClustersList()
+!                            end select
+                        deallocate(newOne)
 
                         if(Host_SimBoxes%m_ClustersInfo_CPU%m_Clusters(IC)%m_Atoms(SIAIndex)%m_NA .GT. 0) then
                             allocate(SecondOrder_AClusterLists::newOne)
@@ -328,6 +326,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                         cursorClusterList%quantififyValue = cursorClusterList%quantififyValue + 1.D0/BoxVolum
                                         cursorClusterList%LastQuantififyValue = cursorClusterList%quantififyValue
                                         Finded = .true.
+                                        exit
                                     end if
 
                                     cursorClusterList=>cursorClusterList%next
@@ -385,12 +384,13 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
 
         if(associated(newOne)) then
-            select type(newOne)
-                type is(SecondOrder_AClusterLists)
-                    call newOne%Clean_SecondOrder_AClusterLists()
-                type is(EVCClustersList)
-                call newOne%Clean_EVCClustersList()
-            end select
+!            select type(newOne)
+!                type is(SecondOrder_AClusterLists)
+!                    call newOne%Clean_SecondOrder_AClusterLists()
+!                type is(EVCClustersList)
+!                call newOne%Clean_EVCClustersList()
+!            end select
+            call newOne%Clean()
 
             deallocate(newOne)
         end if
@@ -916,7 +916,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
                                     IChangeRateClusterListCursor=>IChangeRateCursor%TheEVCCluster%TheList
                             end select
 
-                            
+
                     end select
 
                     ICollectionCursor=>ICollectionCursor%next
@@ -929,16 +929,7 @@ module MCRT_Method_MIGCOALE_CLUSTER_CPU
 
 
 
-
-
-
-
-
-
-
-
-
-
+            !*************************************Apply the change******************************
 
 
 

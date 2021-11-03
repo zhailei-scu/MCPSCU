@@ -2,34 +2,9 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
-	<File name="../sor/CommonGPU/MCLIB_TYPEDEF_SimBoxArray_GPU.F90" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/CommonGPU/MCLIB_GLOBAL_GPU.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="8544" topLine="212" />
-		</Cursor>
-	</File>
-	<File name="../sor/CommonGPU/MCLIB_CONSTANTS_GPU.F90" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="694" topLine="1" />
-		</Cursor>
-	</File>
-	<File name="../sor/CommonGPU/MCLIB_Utilities_GPU.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3815" topLine="115" />
-		</Cursor>
-	</File>
-	<File name="../sor/CommonGPU/MCLIB_TYPEDEF_ReactionsDefine_GPU.F90" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="731" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="../sor/CommonGPU/MCLIB_CAL_NEIGHBOR_LIST_GPU.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="117196" topLine="2701" />
-		</Cursor>
-	</File>
-	<File name="../sor/CommonGPU/MCLIB_TYPEDEF_DiffusorsDefine_GPU.F90" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3134" topLine="48" />
+			<Cursor1 position="3932" topLine="92" />
 		</Cursor>
 	</File>
 	<File name="../sor/CommonGPU/MCLIB_TYPEDEF_Geometry_GPU.F90" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -37,14 +12,39 @@
 			<Cursor1 position="3674" topLine="176" />
 		</Cursor>
 	</File>
+	<File name="../sor/CommonGPU/MCLIB_CONSTANTS_GPU.F90" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="694" topLine="1" />
+		</Cursor>
+	</File>
+	<File name="../sor/CommonGPU/MCLIB_CAL_NEIGHBOR_LIST_GPU.F90" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="117196" topLine="2701" />
+		</Cursor>
+	</File>
+	<File name="../sor/CommonGPU/MCLIB_TYPEDEF_SimBoxArray_GPU.F90" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="8544" topLine="212" />
+		</Cursor>
+	</File>
+	<File name="../sor/CommonGPU/MCLIB_TYPEDEF_ReactionsDefine_GPU.F90" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="731" topLine="0" />
+		</Cursor>
+	</File>
 	<File name="../sor/CommonGPU/MCLIB_TYPEDEF_ClustersInfo_GPU.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="2740" topLine="57" />
 		</Cursor>
 	</File>
-	<File name="../sor/CommonGPU/MCLIB_GLOBAL_GPU.F90" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../sor/CommonGPU/MCLIB_TYPEDEF_DiffusorsDefine_GPU.F90" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3932" topLine="92" />
+			<Cursor1 position="3134" topLine="48" />
+		</Cursor>
+	</File>
+	<File name="../sor/CommonGPU/MCLIB_Utilities_GPU.F90" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3815" topLine="115" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

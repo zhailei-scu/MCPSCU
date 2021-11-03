@@ -26,7 +26,7 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         procedure,public,pass,non_overridable::AppendOtherEVCClustersList
         procedure,public,pass,non_overridable::CopyEVCClustersListFromOther
         procedure,public,pass,non_overridable::CopyEVCClustersListToOther
-        procedure,public,pass,non_overridable::Clean_EVCClustersList
+        procedure,public,pass::Clean=>Clean_EVCClustersList
         Generic::Assignment(=)=>CopyEVCClustersListFromOther
         Final::CleanEVCClustersList
     END TYPE EVCClustersList
@@ -222,7 +222,7 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
             stop
         end if
 
-        call this%Clean_EVCClustersList()
+        call this%Clean()
 
         otherCursorP=>other
         if(.not. associated(otherCursorP)) then
@@ -306,7 +306,7 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
             stop
         end if
 
-        call other%Clean_EVCClustersList()
+        call other%Clean()
 
         if(this%GetList_Count() .LE. 0) then
             return
@@ -372,7 +372,7 @@ module HYBRIDMCRT_TYPEDEF_EVCCLUSTER
         type(EVCClustersList)::this
         !---Body---
 
-        call this%Clean_EVCClustersList()
+        call this%Clean()
 
         return
     end subroutine CleanEVCClustersList
