@@ -1,4 +1,4 @@
-MCPSCU: Monte Carlo simulation package for SiChuan university.<br/>
+MCPSCU:GPU based Monte Carlo simulation package for SiChuan university.<br/>
 
 Author: Lei Zhai(<zhaileiytp@163.com>);Qing Hou(<qhou@scu.edu.cn>).<br/>
 
