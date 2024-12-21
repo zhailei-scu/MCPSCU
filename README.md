@@ -1,4 +1,6 @@
-MCPSCU:GPU based Monte Carlo simulation package for SiChuan university.<br/>
+MCPSCU:GPU based Kinetic Monte Carloi (KMC) simulation package for Sichuan University (based on migration-coalescence diffusion model for objects migration-coalescence diffusion-evolutions in materials).<br/>
+
+SCOPE: Material micro-evolution, kinetic diffusion-reaction simulation.<br/>
 
 Author: Lei Zhai(<zhaileiytp@163.com>);Qing Hou(<qhou@scu.edu.cn>).<br/>
 
