@@ -11,7 +11,7 @@ TINYCCPATH=$PWD/tcc-0.9.27/
 #------------------------------
 VER=Developing_New
 FULLNAME=mcpscu_$VER 
-tar -xvf $FULLNAME.tar.bz2
+#tar -xvf $FULLNAME.tar.bz2
 
 #---- set the running environment
 OS=LINUX
