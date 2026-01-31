@@ -1,13 +1,13 @@
 #!/bin/bash
 version=Developing_New
-mcpscusor=/home/zhail/Development/public/mcpscu_2019_07_01
-tccpath=/home/zhail/Development/public/tcc-0.9.27/
-mcworkspace=/home/zhail/Development/public/mcworkspace/mcpscu_2019_07_01
-cudaVersion=cuda8.0
-computerCapability=cc35
+mcpscusor=/home/zhl/Development/MCPSCU/mcpscu_Developing_New
+tccpath=/home/zhl/Development/MCPSCU/tcc-0.9.27/
+mcworkspace=/home/zhl/Development/MCPSCU/mcworkspace/mcpscu_Developing_New
+cudaVersion=cuda12.6
+computerCapability=cc87
 operateSystem=LINUX
-source $HOME/.bashrc
-hostllvm=-Mnollvm
+source /home/zhl/.bashrc
+#hostllvm=-Mnollvm
 
 
 
@@ -130,14 +130,14 @@ if [ "$ConfigName" = "Release" ];then
        	  export oflags="-fast -D MCVERSION=$version -D $operateSystem -D NODEVRAN $hostllvm -Minform=warn -Minfo=all -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability";
        # the compling option for Linux
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-fast -tp sandybridge-64 -D MCVERSION=$version -D $operateSystem $hostllvm -Minform=warn -Minfo=all  -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability,nollvm";
+       	  export oflags="-fast -tp host -D MCVERSION=$version -D $operateSystem $hostllvm -Minform=warn -Minfo=all  -Mvect -gpu=fastmath,$cudaVersion,$computerCapability -cuda";
        fi        
 else
        # the compling option for CYGWI
        if [ "$operateSystem" = "CYGWIN" ]; then
        	  export oflags="-g $hostllvm -Mcuda=$cudaVersion,$computerCapability,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN";
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-g $hostllvm -Mcuda=$cudaVersion,$computerCapability,nollvm,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN";
+       	  export oflags="-g $hostllvm -gpu=$cudaVersion,$computerCapability,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN -cuda";
        fi
 fi
 echo "with comipling option: "$oflags
