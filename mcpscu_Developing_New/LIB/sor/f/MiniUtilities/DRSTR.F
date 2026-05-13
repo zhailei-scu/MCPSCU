@@ -4,8 +4,30 @@ c         write(6,*) drstr('sds1224323a, 12sdsadsa345.6768')
 c         stop
 c         end
 
+      subroutine drstr(Text,result)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  This function is set to convert a text into a real number !
+!  with double precision
+!i Auther: Hou Qing, Inst. of Nucl. Sci. and Tech,
+!          Sichuan Union University
+!  Update(Lei Zhai): To fix the problem of 'bitcast with     !
+!  differing sizes      -4', we changed from rstr_old to istr! 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      double precision  tem
+      character *(*) Text
+      double precision result
 
-      double precision function drstr(Text)
+       read(Text,*, err=100)tem
+       result = tem
+       return
+  100  write(*, fmt="(A)") "Error when convert string'"//
+     -                     Text(1:len_trim(Text))//
+     -                     "'into real number"
+       write(*, fmt="(A)") "Process to be stpped"
+       stop
+       end subroutine
+
+      double precision function drstr_old(Text)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !  This function is set to convert a text into a real number !
 !  with double precision
@@ -16,7 +38,7 @@ c         end
       character *(*) Text
 
        read(Text,*, err=100)tem
-       drstr = tem
+       drstr_old = tem
        return
   100  write(*, fmt="(A)") "Error when convert string'"//
      -                     Text(1:len_trim(Text))//

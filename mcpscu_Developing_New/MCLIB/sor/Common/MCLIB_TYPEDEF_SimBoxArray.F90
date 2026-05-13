@@ -138,7 +138,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
   private::GetOneBoxBasicStatistic_AllStatu_CPU
   private::Get_MaxClustersNum
   private::CleanSimulationBoxes
-  private::DestorySimulationBoxes
+  !private::DestorySimulationBoxes
   private::PutoutToFile
   private::Puout_Instance_Config_SimBoxArray
   private::Putin_Instance_Config_SimBoxArray

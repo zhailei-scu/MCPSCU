@@ -84,6 +84,8 @@ module MCLIB_UTILITIES
         integer::SepNum
         integer::ElementIndex
         integer::I
+        integer::minVal
+        integer::maxVal
         !---Body---
 
         ElementsStrs = ''
@@ -145,8 +147,8 @@ module MCLIB_UTILITIES
             call separateStrByString(symbolANDNumRangeStr(2),p_NumRangeSpe,NumRangeStr,SepNum)
 
             if(SepNum .eq. 1) then
-                TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(1))
-                TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = ISTR(NumRangeStr(1))
+                call ISTR(NumRangeStr(1),TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From)
+                call ISTR(NumRangeStr(1),TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To)
             else if(SepNum .LE. 0) then
                 write(*,*) "MCPSCUERROR: you must special the atoms compents number for cluster: ",symbol
                 pause
@@ -158,13 +160,15 @@ module MCLIB_UTILITIES
             else if(SepNum .eq. 2) then
                 if(ISSTREQUAL(NumRangeStr(2),p_InfStr)) then
                     TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(1))
+                    call ISTR(NumRangeStr(1),TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From)
                 else if(ISSTREQUAL(NumRangeStr(1),p_InfStr)) then
                     TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = ISTR(NumRangeStr(2))
+                    call ISTR(NumRangeStr(2),TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From)
                 else
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = min(ISTR(NumRangeStr(1)),ISTR(NumRangeStr(2)))
-                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = max(ISTR(NumRangeStr(1)),ISTR(NumRangeStr(2)))
+                    call ISTR(NumRangeStr(1),minVal)
+                    call ISTR(NumRangeStr(2),maxVal)
+                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From = min(minVal,maxVal)
+                    TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = max(minVal,maxVal)
                 end if
             end if
 

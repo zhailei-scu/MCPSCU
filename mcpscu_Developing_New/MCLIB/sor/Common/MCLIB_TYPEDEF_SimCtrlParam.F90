@@ -34,7 +34,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
      integer::INDEPBOX = 1                                              ! if all the box are independent
 
      !***Information for random number
-     integer(kind=KINDDF)::RANDSEED(2) = (/43434, 54454532/)             ! the inputed random seed
+     integer::RANDSEED(2) = (/43434, 54454532/)             ! the inputed random seed
 
      !***PERIOD boundary************
      integer::PERIOD(3) = (/1,1,1/)                                     ! determine if PERIOD condition used
@@ -1105,9 +1105,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%MultiBox = ISTR(STRNUMB(1))
-             this%TOTALBOX = ISTR(STRNUMB(2))
-             this%INDEPBOX = ISTR(STRNUMB(3))
+             call ISTR(STRNUMB(1),this%MultiBox)
+             call ISTR(STRNUMB(2),this%TOTALBOX)
+             call ISTR(STRNUMB(3),this%INDEPBOX)
 
              if(this%MultiBox .LE. 0) then
                write(*,*) "MCPSCU ERROR: The number of box can not less than 0 .",this%MultiBox
@@ -1133,7 +1133,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             end if
 
             DO I = 1,size(this%RANDSEED)
-                this%RANDSEED(I) = ISTR(STRNUMB(I))
+                call ISTR(STRNUMB(I),this%RANDSEED(I))
             END DO
 
         case default
@@ -1178,60 +1178,60 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
            call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
            if(N .GT. 0) then
-                this%STARTJOB = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),this%STARTJOB)
            end if
 
            if(N .GE. 2) then
-                this%ENDJOB = ISTR(STRNUMB(2))
+                call ISTR(STRNUMB(2),this%ENDJOB)
            end if
 
            if(N .GE. 3) then
-                this%JOBSTEP = ISTR(STRNUMB(3))
+                call ISTR(STRNUMB(3),this%JOBSTEP)
            end if
 
         case("&CFGSEL")
            call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
            if(N .GT. 0) then
-                this%STARTCFG = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),this%STARTCFG)
            end if
 
            if(N .GE. 2) then
-                this%ENDCFG = ISTR(STRNUMB(2))
+                call ISTR(STRNUMB(2),this%ENDCFG)
            end if
 
            if(N .GE. 3) then
-                this%CFGSTEP = ISTR(STRNUMB(3))
+                call ISTR(STRNUMB(3),this%CFGSTEP)
            end if
 
         case("&BOXSEL")
            call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
            if(N .GT. 0) then
-                this%STARTBOX = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),this%STARTBOX)
            end if
 
            if(N .GE. 2) then
-                this%ENDBOX = ISTR(STRNUMB(2))
+                call ISTR(STRNUMB(2),this%ENDBOX)
            end if
 
            if(N .GE. 3) then
-                this%BOXSTEP = ISTR(STRNUMB(3))
+                call ISTR(STRNUMB(3),this%BOXSTEP)
            end if
 
         case("&TSECTIONSEL")
            call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
            if(N .GT. 0) then
-                this%STARTTSECTION = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),this%STARTTSECTION)
            end if
 
            if(N .GE. 2) then
-                this%ENDTSECTION = ISTR(STRNUMB(2))
+                call ISTR(STRNUMB(2),this%ENDTSECTION)
            end if
 
            if(N .GE. 3) then
-                this%TSECTIONSTEP = ISTR(STRNUMB(3))
+                call ISTR(STRNUMB(3),this%TSECTIONSTEP)
            end if
 
 
@@ -1331,7 +1331,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%TEMP = DRSTR(STRNUMB(1))
+             call DRSTR(STRNUMB(1),this%TEMP)
              this%TKB = this%TEMP*C_KB
 
              if(this%TEMP .LE. 0) then
@@ -1392,9 +1392,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     pause
                     stop
                 end if
-                this%PERIOD(1) = ISTR(STRNUMB(1))
-                this%PERIOD(2) = ISTR(STRNUMB(2))
-                this%PERIOD(3) = ISTR(STRNUMB(3))
+                call ISTR(STRNUMB(1),this%PERIOD(1))
+                call ISTR(STRNUMB(2),this%PERIOD(2))
+                call ISTR(STRNUMB(3),this%PERIOD(3))
         end select
     END DO
 
@@ -1437,7 +1437,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 stop
             end if
 
-            this%NEIGHBORCALWAY = ISTR(STRNUMB(1))
+            call ISTR(STRNUMB(1),this%NEIGHBORCALWAY)
 
             if(this%NEIGHBORCALWAY .ne. mp_CalcNeighborList_NNEAREST .and. this%NEIGHBORCALWAY .ne. mp_CalcNeighborList_RCUT .AND. this%NEIGHBORCALWAY .ne. mp_CalcNeighborList_SortX) then
                 write(*,*) "MCPSCUERROR: Unkonwn neighbor-list update-strategy."
@@ -1455,7 +1455,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%MAXNEIGHBORNUM = ISTR(STRNUMB(1))
+             call ISTR(STRNUMB(1),this%MAXNEIGHBORNUM)
 
              if(this%MAXNEIGHBORNUM .LE. 0) then
                write(*,*) "MCPSCU ERROR: The MAXNEIGHBORNUM cannot less than 0 .",this%MAXNEIGHBORNUM
@@ -1476,7 +1476,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 stop
             end if
 
-            this%NEIGHBORUPDATE = DRSTR(STRNUMB(1))
+            call DRSTR(STRNUMB(1),this%NEIGHBORUPDATE)
 
             if(this%NEIGHBORUPDATE .LE. 0) then
                 write(*,*) "MCPSCUERROR: The update frequence cannot less than 0."
@@ -1501,7 +1501,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 stop
             end if
 
-            this%CUTREGIONEXTEND = ISTR(STRNUMB(1))
+            call DRSTR(STRNUMB(1),this%CUTREGIONEXTEND)
 
             if(this%CUTREGIONEXTEND .LE. 0) then
                 write(*,*) "MCPSCUERROR: The cut-off region expand cannot less than 0."
@@ -1581,10 +1581,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 stop
             end if
 
-            this%SweepOutFlag = ISTR(STRNUMB(1))
+            call ISTR(STRNUMB(1),this%SweepOutFlag)
             select case(this%SweepOutFlag)
                 case(mp_SweepOutFlag_ByIntervalSteps)
-                    this%SweepOutValue = ISTR(STRNUMB(2))
+                    call RSTR(STRNUMB(2),this%SweepOutValue)
                     if(this%SweepOutValue .LT. 0) then
                         write(*,*) "MCPSCUERROR: The sweep out value cannot less than 0"
                         write(*,*) this%SweepOutValue
@@ -1593,7 +1593,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                     end if
 
                 case(mp_SweepOutFlag_ByIntervalRealTime)
-                    this%SweepOutValue = DRSTR(STRNUMB(2))
+                    call RSTR(STRNUMB(2),this%SweepOutValue)
 
                     if(this%SweepOutValue .LT. 0.E0) then
                         write(*,*) "MCPSCUERROR: The sweep out value cannot less than 0"
@@ -1655,7 +1655,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 this%NImplantSection = N
 
                 DO I = 1,N
-                    this%ImplantSectIDs(I) = ISTR(SUBNUM(I))
+                    call ISTR(SUBNUM(I),this%ImplantSectIDs(I))
                 END DO
 
             case default
@@ -1686,6 +1686,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer::IStatu
     character*32::OneContent
     logical::Finded
+    integer::theFlag
     !---Body---
 
 
@@ -1709,14 +1710,14 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%TermTFlag = ISTR(STRNUMB(1))
+             call ISTR(STRNUMB(1),this%TermTFlag)
              if(this%TermTFlag .ne. mp_TermTimeFlag_ByStep .AND. this%TermTFlag .ne. mp_TermTimeFlag_ByRealTime) then
                write(*,*) "MCPSCU ERROR: The TERMINATE flag cannot is not defined.",this%TermTFlag
                pause
                stop
              end if
 
-             this%TermTValue = DRSTR(STRNUMB(2))
+             call DRSTR(STRNUMB(2),this%TermTValue)
              if(this%TermTValue .LT. 0) then
                write(*,*) "MCPSCU ERROR: The TERMINATE value cannot less than 0.",this%TermTValue
                pause
@@ -1735,7 +1736,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             this%NFocusedTimePoint = N
 
             DO I = 1,N
-                this%FocusedTimePoints(I) = DRSTR(STRNUMB(I))
+                call DRSTR(STRNUMB(I),this%FocusedTimePoints(I))
 
                 if(I .GT. 1) then
                     if(this%FocusedTimePoints(I) .LE. this%FocusedTimePoints(I-1)) then
@@ -1767,7 +1768,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              stop
            end if
 
-           this%UPDATETSTEPSTRATEGY = ISTR(STRNUMB(1))
+           call ISTR(STRNUMB(1),this%UPDATETSTEPSTRATEGY)
 
            select case(this%UPDATETSTEPSTRATEGY)
                 case(mp_SelfAdjustlStep_NearestSep)
@@ -1781,7 +1782,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    this%EnlageTStepScale = DRSTR(STRNUMB(2))
+                    call RSTR(STRNUMB(2),this%EnlageTStepScale)
 
                     if(this%EnlageTStepScale .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The time-step-enlarge-value cannot less than 0.",this%EnlageTStepScale
@@ -1800,7 +1801,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    this%FixedTimeStepValue = DRSTR(STRNUMB(2))
+                    call RSTR(STRNUMB(2),this%FixedTimeStepValue)
 
                     if(this%FixedTimeStepValue .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The fixed time-step-value cannot less than 0.",this%FixedTimeStepValue
@@ -1819,7 +1820,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    this%EnlageTStepScale = DRSTR(STRNUMB(2))
+                    call RSTR(STRNUMB(2),this%EnlageTStepScale)
                     if(this%EnlageTStepScale .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The time-step-enlarge-value cannot less than 0.",this%EnlageTStepScale
                         pause
@@ -1837,7 +1838,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    this%LowerLimitTime = DRSTR(STRNUMB(2))
+                    call DRSTR(STRNUMB(2),this%LowerLimitTime)
                     if(this%LowerLimitTime .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
                         pause
@@ -1855,21 +1856,21 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                         stop
                     end if
 
-                    this%LowerLimitTime = DRSTR(STRNUMB(2))
+                    call DRSTR(STRNUMB(2),this%LowerLimitTime)
                     if(this%LowerLimitTime .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitTime
                         pause
                         stop
                     end if
 
-                    this%LowerLimitLength = DRSTR(STRNUMB(3))
+                    call RSTR(STRNUMB(3),this%LowerLimitLength)
                     if(this%LowerLimitLength .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The lower time limit cannot less than 0.",this%LowerLimitLength
                         pause
                         stop
                     end if
 
-                    this%LastPassageFactor = ISTR(STRNUMB(4))
+                    call ISTR(STRNUMB(4),this%LastPassageFactor)
                     if(this%LastPassageFactor .LT. 0) then
                         write(*,*) "MCPSCU ERROR: The last passage factor cannot less than 0.",this%LastPassageFactor
                         pause
@@ -1892,14 +1893,14 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%TUpdateStatisFlag = ISTR(STRNUMB(1))
+             call ISTR(STRNUMB(1),this%TUpdateStatisFlag)
              if(this%TUpdateStatisFlag .ne. mp_UpdateStatisFlag_ByIntervalSteps .AND. this%TUpdateStatisFlag .ne. mp_UpdateStatisFlag_ByIntervalRealTime) then
                write(*,*) "MCPSCU ERROR: The TUpdateStatisFlag flag cannot is not defined.",this%TUpdateStatisFlag
                pause
                stop
              end if
 
-             this%TUpdateStatisValue = DRSTR(STRNUMB(2))
+             call RSTR(STRNUMB(2),this%TUpdateStatisValue)
              if(this%TUpdateStatisValue .LT. 0) then
                write(*,*) "MCPSCU ERROR: The TUpdateStatis value cannot less than 0.",this%TUpdateStatisValue
                pause
@@ -1918,7 +1919,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%OutPutConfFlag = ISTR(STRNUMB(1))
+             call ISTR(STRNUMB(1),this%OutPutConfFlag)
              if(this%OutPutConfFlag .ne. mp_OutTimeFlag_ByIntervalSteps .AND. &
                 this%OutPutConfFlag .ne. mp_OutTimeFlag_ByIntervalRealTime .AND. &
                 this%OutPutConfFlag .ne. mp_OutTimeFlag_ByIntervalTimeMagnification) then
@@ -1927,7 +1928,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                stop
              end if
 
-             this%OutPutConfValue = DRSTR(STRNUMB(2))
+             call RSTR(STRNUMB(2),this%OutPutConfValue)
              if(this%OutPutConfValue .LT. 0) then
                write(*,*) "MCPSCU ERROR: The OUTPUT_CONF value cannot less than 0.",this%OutPutConfValue
                pause
@@ -1984,7 +1985,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 pause
                 stop
             end if
-            if(ISTR(STRNUMB(1)) .LE. 0) then
+            call ISTR(STRNUMB(1),theFlag)
+            if(theFlag .LE. 0) then
                 this%OutPutConf_SweepOut = .false.
             else
                 this%OutPutConf_SweepOut = .true.
@@ -2000,7 +2002,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%OutPutSCFlag = ISTR(STRNUMB(1))
+             call ISTR(STRNUMB(1),this%OutPutSCFlag)
              if(this%OutPutSCFlag .ne. mp_OutTimeFlag_ByIntervalSteps .AND. &
                 this%OutPutSCFlag .ne. mp_OutTimeFlag_ByIntervalRealTime .AND. &
                 this%OutPutSCFlag .ne. mp_OutTimeFlag_ByIntervalTimeMagnification) then
@@ -2009,14 +2011,14 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                stop
              end if
 
-             this%OutPutSCValue_IntegralBox = DRSTR(STRNUMB(2))
+             call RSTR(STRNUMB(2),this%OutPutSCValue_IntegralBox)
              if(this%OutPutSCValue_IntegralBox .LT. 0) then
                write(*,*) "MCPSCU ERROR: The OUTPUT_SC value cannot less than 0 for integral box.",this%OutPutSCValue_IntegralBox
                pause
                stop
              end if
 
-            this%OutPutSCValue_EachBox = DRSTR(STRNUMB(3))
+            call RSTR(STRNUMB(3),this%OutPutSCValue_EachBox)
              if(this%OutPutSCValue_EachBox .LT. 0) then
                write(*,*) "MCPSCU ERROR: The OUTPUT_SC value cannot less than 0 for each box.",this%OutPutSCValue_EachBox
                pause
@@ -2035,7 +2037,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%OutPutFuncSFlag = ISTR(STRNUMB(1))
+             call ISTR(STRNUMB(1),this%OutPutFuncSFlag)
              if(this%OutPutFuncSFlag .ne. mp_OutTimeFlag_ByIntervalSteps .AND. &
                 this%OutPutFuncSFlag .ne. mp_OutTimeFlag_ByIntervalRealTime .AND. &
                 this%OutPutFuncSFlag .ne. mp_OutTimeFlag_ByIntervalTimeMagnification) then
@@ -2044,7 +2046,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                stop
              end if
 
-             this%OutPutFuncSValue = DRSTR(STRNUMB(2))
+             call RSTR(STRNUMB(2),this%OutPutFuncSValue)
              if(this%OutPutFuncSValue .LT. 0) then
                write(*,*) "MCPSCU ERROR: The OUTPUT_FUNCS value cannot less than 0.",this%OutPutFuncSValue
                pause
@@ -2063,7 +2065,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
              pause
              stop
            else
-             this%OutPutSwapFlag = ISTR(STRNUMB(1))
+             call ISTR(STRNUMB(1),this%OutPutSwapFlag)
              if(this%OutPutSwapFlag .ne. mp_OutTimeFlag_ByIntervalSteps .AND.  &
                 this%OutPutSwapFlag .ne. mp_OutTimeFlag_ByIntervalRealTime .AND. &
                 this%OutPutSwapFlag .ne. mp_OutTimeFlag_ByIntervalTimeMagnification) then
@@ -2072,7 +2074,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                stop
              end if
 
-             this%OutPutSwapValue = DRSTR(STRNUMB(2))
+             call RSTR(STRNUMB(2),this%OutPutSwapValue)
              if(this%OutPutSwapValue .LT. 0) then
                write(*,*) "MCPSCU ERROR: The SAVE value cannot less than 0.",this%OutPutSwapValue
                pause

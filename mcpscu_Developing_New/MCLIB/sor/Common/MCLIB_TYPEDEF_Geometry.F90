@@ -513,7 +513,7 @@ module MCLIB_TYPEDEF_GEOMETRY
             end if
 
             DO I = 1,3
-                this%GrainSeeds(ISeed)%m_POS(I) = DRSTR(STRTMP(I))
+                call DRSTR(STRTMP(I),this%GrainSeeds(ISeed)%m_POS(I))
             END DO
 
         END DO

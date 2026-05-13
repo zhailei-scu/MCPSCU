@@ -200,7 +200,7 @@ module MODEL_ECR_CPU
             pause
             stop
         end if
-        m_SURFE = DRSTR(STRTEMP(1))
+        call DRSTR(STRTEMP(1),m_SURFE)
 
         KEYWORD = "&BiasFactor"
         call UPCASE(KEYWORD)
@@ -213,7 +213,7 @@ module MODEL_ECR_CPU
             pause
             stop
         end if
-        m_BiasFactor = DRSTR(STRTEMP(1))
+        call DRSTR(STRTEMP(1),m_BiasFactor)
 
         KEYWORD = "&Corrections"
         call UPCASE(KEYWORD)
@@ -226,7 +226,7 @@ module MODEL_ECR_CPU
             pause
             stop
         end if
-        m_Corrections = DRSTR(STRTEMP(1))
+        call DRSTR(STRTEMP(1),m_Corrections)
 
         KEYWORD = "&R0"
         call UPCASE(KEYWORD)
@@ -239,7 +239,7 @@ module MODEL_ECR_CPU
             pause
             stop
         end if
-        m_R0 = DRSTR(STRTEMP(1))
+        call DRSTR(STRTEMP(1),m_R0)
 
         KEYWORD = "&R1"
         call UPCASE(KEYWORD)
@@ -252,7 +252,7 @@ module MODEL_ECR_CPU
             pause
             stop
         end if
-        m_R1 = DRSTR(STRTEMP(1))
+        call DRSTR(STRTEMP(1),m_R1)
 
         write(*,*) "***************The Model Relative Data****************"
         write(hFile,fmt="('!',A70,'!',2x,I10)") "Element H Index = ",m_H_Index
