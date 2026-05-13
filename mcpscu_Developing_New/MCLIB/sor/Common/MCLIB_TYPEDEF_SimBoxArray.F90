@@ -440,9 +440,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
              write(*,*) "Should be '&SIZE   bx(LU)= ,  by(LU) = , bz(LU) = '."
              stop
            else
-             BOXSIZE(1) = DRSTR(STRNUMB(1))
-             BOXSIZE(2) = DRSTR(STRNUMB(2))
-             BOXSIZE(3) = DRSTR(STRNUMB(3))
+             call DRSTR(STRNUMB(1),BOXSIZE(1))
+             call DRSTR(STRNUMB(2),BOXSIZE(2))
+             call DRSTR(STRNUMB(3),BOXSIZE(3))
 
              if(any(BOXSIZE .LT. 0)) then
                write(*,*) "MCPSCU ERROR: The value of BOXSIZE can not less than 0 .",this%BOXSIZE
@@ -460,7 +460,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
              write(*,*) "Should be '&LATT latiice constant(nm) = '."
              stop
            else
-             this%LatticeLength = DRSTR(STRNUMB(1))*C_NM2CM
+             call DRSTR(STRNUMB(1),this%LatticeLength)
+             this%LatticeLength = this%LatticeLength*C_NM2CM
 
            end if
 
@@ -576,7 +577,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 else
-                    AtomNumb = ISTR(STRNUMB(1))
+                    call ISTR(STRNUMB(1),AtomNumb)
                 end if
             case("&ATOMP")
                 call EXTRACT_SUBSTR(STR,1,N,STRNUMB)
@@ -601,8 +602,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                tempAtom%m_ElementIndex = ISTR(STRNUMB(1))
-                tempAtom%m_AtomMass = DRSTR(STRNUMB(2))
+                call ISTR(STRNUMB(1),tempAtom%m_ElementIndex)
+                call RSTR(STRNUMB(2),tempAtom%m_AtomMass)
 
             case("&ATOMVOLUM")
                 call EXTRACT_NUMB(STR,1,N,STRNUMB)
@@ -614,7 +615,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                tempAtom%m_Volum = DRSTR(STRNUMB(1))*(C_NM2CM**3)
+                call DRSTR(STRNUMB(1),tempAtom%m_Volum)
+                tempAtom%m_Volum = tempAtom%m_Volum*(C_NM2CM**3)
                 isMatrixAtom = .true.
 
             case default
@@ -801,7 +803,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                newDiffusor%DiffusorValueType_Free = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),newDiffusor%DiffusorValueType_Free)
 
                 select case(newDiffusor%DiffusorValueType_Free)
                     case(p_DiffuseCoefficient_ByValue)
@@ -812,7 +814,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             pause
                             stop
                         end if
-                        newDiffusor%DiffuseCoefficient_Free_Value = DRSTR(STRNUMB(2))
+                        call DRSTR(STRNUMB(2),newDiffusor%DiffuseCoefficient_Free_Value)
 
                     case(p_DiffuseCoefficient_ByArrhenius)
                         call EXTRACT_NUMB(STR,3,N,STRNUMB)
@@ -823,8 +825,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             pause
                             stop
                         end if
-                        newDiffusor%PreFactor_Free = DRSTR(STRNUMB(2))
-                        newDiffusor%ActEnergy_Free = DRSTR(STRNUMB(3))
+                        call DRSTR(STRNUMB(2),newDiffusor%PreFactor_Free)
+                        call DRSTR(STRNUMB(3),newDiffusor%ActEnergy_Free)
 
                     case(p_DiffuseCoefficient_ByBCluster)
                         !Do nothing
@@ -839,9 +841,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             pause
                             stop
                         end if
-                        newDiffusor%PreFactor_Free = DRSTR(STRNUMB(2))
-                        newDiffusor%PreFactorParameter_Free = DRSTR(STRNUMB(3))
-                        newDiffusor%ActEnergy_Free = DRSTR(STRNUMB(4))
+                        call DRSTR(STRNUMB(2),newDiffusor%PreFactor_Free)
+                        call DRSTR(STRNUMB(3),newDiffusor%PreFactorParameter_Free)
+                        call DRSTR(STRNUMB(4),newDiffusor%ActEnergy_Free)
 
                     case(p_DiffuseCoefficient_ByVcCluster)
                         call EXTRACT_NUMB(STR,4,N,STRNUMB)
@@ -852,9 +854,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             pause
                             stop
                         end if
-                        newDiffusor%PreFactor_Free = DRSTR(STRNUMB(2))
-                        newDiffusor%PreFactorParameter_Free = DRSTR(STRNUMB(3))
-                        newDiffusor%ActEnergy_Free = DRSTR(STRNUMB(4))
+                        call DRSTR(STRNUMB(2),newDiffusor%PreFactor_Free)
+                        call DRSTR(STRNUMB(3),newDiffusor%PreFactorParameter_Free)
+                        call DRSTR(STRNUMB(4),newDiffusor%ActEnergy_Free)
 
                     case default
                         write(*,*) "MCPSCUERROR: unknown diffusor value type :",newDiffusor%DiffusorValueType_Free
@@ -873,7 +875,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                newDiffusor%DiffuseDirectionType = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),newDiffusor%DiffuseDirectionType)
 
                 select case(newDiffusor%DiffuseDirectionType)
                     case(p_DiffuseDirection_ThreeDim)
@@ -891,7 +893,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                         VectorLen = 0.D0
                         DO I = 1,3
-                            newDiffusor%DiffuseDirection(I) = DRSTR(STRNUMB(I+1))
+                            call DRSTR(STRNUMB(I+1),newDiffusor%DiffuseDirection(I))
                             VectorLen = VectorLen + newDiffusor%DiffuseDirection(I)**2
                         END DO
 
@@ -904,8 +906,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                         newDiffusor%DiffuseDirection = newDiffusor%DiffuseDirection/DSQRT(VectorLen)
 
-                        newDiffusor%DiffuseRotateAttempFrequence = DRSTR(STRNUMB(5))
-                        newDiffusor%DiffuseRotateEnerg = DRSTR(STRNUMB(6))
+                        call DRSTR(STRNUMB(5),newDiffusor%DiffuseRotateAttempFrequence)
+                        call DRSTR(STRNUMB(6),newDiffusor%DiffuseRotateEnerg)
 
                     case default
                         write(*,*) "MCPSCUERROR: unknown diffuse direction type :",newDiffusor%DiffuseDirectionType
@@ -924,7 +926,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                newDiffusor%ECRValueType_Free = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),newDiffusor%ECRValueType_Free)
 
                 if(newDiffusor%ECRValueType_Free .eq. p_ECR_ByValue) then
                     call EXTRACT_NUMB(STR,2,N,STRNUMB)
@@ -934,7 +936,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         pause
                         stop
                     end if
-                    newDiffusor%ECR_Free = DRSTR(STRNUMB(2))*this%LatticeLength
+                    call DRSTR(STRNUMB(2),newDiffusor%ECR_Free)
+                    newDiffusor%ECR_Free = newDiffusor%ECR_Free*this%LatticeLength
                 end if
 
             case("&DIFFCOEFFVALUE_INGB")
@@ -947,7 +950,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                newDiffusor%DiffusorValueType_InGB = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),newDiffusor%DiffusorValueType_InGB)
 
                 select case(newDiffusor%DiffusorValueType_InGB)
                     case(p_DiffuseCoefficient_ByValue)
@@ -958,7 +961,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             pause
                             stop
                         end if
-                        newDiffusor%DiffuseCoefficient_InGB_Value = DRSTR(STRNUMB(2))
+                        call DRSTR(STRNUMB(2),newDiffusor%DiffuseCoefficient_InGB_Value)
 
                     case(p_DiffuseCoefficient_ByArrhenius)
                         call EXTRACT_NUMB(STR,3,N,STRNUMB)
@@ -969,8 +972,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             pause
                             stop
                         end if
-                        newDiffusor%PreFactor_InGB = DRSTR(STRNUMB(2))
-                        newDiffusor%ActEnergy_InGB = DRSTR(STRNUMB(3))
+                        call DRSTR(STRNUMB(2),newDiffusor%PreFactor_InGB)
+                        call DRSTR(STRNUMB(3),newDiffusor%ActEnergy_InGB)
 
                     case(p_DiffuseCoefficient_ByBCluster)
                         !Do nothing
@@ -985,9 +988,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             pause
                             stop
                         end if
-                        newDiffusor%PreFactor_InGB = DRSTR(STRNUMB(2))
-                        newDiffusor%PreFactorParameter_InGB = DRSTR(STRNUMB(3))
-                        newDiffusor%ActEnergy_InGB = DRSTR(STRNUMB(4))
+                        call DRSTR(STRNUMB(2),newDiffusor%PreFactor_InGB)
+                        call DRSTR(STRNUMB(3),newDiffusor%PreFactorParameter_InGB)
+                        call DRSTR(STRNUMB(4),newDiffusor%ActEnergy_InGB)
 
                     case(p_DiffuseCoefficient_ByVcCluster)
                         call EXTRACT_NUMB(STR,4,N,STRNUMB)
@@ -998,9 +1001,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                             pause
                             stop
                         end if
-                        newDiffusor%PreFactor_InGB = DRSTR(STRNUMB(2))
-                        newDiffusor%PreFactorParameter_InGB = DRSTR(STRNUMB(3))
-                        newDiffusor%ActEnergy_InGB = DRSTR(STRNUMB(4))
+                        call DRSTR(STRNUMB(2),newDiffusor%PreFactor_InGB)
+                        call DRSTR(STRNUMB(3),newDiffusor%PreFactorParameter_InGB)
+                        call DRSTR(STRNUMB(4),newDiffusor%ActEnergy_InGB)
                     case default
                         write(*,*) "MCPSCUERROR: unknown diffusor value type in GB:",newDiffusor%DiffusorValueType_InGB
                         write(*,*) "At line: ",LINE
@@ -1019,7 +1022,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                newDiffusor%ECRValueType_InGB = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),newDiffusor%ECRValueType_InGB)
 
                 if(newDiffusor%ECRValueType_InGB .eq. p_ECR_ByValue) then
                     call EXTRACT_NUMB(STR,2,N,STRNUMB)
@@ -1029,7 +1032,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         pause
                         stop
                     end if
-                    newDiffusor%ECR_InGB = DRSTR(STRNUMB(2))*this%LatticeLength
+                    call DRSTR(STRNUMB(2),newDiffusor%ECR_InGB)
+                    newDiffusor%ECR_InGB = newDiffusor%ECR_InGB*this%LatticeLength
                 end if
 
             case default
@@ -1215,7 +1219,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                newReactionPair%ReactionCoefficientType = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),newReactionPair%ReactionCoefficientType)
 
                 if(newReactionPair%ReactionCoefficientType .eq. p_ReactionCoefficient_ByValue) then
                     call EXTRACT_NUMB(STR,2,N,STRNUMB)
@@ -1225,7 +1229,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         pause
                         stop
                     end if
-                    newReactionPair%ReactionCoefficient_Value = DRSTR(STRNUMB(2))
+                    call DRSTR(STRNUMB(2),newReactionPair%ReactionCoefficient_Value)
                 else if(newReactionPair%ReactionCoefficientType .eq. p_ReactionCoefficient_ByArrhenius) then
                     call EXTRACT_NUMB(STR,3,N,STRNUMB)
 
@@ -1235,8 +1239,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         pause
                         stop
                     end if
-                    newReactionPair%PreFactor = DRSTR(STRNUMB(2))
-                    newReactionPair%ActEnergy = DRSTR(STRNUMB(3))
+                    call DRSTR(STRNUMB(2),newReactionPair%PreFactor)
+                    call DRSTR(STRNUMB(3),newReactionPair%ActEnergy)
                 else
                     write(*,*) "MCPSCUERROR: unknown reaction coefficients type :",newReactionPair%ReactionCoefficientType
                     write(*,*) "At line: ",LINE
@@ -1254,7 +1258,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                newReactionPair%ProductionType = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),newReactionPair%ProductionType)
 
                 select case(newReactionPair%ProductionType)
                     case(p_ProductionType_BySimplePlus)
@@ -1292,7 +1296,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                newReactionPair%ECRValueType = ISTR(STRNUMB(1))
+                call ISTR(STRNUMB(1),newReactionPair%ECRValueType)
 
                 if(newReactionPair%ECRValueType .eq. p_ECR_ByValue) then
                     call EXTRACT_NUMB(STR,2,N,STRNUMB)
@@ -1302,7 +1306,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         pause
                         stop
                     end if
-                    newReactionPair%ECR = DRSTR(STRNUMB(2))*this%LatticeLength
+                    call DRSTR(STRNUMB(2),newReactionPair%ECR)
+                    newReactionPair%ECR = newReactionPair%ECR*this%LatticeLength
                 end if
 
             case default
@@ -1438,7 +1443,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
-                this%m_GrainBoundary%GrainNum = ISTR(STRTEMP(1))
+                call ISTR(STRTEMP(1),this%m_GrainBoundary%GrainNum)
             case("&BYSEEDSUBCTL")
                 this%m_GrainBoundary%GBInitSimple_Strategy = p_GBInitSimple_BySeedCtl
                 call this%Load_GB_Simple_Distribution_ByGSeedCtl(hBoxFile,*100)
@@ -1491,7 +1496,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
-                this%m_GrainBoundary%Cutoff(1) = DRSTR(STRTEMP(1))*this%LatticeLength
+                call DRSTR(STRTEMP(1),this%m_GrainBoundary%Cutoff(1))
+                this%m_GrainBoundary%Cutoff(1) = this%m_GrainBoundary%Cutoff(1)*this%LatticeLength
             case("&MAXCUTOFF")
                 call EXTRACT_NUMB(STR,1,N,STRTEMP)
                 if(N .LT. 1) then
@@ -1501,7 +1507,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
-                this%m_GrainBoundary%Cutoff(2) = DRSTR(STRTEMP(1))*this%LatticeLength
+                call DRSTR(STRTEMP(1),this%m_GrainBoundary%Cutoff(2))
+                this%m_GrainBoundary%Cutoff(2) = this%m_GrainBoundary%Cutoff(2)*this%LatticeLength
             case("&DISTANCE_GAUSS")
                 call EXTRACT_NUMB(STR,2,N,STRTEMP)
                 if(N .LT. 2) then
@@ -1511,8 +1518,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
-                this%m_GrainBoundary%SeedsDistINI = DRSTR(STRTEMP(1))*this%LatticeLength
-                this%m_GrainBoundary%SeedsDistSD = DRSTR(STRTEMP(2))*this%LatticeLength
+                call DRSTR(STRTEMP(1),this%m_GrainBoundary%SeedsDistINI)
+                this%m_GrainBoundary%SeedsDistINI = this%m_GrainBoundary%SeedsDistINI*this%LatticeLength
+
+                call DRSTR(STRTEMP(2),this%m_GrainBoundary%SeedsDistSD)
+                this%m_GrainBoundary%SeedsDistSD = this%m_GrainBoundary%SeedsDistSD*this%LatticeLength
             case default
                 write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
                 write(*,*) "At box file Line: ",LINE
@@ -1566,7 +1576,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
-                this%m_GrainBoundary%Cutoff(1) = DRSTR(STRTEMP(1))*(this%LatticeLength**3)
+                call DRSTR(STRTEMP(1),this%m_GrainBoundary%Cutoff(1))
+                this%m_GrainBoundary%Cutoff(1) = this%m_GrainBoundary%Cutoff(1)*(this%LatticeLength**3)
             case("&MAXCUTOFF")
                 call EXTRACT_NUMB(STR,1,N,STRTEMP)
                 if(N .LT. 1) then
@@ -1576,7 +1587,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
-                this%m_GrainBoundary%Cutoff(2) = DRSTR(STRTEMP(2))*(this%LatticeLength**3)
+                call DRSTR(STRTEMP(2),this%m_GrainBoundary%Cutoff(2))
+                this%m_GrainBoundary%Cutoff(2) = this%m_GrainBoundary%Cutoff(2)*(this%LatticeLength**3)
             case("&VOLUM_GAUSS")
                 call EXTRACT_NUMB(STR,2,N,STRTEMP)
                 if(N .LT. 2) then
@@ -1586,8 +1598,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
-                this%m_GrainBoundary%GVolumINI = DRSTR(STRTEMP(1))*(this%LatticeLength**3)
-                this%m_GrainBoundary%GVolumSD  = DRSTR(STRTEMP(2))*(this%LatticeLength**3)
+                call DRSTR(STRTEMP(1),this%m_GrainBoundary%GVolumINI)
+                this%m_GrainBoundary%GVolumINI = this%m_GrainBoundary%GVolumINI*(this%LatticeLength**3)
+
+                call DRSTR(STRTEMP(2),this%m_GrainBoundary%GVolumSD)
+                this%m_GrainBoundary%GVolumSD = this%m_GrainBoundary%GVolumSD*(this%LatticeLength**3)
             case default
                 write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
                 write(*,*) "At box file Line: ",LINE
@@ -2648,6 +2663,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*32::KEYWORD
     character*32::STRTMP(20)
     integer::N
+    integer::tempIValue
+    real(kind=KINDDF)::tempRValue
     type(UDefReadWriteRecordList),pointer::cursor=>null()
     !---Body---
 
@@ -2679,31 +2696,38 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             case("&TIME")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetSimuTimes(DRSTR(STRTMP(1)))
+                call DRSTR(STRTMP(1),tempRValue)
+                call SimuRecord%SetSimuTimes(tempRValue)
 
             case("&ISTEP")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetSimuSteps(ISTR(STRTMP(1)))
+                call ISTR(STRTMP(1),tempIValue)
+                call SimuRecord%SetSimuSteps(tempIValue)
 
             case("&TSTEP")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetTimeSteps(DRSTR(STRTMP(1)))
+                call DRSTR(STRTMP(1),tempRValue)
+                call SimuRecord%SetTimeSteps(tempRValue)
 
             case("&IPATCH")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetSimuPatch(ISTR(STRTMP(1)))
+                call ISTR(STRTMP(1),tempIValue)
+                call SimuRecord%SetSimuPatch(tempIValue)
 
             case("&LASTOUTCFGTIME")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetLastRecordOutConfigTime(DRSTR(STRTMP(1)))
+                call DRSTR(STRTMP(1),tempRValue)
+                call SimuRecord%SetLastRecordOutConfigTime(tempRValue)
 
             case("&LASTOUTINDEX")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetOutPutIndex(ISTR(STRTMP(1)))
+                call ISTR(STRTMP(1),tempIValue)
+                call SimuRecord%SetOutPutIndex(tempIValue)
 
             case("&ITIMESECTION")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetTimeSections(ISTR(STRTMP(1)))
+                call ISTR(STRTMP(1),tempIValue)
+                call SimuRecord%SetTimeSections(tempIValue)
                 exit
 
             case default
@@ -2777,6 +2801,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::STA
     integer::RecordIndex
     real(kind=KINDDF)::VectorLen
+    integer::tempIValue
+    real(kind=KINDDF)::tempRValue
     !---Body---
 
     MultiBox = Host_SimuCtrlParam%MultiBox
@@ -2829,10 +2855,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     pause
                     stop
                 end if
-                if(ABS(this%LatticeLength - DRSTR(STRTMP(1))*C_AM2CM)*TENPOWEIGHT .GT. 1) then
+                call DRSTR(STRTMP(1),tempRValue)
+                tempRValue = tempRValue*C_AM2CM
+                if(ABS(this%LatticeLength - tempRValue)*TENPOWEIGHT .GT. 1) then
                     write(*,*) "MCPSCUERROR: The read-in configure is not match with lattice length."
                     write(*,*) this%LatticeLength
-                    write(*,*) DRSTR(STRTMP(1))*C_AM2CM
+                    write(*,*) tempRValue
                     pause
                     stop
                 end if
@@ -2840,10 +2868,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case("&BOXLOW")
                 call EXTRACT_NUMB(STR,3,N,STRTMP)
                 DO K = 1,3
-                    if( ABS(this%BOXBOUNDARY(K,1) - DRSTR(STRTMP(K))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
+                    call DRSTR(STRTMP(K),tempRValue)
+                    if( ABS(this%BOXBOUNDARY(K,1) - tempRValue*this%LatticeLength)*TENPOWFIVE .GT. 1) then
                         write(*,*) "MCPSCUERROR: The read-in configure is not match with box below size."
                         write(*,*) this%BOXBOUNDARY(K,1)
-                        write(*,*) DRSTR(STRTMP(K))*this%LatticeLength
+                        write(*,*) tempRValue*this%LatticeLength
                         pause
                         stop
                     end if
@@ -2852,10 +2881,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case("&BOXSIZE")
                 call EXTRACT_NUMB(STR,3,N,STRTMP)
                 DO K = 1,3
-                    if( ABS(this%BOXSIZE(K) - DRSTR(STRTMP(K))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
+                    call DRSTR(STRTMP(K),tempRValue)
+                    if( ABS(this%BOXSIZE(K) - tempRValue*this%LatticeLength)*TENPOWFIVE .GT. 1) then
                         write(*,*) "MCPSCUERROR: The read-in configure is not match with box size."
                         write(*,*) this%BOXSIZE(K)
-                        write(*,*) DRSTR(STRTMP(K))*this%LatticeLength
+                        write(*,*) tempRValue*this%LatticeLength
                         pause
                         stop
                     end if
@@ -2863,10 +2893,11 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             case("&NGRAIN")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                if(this%m_GrainBoundary%GrainNum .ne. ISTR(STRTMP(1))) then
+                call ISTR(STRTMP(1),tempIValue)
+                if(this%m_GrainBoundary%GrainNum .ne. tempIValue) then
                     write(*,*) "MCPSCUERROR: The read-in configure is not match with grain seeds number."
                     write(*,*) this%m_GrainBoundary%GrainNum
-                    write(*,*) ISTR(STRTMP(1))
+                    write(*,*) tempIValue
                     pause
                     stop
                 end if
@@ -2894,7 +2925,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                         stop
                     end if
 
-                    ISeedTemp = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),ISeedTemp)
 
                     if(ISeedTemp .ne. ISeed) then
                         write(*,*) "MCPSCUERROR: The grain seeds index is not correct: ",ISeed
@@ -2903,11 +2934,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     end if
 
                     DO I = 1,3
-                        if( ABS(this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I) - DRSTR(STRTMP(I+1))*this%LatticeLength)*TENPOWFIVE .GT. 1) then
+                        call DRSTR(STRTMP(I+1),tempRValue)
+                        if( ABS(this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I) - tempRValue*this%LatticeLength)*TENPOWFIVE .GT. 1) then
                             write(*,*) "MCPSCUERROR: The read-in configure is not match with box grain position."
                             write(*,*) "For grain seed ID: ",ISeedTemp
                             write(*,*) this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(I)
-                            write(*,*) DRSTR(STRTMP(I+1))*this%LatticeLength
+                            write(*,*) tempRValue*this%LatticeLength
                                 pause
                             stop
                         end if
@@ -3035,7 +3067,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call EXTRACT_NUMB(STR,10+p_ATOMS_GROUPS_NUMBER+3,N,STRTMP)
         atomsInfo = 0
 
-        IBox = ISTR(STRTMP(1))
+        call ISTR(STRTMP(1),IBox)
 
         NCEachBox(IBox) = NCEachBox(IBox) + 1
 
@@ -3050,9 +3082,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call this%m_ClustersInfo_CPU%m_Clusters(IC)%Clean_Cluster()
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer = ISTR(STRTMP(2))
+        call ISTR(STRTMP(2),this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer)
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) = ISTR(STRTMP(3))
+        call ISTR(STRTMP(3),this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1))
 
         if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(1) .GT. this%m_GrainBoundary%GrainNum) then
             write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
@@ -3061,7 +3093,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             stop
         end if
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) = ISTR(STRTMP(4))
+        call ISTR(STRTMP(4),this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2))
 
         if(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID(2) .GT. this%m_GrainBoundary%GrainNum) then
             write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
@@ -3070,18 +3102,18 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             stop
         end if
 
-        IStatu = ISTR(STRTMP(5))
+        call ISTR(STRTMP(5),IStatu)
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu = IStatu
 
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1) = ISTR(STRTMP(6))
-        this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2) = ISTR(STRTMP(7))
+        call ISTR(STRTMP(6),this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(1))
+        call ISTR(STRTMP(7),this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Record(2))
 
         DO I = 1,3
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I) = DRSTR(STRTMP(7+I))
+            call DRSTR(STRTMP(7+I),this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(I))
         END DO
 
         DO I = 1,NATomsUsed
-            atomsInfo(I) = DRSTR(STRTMP(7+3+I))
+            call ISTR(STRTMP(7+3+I),atomsInfo(I))
         END DO
 
         Do IElement = 1,NATomsUsed
@@ -3092,7 +3124,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3) = this%m_ClustersInfo_CPU%m_Clusters(IC)%m_POS(1:3)*this%LatticeLength
 
         DO I = 1,3
-            this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(I) = DRSTR(STRTMP(10+NATomsUsed+I))
+            call DRSTR(STRTMP(10+NATomsUsed+I),this%m_ClustersInfo_CPU%m_Clusters(IC)%m_DiffuseDirection(I))
         END DO
 
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(this%m_ClustersInfo_CPU%m_Clusters(IC))
@@ -3277,6 +3309,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::NATomsUsed
     integer::NClustersGroup
     type(DiffusorValue)::TheDiffusorValue
+    real(kind=KINDDF)::tempRValue
     !---Body---
 
     AtomsIndex = 0
@@ -3319,7 +3352,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             case("&TIME")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetSimuTimes(DRSTR(STRTMP(1)))
+                call DRSTR(STRTMP(1),tempRValue)
+                call SimuRecord%SetSimuTimes(tempRValue)
 
             case("&ELEMENT")
                 call EXTRACT_SUBSTR(STR,p_ATOMS_GROUPS_NUMBER,N,STRTMP)
@@ -3460,13 +3494,14 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         NClustersGroup = NClustersGroup + 1
 
-        ClustersSampleConcentrate(1,NClustersGroup) = DRSTR(STRTMP(NATomsUsed + 1))
+        call DRSTR(STRTMP(NATomsUsed + 1),ClustersSampleConcentrate(1,NClustersGroup))
 
         call ClustersSample(1,NClustersGroup)%Clean_Cluster()
 
         Do IElement = 1,NATomsUsed
             ClustersSample(1,NClustersGroup)%m_Atoms(AtomsIndex(IElement))%m_ID = AtomsIndex(IElement)
-            ClustersSample(1,NClustersGroup)%m_Atoms(AtomsIndex(IElement))%m_NA = floor(DRSTR(STRTMP(IElement)) + 0.5D0)
+            call DRSTR(STRTMP(IElement),tempRValue)
+            ClustersSample(1,NClustersGroup)%m_Atoms(AtomsIndex(IElement))%m_NA = floor(tempRValue + 0.5D0)
         End Do
 
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(ClustersSample(1,NClustersGroup))
@@ -3582,6 +3617,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::IGroup
     integer::tempLayer
     type(DiffusorValue)::TheDiffusorValue
+    real(kind=KINDDF)::tempRValue
     !---Body---
 
     AtomsIndex = 0
@@ -3626,7 +3662,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
             case("&TIME")
                 call EXTRACT_NUMB(STR,1,N,STRTMP)
-                call SimuRecord%SetSimuTimes(DRSTR(STRTMP(1)))
+                call DRSTR(STRTMP(1),tempRValue)
+                call SimuRecord%SetSimuTimes(tempRValue)
 
             case("&ELEMENT")
                 call EXTRACT_SUBSTR(STR,p_ATOMS_GROUPS_NUMBER,N,STRTMP)
@@ -3664,7 +3701,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                LayerNum = ISTR(STRTMP(1))
+                call ISTR(STRTMP(1),LayerNum)
 
                 if(LayerNum .LE. 0) then
                     write(*,*) "MCPSCUERROR: The layer number is less than 1."
@@ -3693,7 +3730,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
 
-                    LayersThick(ILayer) = DRSTR(STRTMP(1))
+                    call DRSTR(STRTMP(1),LayersThick(ILayer))
 
                 END DO
 
@@ -3750,7 +3787,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             stop
         end if
 
-        tempLayer =  ISTR(STRTMP(NATomsUsed + 5))
+        call ISTR(STRTMP(NATomsUsed + 5),tempLayer)
 
         if(ILayer .eq. tempLayer) then
             tempClustersGroup = tempClustersGroup + 1
@@ -3843,7 +3880,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             stop
         end if
 
-        tempLayer =  ISTR(STRTMP(NATomsUsed + 5))
+        call ISTR(STRTMP(NATomsUsed + 5),tempLayer)
 
         if(ILayer .LT. tempLayer) then
             IGroup = IGroup + 1
@@ -3858,9 +3895,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call ClustersSample(ILayer,IGroup)%Clean_Cluster()
 
-        ClustersSample(ILayer,IGroup)%m_Statu = ISTR(STRTMP(NATomsUsed + 1))
+        call ISTR(STRTMP(NATomsUsed + 1),ClustersSample(ILayer,IGroup)%m_Statu)
 
-        ClustersSample(ILayer,IGroup)%m_GrainID(1) = ISTR(STRTMP(NATomsUsed + 2))
+        call ISTR(STRTMP(NATomsUsed + 2),ClustersSample(ILayer,IGroup)%m_GrainID(1))
 
         if(ClustersSample(ILayer,IGroup)%m_GrainID(1) .GT. this%m_GrainBoundary%GrainNum) then
             write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
@@ -3869,7 +3906,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             stop
         end if
 
-        ClustersSample(ILayer,IGroup)%m_GrainID(2) = ISTR(STRTMP(NATomsUsed + 3))
+        call ISTR(STRTMP(NATomsUsed + 3),ClustersSample(ILayer,IGroup)%m_GrainID(2))
 
         if(ClustersSample(ILayer,IGroup)%m_GrainID(2) .GT. this%m_GrainBoundary%GrainNum) then
             write(*,*) "MCPSCUERROR: The grain number is greater than the seeds number in system."
@@ -3878,11 +3915,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             stop
         end if
 
-        ClustersSampleConcentrate(ILayer,IGroup) = DRSTR(STRTMP(NATomsUsed + 4))
+        call DRSTR(STRTMP(NATomsUsed + 4),ClustersSampleConcentrate(ILayer,IGroup))
 
         Do IElement = 1,NATomsUsed
             ClustersSample(ILayer,IGroup)%m_Atoms(AtomsIndex(IElement))%m_ID = AtomsIndex(IElement)
-            ClustersSample(ILayer,IGroup)%m_Atoms(AtomsIndex(IElement))%m_NA = floor(DRSTR(STRTMP(IElement)) + 0.5D0)
+            call DRSTR(STRTMP(IElement),tempRValue)
+            ClustersSample(ILayer,IGroup)%m_Atoms(AtomsIndex(IElement))%m_NA = floor(tempRValue + 0.5D0)
         End Do
 
         TheDiffusorValue = this%m_DiffusorTypesMap%Get(ClustersSample(ILayer,IGroup))
