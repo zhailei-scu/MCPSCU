@@ -22,9 +22,9 @@
 
        ObjectuseArray = .false.
 
-       SubjectStrlength = LENTRIM(adjustl(SubjectStr))
+       call LENTRIM(adjustl(SubjectStr),SubjectStrlength)
 
-       ObjectStrlength = LENTRIM(adjustl(ObjectStr))
+       call LENTRIM(adjustl(ObjectStr),ObjectStrlength)
 
        if(SubjectStrlength .ne. ObjectStrlength) then
           theResult = .false.

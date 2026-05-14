@@ -1559,25 +1559,30 @@
      character*(*)           ::Fmt
      !--- local
      character*32::SN, TFMT
+     integer::tempLen_Fmt
+     integer::tempLen_SN
 
+          call LENTRIM(Fmt,tempLen_Fmt)
           if(associated(pDat%IDATA1))      then
-             TFMT = "("//Fmt(1:LENTRIM(Fmt))//")"
+             TFMT = "("//Fmt(1:tempLen_Fmt)//")"
              write(Str,fmt=TFMT) pDat%IDATA1(Row)
 
           else if(associated(pDat%IDATA2) ) then
              write(SN,*) size(pDat%IDATA2, dim=2)
              SN = adjustl(SN)
-             TFMT = "("//SN(1:LENTRIM(SN))//"("//Fmt(1:LENTRIM(Fmt))//"))"
+             call LENTRIM(SN,tempLen_SN)
+             TFMT = "("//SN(1:tempLen_SN)//"("//Fmt(1:tempLen_Fmt)//"))"
              write(Str,fmt=TFMT) pDat%IDATA2(Row,:)
 
           else if(associated(pDat%DDATA1) ) then
-             TFMT = "("//Fmt(1:LENTRIM(Fmt))//")"
+             TFMT = "("//Fmt(1:tempLen_Fmt)//")"
              write(Str,fmt=TFMT) pDat%DDATA1(Row)
 
           else if(associated(pDat%DDATA2) ) then
              write(SN,*) size(pDat%DDATA2, dim=2)
              SN = adjustl(SN)
-             TFMT = "("//SN(1:LENTRIM(SN))//"("//Fmt(1:LENTRIM(Fmt))//"))"
+             call LENTRIM(SN,tempLen_SN)
+             TFMT = "("//SN(1:tempLen_SN)//"("//Fmt(1:tempLen_Fmt)//"))"
              write(Str,fmt=TFMT) pDat%DDATA2(Row,:)
           end if
 

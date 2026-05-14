@@ -305,6 +305,7 @@ module MCLIB_UTILITIES_FORMER
     character*1000::truePath
     !---Local Vars---
     logical::exits
+    integer::tempLen
     !---Body---
     exits = .false.
 
@@ -312,7 +313,8 @@ module MCLIB_UTILITIES_FORMER
     INQUIRE(FILE=truePath,EXIST=exits)
 
     if(present(parentPath) .AND. .not. exits) then
-        if(LENTRIM(adjustl(parentPath)) .LE. 0) then
+        call LENTRIM(adjustl(parentPath),tempLen)
+        if(tempLen .LE. 0) then
             truePath = adjustl(trim(fileName))
         else
             truePath = adjustl(trim(parentPath))//FolderSpe//adjustl(trim(fileName))
@@ -406,7 +408,7 @@ module MCLIB_UTILITIES_FORMER
     end do
 
     FC = adjustl(FC)
-    FilterLen = LENTRIM(FC)
+    call LENTRIM(FC,FilterLen)
 
     FilterIndex = INDEX(STR,FC(1:FilterLen),back=.false.)
 
@@ -449,7 +451,7 @@ module MCLIB_UTILITIES_FORMER
         return
     end if
 
-    Length = LENTRIM(adjustl(STR))
+    call LENTRIM(adjustl(STR),Length)
 
     segNumber = 0
     IPosBefore = 1
@@ -512,7 +514,7 @@ module MCLIB_UTILITIES_FORMER
 
     tempLongName = adjustl(trim(FileLongName))
 
-    Length = LENTRIM(tempLongName)
+    call LENTRIM(tempLongName,Length)
     if(Length .LE. 0) then
         return
     end if
@@ -547,6 +549,8 @@ module MCLIB_UTILITIES_FORMER
     character(len=128),dimension(10)::seperatedStrsArray
     integer::seperatedNum
     integer::I
+    integer::tempLen_ExePrefixName
+    integer::tempLen_seperatedStrsArray
     !---Body---
 
     seperatedStrsArray = ''
@@ -556,7 +560,9 @@ module MCLIB_UTILITIES_FORMER
     ExePrefixName = ''
 
     DO I = 1,seperatedNum
-        ExePrefixName = ExePrefixName(1:LENTRIM(adjustl(ExePrefixName)))//seperatedStrsArray(I)(1:LENTRIM(adjustl(seperatedStrsArray(I))))
+        call LENTRIM(adjustl(ExePrefixName),tempLen_ExePrefixName)
+        call LENTRIM(adjustl(seperatedStrsArray(I)),tempLen_seperatedStrsArray)
+        ExePrefixName = ExePrefixName(1:tempLen_ExePrefixName)//seperatedStrsArray(I)(1:tempLen_seperatedStrsArray)
     END DO
 
     return
@@ -572,11 +578,13 @@ module MCLIB_UTILITIES_FORMER
     !---Local Vars---
     integer::ISTAT
     character*1000::openInfo
+    integer::tempLen
     !---Body---
     call AvailableIOUnit(fileUnit)
 
     if(present(thePosition)) then
-        open(Unit=fileUnit,File=fileName,STATUS="old",POSITION=thePosition(1:LENTRIM(thePosition)),iostat=ISTAT,IOMSG=openInfo)
+        call LENTRIM(thePosition,tempLen)
+        open(Unit=fileUnit,File=fileName,STATUS="old",POSITION=thePosition(1:tempLen),iostat=ISTAT,IOMSG=openInfo)
     else
         open(Unit=fileUnit,File=fileName,STATUS="old",iostat=ISTAT,IOMSG=openInfo)
     end if
@@ -602,11 +610,13 @@ module MCLIB_UTILITIES_FORMER
     !---Local Vars---
     integer::ISTAT
     character*1000::openInfo
+    integer::tempLen
     !---Body---
     call AvailableIOUnit(fileUnit)
 
     if(present(thePosition)) then
-        open(Unit=fileUnit,File=fileName,STATUS="replace",POSITION=thePosition(1:LENTRIM(thePosition)),iostat=ISTAT,IOMSG=openInfo)
+        call LENTRIM(thePosition,tempLen)
+        open(Unit=fileUnit,File=fileName,STATUS="replace",POSITION=thePosition(1:tempLen),iostat=ISTAT,IOMSG=openInfo)
     else
         open(Unit=fileUnit,File=fileName,STATUS="replace",iostat=ISTAT,IOMSG=openInfo)
     end if
@@ -633,25 +643,26 @@ module MCLIB_UTILITIES_FORMER
     integer::ISTAT
     character*1000::openInfo
     logical::exits
+    integer::tempLen
     !---Body---
     exits = .false.
-
-    INQUIRE(FILE=fileName(1:LENTRIM(adjustl(fileName))),EXIST=exits)
+    call LENTRIM(adjustl(fileName),tempLen)
+    INQUIRE(FILE=fileName(1:tempLen),EXIST=exits)
 
     call AvailableIOUnit(fileUnit)
 
     if(exits) then
 
         if(present(thePosition)) then
-            fileUnit = OpenExistedFile(fileName(1:LENTRIM(fileName)),thePosition)
+            fileUnit = OpenExistedFile(fileName(1:tempLen),thePosition)
         else
-            fileUnit = OpenExistedFile(fileName(1:LENTRIM(fileName)))
+            fileUnit = OpenExistedFile(fileName(1:tempLen))
         end if
     else
         if(present(thePosition)) then
-            fileUnit = CreateNewFile(fileName(1:LENTRIM(fileName)),thePosition)
+            fileUnit = CreateNewFile(fileName(1:tempLen),thePosition)
         else
-            fileUnit = CreateNewFile(fileName(1:LENTRIM(fileName)))
+            fileUnit = CreateNewFile(fileName(1:tempLen))
         end if
 
     end if
@@ -744,7 +755,7 @@ module MCLIB_UTILITIES_FORMER
 
     TempPath = adjustl(trim(ThePath))
 
-    Length = LENTRIM(TempPath)
+    call LENTRIM(TempPath,Length)
 
     #ifdef CYGWIN
     if(Length .GE. 2) then
@@ -785,13 +796,14 @@ module MCLIB_UTILITIES_FORMER
     character*1000::STR
     integer::LINE
     character*1000::tempPath
+    integer::tempLen
     !---Body---
 
     call TheFilesPath%Clean_STRList()
 
     tempTheFolder = adjustl(trim(TheFolder))
 
-    length = LENTRIM(tempTheFolder)
+    call LENTRIM(tempTheFolder,length)
 
     if(length .LE. 0) then
         tempfile = "filelist.temp"
@@ -816,7 +828,8 @@ module MCLIB_UTILITIES_FORMER
     hFile = OpenExistedFile(adjustl(trim(tempfile)))
 
     Do While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
-        if(LENTRIM(STR) .GT. 0) then
+        call LENTRIM(STR,tempLen)
+        if(tempLen .GT. 0) then
             tempPath = INQUIREFILE(adjustl(trim(TheFolder))//FolderSpe//adjustl(trim(STR)))
 
             call TheFilesPath%AppendOne_STRList(adjustl(trim(tempPath)))
@@ -843,7 +856,7 @@ module MCLIB_UTILITIES_FORMER
 
     resultPath = adjustl(trim(distPath))
 
-    Length = LENTRIM(resultPath)
+    call LENTRIM(resultPath,Length)
 
     if(Length .GE. 2) then
         if(resultPath(2:2) .eq. ":") then

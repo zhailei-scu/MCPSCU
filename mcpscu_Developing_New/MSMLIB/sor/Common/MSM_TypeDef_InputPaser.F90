@@ -90,36 +90,40 @@
   !
   !     OUTPUT     To,    the statmentlist copy into
   implicit none
-     !--- dummy varioables
-     type(StatementList), intent(in), pointer ::From
-     type(StatementList),             pointer ::To
-     character*(*), intent(in),       optional::EndKWD
-     !----
-     character*1000::tSTR
-     character*64 ::tWord
+      !--- dummy varioables
+      type(StatementList), intent(in), pointer ::From
+      type(StatementList),             pointer ::To
+      character*(*), intent(in),       optional::EndKWD
+      !----
+      character*1000::tSTR
+      character*64 ::tWord
+      integer::tempLen_tWord
+      integer::tempLen_EndKWD
 
      !----
-              call Release_StatementList(To)
-              if(.not.associated(From)) then
-                 return
-              end if
-              allocate(To)
-              To%line =  From%line
-              To%this =  From%this
-              To%next => null()
-              if(present(EndKWD)) then
-                 tSTR = adjustl(To%this)
-                 call GetKeyWord("&", tSTR, tWord)
-                 call UpCase(tWord)
-                 if(tWord(1:LENTRIM(tWord)) .eq. EndKWD(1:LENTRIM(EndKWD)) ) then
-                    return
-                 end if
-                 call Copy_StatementList(From%next, To%next, EndKWD)
-              else
-                 call Copy_StatementList(From%next, To%next)
-              end if
+      call Release_StatementList(To)
+      if(.not.associated(From)) then
+         return
+      end if
+      allocate(To)
+      To%line =  From%line
+      To%this =  From%this
+      To%next => null()
+      if(present(EndKWD)) then
+         tSTR = adjustl(To%this)
+         call GetKeyWord("&", tSTR, tWord)
+         call UpCase(tWord)
+         call LENTRIM(tWord,tempLen_tWord)
+         call LENTRIM(EndKWD,tempLen_EndKWD)
+         if(tWord(1:tempLen_tWord) .eq. EndKWD(1:tempLen_EndKWD) ) then
+            return
+         end if
+         call Copy_StatementList(From%next, To%next, EndKWD)
+      else
+         call Copy_StatementList(From%next, To%next)
+      end if
 
-              return
+      return
   end subroutine Copy_StatementList
 !****************************************************************************
 
@@ -160,19 +164,21 @@
   !
   !     OUTPUT     Statements
   !
-  implicit none
-     !--- dummy varioables
-     integer, intent(in)::hFile
-     type(StatementList),pointer::Statements
+      implicit none
+      !--- dummy varioables
+      integer, intent(in)::hFile
+      type(StatementList),pointer::Statements
+      !----Local Vars--
+      integer::tempLen
 
-     !----
-              if(.not.associated(Statements)) then
-                 return
-              end if
-
-              write(hFile, fmt="(I8,1X,A)") Statements%line, Statements%this(1:LENTRIM(Statements%this))
-              call Write_StatementList(hFile, Statements%next)
-              return
+      if(.not.associated(Statements)) then
+         return
+      end if
+      
+      call LENTRIM(Statements%this,tempLen)
+      write(hFile, fmt="(I8,1X,A)") Statements%line, Statements%this(1:tempLen)
+      call Write_StatementList(hFile, Statements%next)
+      return
   end subroutine Write_StatementList
  !****************************************************************************
 
@@ -219,6 +225,8 @@
      !----
      character*64::tWord
      character*1000::tSTR
+     integer::tempLen_tWord
+     integer::tempLen_keyword
 
               if(.not. associated(Statements)) then
                  LINE = 0
@@ -230,7 +238,9 @@
               tSTR = adjustl(Statements%this)
               call GetKeyWord("&", tSTR, tWord)
               call UpCase(tWord)
-              if(tWord(1:LENTRIM(tWord)) .eq. keyword(1:LENTRIM(keyword)) ) then
+              call LENTRIM(tWord,tempLen_tWord)
+              call LENTRIM(keyword,tempLen_keyword)
+              if(tWord(1:tempLen_tWord) .eq. keyword(1:tempLen_keyword) ) then
                  STR  = adjustl(tSTR)
                  LINE = Statements%line
                  if(present(SPtr)) SPtr=>Statements
@@ -342,6 +352,8 @@
      !----
      character*64::tWord
      character*1000::tSTR
+     integer::tempLen_tWord
+     integer::tempLen_keyword
 
               SPtr=>null()
               if(.not. associated(Statements)) then
@@ -351,7 +363,9 @@
               tSTR = adjustl(Statements%this)
               call GetKeyWord("&", tSTR, tWord)
               call UpCase(tWord)
-              if(tWord(1:LENTRIM(tWord)) .eq. keyword(1:LENTRIM(keyword)) ) then
+              call LENTRIM(tWord,tempLen_tWord)
+              call LENTRIM(keyword,tempLen_keyword)
+              if(tWord(1:tempLen_tWord) .eq. keyword(1:tempLen_keyword) ) then
                  SPtr=>Statements
                  return
               else
@@ -412,6 +426,8 @@
      !----
      character*64::tWord
      character*1000::tSTR
+     integer::tempLen_tWord
+     integer::tempLen_keyword
 
               if(.not. associated(Statements)) then
                  res = .false.
@@ -421,7 +437,9 @@
               tSTR = adjustl(Statements%this)
               call GetKeyWord("&", tSTR, tWord)
               call UpCase(tWord)
-              if(tWord(1:LENTRIM(tWord)) .eq. keyword(1:LENTRIM(keyword)) ) then
+              call LENTRIM(tWord,tempLen_tWord)
+              call LENTRIM(keyword,tempLen_keyword)
+              if(tWord(1:tempLen_tWord) .eq. keyword(1:tempLen_keyword) ) then
                  res = .true.
                  return
               else
@@ -473,6 +491,7 @@
      !---- local variables
      integer::LINE, hFile
      character*1000::STR
+     integer::tempLen
 
 
               Inputs%filename = fname
@@ -493,7 +512,8 @@
               close(hFile)
               return
 
-    200     write(*,fmt="(A)") "MDPSCU Error: fail to open file "//fname(1:LENTRIM(fname))
+    200     call LENTRIM(fname,tempLen)
+            write(*,fmt="(A)") "MDPSCU Error: fail to open file "//fname(1:tempLen)
             write(*,fmt="(A)") "Process to be stopped"
             stop
             return

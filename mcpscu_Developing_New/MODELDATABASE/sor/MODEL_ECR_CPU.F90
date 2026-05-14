@@ -181,6 +181,7 @@ module MODEL_ECR_CPU
         integer::N
         integer::I
         integer::hFile
+        integer::tempLen
         !---Body---
         hFile = 6
 
@@ -191,7 +192,8 @@ module MODEL_ECR_CPU
 
         KEYWORD = "&SURFE"
         call UPCASE(KEYWORD)
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), MODELData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        call Get_StatementList(KEYWORD(1:tempLen), MODELData, STR, LINE)
         call EXTRACT_NUMB(STR,1,N,STRTEMP)
         if(N .LT. 1) then
             write(*,*) "MCPSCUERROR: Too few parameters for surface energy at line: ",LINE
@@ -204,7 +206,8 @@ module MODEL_ECR_CPU
 
         KEYWORD = "&BiasFactor"
         call UPCASE(KEYWORD)
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), MODELData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        call Get_StatementList(KEYWORD(1:tempLen), MODELData, STR, LINE)
         call EXTRACT_NUMB(STR,1,N,STRTEMP)
         if(N .LT. 1) then
             write(*,*) "MCPSCUERROR: Too few parameters for BiasFactor at line: ",LINE
@@ -217,7 +220,8 @@ module MODEL_ECR_CPU
 
         KEYWORD = "&Corrections"
         call UPCASE(KEYWORD)
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), MODELData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        call Get_StatementList(KEYWORD(1:tempLen), MODELData, STR, LINE)
         call EXTRACT_NUMB(STR,1,N,STRTEMP)
         if(N .LT. 1) then
             write(*,*) "MCPSCUERROR: Too few parameters for Corrections at line: ",LINE
@@ -230,7 +234,8 @@ module MODEL_ECR_CPU
 
         KEYWORD = "&R0"
         call UPCASE(KEYWORD)
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), MODELData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        call Get_StatementList(KEYWORD(1:tempLen), MODELData, STR, LINE)
         call EXTRACT_NUMB(STR,1,N,STRTEMP)
         if(N .LT. 1) then
             write(*,*) "MCPSCUERROR: Too few parameters for R0 at line: ",LINE
@@ -243,7 +248,8 @@ module MODEL_ECR_CPU
 
         KEYWORD = "&R1"
         call UPCASE(KEYWORD)
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), MODELData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        call Get_StatementList(KEYWORD(1:tempLen), MODELData, STR, LINE)
         call EXTRACT_NUMB(STR,1,N,STRTEMP)
         if(N .LT. 1) then
             write(*,*) "MCPSCUERROR: Too few parameters for R1 at line: ",LINE

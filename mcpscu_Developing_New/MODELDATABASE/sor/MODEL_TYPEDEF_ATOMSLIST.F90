@@ -240,6 +240,7 @@ module MODEL_TYPEDEF_ATOMSLIST
         type(AtomsList),pointer::cursor=>null()
         integer::tempIndex
         character*1000::tempSymbol
+        integer::tempLen
         !---Body---
         TheIndex = 0
 
@@ -248,8 +249,8 @@ module MODEL_TYPEDEF_ATOMSLIST
         cursor=>this
 
         tempSymbol = ""
-
-        tempSymbol(1:LENTRIM(Symbol)) = Symbol(1:LENTRIM(Symbol))
+        call LENTRIM(Symbol,tempLen)
+        tempSymbol(1:tempLen) = Symbol(1:tempLen)
 
         call UPCASE(tempSymbol)
 
