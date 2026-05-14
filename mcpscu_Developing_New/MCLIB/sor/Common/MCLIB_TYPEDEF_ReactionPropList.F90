@@ -670,6 +670,10 @@ module MCLIB_TYPEDEF_ReactionPropList
         character*32::CElements
         integer::IAtomsGroup
         integer::I
+        integer::tempLen_SubjectSymbol
+        integer::tempLen_ObjectSymbol
+        integer::tempLen_CElements
+        integer::tempLen_CNum
         !---Body---
         cursor=>this
 
@@ -758,15 +762,23 @@ module MCLIB_TYPEDEF_ReactionPropList
                             CElements = adjustl(CElements)
                             write(CNum,*) SubjectClusterListCursor%TheCluster%m_Atoms(IAtomsGroup)%m_NA
                             CNum = adjustl(CNum)
-                            SubjectSymbol = SubjectSymbol(1:LENTRIM(SubjectSymbol))//CElements(1:LENTRIM(CElements))//"#"//CNum(1:LENTRIM(CNum))
+                            call LENTRIM(SubjectSymbol,tempLen_SubjectSymbol)
+                            call LENTRIM(CElements,tempLen_CElements)
+                            call LENTRIM(CNum,tempLen_CNum)
+                            SubjectSymbol = SubjectSymbol(1:tempLen_SubjectSymbol)//CElements(1:tempLen_CElements)//"#"//CNum(1:tempLen_CNum)
 
                             write(CNum,*) ObjectClusterListCursor%TheCluster%m_Atoms(IAtomsGroup)%m_NA
                             CNum = adjustl(CNum)
-                            ObjectSymbol = ObjectSymbol(1:LENTRIM(ObjectSymbol))//CElements(1:LENTRIM(CElements))//"#"//CNum(1:LENTRIM(CNum))
+                            call LENTRIM(SubjectSymbol,tempLen_ObjectSymbol)
+                            call LENTRIM(CElements,tempLen_CElements)
+                            call LENTRIM(CNum,tempLen_CNum)
+                            ObjectSymbol = ObjectSymbol(1:tempLen_ObjectSymbol)//CElements(1:tempLen_CElements)//"#"//CNum(1:tempLen_CNum)
 
+                            call LENTRIM(SubjectSymbol,tempLen_SubjectSymbol)
+                            call LENTRIM(SubjectSymbol,tempLen_ObjectSymbol)
                             if(IAtomsGroup .LT. p_ATOMS_GROUPS_NUMBER) then
-                                SubjectSymbol = SubjectSymbol(1:LENTRIM(SubjectSymbol))//"@"
-                                ObjectSymbol = ObjectSymbol(1:LENTRIM(ObjectSymbol))//"@"
+                                SubjectSymbol = SubjectSymbol(1:tempLen_SubjectSymbol)//"@"
+                                ObjectSymbol = ObjectSymbol(1:tempLen_ObjectSymbol)//"@"
                             end if
                         END DO
 

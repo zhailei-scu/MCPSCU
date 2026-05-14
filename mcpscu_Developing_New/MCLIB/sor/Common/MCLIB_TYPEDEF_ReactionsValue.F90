@@ -165,6 +165,7 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
         CLASS(ReadReactionPair),intent(in)::this
         type(AtomsList),intent(in)::TheAtomsList
         type(ReactionValue),intent(out)::TheReactionValue
+        integer::tempLen
         !---Body---
 
         TheReactionValue%ReactionCoefficientType = this%ReactionCoefficientType
@@ -177,11 +178,13 @@ module MCLIB_TYPEDEF_REACTIONSVALUE
 
         TheReactionValue%ProductionType = this%ProductionType
 
-        if(LENTRIM(adjustl(this%Element_Subject)) .GT. 0) then
+        call LENTRIM(adjustl(this%Element_Subject),tempLen)
+        if(tempLen .GT. 0) then
             TheReactionValue%ElemetIndex_Subject = TheAtomsList%FindIndexBySymbol(this%Element_Subject)
         end if
 
-        if(LENTRIM(adjustl(this%Element_Object)) .GT. 0) then
+        call LENTRIM(adjustl(this%Element_Object),tempLen)
+        if(tempLen .GT. 0) then
             TheReactionValue%ElemetIndex_Object = TheAtomsList%FindIndexBySymbol(this%Element_Object)
         end if
 

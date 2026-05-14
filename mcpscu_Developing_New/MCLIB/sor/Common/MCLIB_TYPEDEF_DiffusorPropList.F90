@@ -608,6 +608,9 @@ module MCLIB_TYPEDEF_DiffusorPropList
         character*32::CElements
         integer::IAtomsGroup
         integer::I
+        integer::tempLen_symbol
+        integer::tempLen_CElements
+        integer::tempLen_CNum
         !---Body---
         cursor=>this
 
@@ -701,10 +704,14 @@ module MCLIB_TYPEDEF_DiffusorPropList
                         CElements = adjustl(CElements)
                         write(CNum,*) ClusterListCursor%TheCluster%m_Atoms(IAtomsGroup)%m_NA
                         CNum = adjustl(CNum)
-                        symbol = symbol(1:LENTRIM(symbol))//CElements(1:LENTRIM(CElements))//"#"//CNum(1:LENTRIM(CNum))
+                        call LENTRIM(symbol,tempLen_symbol)
+                        call LENTRIM(CElements,tempLen_CElements)
+                        call LENTRIM(CNum,tempLen_CNum)
+                        symbol = symbol(1:tempLen_symbol)//CElements(1:tempLen_CElements)//"#"//CNum(1:tempLen_CNum)
 
+                        call LENTRIM(symbol,tempLen_symbol)
                         if(IAtomsGroup .LT. p_ATOMS_GROUPS_NUMBER) then
-                            symbol = symbol(1:LENTRIM(symbol))//"@"
+                            symbol = symbol(1:tempLen_symbol)//"@"
                         end if
                     END DO
 
