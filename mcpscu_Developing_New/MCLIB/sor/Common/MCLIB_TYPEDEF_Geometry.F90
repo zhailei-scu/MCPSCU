@@ -458,6 +458,7 @@ module MCLIB_TYPEDEF_GEOMETRY
         integer::N
         character*20::STRTMP(10)
         integer::I
+        integer::tempLen
         !---Body---
 
         LINE = 0
@@ -472,8 +473,8 @@ module MCLIB_TYPEDEF_GEOMETRY
 
         DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!") )
             call RemoveComments(STR,"!")
-
-            if(LENTRIM(adjustl(STR)) .LE. 0) then
+            call LENTRIM(adjustl(STR),tempLen)
+            if(tempLen .LE. 0) then
                 cycle
             end if
 
@@ -496,8 +497,8 @@ module MCLIB_TYPEDEF_GEOMETRY
 
         DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!") )
             call RemoveComments(STR,"!")
-
-            if(LENTRIM(adjustl(STR)) .LE. 0) then
+            call LENTRIM(adjustl(STR),tempLen)
+            if(tempLen .LE. 0) then
                 cycle
             end if
 

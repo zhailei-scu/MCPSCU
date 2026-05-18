@@ -204,6 +204,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*32::KEYWORD
     type(SimulationCtrlParamList),pointer::cursor=>null()
     type(SimulationCtrlParam)::tempCtrlParam
+    integer::tempLen
     !---Body---
 
     call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
@@ -211,8 +212,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     STR = adjustl(STR)
     call GETKEYWORD("&", STR, KEYWORD)
     call UPCASE(KEYWORD)
-    if(KEYWORD(1:LENTRIM(KEYWORD)) .ne. m_CTLSTARTFLAG) then
-      write(*,*) "MCPSCUERROR: The Start Flag of simulation Control Parameters is Illegal: ",KEYWORD(1:LENTRIM(KEYWORD))
+    call LENTRIM(KEYWORD,tempLen)
+    if(KEYWORD(1:tempLen) .ne. m_CTLSTARTFLAG) then
+      write(*,*) "MCPSCUERROR: The Start Flag of simulation Control Parameters is Illegal: ",KEYWORD(1:tempLen)
       pause
       stop
     end if
@@ -224,7 +226,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDCTLF")
           exit
 
@@ -272,7 +275,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             call this%AppendOne_SimulationCtrlParam(tempCtrlParam)
 
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen)
           write(*,*) "Please Check Control File at Line: ",LINE
           pause
           stop
@@ -300,6 +304,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*1000::ConfigContent
     character*1000::CFormat
     character*1000::CNUM
+    integer::tempLen
     !---Body---
 
     write(hFile,*) "!****************Control file information***********************"
@@ -335,8 +340,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         if(allocated(cursor%theSimulationCtrlParam%ImplantSectIDs)) then
             if(size(cursor%theSimulationCtrlParam%ImplantSectIDs) .GT. 0) then
                 write(CNUM,*) size(cursor%theSimulationCtrlParam%ImplantSectIDs)
-                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(I18,2x))"
-                write(hFile,fmt=CFormat(1:LENTRIM(CFormat)))  "The Implant sections index is : ", cursor%theSimulationCtrlParam%ImplantSectIDs
+                call LENTRIM(CNUM,tempLen)
+                CFormat = "('!',A70,'!',2x,"//CNUM(1:tempLen)//"(I18,2x))"
+                call LENTRIM(CFormat,tempLen)
+                write(hFile,fmt=CFormat(1:tempLen))  "The Implant sections index is : ", cursor%theSimulationCtrlParam%ImplantSectIDs
             end if
 
         end if
@@ -351,8 +358,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             if(size(cursor%theSimulationCtrlParam%FocusedTimePoints) .GT. 0) then
                 write(CNUM,*) size(cursor%theSimulationCtrlParam%FocusedTimePoints)
                 CFormat = ""
-                CFormat = "('!',A70,'!',2x,"//CNUM(1:LENTRIM(CNUM))//"(1PE18.10,2x))"
-                write(hFile,fmt=CFormat(1:LENTRIM(CFormat)))  "The focused time-points are : ", cursor%theSimulationCtrlParam%FocusedTimePoints
+                call LENTRIM(CNUM,tempLen)
+                CFormat = "('!',A70,'!',2x,"//CNUM(1:tempLen)//"(1PE18.10,2x))"
+                call LENTRIM(CFormat,tempLen)
+                write(hFile,fmt=CFormat(1:tempLen))  "The focused time-points are : ", cursor%theSimulationCtrlParam%FocusedTimePoints
             end if
         end if
 
@@ -1083,6 +1092,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer::N
     integer::I
     integer::LINE
+    integer::tempLen
     !---Body---
 
     DO While(.TRUE.)
@@ -1091,8 +1101,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
       STR = adjustl(STR)
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
-
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDSUBCTL")
           exit
         case("&BOX")
@@ -1137,7 +1147,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             END DO
 
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD)),LINE
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen),LINE
           write(*,*) "Please Check Control File at Line: ",LINE
           pause
           stop
@@ -1162,6 +1173,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer::N
     integer::I
     integer::LINE
+    integer::tempLen
     !---Body---
 
     DO While(.TRUE.)
@@ -1171,7 +1183,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDSUBCTL")
           exit
         case("&JOBSEL")
@@ -1236,7 +1249,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
 
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD)),LINE
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen),LINE
           write(*,*) "Please Check Control File at Line: ",LINE
           pause
           stop
@@ -1258,6 +1272,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*1000::STR
     integer::LINE
     character*32::KEYWORD
+    integer::tempLen
     !---Body---
 
     DO while(.true.)
@@ -1267,7 +1282,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         call GETKEYWORD("&", STR, KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case default
                 write(*,*) "MCPSCUERROR: Illegl symbol : ",KEYWORD,LINE
                 pause
@@ -1310,6 +1326,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
+    integer::tempLen
 
     DO While(.TRUE.)
       call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
@@ -1318,7 +1335,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDSUBCTL")
           exit
         case("&TEMPERATURE")
@@ -1343,7 +1361,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
            end if
 
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen)
           write(*,*) "Please Check Control File at Line: ",LINE
           pause
           stop
@@ -1367,6 +1386,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
+    integer::tempLen
     !---Body---
     DO while(.true.)
         call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -1375,7 +1395,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case default
                 write(*,*) "MCPSCUERROR: Illegl flag: ",KEYWORD,LINE
                 pause
@@ -1415,6 +1436,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
+    integer::tempLen
 
     DO While(.TRUE.)
       call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
@@ -1423,7 +1445,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDSUBCTL")
           exit
         case("&STRATEGY")
@@ -1510,7 +1533,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             end if
 
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen)
           write(*,*) "Please Check Control File at Line: ",LINE
           pause
           stop
@@ -1534,6 +1558,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
+    integer::tempLen
 
     DO While(.TRUE.)
       call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
@@ -1542,7 +1567,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDSUBCTL")
           exit
         case("&SWEEPOUT")
@@ -1560,9 +1586,10 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
             call UPCASE(STRNUMB(1))
 
-            if(IsStrEqual(STRNUMB(1)(1:LENTRIM(STRNUMB(1))),"TRUE")) then
+            call LENTRIM(STRNUMB(1),tempLen)
+            if(IsStrEqual(STRNUMB(1)(1:tempLen),"TRUE")) then
                 this%SweepOutMemory = .true.
-            else if(IsStrEqual(STRNUMB(1)(1:LENTRIM(STRNUMB(1))),"FALSE")) then
+            else if(IsStrEqual(STRNUMB(1)(1:tempLen),"FALSE")) then
                 this%SweepOutMemory = .false.
             else
                 write(*,*) "MCPSCUERROR: You must special true or false for whether sweep out memory"
@@ -1609,7 +1636,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             end select
 
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen)
           write(*,*) "Please Check Control File at Line: ",LINE
           pause
           stop
@@ -1634,6 +1662,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer::LINE
     integer::N
     integer::I
+    integer::tempLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -1642,7 +1671,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&IMPLANTID")
@@ -1687,6 +1717,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*32::OneContent
     logical::Finded
     integer::theFlag
+    integer::tempLen
     !---Body---
 
 
@@ -1697,7 +1728,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDSUBCTL")
           exit
         case("&TERMINATE")
@@ -2084,7 +2116,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
            end if
 
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen)
           write(*,*) "Please Check Control File at Line: ",LINE
           pause
           stop
@@ -2107,6 +2140,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer::N
     character*1000::STR
     character*32::KEYWORD
+    integer::tempLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
@@ -2115,7 +2149,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         call GETKEYWORD("&", STR, KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case default
@@ -2140,6 +2175,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     integer::N
     character*1000::STR
     character*32::KEYWORD
+    integer::tempLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
@@ -2148,7 +2184,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
         call GETKEYWORD("&", STR, KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case default
