@@ -479,6 +479,7 @@ module MCLIB_TYPEDEF_ReactionPropList
         type(ReadReactionPair)::newOne
         !---Local Vars---
         type(ReadReactionPropList),pointer::cursor=>null(),cursorP=>null()
+        logical::iseuqal(2)
         !---Body---
         cursorP=>this
         if(.not. associated(cursorP)) then
@@ -493,13 +494,17 @@ module MCLIB_TYPEDEF_ReactionPropList
         else
             cursor=>this%next
             cursorP=>this
-            if(ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol) .AND. ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol)) then
+            call ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol,iseuqal(1))
+            call ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol,iseuqal(2))
+            if(iseuqal(1) .AND. iseuqal(2)) then
                 write(*,*) "MCPSCUERROR: The Reaction is dumplicated: Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                 pause
                 stop
             end if
 
-            if(ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol) .AND. ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol)) then
+            call ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol,iseuqal(1))
+            call ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol,iseuqal(2))
+            if(iseuqal(1) .AND. iseuqal(2)) then
                 write(*,*) "MCPSCUERROR: The Reaction is dumplicated for pairs Subject : ",cursorP%Reaction%SubjectSymbol," object: ",cursorP%Reaction%ObjectSymbol
                 write(*,*) "and : Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                 pause
@@ -510,13 +515,17 @@ module MCLIB_TYPEDEF_ReactionPropList
                 cursor=>cursor%next
                 cursorP=>cursorP%next
 
-                if(ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol) .AND. ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol)) then
+                call ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%SubjectSymbol,iseuqal(1))
+                call ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%ObjectSymbol,iseuqal(2))
+                if(iseuqal(1) .AND. iseuqal(2)) then
                     write(*,*) "MCPSCUERROR: The Reaction is dumplicated: Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                     pause
                     stop
                 end if
 
-                if(ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol) .AND. ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol)) then
+                call ISSTREQUAL(cursorP%Reaction%SubjectSymbol,newOne%ObjectSymbol,iseuqal(1))
+                call ISSTREQUAL(cursorP%Reaction%ObjectSymbol,newOne%SubjectSymbol,iseuqal(2))
+                if(iseuqal(1) .AND. iseuqal(2)) then
                     write(*,*) "MCPSCUERROR: The Reaction is dumplicated for pairs Subject : ",cursorP%Reaction%SubjectSymbol," object: ",cursorP%Reaction%ObjectSymbol
                     write(*,*) "and : Subject: ",newOne%SubjectSymbol," object: ",newOne%ObjectSymbol
                     pause

@@ -434,6 +434,7 @@ module MCLIB_TYPEDEF_DiffusorPropList
         type(ReadedDiffusorValue)::newOne
         !---Local Vars---
         type(ReadDiffusorPropList),pointer::cursor=>null(),cursorP=>null()
+        logical::iseuqal
         !---Body---
         cursorP=>this
         if(.not. associated(cursorP)) then
@@ -448,7 +449,8 @@ module MCLIB_TYPEDEF_DiffusorPropList
         else
             cursor=>this%next
             cursorP=>this
-            if(ISSTREQUAL(cursorP%Diffusor%symbol,newOne%symbol)) then
+            call ISSTREQUAL(cursorP%Diffusor%symbol,newOne%symbol,iseuqal)
+            if(iseuqal) then
                 write(*,*) "MCPSCUERROR: The Diffusor is dumplicated:",newOne%symbol
                 pause
                 stop
@@ -458,7 +460,8 @@ module MCLIB_TYPEDEF_DiffusorPropList
                 cursor=>cursor%next
                 cursorP=>cursorP%next
 
-                if(ISSTREQUAL(cursorP%Diffusor%symbol,newOne%symbol)) then
+                call ISSTREQUAL(cursorP%Diffusor%symbol,newOne%symbol,iseuqal)
+                if(iseuqal) then
                     write(*,*) "MCPSCUERROR: The Diffusor is dumplicated:",newOne%symbol
                     pause
                     stop

@@ -86,6 +86,7 @@ module MCLIB_UTILITIES
         integer::I
         integer::minVal
         integer::maxVal
+        logical::iseuqal(2)
         !---Body---
 
         ElementsStrs = ''
@@ -158,10 +159,12 @@ module MCLIB_UTILITIES
                 pause
                 stop
             else if(SepNum .eq. 2) then
-                if(ISSTREQUAL(NumRangeStr(2),p_InfStr)) then
+                call ISSTREQUAL(NumRangeStr(2),p_InfStr,iseuqal(2))
+                call ISSTREQUAL(NumRangeStr(1),p_InfStr,iseuqal(1))
+                if(iseuqal(2)) then
                     TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
                     call ISTR(NumRangeStr(1),TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From)
-                else if(ISSTREQUAL(NumRangeStr(1),p_InfStr)) then
+                else if(iseuqal(1)) then
                     TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_To = 1.D32
                     call ISTR(NumRangeStr(2),TheAtomsSetRange%m_SetsRange(ElementIndex)%m_NA_From)
                 else

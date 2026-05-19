@@ -1559,6 +1559,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     character*32::KEYWORD
     character*32::STRNUMB(10)
     integer::tempLen
+    logical::iseuqal(2)
 
     DO While(.TRUE.)
       call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
@@ -1587,9 +1588,11 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
             call UPCASE(STRNUMB(1))
 
             call LENTRIM(STRNUMB(1),tempLen)
-            if(IsStrEqual(STRNUMB(1)(1:tempLen),"TRUE")) then
+            call IsStrEqual(STRNUMB(1)(1:tempLen),"TRUE",iseuqal(1))
+            call IsStrEqual(STRNUMB(1)(1:tempLen),"FALSE",iseuqal(2))
+            if(iseuqal(1)) then
                 this%SweepOutMemory = .true.
-            else if(IsStrEqual(STRNUMB(1)(1:tempLen),"FALSE")) then
+            else if(iseuqal(2)) then
                 this%SweepOutMemory = .false.
             else
                 write(*,*) "MCPSCUERROR: You must special true or false for whether sweep out memory"
@@ -1718,6 +1721,7 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
     logical::Finded
     integer::theFlag
     integer::tempLen
+    logical::isequal
     !---Body---
 
 
@@ -1990,7 +1994,8 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
                 call UPCASE(OneContent)
 
                 DO IStatu = 1,p_NUMBER_OF_STATU
-                    if(ISSTREQUAL(p_CStatu(IStatu),OneContent) .eq. .true. ) then
+                    call ISSTREQUAL(p_CStatu(IStatu),OneContent,isequal)
+                    if(isequal .eq. .true. ) then
                         Finded = .true.
                         this%OutPutConfContent(IStatu) = .true.
                         exit

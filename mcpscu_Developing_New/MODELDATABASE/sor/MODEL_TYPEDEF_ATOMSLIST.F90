@@ -129,6 +129,7 @@ module MODEL_TYPEDEF_ATOMSLIST
         !---Local Vars---
         type(AtomsList),pointer::cursor=>null()
         type(AtomsList),pointer::cursorP=>null()
+        logical::iseuqal
         !---Body---
         cursorP=>this
         if(.not. associated(cursorP)) then
@@ -146,14 +147,16 @@ module MODEL_TYPEDEF_ATOMSLIST
             cursorP=>this
             cursor=>this%next
 
-            if(ISSTREQUAL(cursorP%m_Atom%m_Symbol,newOne%m_Symbol)) then
+            call ISSTREQUAL(cursorP%m_Atom%m_Symbol,newOne%m_Symbol,iseuqal)
+            if(iseuqal) then
                 write(*,*) "MCPSCUERROR: The element symbol is redifined: ",newOne%m_Symbol
                 pause
                 stop
             end if
 
             DO While(associated(cursor))
-                if(ISSTREQUAL(cursor%m_Atom%m_Symbol,newOne%m_Symbol)) then
+                call ISSTREQUAL(cursor%m_Atom%m_Symbol,newOne%m_Symbol,iseuqal)
+                if(iseuqal) then
                     write(*,*) "MCPSCUERROR: The element symbol is redifined: ",newOne%m_Symbol
                     pause
                     stop
@@ -241,6 +244,7 @@ module MODEL_TYPEDEF_ATOMSLIST
         integer::tempIndex
         character*1000::tempSymbol
         integer::tempLen
+        logical::iseuqal
         !---Body---
         TheIndex = 0
 
@@ -255,8 +259,8 @@ module MODEL_TYPEDEF_ATOMSLIST
         call UPCASE(tempSymbol)
 
         DO While(associated(cursor))
-
-            if(ISSTREQUAL(tempSymbol,cursor%m_Atom%m_Symbol)) then
+            call ISSTREQUAL(tempSymbol,cursor%m_Atom%m_Symbol,iseuqal)
+            if(iseuqal) then
                 TheIndex = tempIndex
                 if(TheIndex .ne. cursor%m_Atom%m_ID) then
                     write(*,*) "MCPSCUERROR: The elements id is not stored correct: ",Symbol

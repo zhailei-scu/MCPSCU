@@ -253,6 +253,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::LINE
     character*1000::STR
     character*32::KEYWORD
+    integer::tempLen
     !---Body---
 
     call GETINPUTSTRLINE(hBoxFile,STR, LINE, "!", *100)
@@ -260,8 +261,10 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     STR = adjustl(STR)
     call GETKEYWORD("&", STR, KEYWORD)
     call UPCASE(KEYWORD)
-    if(KEYWORD(1:LENTRIM(KEYWORD)) .ne. m_BOXSTARTFLAG) then
-      write(*,*) "MCPSCUERROR: The Start Flag of simulation box Parameters is Illegal: ",KEYWORD(1:LENTRIM(KEYWORD))
+
+    call LENTRIM(KEYWORD,tempLen)
+    if(KEYWORD(1:tempLen) .ne. m_BOXSTARTFLAG) then
+      write(*,*) "MCPSCUERROR: The Start Flag of simulation box Parameters is Illegal: ",KEYWORD(1:tempLen)
       pause
       stop
     end if
@@ -273,7 +276,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDBOXF")
             exit
         case("&BOXSUBCTL")
@@ -285,7 +289,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         case("&GBSUBCTL")
           call this%Load_Box_GrainBoundary(hBoxFile,*100)
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen)
           write(*,*) "Please Check Box File at Line: ",LINE
           pause
           stop
@@ -419,6 +424,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*32::KEYWORD
     character*32::STRNUMB(10)
     real(kind=KINDDF)::BOXSIZE(3)
+    integer::tempLen
     !---Body---
 
     DO While(.TRUE.)
@@ -428,7 +434,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
         case("&ENDSUBCTL")
           exit
         case("&SIZE")
@@ -466,7 +473,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
            end if
 
         case default
-          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+          call LENTRIM(KEYWORD,tempLen)
+          write(*,*) "MCPSCU ERROR: The Illegal Flag: ",KEYWORD(1:tempLen)
           write(*,*) "Please Check box File at Line: ",LINE
           stop
       end select
@@ -501,6 +509,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::STR
     character*32::KEYWORD
     character*32::STRNUMB(10)
+    integer::tempLen
     !---Body---
 
     DO While(.true.)
@@ -510,13 +519,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&GROUPSUBCTL")
                 call this%Load_OneSecton_AtomDefine(hBoxFile,*100)
             case default
-                write(*,*) "MCPSCUERROR: The illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+                call LENTRIM(KEYWORD,tempLen)
+                write(*,*) "MCPSCUERROR: The illegal flag: ",KEYWORD(1:tempLen)
                 write(*,*) "Please check box file at Line: ",LINE
                 pause
                 stop
@@ -547,6 +558,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::N
     integer::LINE
     logical::isMatrixAtom
+    integer::tempLen
     !---Body---
 
     AtomNumb = 0
@@ -566,7 +578,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case ("&ENDSUBCTL")
                 exit
             case("&NATOM")
@@ -620,7 +633,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 isMatrixAtom = .true.
 
             case default
-                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+                call LENTRIM(KEYWORD,tempLen)
+                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:tempLen)
                 write(*,*) "At box file Line: ",LINE
                 pause
                 stop
@@ -656,6 +670,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::STR
     character*32::KEYWORD
     integer::LINE
+    integer::tempLen
     !---Body---
 
     DO While(.true.)
@@ -665,7 +680,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&DIFFUSORDEFSUBCTL")
@@ -700,6 +716,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     type(ReadDiffusorPropList),pointer::cursor=>null()
     integer::I
     real(kind=KINDDF)::VectorLen
+    integer::tempLen
     !---Body---
     allocate(this%ReadDiffusorProp_List)
 
@@ -709,7 +726,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         STR = adjustl(STR)
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
-        SELECT CASE(KEYWORD(1:LENTRIM(KEYWORD)))
+
+        call LENTRIM(KEYWORD,tempLen)
+        SELECT CASE(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&DIFFUSOR")
@@ -774,6 +793,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::N
     integer::I
     real(kind=KINDDF)::VectorLen
+    integer::tempLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
@@ -781,7 +801,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         STR = adjustl(STR)
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
-        SELECT CASE(KEYWORD(1:LENTRIM(KEYWORD)))
+
+        call LENTRIM(KEYWORD,tempLen)
+        SELECT CASE(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&SYMBOL")
@@ -1037,7 +1059,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 end if
 
             case default
-                write(*,*) "MCPSCUERROR: The unknown symbol: ",KEYWORD(1:LENTRIM(KEYWORD))
+                call LENTRIM(KEYWORD,tempLen)
+                write(*,*) "MCPSCUERROR: The unknown symbol: ",KEYWORD(1:tempLen)
                 write(*,*) "Please check box file at Line: ",LINE
                 pause
                 stop
@@ -1097,6 +1120,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*32::KEYWORD
     character(kind=c_char,len=10000)::scriptStr
     integer::LINE
+    integer::tempLen
     !---Body---
     scriptStr = ''
 
@@ -1106,7 +1130,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         STR = adjustl(STR)
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
         end select
@@ -1135,6 +1161,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::LINE
     character*32::STRNUMB(10)
     type(ReadReactionPropList),pointer::cursor=>null()
+    integer::tempLen
     !---Body---
     allocate(this%ReadReactionProp_List)
 
@@ -1144,7 +1171,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         STR = adjustl(STR)
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
-        SELECT CASE(KEYWORD(1:LENTRIM(KEYWORD)))
+
+        call LENTRIM(KEYWORD,tempLen)
+        SELECT CASE(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&REACTION")
@@ -1190,6 +1219,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*32::STRNUMB(10)
     type(ReadReactionPair)::newReactionPair
     integer::N
+    integer::tempLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
@@ -1197,7 +1227,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         STR = adjustl(STR)
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
-        SELECT CASE(KEYWORD(1:LENTRIM(KEYWORD)))
+
+        call LENTRIM(KEYWORD,tempLen)
+        SELECT CASE(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&REACTPAIRS")
@@ -1311,7 +1343,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 end if
 
             case default
-                write(*,*) "MCPSCUERROR: The unknown symbol: ",KEYWORD(1:LENTRIM(KEYWORD))
+                call LENTRIM(KEYWORD,tempLen)
+                write(*,*) "MCPSCUERROR: The unknown symbol: ",KEYWORD(1:tempLen)
                 write(*,*) "Please check box file at Line: ",LINE
                 pause
                 stop
@@ -1336,6 +1369,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*32::KEYWORD
     character(kind=c_char,len=10000)::scriptStr
     integer::LINE
+    integer::tempLen
     !---Body---
     scriptStr = ''
 
@@ -1345,7 +1379,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         STR = adjustl(STR)
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
         end select
@@ -1374,6 +1410,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::STR
     character*32::KEYWORD
     character*32::STRTEMP(10)
+    integer::tempLen
     !---Body---
 
     DO While(.true.)
@@ -1383,7 +1420,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&SIMPLEDISTSUBCTL")
@@ -1423,6 +1461,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::STR
     character*32::KEYWORD
     character*32::STRTEMP(10)
+    integer::tempLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
@@ -1431,7 +1470,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&GRAINSNUMBER")
@@ -1451,7 +1491,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 this%m_GrainBoundary%GBInitSimple_Strategy = p_GBInitSimple_ByGVolumCtl
                 call this%Load_GB_Simple_Distribution_ByGVolumCtl(hBoxFile,*100)
             case default
-                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+                call LENTRIM(KEYWORD,tempLen)
+                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:tempLen)
                 write(*,*) "At box file Line: ",LINE
                 pause
                 stop
@@ -1476,6 +1517,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::STR
     character*32::KEYWORD
     character*32::STRTEMP(10)
+    integer::tempLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
@@ -1484,7 +1526,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&MINCUTOFF")
@@ -1524,7 +1567,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 call DRSTR(STRTEMP(2),this%m_GrainBoundary%SeedsDistSD)
                 this%m_GrainBoundary%SeedsDistSD = this%m_GrainBoundary%SeedsDistSD*this%LatticeLength
             case default
-                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+                call LENTRIM(KEYWORD,tempLen)
+                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:tempLen)
                 write(*,*) "At box file Line: ",LINE
                 pause
                 stop
@@ -1556,6 +1600,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::STR
     character*32::KEYWORD
     character*32::STRTEMP(10)
+    integer::tempLen
     !---Body---
     DO While(.true.)
         call GETINPUTSTRLINE(hBoxFile,STR,LINE,"!",*100)
@@ -1564,7 +1609,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&MINCUTOFF")
@@ -1604,7 +1650,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 call DRSTR(STRTEMP(2),this%m_GrainBoundary%GVolumSD)
                 this%m_GrainBoundary%GVolumSD = this%m_GrainBoundary%GVolumSD*(this%LatticeLength**3)
             case default
-                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+                call LENTRIM(KEYWORD,tempLen)
+                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:tempLen)
                 write(*,*) "At box file Line: ",LINE
                 pause
                 stop
@@ -1636,6 +1683,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::STR
     character*32::KEYWORD
     character*10::STRTMP(10)
+    integer::tempLen
     !---Body---
 
     DO While(.true.)
@@ -1645,7 +1693,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 exit
             case("&FGBDIST")
@@ -1658,7 +1707,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     stop
                 end if
 
-                if(LENTRIM(STRTMP(1)) .LE. 0) then
+                call LENTRIM(STRTMP(1),tempLen)
+                if(tempLen .LE. 0) then
                     write(*,*) "MCPSCUERROR: The grain boundary configuration file path is null !"
                     pause
                     stop
@@ -1666,7 +1716,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                 this%m_GrainBoundary%GBCfgFileName = adjustl((trim(STRTMP(1))))
             case default
-                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:LENTRIM(KEYWORD))
+                call LENTRIM(KEYWORD,tempLen)
+                write(*,*) "MCPSCUERROR: The Illegal flag: ",KEYWORD(1:tempLen)
                 write(*,*) "At box file Line: ",LINE
                 pause
                 stop
@@ -2352,6 +2403,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::CNUM
     character*15::AtomsStr(p_ATOMS_GROUPS_NUMBER)
     integer::tempLen
+    integer::tempLen_Str
     integer::ElementsKind
     !---Body---
 
@@ -2362,7 +2414,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     write(hFile,FMT="(A)") OKMC_OUTCFG_FORMAT18
 
     KEYWORD = "&VERSION"
-    write(hFile,FMT="(A,1x,A30)") KEYWORD(1:LENTRIM(KEYWORD)),adjustl(trim(mp_Version))
+
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile,FMT="(A,1x,A30)") KEYWORD(1:tempLen_Str),adjustl(trim(mp_Version))
 
     if(associated(SimuRecord%GetUDefReadWriteRecord_List())) then
 
@@ -2371,12 +2425,14 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         Do while(associated(cursorUDefWriteRecordList))
 
             KEYWORD = "&UDEFSECTION"
-            write(hFile, FMT="(A,1x)") KEYWORD(1:LENTRIM(KEYWORD))
+            call LENTRIM(KEYWORD,tempLen_Str)
+            write(hFile, FMT="(A,1x)") KEYWORD(1:tempLen_Str)
 
             call cursorUDefWriteRecordList%TheReadWriteProc(hFile,SimuRecord)
 
             KEYWORD = "&ENDUDEFSECTION"
-            write(hFile, FMT="(A,1x)") KEYWORD(1:LENTRIM(KEYWORD))
+            call LENTRIM(KEYWORD,tempLen_Str)
+            write(hFile, FMT="(A,1x)") KEYWORD(1:tempLen_Str)
 
             cursorUDefWriteRecordList=>cursorUDefWriteRecordList%next
         End Do
@@ -2387,51 +2443,63 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     cursorUDefWriteRecordList=>null()
 
     KEYWORD = "&TIME"
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetSimuTimes()
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",SimuRecord%GetSimuTimes()
 
     KEYWORD = "&ISTEP"
-    write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuSteps()
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:tempLen_Str),SimuRecord%GetSimuSteps()
 
     KEYWORD = "&TSTEP"
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetTimeSteps()
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",SimuRecord%GetTimeSteps()
 
     KEYWORD = "&IPATCH"
-    write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetSimuPatch()
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:tempLen_Str),SimuRecord%GetSimuPatch()
 
     KEYWORD = "&LASTOUTCFGTIME"
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:LENTRIM(KEYWORD)),"(in s)",SimuRecord%GetLastRecordOutConfigTime()
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",SimuRecord%GetLastRecordOutConfigTime()
 
     KEYWORD = "&LASTOUTINDEX"
-    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetOutPutIndex()
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:tempLen_Str),SimuRecord%GetOutPutIndex()
 
     KEYWORD = "&ITIMESECTION"
-    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:LENTRIM(KEYWORD)),SimuRecord%GetTimeSections()
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:tempLen_Str),SimuRecord%GetTimeSections()
 
     write(hFile,*) ""
 
     KEYWORD = "&LATT"
-    write(hFile, FMT="(A,1x,A25,1x,1PE18.7)") KEYWORD(1:LENTRIM(KEYWORD)),"lattice length(in A):",this%LatticeLength*C_CM2AM
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,A25,1x,1PE18.7)") KEYWORD(1:tempLen_Str),"lattice length(in A):",this%LatticeLength*C_CM2AM
 
     KEYWORD = "&BOXLOW"
-    write(hFile, FMT="(A,1x,8x,A15,2x,1x,3(1PE16.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),                &
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,8x,A15,2x,1x,3(1PE16.8, 1x))") KEYWORD(1:tempLen_Str),                     &
                                                            "(in LU):",                                 &
                                                            this%BoxBoundary(1,1)/this%LatticeLength,   &
                                                            this%BoxBoundary(2,1)/this%LatticeLength,   &
                                                            this%BoxBoundary(3,1)/this%LatticeLength
 
     KEYWORD = "&BOXSIZE"
-    write(hFile, FMT="(A,1x,7x,A15,1x,1x,3(1PE16.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),           &
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile, FMT="(A,1x,7x,A15,1x,1x,3(1PE16.8, 1x))") KEYWORD(1:tempLen_Str),                &
                                                            "(in LU):",                            &
                                                            this%BOXSIZE(1)/this%LatticeLength,    &
                                                            this%BOXSIZE(2)/this%LatticeLength,    &
                                                            this%BOXSIZE(3)/this%LatticeLength
 
     KEYWORD = "&NGRAIN"
-    write(hFile,FMT="(A,1x,I8)") KEYWORD(1:LENTRIM(KEYWORD)),this%m_GrainBoundary%GrainNum
+    call LENTRIM(KEYWORD,tempLen_Str)
+    write(hFile,FMT="(A,1x,I8)") KEYWORD(1:tempLen_Str),this%m_GrainBoundary%GrainNum
     write(hFile,FMT="(A,1x,8x,4(A14,1x))")  "!","Seed ID", "x(LU)", "y(LU)", "z(LU)"
     KEYWORD = "&SEEDDATA"
     Do ISeed = 1,this%m_GrainBoundary%GrainNum
-        write(hFile,fmt="(A,1x,I14, 1x, 3(1PE16.8, 1x))") KEYWORD(1:LENTRIM(KEYWORD)),ISeed,this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3)/this%LatticeLength
+        call LENTRIM(KEYWORD,tempLen_Str)
+        write(hFile,fmt="(A,1x,I14, 1x, 3(1PE16.8, 1x))") KEYWORD(1:tempLen_Str),ISeed,this%m_GrainBoundary%GrainSeeds(ISeed)%m_POS(1:3)/this%LatticeLength
     End Do
 
 !    CNUM = ""
@@ -2453,7 +2521,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     KEYWORD = "&BOXSEINDEX"
     CFormat = ""
     CFormat = "(A,7(A20,1x))"
-    write(hFile, FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),  &
+    call LENTRIM(CFormat,tempLen_Str)
+    call LENTRIM(KEYWORD,tempLen)
+    write(hFile, FMT=CFormat(1:tempLen_Str)) KEYWORD(1:tempLen),                &
                                                   "IBox",                       &
                                                   "SEUsedIndexFrom",            &
                                                   "SEUsedIndexTo",              &
@@ -2464,9 +2534,12 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     KEYWORD = "&BOXSEDATA"
     CFormat = ""
-    CFormat = "(A,1x,I20,1x,"//CNUM(1:LENTRIM(CNUM))//"(I20,1x))"
+    call LENTRIM(CNUM,tempLen)
+    CFormat = "(A,1x,I20,1x,"//CNUM(1:tempLen)//"(I20,1x))"
     DO IBox = 1,MultiBox
-        write(hFile, FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),                  &
+        call LENTRIM(CFormat,tempLen_Str)
+        call LENTRIM(KEYWORD,tempLen)
+        write(hFile, FMT=CFormat(1:tempLen_Str)) KEYWORD(1:tempLen),                                &
                                                       IBox,                                         &
                                                       this%m_BoxesInfo%SEUsedIndexBox(IBox,1:2),    &
                                                       this%m_BoxesInfo%SEExpdIndexBox(IBox,1:2),    &
@@ -2482,23 +2555,31 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     cursor=>this%Atoms_list
     AtomsStr = " "
     DO While(associated(cursor))
-        AtomsStr(IAKind)(tempLen-LENTRIM(cursor%m_Atom%m_Symbol)+1:tempLen) = cursor%m_Atom%m_Symbol
+        call LENTRIM(cursor%m_Atom%m_Symbol,tempLen_Str)
+        AtomsStr(IAKind)(tempLen-tempLen_Str+1:tempLen) = cursor%m_Atom%m_Symbol
         IAKind = IAKind + 1
         cursor=>cursor%next
     END DO
 
     KEYWORD = "&ELEMENT"
     CFormat = ""
-    CFormat = "(A,1x,"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
-    write(hFile, FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),AtomsStr(1:ElementsKind)
+    call LENTRIM(CNUM,tempLen)
+    CFormat = "(A,1x,"//CNUM(1:tempLen)//"(A15,1x))"
+    call LENTRIM(CFormat,tempLen_Str)
+    call LENTRIM(KEYWORD,tempLen)
+    write(hFile, FMT=CFormat(1:tempLen_Str)) KEYWORD(1:tempLen),AtomsStr(1:ElementsKind)
 
     KEYWORD = "&TYPE"
     CFormat = ""
-    CFormat = "(A,1x,10(A15,1x),"//CNUM(1:LENTRIM(CNUM))//"(A15,1x),"//"3(A15,1x))"
-    write(hFile,FMT=CFormat(1:LENTRIM(CFormat))) KEYWORD(1:LENTRIM(KEYWORD)),"IBox", "Layer","GBSeed1","GBSeed2","Statu","Record1","Record2","x(LU)","y(LU)","z(LU)",AtomsStr(1:ElementsKind),"Direct(x)","Direct(y)","Direct(z)"
+    call LENTRIM(CNUM,tempLen)
+    CFormat = "(A,1x,10(A15,1x),"//CNUM(1:tempLen)//"(A15,1x),"//"3(A15,1x))"
+    call LENTRIM(CFormat,tempLen_Str)
+    call LENTRIM(KEYWORD,tempLen)
+    write(hFile,FMT=CFormat(1:tempLen_Str)) KEYWORD(1:tempLen),"IBox", "Layer","GBSeed1","GBSeed2","Statu","Record1","Record2","x(LU)","y(LU)","z(LU)",AtomsStr(1:ElementsKind),"Direct(x)","Direct(y)","Direct(z)"
 
     CFormat = ""
-    CFormat = "(A,1x,7(I15, 1x),3(1PE16.8, 1x),"//CNUM(1:LENTRIM(CNUM))//"(I15,1x)"//",3(1PE16.8, 1x))"
+    call LENTRIM(CNUM,tempLen)
+    CFormat = "(A,1x,7(I15, 1x),3(1PE16.8, 1x),"//CNUM(1:tempLen)//"(I15,1x)"//",3(1PE16.8, 1x))"
     DO IBox = 1,MultiBox
         ICFROM = this%m_BoxesInfo%SEUsedIndexBox(IBox,1)
         ICTO   = this%m_BoxesInfo%SEUsedIndexBox(IBox,2)
@@ -2510,7 +2591,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         DO IC = ICFROM, ICTO
             if(Host_SimuCtrlParam%OutPutConfContent(this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Statu) .eq. .true. ) then
 
-                write(hFile,fmt=CFormat(1:LENTRIM(CFormat))) "     ",                                                             &
+                call LENTRIM(CFormat,tempLen)
+                write(hFile,fmt=CFormat(1:tempLen))         "     ",                                                             &
                                                             IBox,                                                                 &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_Layer,                       &
                                                             this%m_ClustersInfo_CPU%m_Clusters(IC)%m_GrainID,                     &
@@ -2548,6 +2630,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::C_JOB
     character*1000::path
     integer::hFile
+    integer::tempLen
     !---Body---
 
     if(present(RescaleCount)) then
@@ -2577,7 +2660,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     ! output the configuration(can also be for the restart)
 
-    path = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"Config_"//trim(C_JOB)//"_"//trim(C_TIMESECTION)//"_"//trim(c_ITIME)//".dat"
+    call LENTRIM(Host_SimuCtrlParam%OutFilePath,tempLen)
+    path = Host_SimuCtrlParam%OutFilePath(1:tempLen)//FolderSpe//"Config_"//trim(C_JOB)//"_"//trim(C_TIMESECTION)//"_"//trim(c_ITIME)//".dat"
 
     hFile = CreateNewFile(path)
 
@@ -2608,6 +2692,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::STR
     character*32::KEYWORD
     integer::LINE
+    integer::tempLen
     !---Body---
 
     LINE = 0
@@ -2625,7 +2710,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     close(hFile)
 
-    select case(KEYWORD(1:LENTRIM(KEYWORD)))
+    call LENTRIM(KEYWORD,tempLen)
+    select case(KEYWORD(1:tempLen))
         case(OKMC_OUTCFG_FORMAT18)
             call this%Putin_OKMC_OUTCFG_FORMAT18(cfgFile,Host_SimuCtrlParam,SimuRecord,TheVersion,SURDIFPRE_FREE,SURDIFPRE_INGB,AsInitial)
         case(MF_OUTCFG_FORMAT18)
@@ -2666,6 +2752,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::tempIValue
     real(kind=KINDDF)::tempRValue
     type(UDefReadWriteRecordList),pointer::cursor=>null()
+    integer::tempLen
     !---Body---
 
     DO While(.true.)
@@ -2678,7 +2765,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
 
             case("&VERSION")
                 call EXTRACT_SUBSTR(STR,1,N,STRTMP)
@@ -2803,6 +2891,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     real(kind=KINDDF)::VectorLen
     integer::tempIValue
     real(kind=KINDDF)::tempRValue
+    integer::tempLen
+    logical::isequal
     !---Body---
 
     MultiBox = Host_SimuCtrlParam%MultiBox
@@ -2824,7 +2914,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call UPCASE(KEYWORD)
 
-    if(.not. ISSTREQUAL(adjustl(trim(KEYWORD)),OKMC_OUTCFG_FORMAT18)) then
+    call ISSTREQUAL(adjustl(trim(KEYWORD)),OKMC_OUTCFG_FORMAT18,isequal)
+    if(.not. isequal) then
         write(*,*) "MCPSCUERROR: the format of OKMC configuration file is not right at LINE: ",LINE
         write(*,*) STR
         pause
@@ -2843,7 +2934,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&TYPE")
                 exit
 
@@ -2908,7 +3000,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                     call GETKEYWORD("&",STR,KEYWORD)
                     call UPCASE(KEYWORD)
 
-                    if(.not. ISSTREQUAL(KEYWORD,"&SEEDDATA")) then
+                    call ISSTREQUAL(KEYWORD,"&SEEDDATA",isequal)
+                    if(.not. isequal) then
                         write(*,*) "MCPSCUERROR: The grain seeds number is less than the recorded one."
                         write(*,*) KEYWORD
                         pause
@@ -2952,7 +3045,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
                 CNUM = ""
                 write(CNUM,*) p_NUMBER_OF_STATU
                 CFormat = ""
-                CFormat = "(A20,1x,I20,1x,"//CNUM(1:LENTRIM(CNUM))//"(I20,1x))"
+                call LENTRIM(CNUM,tempLen)
+                CFormat = "(A20,1x,I20,1x,"//CNUM(1:tempLen)//"(I20,1x))"
                 DO IBox = 1,MultiBox
                     call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
                     call RemoveComments(STR,"!")
@@ -2964,16 +3058,20 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                 CFormat = ""
                 write(CNUM,*) p_NUMBER_OF_STATU
-                CFormat = "(A20,1x,I20,1x,"//CNUM(1:LENTRIM(CNUM))//"(I20,1x))"
+                call LENTRIM(CNUM,tempLen)
+                CFormat = "(A20,1x,I20,1x,"//CNUM(1:tempLen)//"(I20,1x))"
                 DO IBox = 1,MultiBox
                     call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
                     call RemoveComments(STR,"!")
-                    read(STR,fmt=CFormat(1:LENTRIM(CFormat)),ERR=100)   CEmpty,                                  &
+                    call LENTRIM(CFormat,tempLen)
+                    read(STR,fmt=CFormat(1:tempLen),ERR=100)            CEmpty,                                  &
                                                                         IBoxTemp,                                &
                                                                         tempBoxesInfo%SEUsedIndexBox(IBox,1:2),  &
                                                                         tempBoxesInfo%SEExpdIndexBox(IBox,1:2),  &
                                                                         tempBoxesInfo%SEVirtualIndexBox(IBox,1:2)
-                    if(.not. ISSTREQUAL(CEmpty,"&BOXSEDATA")) then
+
+                    call ISSTREQUAL(CEmpty,"&BOXSEDATA",isequal)
+                    if(.not. isequal) then
                         write(*,*) "MCPSCUERROR: The box clusters start and end index record is less than the control file recorded."
                         pause
                         stop
@@ -3013,12 +3111,15 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
             case("&ELEMENT")
                 CNUM = ""
                 write(CNUM,*) p_ATOMS_GROUPS_NUMBER
-                CFormat = "(A20,1x,"//CNUM(1:LENTRIM(CNUM))//"(A15,1x))"
-                read(STR,fmt=CFormat(1:LENTRIM(CFormat)),ERR=100) CEmpty,CElement
+                call LENTRIM(CNUM,tempLen)
+                CFormat = "(A20,1x,"//CNUM(1:tempLen)//"(A15,1x))"
+                call LENTRIM(CFormat,tempLen)
+                read(STR,fmt=CFormat(1:tempLen),ERR=100) CEmpty,CElement
 
                 NATomsUsed = 0
                 DO IElement = 1,p_ATOMS_GROUPS_NUMBER
-                    if(LENTRIM(adjustl(CElement(IElement))) .GT. 0) then
+                    call LENTRIM(adjustl(CElement(IElement)),tempLen)
+                    if(tempLen .GT. 0) then
                         NATomsUsed = NATomsUsed + 1
                         AtomsIndex(NATomsUsed) = this%Atoms_list%FindIndexBySymbol(adjustl(trim(CElement(IElement))))
                     end if
@@ -3310,6 +3411,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::NClustersGroup
     type(DiffusorValue)::TheDiffusorValue
     real(kind=KINDDF)::tempRValue
+    integer::tempLen
+    logical::isequal
     !---Body---
 
     AtomsIndex = 0
@@ -3329,7 +3432,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call UPCASE(KEYWORD)
 
-    if(.not. ISSTREQUAL(adjustl(trim(KEYWORD)),MF_OUTCFG_FORMAT18)) then
+    call ISSTREQUAL(adjustl(trim(KEYWORD)),MF_OUTCFG_FORMAT18,isequal)
+    if(.not. isequal) then
         write(*,*) "MCPSCUERROR: the format of mean field configuration file is not right at LINE: ",LINE
         write(*,*) STR
         pause
@@ -3346,7 +3450,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&TYPE")
                 exit
 
@@ -3409,7 +3514,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDBOXMF18")
                 exit
         end select
@@ -3459,7 +3565,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&TYPE")
                 exit
         end select
@@ -3477,7 +3584,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDBOXMF18")
                 exit
         end select
@@ -3618,6 +3726,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::tempLayer
     type(DiffusorValue)::TheDiffusorValue
     real(kind=KINDDF)::tempRValue
+    integer::tempLen
+    logical::isequal
     !---Body---
 
     AtomsIndex = 0
@@ -3639,7 +3749,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     call UPCASE(KEYWORD)
 
-    if(.not. ISSTREQUAL(adjustl(trim(KEYWORD)),SPMF_OUTCFG_FORMAT18)) then
+    call ISSTREQUAL(adjustl(trim(KEYWORD)),SPMF_OUTCFG_FORMAT18,isequal)
+    if(.not. isequal) then
         write(*,*) "MCPSCUERROR: the format of space special mean field configuration file is not right at LINE: ",LINE
         write(*,*) STR
         pause
@@ -3656,7 +3767,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&TYPE")
                 exit
 
@@ -3722,7 +3834,9 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
                     call UPCASE(KEYWORD)
 
-                    if(.not. ISSTREQUAL(KEYWORD(1:LENTRIM(KEYWORD)),"&LAYERTHICK")) then
+                    call LENTRIM(KEYWORD,tempLen)
+                    call ISSTREQUAL(KEYWORD(1:tempLen),"&LAYERTHICK",isequal)
+                    if(.not. isequal) then
                         write(*,*) "MCPSCUERROR: the layers number is less than the recorded layers number ."
                         pause
                         stop
@@ -3772,7 +3886,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDBOXMF18")
                 exit
         end select
@@ -3844,7 +3959,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&TYPE")
                 exit
         end select
@@ -3865,7 +3981,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
         call UPCASE(KEYWORD)
 
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDBOXMF18")
                 exit
         end select
