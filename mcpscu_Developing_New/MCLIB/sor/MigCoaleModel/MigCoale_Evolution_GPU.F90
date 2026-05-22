@@ -40,6 +40,7 @@ module MIGCOALE_EVOLUTION_GPU
     type(dim3)::blocks
     type(dim3)::threads
     integer::BX,BY,NB,err
+    integer::tempIValue
     !---Body---
 
     MULTIBOX = Host_SimuCtrlParam%MultiBox
@@ -80,7 +81,8 @@ module MIGCOALE_EVOLUTION_GPU
             threads = dim3(BX, BY, 1)
 
             if(TotalNC .GT. size(Dev_Rand%dm_DevRandRecord)) then
-                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                call Record%GetSimuSteps(tempIValue)
+                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
                 ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             end if
 
@@ -115,7 +117,8 @@ module MIGCOALE_EVOLUTION_GPU
             end if
 
             if(TotalNC .GT. size(Dev_Rand%dm_DevRandRecord)) then
-                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                call Record%GetSimuSteps(tempIValue)
+                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + 2))
                 ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             end if
 
@@ -1015,6 +1018,7 @@ module MIGCOALE_EVOLUTION_GPU
     real(kind=KINDDF)::ATOMV0
     real(kind=KINDDF)::DIF0
     integer::TotalNC
+    integer::tempIValue
     !---Body---
 
     ASSOCIATE(Dev_ClusterInfo_GPU=>Dev_Boxes%dm_ClusterInfo_GPU,Dev_DiffusorMap=>Dev_Boxes%dm_DiffusorTypesMap,Dev_ReactionsMap=>Dev_Boxes%dm_ReactionsMap, &
@@ -1053,10 +1057,12 @@ module MIGCOALE_EVOLUTION_GPU
 
         if(TotalNC .GT. size(Dev_Rand%dm_DevRandRecord)) then
             if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                call Record%GetSimuSteps(tempIValue)
+                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
                 ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             else
-                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                call Record%GetSimuSteps(tempIValue)
+                call Dev_Rand%ReSizeDevRandRecord(TotalNC,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + 2))
                 ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             end if
         end if

@@ -42,6 +42,7 @@ module MIGCOALE_TIMECTL
         integer::NCActGB
         real(kind=KINDDF)::TSTEPFREE,TSTEPGB
         integer::I
+        real(kind=KINDDF)::tempRValue
         !---Body---
 
         TSTEPFREE = 1.D32
@@ -156,12 +157,14 @@ module MIGCOALE_TIMECTL
         call Record%TurnOffTriggerFocusedTimePoints()
 
         DO I = 1,Host_SimuCtrlParam%NFocusedTimePoint
-            if( ((Record%GetSimuTimes() + TSTEP) .GE. Host_SimuCtrlParam%FocusedTimePoints(I)) .AND. &
-                Record%GetSimuTimes() .LT. Host_SimuCtrlParam%FocusedTimePoints(I) ) then
+            call Record%GetSimuTimes(tempRValue)
+            if( ((tempRValue + TSTEP) .GE. Host_SimuCtrlParam%FocusedTimePoints(I)) .AND. &
+                  tempRValue .LT. Host_SimuCtrlParam%FocusedTimePoints(I) ) then
 
                 call Record%TurnOnTriggerFocusedTimePoints()
 
-                TSTEP = DABS(Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes())
+                call Record%GetSimuTimes(tempRValue)
+                TSTEP = DABS(Host_SimuCtrlParam%FocusedTimePoints(I) - tempRValue)
 
                 exit
             end if
@@ -188,6 +191,8 @@ module MIGCOALE_TIMECTL
         real(kind=KINDDF)::TSTEPFREE,TSTEPGB
         integer::MultiBox
         integer::I
+        real(kind=KINDDF)::tempRValue
+
         !---Body---
 
         TSTEPFREE = 1.D32
@@ -303,12 +308,14 @@ module MIGCOALE_TIMECTL
         !***********Focused TimePoint*********************
 
         DO I = 1,Host_SimuCtrlParam%NFocusedTimePoint
-            if( ((Record%GetSimuTimes() + TheVerifyTime) .GE. Host_SimuCtrlParam%FocusedTimePoints(I)) .AND. &
-                Record%GetSimuTimes() .LT. Host_SimuCtrlParam%FocusedTimePoints(I) ) then
+            call Record%GetSimuTimes(tempRValue)
+            if( ((tempRValue + TheVerifyTime) .GE. Host_SimuCtrlParam%FocusedTimePoints(I)) .AND. &
+                  tempRValue .LT. Host_SimuCtrlParam%FocusedTimePoints(I) ) then
 
                 call Record%TurnOnTriggerFocusedTimePoints()
 
-                TheVerifyTime = DABS(Host_SimuCtrlParam%FocusedTimePoints(I) - Record%GetSimuTimes())
+                call Record%GetSimuTimes(tempRValue)
+                TheVerifyTime = DABS(Host_SimuCtrlParam%FocusedTimePoints(I) - tempRValue)
                 exit
             end if
         END DO

@@ -337,6 +337,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*32::KEYWORD
         character*20::STRTMP(10)
         integer::N
+        integer::tempLen
         !---Body---
         Do While(.true.)
             call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -345,7 +346,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
 
@@ -389,6 +391,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*20::STRTMP(20)
         integer::N
         integer::I
+        integer::tempLen
+        integer::tempIValue
+        real(kind=KINDDF)::tempRValue
         !---Body---
         DO while(.true.)
             call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -397,7 +402,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
 
@@ -410,7 +416,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         pause
                         stop
                     end if
-                    this%InsertTimeInterval = DRSTR(STRTMP(1))
+                    call DRSTR(STRTMP(1),tempRValue)
+                    this%InsertTimeInterval = tempRValue
 
                 case("&INSERTTIMEPOINT")
                     call EXTRACT_NUMB(STR,p_MAX_BATCHINSERTTIMEPOINTS,N,STRTMP)
@@ -428,7 +435,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     this%NInsertTimePoint = N
 
                     DO I = 1,N
-                        this%InsertTimePoint(I) = DRSTR(STRTMP(I))
+                        call DRSTR(STRTMP(I),tempRValue)
+                        this%InsertTimePoint(I) = tempRValue
 
                         if(I .GT. 1) then
                             if(this%InsertTimePoint(I) .LE. this%InsertTimePoint(I-1)) then
@@ -451,7 +459,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         pause
                         stop
                     end if
-                    this%InsertCountModel = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),tempIValue)
+                    this%InsertCountModel = tempIValue
 
                 case("&INSERTCOUNT")
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
@@ -462,7 +471,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         pause
                         stop
                     end if
-                    this%InsertCountOneBatch = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),tempIValue)
+                    this%InsertCountOneBatch = tempIValue
 
                 case default
                     write(*,*) "MCPSCUERROR: Unknown Flag: ",KEYWORD
@@ -495,6 +505,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*32::KEYWORD
         character*20::STRTMP(10)
         integer::N
+        integer::tempLen
+        integer::tempIValue
         !---Body---
         DO while(.true.)
             call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -504,7 +516,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
 
@@ -517,7 +530,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         pause
                         stop
                     end if
-                    this%ImplantConfigType = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),tempIValue)
+                    this%ImplantConfigType = tempIValue
 
                 case("&FEXPAND")
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
@@ -528,7 +542,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         pause
                         stop
                     end if
-                    this%ExpandFactor = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),tempIValue)
+                    this%ExpandFactor = tempIValue
 
                 case("&FMEMOCCUP")
                     call EXTRACT_NUMB(STR,1,N,STRTMP)
@@ -539,7 +554,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         pause
                         stop
                     end if
-                    this%MemoryOccupyFactor = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),tempIValue)
+                    this%MemoryOccupyFactor = tempIValue
 
                     if(this%MemoryOccupyFactor .LE. 1) then
                         write(*,*) "MCPSCUERROR: The MemoryOccupyFactor cannot less than 1"
@@ -548,7 +564,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     end if
 
                 case default
-                    write(*,*) "MCPSCUERROR: Unknown keyword: ",KEYWORD(1:LENTRIM(KEYWORD))
+                    call LENTRIM(KEYWORD,tempLen)
+                    write(*,*) "MCPSCUERROR: Unknown keyword: ",KEYWORD(1:tempLen)
                     write(*,*) "At Line: ",LINE
                     pause
                     stop
@@ -602,9 +619,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(SimulationBoxes)::SimBoxes
         type(SimulationCtrlParam)::Host_SimuCtrlParam
         integer::LINE
+        integer::tempLen
         !---Body---
-
-        select case(KEYWORD(1:LENTRIM(KEYWORD)))
+        call LENTRIM(KEYWORD,tempLen)
+        select case(KEYWORD(1:tempLen))
             case("&ENDSUBCTL")
                 return
             case("&SIZESUBCTL")
@@ -645,9 +663,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*1000::ConfigPath
         integer::LayerNum
         type(STRList),pointer::cursor=>null()
+        logical::isequal
+        integer::tempLen
         !---Body---
-
-        if(.not. ISSTREQUAL(PreKEYWORD,"&EXTFSUBCTL")) then
+        call ISSTREQUAL(PreKEYWORD,"&EXTFSUBCTL",isequal)
+        if(.not. isequal) then
             write(*,*) "MCPSCUERROR: You must special the &EXTFSUBCTL when the implant strategy is chosen by outer file ."
             write(*,*) "However, you had special the key word :",KEYWORD
             write(*,*) "At line: ",LINE
@@ -662,7 +682,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
                 case("&DISTFILETYPE")
@@ -674,7 +695,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         stop
                     end if
 
-                    if(LENTRIM(STRTEMP(1)) .LE. 0) then
+                    call LENTRIM(STRTEMP(1),tempLen)
+                    if(tempLen .LE. 0) then
                         write(*,*) "MCPSCUERROR: The implant configuration file type is null."
                         write(*,*) "At line: ",LINE
                         pause

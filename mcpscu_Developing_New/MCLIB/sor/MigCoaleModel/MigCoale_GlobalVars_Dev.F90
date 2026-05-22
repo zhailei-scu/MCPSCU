@@ -96,6 +96,7 @@ module MIGCOALE_GLOBALVARS_DEV
         integer::ISEED_Curand
         integer::SEED(2)
         integer::err
+        integer::tempIValue
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -174,10 +175,12 @@ module MIGCOALE_GLOBALVARS_DEV
         call GetSeed_RAND32SEEDLIB(ISEED_Curand,SEED(1),SEED(2))
 
         if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-            call InitialDevRandRecordArray(this%dm_DevRandRecord,TotalUsedNC,SEED(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+            call Record%GetSimuSteps(tempIValue)
+            call InitialDevRandRecordArray(this%dm_DevRandRecord,TotalUsedNC,SEED(1),tempIValue*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
             ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
         else
-            call InitialDevRandRecordArray(this%dm_DevRandRecord,TotalUsedNC,SEED(1),Record%GetSimuSteps()*(3 + 2))
+            call Record%GetSimuSteps(tempIValue)
+            call InitialDevRandRecordArray(this%dm_DevRandRecord,TotalUsedNC,SEED(1),tempIValue*(3 + 2))
             ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
         end if
 
