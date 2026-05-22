@@ -596,11 +596,12 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine
 
     !***************************************************
-    integer function Get_SimuSteps(this)
+    subroutine Get_SimuSteps(this,theResult)
             implicit none
             CLASS(SimulationRecord_SUB)::this
-            Get_SimuSteps = this%SimulaitonSteps
-    end function
+            integer,intent(out)::theResult
+            theResult = this%SimulaitonSteps
+    end subroutine
 
 
     !***************************************************
@@ -622,11 +623,12 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine
 
     !***************************************************
-    real(kind=KINDDF) function Get_SimuTimes(this)
-            implicit none
-            CLASS(SimulationRecord_SUB)::this
-            Get_SimuTimes = this%SimulationTimes
-    end function
+    subroutine Get_SimuTimes(this,theTime)
+        implicit none
+        CLASS(SimulationRecord_SUB)::this
+        real(kind=KINDDF),intent(out)::theTime
+        theTime = this%SimulationTimes
+    end subroutine
 
 
     !***************************************************
@@ -638,11 +640,12 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine
 
     !***************************************************
-    real(kind=KINDDF) function Get_TimeSteps(this)
-            implicit none
-            CLASS(SimulationRecord_SUB)::this
-            Get_TimeSteps = this%TimeStep
-    end function
+    subroutine Get_TimeSteps(this,theStep)
+        implicit none
+        CLASS(SimulationRecord_SUB)::this
+        real(kind=KINDDF),intent(out)::theStep
+        theStep = this%TimeStep
+    end subroutine
 
     !*****************************************************
     subroutine Add_SimuTimes(this,increaseTime)
@@ -670,7 +673,7 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
    end subroutine Set_SimuPatch
 
    !********************************************************
-   function Get_SimuPatch(this) result(SimPath)
+   subroutine Get_SimuPatch(this,SimPath)
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord_SUB)::this
@@ -680,7 +683,7 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
         SimPath = this%SimulationPatch
 
         return
-   end function Get_SimuPatch
+   end subroutine Get_SimuPatch
 
     !***************************************************
     subroutine Set_TimeSections(this,TimeSection)
@@ -691,11 +694,12 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine Set_TimeSections
 
     !***************************************************
-    integer function Get_TimeSections(this)
+    subroutine Get_TimeSections(this,theResult)
         implicit none
         CLASS(SimulationRecord_SUB)::this
-        Get_TimeSections = this%TimeSections
-    end function Get_TimeSections
+        integer,intent(out)::theResult
+        theResult = this%TimeSections
+    end subroutine Get_TimeSections
 
 
     !***************************************************
@@ -709,13 +713,14 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine Increase_OneTimeSection
 
     !****************************************************
-    real(kind=KINDDF) function Get_LastUpdateStatisTime(this)
+    subroutine Get_LastUpdateStatisTime(this,theResult)
         implicit none
         CLASS(SimulationRecord_SUB)::this
+        real(kind=KINDDF),intent(out)::theResult
 
-        Get_LastUpdateStatisTime = this%LastUpdateStatisTime
+        theResult = this%LastUpdateStatisTime
         return
-    end function Get_LastUpdateStatisTime
+    end subroutine Get_LastUpdateStatisTime
 
     !***************************************************
     subroutine Set_LastUpdateStatisTime(this,TIME)
@@ -730,7 +735,7 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine Set_LastUpdateStatisTime
 
     !****************************************************
-    function Get_LastUpdateNLTime(this) result(TheTime)
+    subroutine Get_LastUpdateNLTime(this,TheTime)
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord_SUB)::this
@@ -738,7 +743,7 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
         !---Body---
         TheTime = this%LastUpdateNLTime
         return
-    end function Get_LastUpdateNLTime
+    end subroutine Get_LastUpdateNLTime
 
     !****************************************************
     subroutine Set_LastUpdateNLTime(this,TheTime)
@@ -752,7 +757,7 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine Set_LastUpdateNLTime
 
     !****************************************************
-    function Get_LastUpdateNLNC0(this) result(NC0)
+    subroutine Get_LastUpdateNLNC0(this,NC0)
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord_SUB)::this
@@ -760,7 +765,7 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
         !---Body---
         NC0 = this%LastUpdateNL_NC0
         return
-    end function Get_LastUpdateNLNC0
+    end subroutine Get_LastUpdateNLNC0
 
     !****************************************************
     subroutine Set_LastUpdateNLNC0(this,NC0)
@@ -798,13 +803,14 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine
 
     !****************************************************
-    real function Get_LastRecordOutConfigTime(this)
+    subroutine Get_LastRecordOutConfigTime(this,theResult)
         implicit none
         CLASS(SimulationRecord_SUB)::this
+        real(kind=KINDDF),intent(out)::theResult
 
-        Get_LastRecordOutConfigTime = this%LastRecordOutConfigTime
+        theResult = this%LastRecordOutConfigTime
         return
-    end function Get_LastRecordOutConfigTime
+    end subroutine Get_LastRecordOutConfigTime
 
     !****************************************************
     subroutine Set_LastRecordOutConfigTime(this,TIME)
@@ -819,15 +825,16 @@ module MCLIB_TYPEDEF_BASICRECORD_SUB
     end subroutine Set_LastRecordOutConfigTime
 
     !****************************************************
-    integer function Get_OutPutIndex(this)
+     subroutine Get_OutPutIndex(this,theResult)
         implicit none
         !---Dummy Vars---
         CLASS(SimulationRecord_SUB)::this
+        integer,intent(out)::theResult
 
-        Get_OutPutIndex = this%OutPutIndex
+        theResult = this%OutPutIndex
 
         return
-    end function Get_OutPutIndex
+    end subroutine Get_OutPutIndex
 
     !****************************************************
     subroutine Set_OutPutIndex(this,OutIndex)

@@ -2405,6 +2405,8 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     integer::tempLen
     integer::tempLen_Str
     integer::ElementsKind
+    integer::tempIValue
+    real(kind=KINDDF)::tempRValue
     !---Body---
 
     ! output the configuration(can also be for the restart)
@@ -2444,31 +2446,38 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
 
     KEYWORD = "&TIME"
     call LENTRIM(KEYWORD,tempLen_Str)
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",SimuRecord%GetSimuTimes()
+    call SimuRecord%GetSimuTimes(tempRValue)
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",tempRValue
 
     KEYWORD = "&ISTEP"
     call LENTRIM(KEYWORD,tempLen_Str)
-    write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:tempLen_Str),SimuRecord%GetSimuSteps()
+    call SimuRecord%GetSimuSteps(tempIValue)
+    write(hFile, FMT="(A,1x,7x,I15,1x)") KEYWORD(1:tempLen_Str),tempIValue
 
     KEYWORD = "&TSTEP"
     call LENTRIM(KEYWORD,tempLen_Str)
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",SimuRecord%GetTimeSteps()
+    call SimuRecord%GetTimeSteps(tempRValue)
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",tempRValue
 
     KEYWORD = "&IPATCH"
     call LENTRIM(KEYWORD,tempLen_Str)
-    write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:tempLen_Str),SimuRecord%GetSimuPatch()
+    call SimuRecord%GetSimuPatch(tempIValue)
+    write(hFile, FMT="(A,1x,6x,I15,1x)") KEYWORD(1:tempLen_Str),tempIValue
 
     KEYWORD = "&LASTOUTCFGTIME"
     call LENTRIM(KEYWORD,tempLen_Str)
-    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",SimuRecord%GetLastRecordOutConfigTime()
+    call SimuRecord%GetLastRecordOutConfigTime(tempRValue)
+    write(hFile, FMT="(A,1x,A16,1x,1PE18.10)") KEYWORD(1:tempLen_Str),"(in s)",tempRValue
 
     KEYWORD = "&LASTOUTINDEX"
     call LENTRIM(KEYWORD,tempLen_Str)
-    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:tempLen_Str),SimuRecord%GetOutPutIndex()
+    call SimuRecord%GetOutPutIndex(tempIValue)
+    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:tempLen_Str),tempIValue
 
     KEYWORD = "&ITIMESECTION"
     call LENTRIM(KEYWORD,tempLen_Str)
-    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:tempLen_Str),SimuRecord%GetTimeSections()
+    call SimuRecord%GetTimeSections(tempIValue)
+    write(hFile, FMT="(A,1x,I15,1x)") KEYWORD(1:tempLen_Str),tempIValue
 
     write(hFile,*) ""
 
@@ -2631,6 +2640,7 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
     character*1000::path
     integer::hFile
     integer::tempLen
+    integer::tempIValue
     !---Body---
 
     if(present(RescaleCount)) then
@@ -2642,18 +2652,21 @@ module MCLIB_TYPEDEF_SIMULATIONBOXARRAY
         c_ITIME = adjustl(c_ITIME)
         c_ITIME = "BeforeSweepOut"//c_ITIME
     else
-        write(c_ITIME,*) SimuRecord%GetOutPutIndex()
+        call SimuRecord%GetOutPutIndex(tempIValue)
+        write(c_ITIME,*) tempIValue
 
         call SimuRecord%IncreaseOneOutPutIndex()
 
         c_ITIME = adjustl(c_ITIME)
     end if
 
-    write(C_TIMESECTION,*) SimuRecord%GetTimeSections()
+    call SimuRecord%GetTimeSections(tempIValue)
+    write(C_TIMESECTION,*) tempIValue
     C_TIMESECTION = adjustl(C_TIMESECTION)
     C_TIMESECTION = "Section"//C_TIMESECTION
 
-    write(C_JOB,*) SimuRecord%GetSimuPatch()
+    call SimuRecord%GetSimuPatch(tempIValue)
+    write(C_JOB,*) tempIValue
     C_JOB = adjustl(C_JOB)
     C_JOB = "Job"//C_JOB
 
