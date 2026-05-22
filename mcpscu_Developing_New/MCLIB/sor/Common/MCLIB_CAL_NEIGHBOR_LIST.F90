@@ -33,6 +33,8 @@ module MCLIB_CAL_NEIGHBOR_LIST
     !---Local Vars---
     logical::SureToUpdateNL
     integer::NAct
+    integer::tempIValue
+    real(kind=KINDDF)::tempRValue
     !---Body---
     if(Host_SimuCtrlParam%FreeDiffusion .eq. .true.) then
         return
@@ -52,11 +54,14 @@ module MCLIB_CAL_NEIGHBOR_LIST
     if(SureToUpdateNL .eq. .false.) then
         select case(Host_SimuCtrlParam%NEIGHBORUPDATESTRATEGY)
             case(mp_NEIGHBORUPDATEBYNCREMIND)
-                if(dble(NAct)/dble(Record%GetLastUpdateNLNC0()) .LE. Host_SimuCtrlParam%NEIGHBORUPDATE) then
-                        SureToUpdateNL = .true.
+                call Record%GetLastUpdateNLNC0(tempIValue)
+                if(dble(NAct)/dble(tempIValue) .LE. Host_SimuCtrlParam%NEIGHBORUPDATE) then
+                    SureToUpdateNL = .true.
                 end if
             case(mp_NEIGHBORUPDATEBYSTEP)
-                if((Record%GetSimuSteps() - Record%GetLastUpdateNLTime()) .GE. Host_SimuCtrlParam%NEIGHBORUPDATE) then
+              call Record%GetSimuSteps(tempIValue)
+                call Record%GetLastUpdateNLTime(tempRValue)
+                if((tempIValue - tempRValue) .GE. Host_SimuCtrlParam%NEIGHBORUPDATE) then
                     SureToUpdateNL = .true.
                 end if
         end select
@@ -80,7 +85,8 @@ module MCLIB_CAL_NEIGHBOR_LIST
         end select
 
         call Record%SetLastUpdateNLNC0(NAct)
-        call Record%SetLastUpdateNLTime((dble(Record%GetSimuSteps())))
+        call Record%GetSimuSteps(tempIValue)
+        call Record%SetLastUpdateNLTime((dble(tempIValue)))
 
         call Host_Boxes%m_ClustersInfo_CPU%m_list%IncreaseOneNLUpdateCount_Host()
     end if

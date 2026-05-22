@@ -28,7 +28,7 @@ module MCLIB_TYPEDEF_RECORDLIST_GPU
     end interface
 
     type,public::OneStepProcedureList
-        procedure(Procedure_OneStep),pointer::m_Procedure=>null()
+        procedure(Procedure_OneStep),pointer,nopass::m_Procedure=>null()
 
         type(OneStepProcedureList),pointer::next=>null()
 

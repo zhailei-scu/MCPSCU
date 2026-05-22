@@ -43,11 +43,15 @@ module MIGCOALE_ADDONDATA_HOST
         integer::N
         integer::I
         integer::hFile
+        integer::tempLen
+        integer::tempIValue
+        real(kind=KINDDF)::tempRValue
         !---Body---
         hFile = 6
 
         KEYWORD = "&DUMPLICATEBOX"
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        call Get_StatementList(KEYWORD(1:tempLen), Host_SimuCtrlParam%AddOnData, STR, LINE)
         call RemoveComments(STR,"!")
         call EXTRACT_NUMB(STR,1,N,STRTEMP)
         if(N .LT. 1) then
@@ -57,15 +61,17 @@ module MIGCOALE_ADDONDATA_HOST
             pause
             stop
         end if
-        if(ISTR(STRTEMP(1)) .eq. 0) then
+        call ISTR(STRTEMP(1),tempIValue)
+        if(tempIValue .eq. 0) then
             m_DumplicateBox = .false.
         else
             m_DumplicateBox = .true.
         end if
 
         KEYWORD = "&CHECKNCLUSTERS"
-        if(HasKeyword_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData) .eq. .true.) then
-            call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        if(HasKeyword_StatementList(KEYWORD(1:tempLen), Host_SimuCtrlParam%AddOnData) .eq. .true.) then
+            call Get_StatementList(KEYWORD(1:tempLen), Host_SimuCtrlParam%AddOnData, STR, LINE)
             call RemoveComments(STR,"!")
             call EXTRACT_NUMB(STR,1,N,STRTEMP)
             if(N .LT. 1) then
@@ -75,7 +81,8 @@ module MIGCOALE_ADDONDATA_HOST
                 pause
                 stop
             end if
-            if(ISTR(STRTEMP(1)) .eq. 0) then
+            call ISTR(STRTEMP(1),tempIValue)
+            if(tempIValue .eq. 0) then
                 m_CheckNClusters = .false.
             else
                 m_CheckNClusters = .true.
@@ -83,7 +90,8 @@ module MIGCOALE_ADDONDATA_HOST
         end if
 
         KEYWORD = "&SURDIF"
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        call Get_StatementList(KEYWORD(1:tempLen), Host_SimuCtrlParam%AddOnData, STR, LINE)
         call EXTRACT_NUMB(STR,6,N,STRTEMP)
         if(N .LT. 6) then
             write(*,*) "MCPSCUERROR: Too few parameters for surface diffusion oarameters at line: ",LINE
@@ -93,14 +101,17 @@ module MIGCOALE_ADDONDATA_HOST
             stop
         end if
         DO I=1,3
-            m_FREEDIFCOESPRE(I) = DRSTR(STRTEMP(2*I-1))
-            m_FREEDIFCOESES(I) =  DRSTR(STRTEMP(2*I))
+            call DRSTR(STRTEMP(2*I-1),tempRValue)
+            m_FREEDIFCOESPRE(I) = tempRValue
+            call DRSTR(STRTEMP(2*I),tempRValue)
+            m_FREEDIFCOESES(I) =  tempRValue
             m_FREEDIFCOES(I) = m_FREEDIFCOESPRE(I)*DEXP(-m_FREEDIFCOESES(I)*C_EV2ERG/Host_SimuCtrlParam%TKB)
         END DO
         m_FREESURDIFPRE = (3.D0/(2.D0*CP_PI))*(Host_Boxes%MatrixAtom%m_Volum**C_FOURBYTHREE)*m_FREEDIFCOES(1)
 
         KEYWORD = "&GBSURDIF"
-        call Get_StatementList(KEYWORD(1:LENTRIM(KEYWORD)), Host_SimuCtrlParam%AddOnData, STR, LINE)
+        call LENTRIM(KEYWORD,tempLen)
+        call Get_StatementList(KEYWORD(1:tempLen), Host_SimuCtrlParam%AddOnData, STR, LINE)
         call EXTRACT_NUMB(STR,6,N,STRTEMP)
         if(N .LT. 6) then
             write(*,*) "MCPSCUERROR: Too few parameters for surface diffusion parameters in GB at line: ",LINE
@@ -110,8 +121,10 @@ module MIGCOALE_ADDONDATA_HOST
             stop
         end if
         DO I=1,3
-            m_GBDIFCOESPRE(I) = DRSTR(STRTEMP(2*I-1))
-            m_GBDIFCOESES(I) =  DRSTR(STRTEMP(2*I))
+            call DRSTR(STRTEMP(2*I-1),tempRValue)
+            m_GBDIFCOESPRE(I) = tempRValue
+            call DRSTR(STRTEMP(2*I),tempRValue)
+            m_GBDIFCOESES(I) =  tempRValue
             m_GBDIFCOES(I) = m_GBDIFCOESPRE(I)*DEXP(-m_GBDIFCOESES(I)*C_EV2ERG/Host_SimuCtrlParam%TKB)
         END DO
 

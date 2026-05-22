@@ -44,6 +44,8 @@ module MCLIB_GLOBAL
     character*1000::ctlFile,boxFile,initFile,impFile,outPath,restartFile
     character*1000::STRTMP(5)
     integer::N
+    integer::tempLen
+    integer::tempLen_Str
     !---Body---
     call CtrlParamList%theSimulationCtrlParam%DefaultValue_CtrlParam()
 
@@ -72,15 +74,18 @@ module MCLIB_GLOBAL
     call GETKEYWORD("&", STR, KEYWORD)
     call UPCASE(KEYWORD)
 
-    select case(KEYWORD(1:LENTRIM(KEYWORD)))
+    call LENTRIM(KEYWORD,tempLen)
+    select case(KEYWORD(1:tempLen))
         case("&START_MIGCOALE_CLUSTER_GPU")
           CtrlParamList%theSimulationCtrlParam%RESTARTAT = 0
-          m_AppType = KEYWORD(LENTRIM("&START_")+1:LENTRIM(KEYWORD))
+          call LENTRIM("&START_",tempLen_Str)
+          m_AppType = KEYWORD(tempLen_Str+1:tempLen)
         case("&RESTART_MIGCOALE_CLUSTER_GPU")
           CtrlParamList%theSimulationCtrlParam%RESTARTAT = 1
-          m_AppType = KEYWORD(LENTRIM("&RESTART_")+1:LENTRIM(KEYWORD))
+          call LENTRIM("&RESTART_",tempLen_Str)
+          m_AppType = KEYWORD(tempLen_Str+1:tempLen)
         case default
-          write(*,*) "MCPSCUERROR: Illegal flag in sample file: ",KEYWORD(1:LENTRIM(KEYWORD))
+          write(*,*) "MCPSCUERROR: Illegal flag in sample file: ",KEYWORD(1:tempLen)
           pause
           close(fileUnit)
           stop
@@ -93,11 +98,13 @@ module MCLIB_GLOBAL
       call GETKEYWORD("&", STR, KEYWORD)
       call UPCASE(KEYWORD)
 
-      select case(KEYWORD(1:LENTRIM(KEYWORD)))
+      call LENTRIM(KEYWORD,tempLen)
+      select case(KEYWORD(1:tempLen))
           case("&END")
             exit
           case default
-            write(*,*) "MCPSCU ERROR: Illegal flag in sample file: ",KEYWORD(1:LENTRIM(KEYWORD))
+            call LENTRIM(KEYWORD,tempLen)
+            write(*,*) "MCPSCU ERROR: Illegal flag in sample file: ",KEYWORD(1:tempLen)
             pause
             close(fileUnit)
             stop
@@ -154,7 +161,8 @@ module MCLIB_GLOBAL
             if(IsAbsolutePath(outPath)) then
                 CtrlParamList%theSimulationCtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
             else
-                if(LENTRIM(adjustl(CtrlParamList%theSimulationCtrlParam%InputFilePath)) .GT. 0) then
+                call LENTRIM(adjustl(CtrlParamList%theSimulationCtrlParam%InputFilePath),tempLen_Str)
+                if(tempLen_Str .GT. 0) then
                     CtrlParamList%theSimulationCtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(CtrlParamList%theSimulationCtrlParam%InputFilePath))//FolderSpe//adjustl(trim(outPath)))
                 else
                     CtrlParamList%theSimulationCtrlParam%OutFilePath = CreateDataFolder(adjustl(trim(outPath)))
@@ -214,6 +222,8 @@ module MCLIB_GLOBAL
     integer::length
     integer::ISTAT
     logical::exits
+    integer::tempLen
+    integer::tempLen_Str
     !---Body---
     call GET_COMMAND_ARGUMENT(0,ARG)
 
@@ -234,10 +244,13 @@ module MCLIB_GLOBAL
 
     call resolveLongFileName(SampleFilePath,path,fileName)
 
-    if(LENTRIM(adjustl(path)) .LE. 0) then
-        hFILELOG = CreateOrOpenExistedFile(ExePrefixName(1:LENTRIM(ExePrefixName))//".log","APPEND")
+    call LENTRIM(adjustl(path),tempLen)
+    if(tempLen .LE. 0) then
+        call LENTRIM(ExePrefixName,tempLen_Str)
+        hFILELOG = CreateOrOpenExistedFile(ExePrefixName(1:tempLen_Str)//".log","APPEND")
     else
-        hFILELOG = CreateOrOpenExistedFile(path(1:LENTRIM(path))//FolderSpe//ExePrefixName(1:LENTRIM(ExePrefixName))//".log","APPEND")
+        call LENTRIM(ExePrefixName,tempLen_Str)
+        hFILELOG = CreateOrOpenExistedFile(path(1:tempLen)//FolderSpe//ExePrefixName(1:tempLen_Str)//".log","APPEND")
     end if
 
     return
