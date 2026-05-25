@@ -110,6 +110,8 @@ module INLET_TYPEDEF_IMPLANTLIST
         integer::LINE
         integer::CountSection
         integer::I
+        logical::isequal
+        integer::tempLen
         !---Body---
         LINE = 0
 
@@ -128,7 +130,8 @@ module INLET_TYPEDEF_IMPLANTLIST
 
         call UPCASE(KEYWORD)
 
-        if(.not. ISSTREQUAL(KEYWORD,m_IMPFINPUTF)) then
+        call ISSTREQUAL(KEYWORD,m_IMPFINPUTF,isequal)
+        if(.not. isequal) then
             write(*,*) "MCPSCUERROR: Unknown file header: ",KEYWORD
             write(*,*) "In file: ",truePath
             pause
@@ -145,7 +148,8 @@ module INLET_TYPEDEF_IMPLANTLIST
 
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDIMPFINPUTF")
                     exit
                 case("&GROUPSUBCTL")

@@ -663,11 +663,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
         character*1000::ConfigPath
         integer::LayerNum
         type(STRList),pointer::cursor=>null()
-        logical::isequal
+        logical::isequal(2)
         integer::tempLen
         !---Body---
-        call ISSTREQUAL(PreKEYWORD,"&EXTFSUBCTL",isequal)
-        if(.not. isequal) then
+        call ISSTREQUAL(PreKEYWORD,"&EXTFSUBCTL",isequal(1))
+        if(.not. isequal(1)) then
             write(*,*) "MCPSCUERROR: You must special the &EXTFSUBCTL when the implant strategy is chosen by outer file ."
             write(*,*) "However, you had special the key word :",KEYWORD
             write(*,*) "At line: ",LINE
@@ -706,8 +706,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     call UPCASE(STRTEMP(1))
 
                     this%ImplantCfgFileType = adjustl(trim(KEYWORD_HEAD))//adjustl(trim(STRTEMP(1)))
-
-                    if(ISSTREQUAL(trim(this%ImplantCfgFileType),SRIM_DIST) .or.  ISSTREQUAL(trim(this%ImplantCfgFileType),PANDA_DIST)) then
+                    
+                    call ISSTREQUAL(trim(this%ImplantCfgFileType),SRIM_DIST,isequal(1))
+                    call ISSTREQUAL(trim(this%ImplantCfgFileType),PANDA_DIST,isequal(2))
+                    if(isequal(1) .or.  isequal(2)) then
                         call EXTRACT_SUBSTR(STR,2,N,STRTEMP)
 
                         if(N .LT. 2) then
@@ -722,7 +724,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         this%Elemets(1) = adjustl(trim((STRTEMP(2))))
                     end if
 
-                    if(ISSTREQUAL(trim(this%ImplantCfgFileType),SRIM_DIST)) then
+                    call ISSTREQUAL(trim(this%ImplantCfgFileType),SRIM_DIST,isequal(1))
+                    if(isequal(1)) then
                         call EXTRACT_NUMB(STR,1,N,STRTEMP)
 
                         if(N .LT. 1) then
@@ -732,7 +735,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                             stop
                         end if
 
-                        LayerNum = ISTR(STRTEMP(1))
+                        call ISTR(STRTEMP(1),LayerNum)
 
                         if(LayerNum .LE. 0) then
                             write(*,*) "MCPSCUERROR: the total layer number cannot be less than 0 when it is set for SRIM distribution"
@@ -757,7 +760,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     if(IsAbsolutePath(ConfigPath)) then
                         this%ConfigFolder = adjustl(trim(ConfigPath))
                     else
-                        if(LENTRIM(adjustl(Host_SimuCtrlParam%InputFilePath)) .GT. 0) then
+                        call LENTRIM(adjustl(Host_SimuCtrlParam%InputFilePath),tempLen)
+                        if(tempLen .GT. 0) then
                             this%ConfigFolder = adjustl(trim(Host_SimuCtrlParam%InputFilePath))//FolderSpe//adjustl(trim(ConfigPath))
                         else
                             this%ConfigFolder = adjustl(trim(ConfigPath))
@@ -786,7 +790,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         stop
                     end if
 
-                    this%InsetSequence = ISTR(STRTEMP(1))
+                    call ISTR(STRTEMP(1),this%InsetSequence)
                 case default
                     write(*,*) "MCPSCUERROR: Illegal flag: ",KEYWORD
                     pause
@@ -954,11 +958,14 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF)::SumOfThick
         type(ACluster)::ImplantIon
         type(DiffusorValue)::TheDiffusorValue
+        integer::tempLen
+        real(kind=KINDDF)::tempRValue
         !---Body---
 
         LINE = 0
 
-        hFile = OpenExistedFile(cfgFile(1:LENTRIM(cfgFile)))
+        call LENTRIM(cfgFile,tempLen)
+        hFile = OpenExistedFile(cfgFile(1:tempLen))
 
         LayerNum = 0
 
@@ -967,7 +974,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
             call RemoveComments(STR,"!")
 
-            if(LENTRIM(adjustl(STR)) .LE. 0) then
+            call LENTRIM(adjustl(STR),tempLen)
+            if(tempLen .LE. 0) then
                 cycle
             end if
 
@@ -1053,7 +1061,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
             call RemoveComments(STR,"!")
 
-            if(LENTRIM(adjustl(STR)) .LE. 0) then
+            call LENTRIM(adjustl(STR),tempLen)
+            if(tempLen .LE. 0) then
                 cycle
             end if
 
@@ -1069,7 +1078,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 stop
             end if
 
-            LayersThick(ILayer) = 2*(DRSTR(STRTMP(1))*C_UM2CM - SumOfThick)
+            call DRSTR(STRTMP(1),tempRValue)
+            LayersThick(ILayer) = 2*(tempRValue*C_UM2CM - SumOfThick)
             SumOfThick = SumOfThick + LayersThick(ILayer)
 
             if(SumOfThick .GT. SimBoxes%BOXSIZE(3)) then
@@ -1080,7 +1090,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 stop
             end if
 
-            ClustersSampleConcentrate(ILayer,1) = DRSTR(STRTMP(2))
+            call DRSTR(STRTMP(2),ClustersSampleConcentrate(ILayer,1))
 
             ClustersSample(ILayer,1)%m_Statu = p_ACTIVEFREE_STATU
 
@@ -1122,6 +1132,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         type(DiffusorValue)::TheDiffusorValue
         real(kind=KINDDF),dimension(:,:),allocatable::StoppedPosition
         real(kind=KINDDF)::Thickness
+        integer::tempLen
         !---Body---
         LINE = 0
 
@@ -1132,7 +1143,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
             call RemoveComments(STR,"!")
 
-            if(LENTRIM(adjustl(STR)) .LE. 0) then
+            call LENTRIM(adjustl(STR),tempLen)
+            if(tempLen .LE. 0) then
                 cycle
             end if
 
@@ -1161,7 +1173,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         DO While(.not. GETINPUTSTRLINE_New(hFile,STR,LINE,"!"))
             call RemoveComments(STR,"!")
 
-            if(LENTRIM(adjustl(STR)) .LE. 0) then
+            call LENTRIM(adjustl(STR),tempLen)
+            if(tempLen .LE. 0) then
                 cycle
             end if
 
@@ -1179,9 +1192,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     stop
                 end if
 
-                StoppedPosition(IIon,1) = DRSTR(STRTMP(2))*C_AM2CM ! depth   X
-                StoppedPosition(IIon,2) = DRSTR(STRTMP(3))*C_AM2CM ! lateral Y
-                StoppedPosition(IIon,3) = DRSTR(STRTMP(4))*C_AM2CM ! lateral Z
+                call DRSTR(STRTMP(2),StoppedPosition(IIon,1)) ! depth   X
+                call DRSTR(STRTMP(3),StoppedPosition(IIon,2)) ! lateral Y
+                call DRSTR(STRTMP(4),StoppedPosition(IIon,3)) ! lateral Z
+                StoppedPosition(IIon,:) = StoppedPosition(IIon,:)*C_AM2CM
 
                 if(StoppedPosition(IIon,2) .LT. SimBoxes%BOXBOUNDARY(1,1) .or. StoppedPosition(IIon,2) .GT. SimBoxes%BOXBOUNDARY(1,2)) then
                     write(*,*) "MCPSCUERROR: The SRIM2003 distribution is out of the simulation box in lateral X."
@@ -1338,6 +1352,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::I
         integer::TheIndex
         real(kind=KINDDF)::TotalSampleRate
+        integer::tempLen
         !---Body---
         DO While(.true.)
             call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -1346,7 +1361,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            SELECT CASE(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            SELECT CASE(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
                 case("&NATOMDIST")
@@ -1357,10 +1373,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         pause
                         stop
                     end if
-                    this%NAINI = DRSTR(STRTMP(1))
-                    this%NASDINI  = DRSTR(STRTMP(2))
-                    this%NACUT(1) = DRSTR(STRTMP(3))
-                    this%NACUT(2) = DRSTR(STRTMP(4))
+                    call DRSTR(STRTMP(1),this%NAINI)
+                    call DRSTR(STRTMP(2),this%NASDINI)
+                    call DRSTR(STRTMP(3),this%NACUT(1))
+                    call DRSTR(STRTMP(4),this%NACUT(2))
                     if(this%NACUT(1) .GE. this%NACUT(2)) then
                         write(*,*) "MCPSCUERROR: The right cut cannot less than left cut."
                         write(*,*) "LCut",this%NACUT(1)
@@ -1400,7 +1416,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
                         DO I = 1,N
                             TheIndex = SimBoxes%Atoms_list%FindIndexBySymbol(this%Elemets(I))
-                            this%CompositWeight(TheIndex) = DRSTR(STRTMP(I))
+                            call DRSTR(STRTMP(I),this%CompositWeight(TheIndex))
                         END DO
 
                         if(sum(this%CompositWeight) .LE. 0.D0) then
@@ -1448,6 +1464,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::LayerNum
         real(kind=KINDDF)::SumOfLayer
         real(kind=KINDDF)::TotalSampleRate
+        integer::tempLen
+        real(kind=KINDDF)::tempRValue
         !---Body---
 
         DO While(.true.)
@@ -1457,7 +1475,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            SELECT CASE(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            SELECT CASE(KEYWORD(1:tempLen))
                 CASE("&ENDSUBCTL")
                     exit
                 CASE("&DEPTH_LAYER")
@@ -1472,7 +1491,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         stop
                     end if
 
-                    LayerNum = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),LayerNum)
                     if(LayerNum .LT. 1) then
                         write(*,*) "MCPSCUERROR: The layer number should greater than 1"
                         write(*,*) "At line :",LINE
@@ -1497,7 +1516,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     this%ClustersSampleRate = 0.D0
 
                     DO I = 1,LayerNum
-                        this%LayerThick(I) = DRSTR(STRTMP(I+1))
+                        call DRSTR(STRTMP(I+1),this%LayerThick(I))
                     END DO
 
                     if(sum(this%LayerThick) .LE. 0) then
@@ -1511,7 +1530,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
                     END DO
 
                     DO I = 1,LayerNum
-                        this%ClustersSampleRate(I,1) = DRSTR(STRTMP(I + LayerNum + 1))
+                        call DRSTR(STRTMP(I + LayerNum + 1),this%ClustersSampleRate(I,1))
                     END DO
 
                     ! Note, the out put SampleRate may be the concentrate, we need to convert it to rate now.
@@ -1537,8 +1556,9 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         stop
                     end if
                     DO I=1, 3
-                        this%SUBBOXBOUNDARY(I,1) = Host_SimBoxes%BOXBOUNDARY(I,1) - DRSTR(STRTMP(I))*C_NM2CM/2
-                        this%SUBBOXBOUNDARY(I,2) = Host_SimBoxes%BOXBOUNDARY(I,2) + DRSTR(STRTMP(I))*C_NM2CM/2
+                        call DRSTR(STRTMP(I),tempRValue)
+                        this%SUBBOXBOUNDARY(I,1) = Host_SimBoxes%BOXBOUNDARY(I,1) - tempRValue*C_NM2CM/2
+                        this%SUBBOXBOUNDARY(I,2) = Host_SimBoxes%BOXBOUNDARY(I,2) + tempRValue*C_NM2CM/2
                     END DO
 
                 CASE("&DEPTH_GAUSS")
@@ -1553,8 +1573,10 @@ module INLET_TYPEDEF_IMPLANTSECTION
                         pause
                         stop
                     end if
-                    this%DepthINI = DRSTR(STRTMP(1))*C_NM2CM
-                    this%DepthSDINI = DRSTR(STRTMP(2))*C_NM2CM
+                    call DRSTR(STRTMP(1),tempRValue)
+                    this%DepthINI = tempRValue*C_NM2CM
+                    call DRSTR(STRTMP(2),tempRValue)
+                    this%DepthSDINI = tempRValue*C_NM2CM
                 CASE default
                     write(*,*) "MCPSCUERROR: Illegal Symbol: ", KEYWORD
                     pause
@@ -1631,6 +1653,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::NewTotalSize
         integer::IBox
         integer::NInsertedBatch
+        integer::tempIValue
+        real(kind=KINDDF)::tempRValue
         !---Body---
         if(Record%GetStatu_InsertOneBatchInNextStep() .eq. .true. .AND.  &
            this%Check_ImplantBatchFromConfig(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record) .eq. .true.) then
@@ -1695,11 +1719,12 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
 
+            call Record%GetSimuSteps(tempIValue)
             if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
                 ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             else
-                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + 2))
                 ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
             end if
 
@@ -1722,9 +1747,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
             END DO
 
             if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
-                call Record%SetLastUpdateStatisTime(Record%GetSimuSteps() + 1.D0)
+                call Record%GetSimuSteps(tempIValue)
+                call Record%SetLastUpdateStatisTime(tempIValue + 1.D0)
             else if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalRealTime) then
-                call Record%SetLastUpdateStatisTime(Record%GetSimuTimes() + TSTEP)
+                call Record%GetSimuTimes(tempRValue)
+                call Record%SetLastUpdateStatisTime(tempRValue + TSTEP)
             end if
 
             call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
@@ -1762,22 +1789,24 @@ module INLET_TYPEDEF_IMPLANTSECTION
         real(kind=KINDDF)::TSTEP
         !---Local Vars---
         integer::I
+        real(kind=KINDDF)::tempRValue
         !---Body---
 
         call Record%SetFalse_InsertOneBatchInNextStep()
 
+        call Record%GetSimuTimes(tempRValue)
 
         if(this%NInsertTimePoint .GT. 0) then
             DO I = Record%Get_InsertBatchNum()+1,this%NInsertTimePoint
-                if(this%InsertTimePoint(I) .GE. Record%GetSimuTimes() .AND. this%InsertTimePoint(I) .LE. (Record%GetSimuTimes() + TSTEP) ) then
-                    TSTEP = DABS(this%InsertTimePoint(I) - Record%GetSimuTimes())
+                if(this%InsertTimePoint(I) .GE. tempRValue .AND. this%InsertTimePoint(I) .LE. (tempRValue + TSTEP) ) then
+                    TSTEP = DABS(this%InsertTimePoint(I) -tempRValue)
                     call Record%SetTrue_InsertOneBatchInNextStep()
                     exit
                 end if
             END DO
         else
-            if(floor((Record%GetSimuTimes() + TSTEP)/this%InsertTimeInterval) .GT. Record%Get_InsertBatchNum()) then
-                TSTEP = DABS((Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - Record%GetSimuTimes())
+            if(floor((tempRValue + TSTEP)/this%InsertTimeInterval) .GT. Record%Get_InsertBatchNum()) then
+                TSTEP = DABS((Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - tempRValue)
                 call Record%SetTrue_InsertOneBatchInNextStep()
             end if
         end if
@@ -1797,20 +1826,23 @@ module INLET_TYPEDEF_IMPLANTSECTION
         logical::TheResult
         !---Local Vars---
         integer::I
+        real(kind=KINDDF)::tempRValue
         !---Body---
 
         TheResult = .false.
 
+        call Record%GetSimuTimes(tempRValue)
+
         if(this%NInsertTimePoint .GT. 0) then
             DO I = Record%Get_InsertBatchNum()+1,this%NInsertTimePoint
-                if( dabs(this%InsertTimePoint(I) - Record%GetSimuTimes())*TENPOWFIVE/Record%GetSimuTimes() .LE. 1.D0) then
+                if( dabs(this%InsertTimePoint(I) - tempRValue)*TENPOWFIVE/tempRValue .LE. 1.D0) then
                     TheResult = .true.
                     exit
                 end if
 
             END DO
         else
-            if( dabs((Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - Record%GetSimuTimes())*TENPOWFIVE/Record%GetSimuTimes() .LE. 1.D0) then
+            if( dabs((Record%Get_InsertBatchNum() + 1)*this%InsertTimeInterval - tempRValue)*TENPOWFIVE/tempRValue .LE. 1.D0) then
                 TheResult = .true.
             end if
         end if
@@ -1846,6 +1878,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::ImplantNumEachBox
         integer::TotalImplantNum
         integer::NC0
+        integer::tempIValue
+        real(kind=KINDDF)::tempRValue
         !---Body---
 
         TotalImplantNum = 0
@@ -1884,7 +1918,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
             call Dev_Boxes%SweepUnActiveMemory_GPUToCPU(Host_Boxes,Host_SimuCtrlParam)
 
-            call Record%SetLastSweepOutTime(Record%GetSimuTimes())
+            call Record%GetSimuTimes(tempRValue)
+            call Record%SetLastSweepOutTime(tempRValue)
 
             call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
@@ -1909,11 +1944,12 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeWalkRandNum(NewTotalSize)
                 call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeImplantRandNum(MultiBox*NewAllocateNCEachBox)
 
+                call Record%GetSimuSteps(tempIValue)
                 if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
                     ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
                 else
-                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                    call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(NewTotalSize,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + 2))
                     ! 3 is for three random boundary condition for 1-D diffusion , 2 is for the random 1-D direction for new generated cluster in pre and back merge
                 end if
 
@@ -1937,9 +1973,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
             call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
 
             if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
-                call Record%SetLastUpdateStatisTime(Record%GetSimuSteps() + 1.D0)
+                call Record%GetSimuSteps(tempIValue)
+                call Record%SetLastUpdateStatisTime(tempIValue + 1.D0)
             else if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalRealTime) then
-                call Record%SetLastUpdateStatisTime(Record%GetSimuTimes() + TSTEP)
+                call Record%GetSimuTimes(tempRValue)
+                call Record%SetLastUpdateStatisTime(tempRValue + TSTEP)
             end if
 
             call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
@@ -1971,9 +2009,11 @@ module INLET_TYPEDEF_IMPLANTSECTION
                 call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
 
                 if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
-                    call Record%SetLastUpdateStatisTime(Record%GetSimuSteps() + 1.D0)
+                    call Record%GetSimuSteps(tempIValue)
+                    call Record%SetLastUpdateStatisTime(tempIValue + 1.D0)
                 else if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalRealTime) then
-                    call Record%SetLastUpdateStatisTime(Record%GetSimuTimes() + TSTEP)
+                    call Record%GetSimuTimes(tempRValue)
+                    call Record%SetLastUpdateStatisTime(tempRValue + TSTEP)
                 end if
 
                 call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
@@ -2093,6 +2133,7 @@ module INLET_TYPEDEF_IMPLANTSECTION
         integer::RestoreImplantNumEachBox
         real(kind=KINDDF)::ImplantPersistTime
         integer,dimension(:),allocatable::NCFree
+        real(kind=KINDDF)::tempRValue
         !---Body---
 
         RestoreImplantNumEachBox = ImplantNumEachBox_Ceiling
@@ -2103,7 +2144,8 @@ module INLET_TYPEDEF_IMPLANTSECTION
 
         MultiBox = Host_SimuCtrlParam%MultiBox
 
-        ImplantPersistTime = Record%GetSimuTimes() - Record%GetStartImplantTime()
+        call Record%GetSimuTimes(tempRValue)
+        ImplantPersistTime = tempRValue - Record%GetStartImplantTime()
 
         call AllocateArray_Host(NCFree,MultiBox,"NCFree")
 

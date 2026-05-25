@@ -128,6 +128,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::ISEED0
         integer::ISEED(2)
         logical::exitflag
+        integer::tempStep
+        integer::tempIValue
+        integer::tempSection
+        real(kind=KINDDF)::tempRValue
         !---Body---
         call tempMigCoalClusterRecord%InitMigCoalClusterRecord(MultiBox=Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox)
 
@@ -143,8 +147,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         call ReadInitBoxSimRecord(Host_SimBoxes,m_InitBoxSimCfgList,tempMigCoalClusterRecord)
 
+        call tempMigCoalClusterRecord%GetSimuSteps(tempStep)
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%RESTARTAT .GT. 0 .or. &
-          tempMigCoalClusterRecord%GetSimuSteps() .GT. 0) then
+           tempStep .GT. 0) then
             !---For restart, we should use the random number in the sequence before last running---
             !---However, it too hard to realize, currently, we should at least that the random number in---
             !---the restart job is not same with last running, so, it is necessary to change the random seed again---
@@ -152,10 +157,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             DO While(.true.)
                 exitflag = .true.
 
-                ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1) + tempMigCoalClusterRecord%GetSimuSteps() + DRAND32()*RAND32SEEDLIB_SIZE
+                ISEED0 = Host_SimuCtrlParamList%theSimulationCtrlParam%RANDSEED(1) + tempIValue + DRAND32()*RAND32SEEDLIB_SIZE
 
                 call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
-                ISEED0 = ISEED0 + JobIndex + tempMigCoalClusterRecord%GetTimeSections() - 1
+                call tempMigCoalClusterRecord%GetTimeSections(tempSection)
+                ISEED0 = ISEED0 + JobIndex + tempSection - 1
                 call GetSeed_RAND32SEEDLIB(ISEED0,ISEED(1),ISEED(2))
 
                 DO I = 1,size(ISEED)
@@ -173,14 +179,16 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         end if
 
         if(Host_SimuCtrlParamList%theSimulationCtrlParam%INDEPBOX) then
-            if(JobIndex .LT. tempMigCoalClusterRecord%GetSimuPatch()) then
+            call tempMigCoalClusterRecord%GetSimuPatch(tempIValue)
+            if(JobIndex .LT. tempIValue) then
                 return
             end if
 
             TestLoop0 = 1
             TestLoop1 = 1
         else
-            TestLoop0 = tempMigCoalClusterRecord%GetSimuPatch()
+            call tempMigCoalClusterRecord%GetSimuPatch(tempIValue)
+            TestLoop0 = tempIValue
             TestLoop1 = Host_SimuCtrlParamList%theSimulationCtrlParam%TOTALBOX/Host_SimuCtrlParamList%theSimulationCtrlParam%MultiBox
         end if
 
@@ -189,7 +197,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             !---The Assignment had been override----
             m_MigCoalClusterRecord = tempMigCoalClusterRecord
 
-            cursor=>Host_SimuCtrlParamList%Get_P(m_MigCoalClusterRecord%GetTimeSections())
+            call m_MigCoalClusterRecord%GetTimeSections(tempSection)
+            cursor=>Host_SimuCtrlParamList%Get_P(tempSection)
 
             if(Host_SimuCtrlParamList%theSimulationCtrlParam%INDEPBOX) then
                 call m_MigCoalClusterRecord%SetSimuPatch(JobIndex)
@@ -212,9 +221,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
             DO While(.true.)
 
-                write(*,*) "Start to evolution for time section ",m_MigCoalClusterRecord%GetTimeSections()
+                call m_MigCoalClusterRecord%GetTimeSections(tempSection)
+                write(*,*) "Start to evolution for time section ",tempSection
 
-                call m_MigCoalClusterRecord%SetStartImplantTime(m_MigCoalClusterRecord%GetSimuTimes())
+                call m_MigCoalClusterRecord%GetSimuTimes(tempRValue)
+                call m_MigCoalClusterRecord%SetStartImplantTime(tempRValue)
 
                 call copyInPhyParamsConstant(cursor%theSimulationCtrlParam)
 
@@ -262,6 +273,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Local Vars---
         integer::TotalSize
         integer:: NCUT, DUP, DUPXYZ(3)
+        integer::tempIValue
+        real(kind=KINDDF)::tempRValue
         !---Body---
         if(m_DumplicateBox .eq. .true.) then
 
@@ -298,7 +311,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end if
 
                 call GetBoxesMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
-                if(Record%GetSimuSteps() .eq. 0) then
+                call Record%GetSimuSteps(tempIValue)
+                if(tempIValue .eq. 0) then
                     call TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%ConverFromUsed(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
                     call TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual%ConverFromUsed(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
                 else
@@ -316,7 +330,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call PutOut_Instance_Statistic_IntegralBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record,Model=0)
                 call PutOut_Instance_Statistic_EachBox(Host_SimBoxes,Host_SimuCtrlParam,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
 
-                if(Record%GetSimuTimes() .gt. Host_SimuCtrlParam%TermTValue) then
+                call Record%GetSimuTimes(tempRValue)
+                if(tempRValue .gt. Host_SimuCtrlParam%TermTValue) then
                     exit
                 end if
 
@@ -338,11 +353,12 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end if
 
                 if(TotalSize .GT. size(Dev_MigCoaleGVars%dm_MigCoale_RandDev%dm_DevRandRecord)) then
+                    call Record%GetSimuSteps(tempIValue)
                     if(Host_SimuCtrlParam%UPDATETSTEPSTRATEGY .eq. mp_SelfAdjustlStep_NNDR_LastPassage_Integer) then
-                        call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
+                        call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + (Host_SimuCtrlParam%LastPassageFactor+2)*3 + 2))
                         ! 3 is for three random boundary condition for 1-D diffusion , (Host_SimuCtrlParam%LastPassageFactor+2)*3 is for random walk , 2 is for the random 1-D direction for new generated cluster in pre and back merge
                     else
-                        call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),Record%GetSimuSteps()*(3 + 2))
+                        call Dev_MigCoaleGVars%dm_MigCoale_RandDev%ReSizeDevRandRecord(TotalSize,Record%RandSeed_InnerDevWalk(1),tempIValue*(3 + 2))
                         ! 3 is for three random boundary condition for 1-D diffusion ,2 is for the random 1-D direction for new generated cluster in pre and back merge
                     end if
 
@@ -374,7 +390,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             end if
 
             call GetBoxesMigCoaleStat_Used_GPU(Host_SimBoxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used,Record)
-            if(Record%GetSimuSteps() .eq. 0) then
+            call Record%GetSimuSteps(tempIValue)
+            if(tempIValue .eq. 0) then
                 call TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%ConverFromUsed(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
                 call TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Virtual%ConverFromUsed(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Used)
             else
@@ -414,6 +431,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         logical::HasUpdateStatis
         integer::MultiBox
         integer::NSIZE
+        integer::tempIValue
+        real(kind=KINDDF)::tempRValue
+        real(kind=KINDDF)::tempUpTime
         !---Body---
 
         Associate(Host_ClustesInfo=>Host_Boxes%m_ClustersInfo_CPU,Dev_ClustesInfo=>Dev_Boxes%dm_ClusterInfo_GPU, &
@@ -431,19 +451,23 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call For_One_Step(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Dev_MigCoaleGVars,ImplantSectionList,TheMigCoaleStatInfoWrap,Record,TSTEP)
 
                 if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalSteps) then
-                    if ((Record%GetSimuSteps() - Record%GetLastUpdateStatisTime()) .GE. Host_SimuCtrlParam%TUpdateStatisValue) then
+                    call Record%GetSimuSteps(tempIValue)
+                    call  Record%GetLastUpdateStatisTime(tempRValue)
+                    if ((tempIValue - tempRValue) .GE. Host_SimuCtrlParam%TUpdateStatisValue) then
                         call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
 
-                        call Record%SetLastUpdateStatisTime(dble(Record%GetSimuSteps()))
+                        call Record%SetLastUpdateStatisTime(dble(tempIValue))
 
                     end if
 
                 else if(Host_SimuCtrlParam%TUpdateStatisFlag .eq. mp_UpdateStatisFlag_ByIntervalRealTime) then
-                    if((Record%GetSimuTimes() - Record%GetLastUpdateStatisTime()) .GE. Host_SimuCtrlParam%TUpdateStatisValue) then
+                    call Record%GetSimuTimes(tempRValue)
+                    call Record%GetLastUpdateStatisTime(tempUpTime)
+                    if((tempRValue - tempUpTime) .GE. Host_SimuCtrlParam%TUpdateStatisValue) then
 
                         call GetBoxesMigCoaleStat_Expd_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd,Record)
 
-                        call Record%SetLastUpdateStatisTime(Record%GetSimuTimes())
+                        call Record%SetLastUpdateStatisTime(tempRValue)
                     end if
                 end if
 
@@ -467,7 +491,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     end if
                 end if
 
-                if(Record%GetSimuTimes() .GE. Host_SimuCtrlParam%TermTValue) then
+                call Record%GetSimuTimes(tempRValue)
+                if(tempRValue .GE. Host_SimuCtrlParam%TermTValue) then
                     exit
                 end if
 
@@ -745,6 +770,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         character*18,dimension(:),allocatable::CAcumNum
         integer::I
         integer::length,trueLength
+        integer::tempLen
         !---Body---
 
         call DOInitSimulationBoxesConfig(SimBoxes,Host_SimuCtrlParam,Record,InitBoxCfgList)
@@ -762,31 +788,36 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         DO I = 1,p_NUMBER_OF_STATU
             CRMin(I) = "RMIN_"//trim(p_CStatu(I))
             length = len(CRMin(I))
-            trueLength = LENTRIM(CRMin(I))
+            call LENTRIM(CRMin(I),tempLen)
+            trueLength = tempLen
             CRMin(I)(length-trueLength+1:length) = CRMin(I)(1:trueLength)
             CRMin(I)(1:length-trueLength) = ""
 
             CRMax(I) = "RMAX_"//trim(p_CStatu(I))
             length = len(CRMax(I))
-            trueLength = LENTRIM(CRMax(I))
+            call LENTRIM(CRMax(I),tempLen)
+            trueLength = tempLen
             CRMax(I)(length-trueLength+1:length) = CRMax(I)(1:trueLength)
             CRMax(I)(1:length-trueLength) = ""
 
             CCNum(I) = "NUM_"//trim(p_CStatu(I))
             length = len(CCNum(I))
-            trueLength = LENTRIM(CCNum(I))
+            call LENTRIM(CCNum(I),tempLen)
+            trueLength = tempLen
             CCNum(I)(length-trueLength+1:length) = CCNum(I)(1:trueLength)
             CCNum(I)(1:length-trueLength) = ""
 
             CAcumNum(I) = "ACUM_"//trim(p_CStatu(I))
             length = len(CAcumNum(I))
-            trueLength = LENTRIM(CAcumNum(I))
+            call LENTRIM(CAcumNum(I),tempLen)
+            trueLength = tempLen
             CAcumNum(I)(length-trueLength+1:length) = CAcumNum(I)(1:trueLength)
             CAcumNum(I)(1:length-trueLength) = ""
 
         END DO
 
-        path = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"RTStatistic_EachBox_.out"
+        call LENTRIM(Host_SimuCtrlParam%OutFilePath,tempLen)
+        path = Host_SimuCtrlParam%OutFilePath(1:tempLen)//FolderSpe//"RTStatistic_EachBox_.out"
 
         Record%HSizeStatistic_EachBox = CreateNewFile(path)
 
@@ -808,7 +839,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         FLUSH(Record%HSizeStatistic_EachBox)
 
-        path = Host_SimuCtrlParam%OutFilePath(1:LENTRIM(Host_SimuCtrlParam%OutFilePath))//FolderSpe//"RTStatistic_TotalBox_.out"
+        call LENTRIM(Host_SimuCtrlParam%OutFilePath,tempLen)
+        path = Host_SimuCtrlParam%OutFilePath(1:tempLen)//FolderSpe//"RTStatistic_TotalBox_.out"
 
         Record%HSizeStatistic_TotalBox = CreateNewFile(path)
 
@@ -859,13 +891,15 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         character*32::STRTMP(10)
         integer::LINE
         integer::N
+        integer::tempLen
         !---Body---
         existed = .false.
 
         LINE = 0
         call InitBoxCfgList%Clean_InitBoxSimCfgList()
 
-        INQUIRE(File=Host_SimuCtrlParam%IniConfig(1:LENTRIM(Host_SimuCtrlParam%IniConfig)),exist=existed)
+        call LENTRIM(Host_SimuCtrlParam%IniConfig,tempLen)
+        INQUIRE(File=Host_SimuCtrlParam%IniConfig(1:tempLen),exist=existed)
 
         if(.not. existed) then
             write(*,*) "MCPSCUERROR: The box initial file do not existed!"
@@ -881,8 +915,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         STR = adjustl(STR)
         call GETKEYWORD("&",STR,KEYWORD)
         call UPCASE(KEYWORD)
-        if(KEYWORD(1:LENTRIM(KEYWORD)) .ne. m_INIFSTARTFLAG) then
-            write(*,*) "MCPSCUERROR: The Start Flag of Init box Parameters is Illegal: ",KEYWORD(1:LENTRIM(KEYWORD))
+        call LENTRIM(KEYWORD,tempLen)
+
+        if(KEYWORD(1:tempLen) .ne. m_INIFSTARTFLAG) then
+            write(*,*) "MCPSCUERROR: The Start Flag of Init box Parameters is Illegal: ",KEYWORD(1:tempLen)
             pause
             stop
         end if
@@ -894,7 +930,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDINITINPUTF")
                     exit
                 case("&GROUPSUBCTL")
@@ -911,8 +948,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         END DO
 
         return
-
-        100 write(*,*) "MCPSCUERROR : Load init config file"//Host_SimuCtrlParam%IniConfig(1:LENTRIM(Host_SimuCtrlParam%IniConfig))//"failed !"
+        call LENTRIM(Host_SimuCtrlParam%IniConfig,tempLen)
+        100 write(*,*) "MCPSCUERROR : Load init config file"//Host_SimuCtrlParam%IniConfig(1:tempLen)//"failed !"
             write(*,*) "At line :",LINE
             write(*,*) "The program would stop."
             pause
@@ -934,6 +971,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::LINE
         integer::RecordNum
         character*30::TheVersion
+        logical::isequal
         !---Body---
 
         RecordNum = 0
@@ -957,7 +995,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 call UPCASE(KEYWORD)
 
-                if(ISSTREQUAL(adjustl(trim(KEYWORD)),OKMC_OUTCFG_FORMAT18)) then
+                call ISSTREQUAL(adjustl(trim(KEYWORD)),OKMC_OUTCFG_FORMAT18,isequal)
+                if(isequal) then
                     if(RecordNum .GE. 1) then
                         write(*,*) "MCPSCUERROR: Do not allow two records for initialization."
                         pause
@@ -1002,6 +1041,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         character*32::KEYWORD
         character*32::STRTMP(10)
         integer::N
+        integer::tempLen
         !---Body---
 
         call tempInitBoxSimCfg%Clean_InitBoxSimCfg()
@@ -1013,7 +1053,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
                 case("&TYPE")
@@ -1025,7 +1066,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                         pause
                         stop
                     end if
-                    tempInitBoxSimCfg%InitType = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),tempInitBoxSimCfg%InitType)
                     exit
                 case default
                     write(*,*) "MCPSCUERROR: You must special the bubble init type first!"
@@ -1072,6 +1113,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::IBox
         integer::MultiBox
         integer::SNC0
+        integer::tempLen
+        integer::tempIValue
         !---Body---
 
         MultiBox = Host_SimuCtrlParam%MultiBox
@@ -1083,7 +1126,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
                 case("&NUMBER")
@@ -1108,10 +1152,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                         pause
                         stop
                     else if(N .eq. 1) then
-                        InitBoxCfg%NClusters = ISTR(STRTMP(1))
+                        call ISTR(STRTMP(1),tempIValue)
+                        InitBoxCfg%NClusters = tempIValue
                     else if(N .eq. MultiBox) then
                         DO IBox = 1,MultiBox
-                            InitBoxCfg%NClusters(IBox) = ISTR(STRTMP(IBox))
+                            call ISTR(STRTMP(IBox),InitBoxCfg%NClusters(IBox))
                         END DO
                     end if
 
@@ -1149,6 +1194,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         character*32::KEYWORD
         character*200::STRTMP(10)
         integer::N
+        integer::tempLen
         !---Body---
 
         DO While(.true.)
@@ -1158,7 +1204,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            select case(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            select case(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
                 case("&INITFILE")
@@ -1220,6 +1267,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::NElements
         integer::I
         integer::TheIndex
+        integer::tempLen
         !---Body---
         DO While(.true.)
             call GETINPUTSTRLINE(hFile,STR,LINE,"!",*100)
@@ -1228,7 +1276,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            SELECT CASE(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            SELECT CASE(KEYWORD(1:tempLen))
                 case("&ENDSUBCTL")
                     exit
                 CASE("&NATOMDIST")
@@ -1239,10 +1288,10 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                         pause
                         stop
                     end if
-                    InitBoxCfg%NAINI = DRSTR(STRTMP(1))
-                    InitBoxCfg%NASDINI  = DRSTR(STRTMP(2))
-                    InitBoxCfg%NACUT(1) = DRSTR(STRTMP(3))
-                    InitBoxCfg%NACUT(2) = DRSTR(STRTMP(4))
+                    call DRSTR(STRTMP(1),InitBoxCfg%NAINI)
+                    call DRSTR(STRTMP(2),InitBoxCfg%NASDINI)
+                    call DRSTR(STRTMP(3),InitBoxCfg%NACUT(1))
+                    call DRSTR(STRTMP(4),InitBoxCfg%NACUT(2))
 
                     if(InitBoxCfg%NACUT(1) .GE. InitBoxCfg%NACUT(2)) then
                         write(*,*) "MCPSCUERROR: The right cut cannot less than left cut."
@@ -1282,7 +1331,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                         DO I = 1,N
                             TheIndex = SimBoxes%Atoms_list%FindIndexBySymbol(InitBoxCfg%Elemets(I))
-                            InitBoxCfg%CompositWeight(TheIndex) = DRSTR(STRTMP(I))
+                            call DRSTR(STRTMP(I),InitBoxCfg%CompositWeight(TheIndex))
                         END DO
 
                         if(sum(InitBoxCfg%CompositWeight) .LE. 0.D0) then
@@ -1330,6 +1379,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::I
         real(kind=KINDDF)::TotalLayerThick
         real(kind=KINDDF)::TotalPNC
+        integer::tempLen
         !---Body---
 
         DO While(.true.)
@@ -1339,7 +1389,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
             call GETKEYWORD("&",STR,KEYWORD)
             call UPCASE(KEYWORD)
 
-            SELECT CASE(KEYWORD(1:LENTRIM(KEYWORD)))
+            call LENTRIM(KEYWORD,tempLen)
+            SELECT CASE(KEYWORD(1:tempLen))
                 CASE("&ENDSUBCTL")
                     exit
                 CASE("&DEPTH_LAYER")
@@ -1353,7 +1404,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                         pause
                         stop
                     end if
-                    LayerNum = ISTR(STRTMP(1))
+                    call ISTR(STRTMP(1),LayerNum)
                     if(LayerNum .LT. 1) then
                         write(*,*) "MCPSCUERROR: The layer number should greater than 1"
                         write(*,*) "At line :",LINE
@@ -1378,7 +1429,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     InitBoxCfg%PNCLayers = 0.D0
 
                     DO I = 1,LayerNum
-                        InitBoxCfg%LayerThick(I) = DRSTR(STRTMP(I+1))
+                        call DRSTR(STRTMP(I+1),InitBoxCfg%LayerThick(I))
                     END DO
 
                     if(sum(InitBoxCfg%LayerThick) .LE. 0) then
@@ -1392,7 +1443,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                     END DO
 
                     DO I = 1,LayerNum
-                        InitBoxCfg%PNCLayers(I) = DRSTR(STRTMP(I + LayerNum + 1))
+                        call DRSTR(STRTMP(I + LayerNum + 1),InitBoxCfg%PNCLayers(I))
                     END DO
 
                     TotalPNC = sum(InitBoxCfg%PNCLayers)
@@ -1417,8 +1468,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                         stop
                     end if
                     DO I=1, 3
-                        InitBoxCfg%SUBBOXBOUNDARY(I,1) = DRSTR(STRTMP((I-1)*2 + 1))*Host_SimBoxes%LatticeLength
-                        InitBoxCfg%SUBBOXBOUNDARY(I,2) = DRSTR(STRTMP((I-1)*2 + 2))*Host_SimBoxes%LatticeLength
+                        call DRSTR(STRTMP((I-1)*2 + 1),InitBoxCfg%SUBBOXBOUNDARY(I,1))
+                        InitBoxCfg%SUBBOXBOUNDARY(I,1) = InitBoxCfg%SUBBOXBOUNDARY(I,1)*Host_SimBoxes%LatticeLength
+
+                        call DRSTR(STRTMP((I-1)*2 + 2),InitBoxCfg%SUBBOXBOUNDARY(I,2))
+                        InitBoxCfg%SUBBOXBOUNDARY(I,2) = InitBoxCfg%SUBBOXBOUNDARY(I,2)*Host_SimBoxes%LatticeLength
 
                         if(InitBoxCfg%SUBBOXBOUNDARY(I,1) .LT. Host_SimBoxes%BOXBOUNDARY(I,1) .or. InitBoxCfg%SUBBOXBOUNDARY(I,1) .GT. Host_SimBoxes%BOXBOUNDARY(I,2)) then
                             write(*,*) "MCPSCUERROR: The subbox boundary should not beyond the origin box.",InitBoxCfg%SUBBOXBOUNDARY(I,1)
@@ -1447,8 +1501,11 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                         pause
                         stop
                     end if
-                    InitBoxCfg%DepthINI = DRSTR(STRTMP(1))*Host_SimBoxes%LatticeLength
-                    InitBoxCfg%DepthSDINI = DRSTR(STRTMP(2))*Host_SimBoxes%LatticeLength
+                    call DRSTR(STRTMP(1),InitBoxCfg%DepthINI)
+                    InitBoxCfg%DepthINI = InitBoxCfg%DepthINI*Host_SimBoxes%LatticeLength
+
+                    call DRSTR(STRTMP(2),InitBoxCfg%DepthSDINI)
+                    InitBoxCfg%DepthSDINI = InitBoxCfg%DepthSDINI*Host_SimBoxes%LatticeLength
                 CASE default
                     write(*,*) "MCPSCUERROR: Illegal Symbol: ", KEYWORD
                     pause
@@ -1953,6 +2010,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         logical::OutIntegralBoxStatistic
         logical::OutEachBoxStatistic
         integer::NC0
+        integer::tempIValue
+        real(kind=KINDDF)::tempRValue
+        real(kind=KINDDF)::tempOutValue
         !---Body---
 
         OutIntegralBoxStatistic = .false.
@@ -1976,11 +2036,14 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call PutOut_Instance_Statistic_IntegralBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record,Model=0)
 
                 if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalSteps) then
-                    call Record%SetLastOutSizeDistTime_IntegralBox(dble(Record%GetSimuSteps()))
+                    call Record%GetSimuSteps(tempIValue)
+                    call Record%SetLastOutSizeDistTime_IntegralBox(dble(tempIValue))
                 else if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalRealTime) then
-                    call Record%SetLastOutSizeDistTime_IntegralBox(Record%GetSimuTimes())
+                    call Record%GetSimuTimes(tempRValue)
+                    call Record%SetLastOutSizeDistTime_IntegralBox(tempRValue)
                 else if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalTimeMagnification) then
-                    call Record%SetLastOutSizeDistTime_IntegralBox(Record%GetSimuTimes())
+                    call Record%GetSimuTimes(tempRValue)
+                    call Record%SetLastOutSizeDistTime_IntegralBox(tempRValue)
                 end if
             end if
 
@@ -1988,11 +2051,14 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 call PutOut_Instance_Statistic_EachBox(Host_Boxes,Host_SimuCtrlParam,TheMigCoaleStatisticInfo,Record)
 
                 if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalSteps) then
-                    call Record%SetLastOutSizeDistTime_EachBox(dble(Record%GetSimuSteps()))
+                    call Record%GetSimuSteps(tempIValue)
+                    call Record%SetLastOutSizeDistTime_EachBox(dble(tempIValue))
                 else if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalRealTime) then
-                    call Record%SetLastOutSizeDistTime_EachBox(Record%GetSimuTimes())
+                    call Record%GetSimuTimes(tempRValue)
+                    call Record%SetLastOutSizeDistTime_EachBox(tempRValue)
                 else if(Host_SimuCtrlParam%OutPutSCFlag .eq. mp_OutTimeFlag_ByIntervalTimeMagnification) then
-                    call Record%SetLastOutSizeDistTime_EachBox(Record%GetSimuTimes())
+                    call Record%GetSimuTimes(tempRValue)
+                    call Record%SetLastOutSizeDistTime_EachBox(tempRValue)
                 end if
             end if
 
@@ -2005,36 +2071,45 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         ! check if need to output intermediate configure
         if(Host_SimuCtrlParam%OutPutConfFlag .eq. mp_OutTimeFlag_ByIntervalSteps) then
-            if((Record%GetSimuSteps() - Record%GetLastRecordOutConfigTime()) .GE. Host_SimuCtrlParam%OutPutConfValue .OR. &
-                Record%GetSimuTimes() .GE. Host_SimuCtrlParam%TermTValue) then
+            call Record%GetSimuSteps(tempIValue)
+            call Record%GetSimuTimes(tempRValue)
+            call Record%GetLastRecordOutConfigTime(tempOutValue)
+            if((tempIValue - tempOutValue) .GE. Host_SimuCtrlParam%OutPutConfValue .OR. &
+                tempRValue .GE. Host_SimuCtrlParam%TermTValue) then
 
                 call Dev_Boxes%dm_ClusterInfo_GPU%CopyOutToHost(Host_Boxes%m_ClustersInfo_CPU,NC0,IfCpyNL=.false.)
 
                 call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
 
-                call Record%SetLastRecordOutConfigTime(dble(Record%GetSimuSteps()))
+                call Record%SetLastRecordOutConfigTime(dble(tempIValue))
 
             end if
         else if(Host_SimuCtrlParam%OutPutConfFlag .eq. mp_OutTimeFlag_ByIntervalRealTime) then
-            if((Record%GetSimuTimes() - Record%GetLastRecordOutConfigTime()) .GE. Host_SimuCtrlParam%OutPutConfValue .OR. &
-                Record%GetSimuTimes() .GE. Host_SimuCtrlParam%TermTValue) then
+            call Record%GetSimuTimes(tempRValue)
+            call Record%GetLastRecordOutConfigTime(tempOutValue)
+            if((tempRValue - tempOutValue) .GE. Host_SimuCtrlParam%OutPutConfValue .OR. &
+                tempRValue .GE. Host_SimuCtrlParam%TermTValue) then
 
                 call Dev_Boxes%dm_ClusterInfo_GPU%CopyOutToHost(Host_Boxes%m_ClustersInfo_CPU,NC0,IfCpyNL=.false.)
 
                 call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
 
-                call Record%SetLastRecordOutConfigTime(Record%GetSimuTimes())
+                call Record%GetSimuTimes(tempRValue)
+                call Record%SetLastRecordOutConfigTime(tempRValue)
             end if
 
         else if(Host_SimuCtrlParam%OutPutConfFlag .eq. mp_OutTimeFlag_ByIntervalTimeMagnification) then
-            if((Record%GetSimuTimes()/Host_SimuCtrlParam%OutPutConfValue) .GE. Record%GetLastRecordOutConfigTime() .OR. &
-                Record%GetSimuTimes() .GE. Host_SimuCtrlParam%TermTValue) then
+            call Record%GetSimuTimes(tempRValue)
+            call Record%GetLastRecordOutConfigTime(tempOutValue)
+            if((tempRValue/Host_SimuCtrlParam%OutPutConfValue) .GE. tempOutValue .OR. &
+                tempRValue .GE. Host_SimuCtrlParam%TermTValue) then
 
                 call Dev_Boxes%dm_ClusterInfo_GPU%CopyOutToHost(Host_Boxes%m_ClustersInfo_CPU,NC0,IfCpyNL=.false.)
 
                 call Host_Boxes%PutoutCfg(Host_SimuCtrlParam,Record)
 
-                call Record%SetLastRecordOutConfigTime(Record%GetSimuTimes())
+                call Record%GetSimuTimes(tempRValue)
+                call Record%SetLastRecordOutConfigTime(tempRValue)
             end if
 
         else if(Record%GetStatusTriggerFocusedTimePoints() .eq. .true.) then
@@ -2060,6 +2135,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::NCAct
         real(kind=KINDDF)::RAVA
         real(kind=KINDDF)::NAVA
+        integer::tempSimuSteps
+        real(kind=KINDDF)::tempTimeSteps
+        real(kind=KINDDF)::tempSimuTimes
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2079,23 +2157,26 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Concentrate = NCAct/(MultiBox*Host_Boxes%BOXVOLUM)
 
-                write(Record%HSizeStatistic_TotalBox, fmt="(I30,1x,2(1PE30.10,1x),10(I30,1x),17(1PE30.10,1x),8(I30,1x))") Record%GetSimuSteps(),             &
-                                                                                                           Record%GetSimuTimes(),                          &
-                                                                                                           Record%GetTimeSteps(),                          &
-                                                                                                           NCAct,                                          &
-                                                                                                           sum(TBasicInfo%NC),                             &
-                                                                                                           sum(TBasicInfo%NA),                             &
-                                                                                                           TBasicInfo%NC(1:p_NUMBER_OF_STATU),             &
-                                                                                                           TMigStatInfo%RMIN(1:p_NUMBER_OF_STATU)*C_CM2NM, &
-                                                                                                           TMigStatInfo%RMAX(1:p_NUMBER_OF_STATU)*C_CM2NM, &
-                                                                                                           RAVA*C_CM2NM,                                   &
-                                                                                                           NAVA,                                           &
-                                                                                                           Concentrate,                                    &
-                                                                                                           Record%GetImplantedEntitiesNum(),                &
-                                                                                                           TBasicInfo%NC(p_ACTIVEFREE_STATU),               &
-                                                                                                           TBasicInfo%NC(p_ACTIVEINGB_STATU),               &
-                                                                                                           TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + &
-                                                                                                           Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)
+                call Record%GetSimuSteps(tempSimuSteps)
+                call Record%GetSimuTimes(tempSimuTimes)
+                call Record%GetTimeSteps(tempTimeSteps)
+                write(Record%HSizeStatistic_TotalBox, fmt="(I30,1x,2(1PE30.10,1x),10(I30,1x),17(1PE30.10,1x),8(I30,1x))")   tempSimuSteps,                                                  &
+                                                                                                                            tempSimuTimes,                                                  &
+                                                                                                                            tempTimeSteps,                                                  &
+                                                                                                                            NCAct,                                                          &
+                                                                                                                            sum(TBasicInfo%NC),                                             &
+                                                                                                                            sum(TBasicInfo%NA),                                             &
+                                                                                                                            TBasicInfo%NC(1:p_NUMBER_OF_STATU),                             &
+                                                                                                                            TMigStatInfo%RMIN(1:p_NUMBER_OF_STATU)*C_CM2NM,                 &
+                                                                                                                            TMigStatInfo%RMAX(1:p_NUMBER_OF_STATU)*C_CM2NM,                 &
+                                                                                                                            RAVA*C_CM2NM,                                                   &
+                                                                                                                            NAVA,                                                           &
+                                                                                                                            Concentrate,                                                    &
+                                                                                                                            Record%GetImplantedEntitiesNum(),                               &
+                                                                                                                            TBasicInfo%NC(p_ACTIVEFREE_STATU),                              &
+                                                                                                                            TBasicInfo%NC(p_ACTIVEINGB_STATU),                              &
+                                                                                                                            TBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) +         &
+                                                                                                                            Record%RecordNCBeforeSweepOut_Integal(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)
                 call flush(Record%HSizeStatistic_TotalBox)
 
                 if(m_CheckNClusters .eq. .true.) then
@@ -2145,19 +2226,22 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 RMIN = min(RMIN,TMigStatInfo%RMIN(p_ACTIVEINGB_STATU))
             end if
 
-            write(6, fmt= "(I15,1x,2(1PE16.8,1x),3(I15,1x),I15,1x,130(1PE16.8,1x))")   Record%GetSimuSteps(),                                                                &
-                                                                                    Record%GetSimuTimes(),                                                                   &
-                                                                                    Record%GetTimeSteps(),                                                                   &
-                                                                                    TBasicInfo%NC(p_ACTIVEFREE_STATU),                                                       &
-                                                                                    TBasicInfo%NC(p_ACTIVEINGB_STATU),                                                       &
-                                                                                    NCAct,                                                                                   &
-                                                                                    sum(TBasicInfo%NC),                                                                      &
-                                                                                    RMIN*C_CM2NM,                                                                            &
-                                                                                    max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU))*C_CM2NM,&
-                                                                                    RAVA*C_CM2NM,                                                                            &
-                                                                                    NAVA,                                                                                    &
-                                                                                    max(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU),TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU)), &
-                                                                                    Concentrate
+            call Record%GetSimuSteps(tempSimuSteps)
+            call Record%GetSimuTimes(tempSimuTimes)
+            call Record%GetTimeSteps(tempTimeSteps)
+            write(6, fmt= "(I15,1x,2(1PE16.8,1x),3(I15,1x),I15,1x,130(1PE16.8,1x))") tempSimuSteps,                                                                                             &
+                                                                                     tempSimuTimes,                                                                                             &
+                                                                                     tempTimeSteps,                                                                                             &
+                                                                                     TBasicInfo%NC(p_ACTIVEFREE_STATU),                                                                         &
+                                                                                     TBasicInfo%NC(p_ACTIVEINGB_STATU),                                                                         &
+                                                                                     NCAct,                                                                                                     &
+                                                                                     sum(TBasicInfo%NC),                                                                                        &
+                                                                                     RMIN*C_CM2NM,                                                                                              &
+                                                                                     max(TMigStatInfo%RMAX(p_ACTIVEFREE_STATU),TMigStatInfo%RMAX(p_ACTIVEINGB_STATU))*C_CM2NM,                  &
+                                                                                     RAVA*C_CM2NM,                                                                                              &
+                                                                                     NAVA,                                                                                                      &
+                                                                                     max(TMigStatInfo%DiffusorValueMax(p_ACTIVEFREE_STATU),TMigStatInfo%DiffusorValueMax(p_ACTIVEINGB_STATU)),  &
+                                                                                     Concentrate
 
 
         END ASSOCIATE
@@ -2180,6 +2264,9 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::NCAct
         real(kind=KINDDF)::RAVA
         real(kind=KINDDF)::NAVA
+        integer::tempSimuSteps
+        real(kind=KINDDF)::tempTimeSteps
+        real(kind=KINDDF)::tempSimuTimes
         !---Body---
         MultiBox = Host_SimuCtrlParam%MultiBox
 
@@ -2199,24 +2286,27 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                 Concentrate = NCAct/Host_Boxes%BOXVOLUM
 
-                write(Record%HSizeStatistic_EachBox,fmt="(2(I30,1x),2(1PE30.10,1x),10(I30,1x),17(1PE30.10,1x),8(I30,1x))") Record%GetSimuSteps(),               &
-                                                                                                             IBox,                                            &
-                                                                                                             Record%GetSimuTimes(),                           &
-                                                                                                             Record%GetTimeSteps(),                           &
-                                                                                                             NCAct,                                           &
-                                                                                                             sum(SBasicInfo%NC),                              &
-                                                                                                             sum(SBasicInfo%NA(1:p_NUMBER_OF_STATU)),         &
-                                                                                                             SBasicInfo%NC(1:p_NUMBER_OF_STATU),              &
-                                                                                                             SMigStatInfo%RMIN(1:p_NUMBER_OF_STATU)*C_CM2NM,  &
-                                                                                                             SMigStatInfo%RMAX(1:p_NUMBER_OF_STATU)*C_CM2NM,  &
-                                                                                                             RAVA*C_CM2NM,                                    &
-                                                                                                             NAVA,                                            &
-                                                                                                             Concentrate,                                     &
-                                                                                                             Record%GetImplantedEntitiesNum(),                &
-                                                                                                             SBasicInfo%NC(p_ACTIVEFREE_STATU),               &
-                                                                                                             SBasicInfo%NC(p_ACTIVEINGB_STATU),               &
-                                                                                                             SBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + &
-                                                                                                             Record%RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)
+                call Record%GetSimuSteps(tempSimuSteps)
+                call Record%GetSimuTimes(tempSimuTimes)
+                call Record%GetTimeSteps(tempTimeSteps)
+                write(Record%HSizeStatistic_EachBox,fmt="(2(I30,1x),2(1PE30.10,1x),10(I30,1x),17(1PE30.10,1x),8(I30,1x))")  tempSimuSteps,               &
+                                                                                                                            IBox,                                            &
+                                                                                                                            tempSimuTimes,                           &
+                                                                                                                            tempTimeSteps,                           &
+                                                                                                                            NCAct,                                           &
+                                                                                                                            sum(SBasicInfo%NC),                              &
+                                                                                                                            sum(SBasicInfo%NA(1:p_NUMBER_OF_STATU)),         &
+                                                                                                                            SBasicInfo%NC(1:p_NUMBER_OF_STATU),              &
+                                                                                                                            SMigStatInfo%RMIN(1:p_NUMBER_OF_STATU)*C_CM2NM,  &
+                                                                                                                            SMigStatInfo%RMAX(1:p_NUMBER_OF_STATU)*C_CM2NM,  &
+                                                                                                                            RAVA*C_CM2NM,                                    &
+                                                                                                                            NAVA,                                            &
+                                                                                                                            Concentrate,                                     &
+                                                                                                                            Record%GetImplantedEntitiesNum(),                &
+                                                                                                                            SBasicInfo%NC(p_ACTIVEFREE_STATU),               &
+                                                                                                                            SBasicInfo%NC(p_ACTIVEINGB_STATU),               &
+                                                                                                                            SBasicInfo%NC(p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU) + &
+                                                                                                                            Record%RecordNCBeforeSweepOut_SingleBox(IBox,p_OUT_DESTROY_STATU:p_ANNIHILATE_STATU)
 
             END ASSOCIATE
 
@@ -2238,6 +2328,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         !---Local Vars---
         integer::MultiBox
         integer::NC0
+        integer::tempSimuSteps
+        real(kind=KINDDF)::tempSimuTimes
         !---Body---
 
         MultiBox = Host_SimuCtrlParam%MultiBox
@@ -2252,7 +2344,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         if(Host_SimuCtrlParam%SweepOutMemory .eq. .true.) then
 
             if(Host_SimuCtrlParam%SweepOutFlag .eq. mp_SweepOutFlag_ByIntervalSteps) then
-                if((Record%GetSimuSteps() - Record%GetLastSweepOutTime()) .GE. Host_SimuCtrlParam%SweepOutValue) then
+                if((tempSimuSteps - Record%GetLastSweepOutTime()) .GE. Host_SimuCtrlParam%SweepOutValue) then
 
                     call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
                     call Record%RecordNC_ForSweepOut(MultiBox,Host_Boxes%m_BoxesBasicStatistic)
@@ -2267,7 +2359,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                     call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
-                    call Record%SetLastSweepOutTime(dble(Record%GetSimuSteps()))
+                    call Record%GetSimuSteps(tempSimuSteps)
+                    call Record%SetLastSweepOutTime(dble(tempSimuSteps))
 
 
                     call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
@@ -2279,7 +2372,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
                 end if
 
             else if(Host_SimuCtrlParam%SweepOutFlag .eq. mp_SweepOutFlag_ByIntervalRealTime) then
-                if((Record%GetSimuTimes() - Record%GetLastSweepOutTime()) .GE. Host_SimuCtrlParam%SweepOutValue) then
+                call Record%GetSimuTimes(tempSimuTimes)
+                if((tempSimuTimes - Record%GetLastSweepOutTime()) .GE. Host_SimuCtrlParam%SweepOutValue) then
 
                     call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
                     call Record%RecordNC_ForSweepOut(MultiBox,Host_Boxes%m_BoxesBasicStatistic)
@@ -2294,7 +2388,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
                     call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
 
-                    call Record%SetLastSweepOutTime(Record%GetSimuTimes())
+                    call Record%GetSimuTimes(tempSimuTimes)
+                    call Record%SetLastSweepOutTime(tempSimuTimes)
 
                     call Cal_Neighbor_List_GPU(Host_Boxes,Host_SimuCtrlParam,Dev_Boxes,Record,IfDirectly=.true.,RMAX= &
                                       max(TheMigCoaleStatInfoWrap%m_MigCoaleStatisticInfo_Expd%statistic_IntegralBox%RMAX(p_ACTIVEFREE_STATU), &
