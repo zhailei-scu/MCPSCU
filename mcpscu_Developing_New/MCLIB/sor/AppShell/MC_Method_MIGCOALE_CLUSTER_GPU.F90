@@ -2330,6 +2330,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         integer::NC0
         integer::tempSimuSteps
         real(kind=KINDDF)::tempSimuTimes
+        real(kind=KINDDF)::tempSweepOutTime
         !---Body---
 
         MultiBox = Host_SimuCtrlParam%MultiBox
@@ -2344,7 +2345,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
         if(Host_SimuCtrlParam%SweepOutMemory .eq. .true.) then
 
             if(Host_SimuCtrlParam%SweepOutFlag .eq. mp_SweepOutFlag_ByIntervalSteps) then
-                if((tempSimuSteps - Record%GetLastSweepOutTime()) .GE. Host_SimuCtrlParam%SweepOutValue) then
+                call Record%GetLastSweepOutTime(tempSweepOutTime)
+                if((tempSimuSteps - tempSweepOutTime) .GE. Host_SimuCtrlParam%SweepOutValue) then
 
                     call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
                     call Record%RecordNC_ForSweepOut(MultiBox,Host_Boxes%m_BoxesBasicStatistic)
@@ -2373,7 +2375,8 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
             else if(Host_SimuCtrlParam%SweepOutFlag .eq. mp_SweepOutFlag_ByIntervalRealTime) then
                 call Record%GetSimuTimes(tempSimuTimes)
-                if((tempSimuTimes - Record%GetLastSweepOutTime()) .GE. Host_SimuCtrlParam%SweepOutValue) then
+                call Record%GetLastSweepOutTime(tempSweepOutTime)
+                if((tempSimuTimes - tempSweepOutTime) .GE. Host_SimuCtrlParam%SweepOutValue) then
 
                     call Dev_Boxes%GetBoxesBasicStatistic_AllStatu_GPU(Host_Boxes,Host_SimuCtrlParam)
                     call Record%RecordNC_ForSweepOut(MultiBox,Host_Boxes%m_BoxesBasicStatistic)

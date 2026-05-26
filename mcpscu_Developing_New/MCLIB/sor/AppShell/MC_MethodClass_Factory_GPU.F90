@@ -55,11 +55,13 @@ module MC_MethodClass_Factory_GPU
         type(SimulationBoxes),target::SimBoxes
         type(SimulationCtrlParamList),target::SimCtrlParamsList
         !---Local Vars---
+        integer::tempLen
         !---Body---
         this%pSimulationBoxes=>SimBoxes
         this%pSimulationCtrlParamList=>SimCtrlParamsList
 
-        select case(className(1:LENTRIM(className)))
+        call LENTRIM(className,tempLen)
+        select case(className(1:tempLen))
             case("MIGCOALE_CLUSTER_GPU")
                 this%name = "MIGCOALE_CLUSTER_GPU"
                 this%ForOneTest=>For_One_Test_MIGCOALE_CLUSTER_GPU

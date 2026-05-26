@@ -130,14 +130,14 @@ if [ "$ConfigName" = "Release" ];then
        	  export oflags="-fast -D MCVERSION=$version -D $operateSystem -D NODEVRAN $hostllvm -Minform=warn -Minfo=all -Mvect=sse,simd -Mcuda=fastmath,$cudaVersion,$computerCapability";
        # the compling option for Linux
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-fast -tp host -D MCVERSION=$version -D $operateSystem $hostllvm -Minform=warn -Minfo=all  -Mvect -gpu=fastmath,$cudaVersion,$computerCapability -cuda";
+       	  export oflags="-fast -tp host -D MCVERSION=$version -D $operateSystem $hostllvm -Minform=warn -Minfo=all  -Mvect -gpu=fastmath,$cudaVersion,$computerCapability -cuda -cudalib=curand";
        fi        
 else
        # the compling option for CYGWI
        if [ "$operateSystem" = "CYGWIN" ]; then
        	  export oflags="-g $hostllvm -Mcuda=$cudaVersion,$computerCapability,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN";
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-g $hostllvm -gpu=$cudaVersion,$computerCapability,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN -cuda";
+       	  export oflags="-g $hostllvm -gpu=$cudaVersion,$computerCapability,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN -cuda -cudalib=curand";
        fi
 fi
 echo "with comipling option: "$oflags

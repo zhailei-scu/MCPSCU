@@ -300,9 +300,10 @@ module MIGCOALE_TYPEDEF_SIMRECORD
                         call DRSTR(STRTMP(1),tempRValue)
                         call fp_Record%SetLastSweepOutTime(tempRValue)
 
-                        if(fp_Record%GetLastSweepOutTime() .LT. 0) then
+                        call fp_Record%GetLastSweepOutTime(tempRValue)
+                        if(tempRValue .LT. 0) then
                             write(*,*) "MCPSCUERROR: The last sweep out time cannot less than 0"
-                            write(*,*) fp_Record%GetLastSweepOutTime()
+                            write(*,*) tempRValue
                             pause
                             stop
                         end if
@@ -478,7 +479,8 @@ module MIGCOALE_TYPEDEF_SIMRECORD
 
             KEYWORD = "&LASTSWEEPOUTTIME"
             call LENTRIM(KEYWORD,tempLen)
-            write(hFile, FMT="(A,1x,A32,1x,1PE18.10)") "  ",KEYWORD(1:tempLen),fp_Record%GetLastSweepOutTime()
+            call fp_Record%GetLastSweepOutTime(tempRValue)
+            write(hFile, FMT="(A,1x,A32,1x,1PE18.10)") "  ",KEYWORD(1:tempLen),tempRValue
 
             KEYWORD = "&NSWEEPOUT"
             call LENTRIM(KEYWORD,tempLen)
@@ -1024,14 +1026,14 @@ module MIGCOALE_TYPEDEF_SIMRECORD
     end subroutine
 
     !**************************************************************
-    function Get_LastSweepOutTime(this) result(TheTime)
+    subroutine Get_LastSweepOutTime(this,TheTime)
         implicit none
         Class(MigCoalClusterRecord)::this
         real(kind=KINDDF)::TheTime
 
         TheTime = this%LastSweepOutTime
         return
-    end function Get_LastSweepOutTime
+    end subroutine Get_LastSweepOutTime
 
     !*************************************************************
     subroutine Set_InsertBatchNum(this,TheBatchNum)
