@@ -107,9 +107,9 @@ if [ "$ConfigName" = "Release" ];then
 else
        # the compling option for CYGWI
        if [ "$operateSystem" = "CYGWIN" ]; then
-       	  export oflags="-g $hostllvm -Mcuda=$cudaVersion,$computerCapability,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN";
+       	  export oflags="-g $hostllvm -O0 -Mcuda=$cudaVersion,$computerCapability -D MCVERSION=$version -D $operateSystem -D NODEVRAN";
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-g $hostllvm -gpu=$cudaVersion,$computerCapability,nodebug -D MCVERSION=$version -D $operateSystem -D NODEVRAN -cuda -cudalib=curand";
+       	  export oflags="-g $hostllvm -O0 -traceback -gpu=$cudaVersion,$computerCapability,debug -D MCVERSION=$version -D $operateSystem -D NODEVRAN -cuda -cudalib=curand";
        fi
 fi
 

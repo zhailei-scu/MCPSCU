@@ -348,6 +348,7 @@ module MCLIB_UTILITIES_FORMER
     integer::I, IP, IC, LS
     character*1000::FMessage
     integer::stat
+    logical::finded
     !---Body---
     ExitFile = .false.
 
@@ -358,6 +359,7 @@ module MCLIB_UTILITIES_FORMER
 
     LS = len(STR)
     do while(.true.) !.NOT.EOF(hFile))
+        finded = .false.
         line = line + 1
         read(hFile,fmt="(A256)",IOSTAT=stat,IOMSG=FMessage)TSTR
 
@@ -375,9 +377,18 @@ module MCLIB_UTILITIES_FORMER
         do I=1, len_trim(TSTR)
             IC = iachar(TSTR(I:I))
             if(IC .GE. 20 .and. IC .LE. 126) then
+                finded = .true.
                 IP = IP + 1
                 STR(IP:IP) = TSTR(I:I)
                 if(IP.GE.LS) return
+            end if
+
+            if(finded) then
+                if(IC .eq. 9 .or. IC .eq. 11) then
+                  IP = IP + 1
+                  STR(IP:IP) = ' '
+                  if(IP.GE.LS) return
+                end if
             end if
         end do
         STR = adjustL(STR)

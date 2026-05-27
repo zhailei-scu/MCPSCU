@@ -1563,6 +1563,9 @@ module MCLIB_TYPEDEF_SIMULATIONCTRLPARAM
 
     DO While(.TRUE.)
       call GETINPUTSTRLINE(hFile,STR, LINE, "!", *100)
+
+      write(*,*) STR
+
       call RemoveComments(STR,"!")
       STR = adjustl(STR)
       call GETKEYWORD("&", STR, KEYWORD)
