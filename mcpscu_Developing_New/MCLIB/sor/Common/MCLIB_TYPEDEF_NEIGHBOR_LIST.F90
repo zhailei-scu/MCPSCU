@@ -76,6 +76,7 @@ module MCLIB_TYPEDEF_NEIGHBOR_LIST
       #endif
       !---Body---
       ! ALLOCATE
+
       call AllocateArray_Host(this%m_INDI,NC,NeigborNum,"m_INDI")
 
       call AllocateArray_Host(this%m_KVOIS,NC,"m_KVOIS")

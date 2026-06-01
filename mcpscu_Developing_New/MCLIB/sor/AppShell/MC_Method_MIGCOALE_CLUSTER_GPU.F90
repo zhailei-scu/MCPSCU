@@ -1550,6 +1550,7 @@ module MC_Method_MIGCOALE_CLUSTER_GPU
 
         DO While(associated(cursor))
 
+            write(*,*) "11111111111111"
             select case(cursor%TheValue%InitType)
                 case(p_ClusterIniConfig_Simple)
                     call DoInitSimulationBoxesConfig_Simple(SimBoxes,Host_SimuCtrlParam,cursor%TheValue)
