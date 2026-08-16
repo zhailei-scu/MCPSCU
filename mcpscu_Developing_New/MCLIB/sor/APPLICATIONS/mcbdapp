@@ -109,7 +109,7 @@ else
        if [ "$operateSystem" = "CYGWIN" ]; then
        	  export oflags="-g $hostllvm -O0 -Mcuda=$cudaVersion,$computerCapability -D MCVERSION=$version -D $operateSystem -D NODEVRAN";
        elif [ "$operateSystem" = "LINUX" ]; then
-       	  export oflags="-g $hostllvm -O0 -traceback -gpu=$cudaVersion,$computerCapability,debug -D MCVERSION=$version -D $operateSystem -D NODEVRAN -cuda -cudalib=curand";
+       	  export oflags="-g $hostllvm -O0 -traceback -gpu=$cudaVersion,$computerCapability,debug -gopt -D MCVERSION=$version -D $operateSystem -D NODEVRAN -cuda -cudalib=curand";
        fi
 fi
 
