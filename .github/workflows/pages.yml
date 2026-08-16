@@ -1,0 +1,83 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches: [ "master" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10-slim"
+
+      - name: Install dependencies
+        run: pip install -r docs/requirements.txt
+
+      # HTML
+      - name: Build HTML
+        run: |
+          python3 -m sphinx \
+          -b html \
+          docs/source \
+          _public
+
+      # PDF
+      - name: Build PDF
+        run: |
+          sudo apt-get update
+
+          sudo apt-get install -y \
+          latexmk \
+          texlive-latex-extra
+
+          python3 -m sphinx \
+          -b latex \
+          docs/source \
+          _build/latex
+
+          cd _build/latex
+
+          latexmk -pdf
+
+
+      # Copy PDF
+      - name: Copy PDF
+        run: |
+          mkdir -p _public/downloads
+          cp _build/latex/*.pdf \
+          _public/downloads/MCPSCU.pdf
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _public
+
+  deploy:
+
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+
+    steps:
+      - name: Deploy Pages
+        uses: actions/deploy-pages@v4
