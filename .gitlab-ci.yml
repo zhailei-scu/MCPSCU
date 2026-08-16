@@ -1,0 +1,23 @@
+image: python:3.10-slim
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+
+  before_script:
+  - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir -r docs/requirements.txt
+
+  script:
+    - python3 -m sphinx -b html docs/source _public
+    - python3 -m sphinx -b latex docs/source _build/latex
+    - cd _build/latex
+    - latexmk -pdf
+    - mkdir -p ../../_public/downloads
+    - cp *.pdf ../../_public/downloads/MCPSCU.pdf
+    - ls -d $PWD/../../_public/downloads/*
+  publish: _public
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

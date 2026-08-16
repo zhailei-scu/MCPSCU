@@ -1,0 +1,11 @@
+#mkdocs>=1.5.0
+#mkdocs-material>=9.0.0
+#mkdocs-with-pdf
+#pymdown-extensions
+
+sphinx
+myst-parser
+sphinx-rtd-theme
+sphinxcontrib-mermaid
+sphinx-tabs
+sphinx-design
