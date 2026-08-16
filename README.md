@@ -1,3 +1,4 @@
+# Introucution
 MCPSCU:GPU based Kinetic Monte Carloi (KMC) simulation package for Sichuan University (based on migration-coalescence diffusion model for objects migration-coalescence diffusion-evolutions in materials).<br/>
 
 SCOPE: Material micro-evolution, kinetic diffusion-reaction simulation.<br/>
@@ -11,3 +12,8 @@ Please ref "Lei Zhai, Chaoqiong Ma, Jiechao Cui and Qing Hou, GPU-based accelera
 Email: <zhaileiytp@163.com>  or  <lei.zhai@hfcim.com>  </br>
 
 License: MIT License (There are no limitation for anyone to use/modify/sale of this code, be happy to use this code).
+
+# Documentation
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://zhailei-scu.github.io/MCPSCU)
+
+https://zhailei-scu.github.io/MCPSCU
