@@ -2,5 +2,5 @@
 *.mod
 mcworkspace/
 .vscode/
-./mcapps
-./mcanaly
+/mcapps
+/mcanaly
