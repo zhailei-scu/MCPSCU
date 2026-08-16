@@ -1,6 +1,6 @@
 mcworkspace/
 *.o
 *.mod
-.vscode/
+.vscode
 ./mcapps
 ./mcanaly
