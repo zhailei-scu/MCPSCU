@@ -10,7 +10,7 @@ import subprocess
 
 project = 'MCPSCU Documents'
 copyright = '2017-2026, Sichuan university'
-author = 'zhailei-scu(Lei Zhai)'
+author = 'Lei Zhai(zhailei-scu), Qing-Hou'
 
 release = "latest"
 
