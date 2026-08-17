@@ -15,8 +15,11 @@ Please ref "Lei Zhai, Chaoqiong Ma, Jiechao Cui and Qing Hou, GPU-based accelera
 Document Version: v_dc_2021_0702
 
 You can find more open source repos from authors' github personal repo address:
-- Lei Zhai (zhailei-scu): https://github.com/zhailei-scu
-- Qing Hou (qhou-scu)   : https://github.com/qhou-scu
+- Lei Zhai (zhailei-scu): <https://github.com/zhailei-scu>
+- Qing Hou (qhou-scu)   : <https://github.com/qhou-scu>
 
-# Introduction
-```{include} Introduction/Introduction.md
+# Contents
+```{toctree}
+:maxdepth: 2
+
+Introduction <Introduction/Introduction>

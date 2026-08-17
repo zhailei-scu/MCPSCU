@@ -4,3 +4,8 @@ mcworkspace/
 .vscode/
 /mcapps
 /mcanaly
+*.log
+_build/
+_public/
+__pycache__/
+*.pyc

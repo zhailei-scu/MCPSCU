@@ -1,4 +1,5 @@
-## 1. Software Introduction
+# Introdutions
+## 1 Software Introduction
 
 MCPSCU (Monte Carlo package for Sichuan University) is a GPU (Graphics Processing Unit) parallelized migration–coalescence kinetic Monte Carlo simulation package.
 
@@ -13,7 +14,7 @@ To enable GPU parallelization, MCPSCU uses the CUDA Fortran parallel programming
 
 MCPSCU has undergone multiple stages of development. Around 2008, researchers Qing Hou, Yulu Zhou, Chaoqiong Ma, Renshun Li, and others verified the feasibility of using migration–coalescence kinetic Monte Carlo methods to simulate helium bubble growth in materials and developed a simple CPU serial demo program. Since 2017, graduate student Lei Zhai and researcher Qing Hou have completely redeveloped MCPSCU to achieve systematic, object-oriented, extensible, hierarchical, and parallel development. Through multiple functional upgrades and version iterations, MCPSCU has evolved into a highly stable software package capable of high-concurrency operation, mainly under Linux environments.
 
-## 2 Version history of MCPSCU
+### 1.1 Version history of MCPSCU
 | Version           | Event                                                                                                                                                                                                                                                                                                                                                |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | mcpscu_Origin     | A simple CPU serial demo program                                                                                                                                                                                                                                                                                                                     |
@@ -37,7 +38,7 @@ MCPSCU has undergone multiple stages of development. Around 2008, researchers Qi
 Note: Version control is based on the GitLab local server and Git distributed version control system.
 
 
-## 2 安装指南
+## 2 Software Installation Guide
 
 ### 2.1 操作系统/软件/硬件环境要求
 
@@ -377,7 +378,7 @@ ANALYTOOLS中包含如下文件：
 
 具体每种工具的功能，将在本手册后续内容中进行介绍。
 
-## 3 物理模型简述
+## 3 Physical Model Description
 
 MCPSCU用于模拟材料中对象的迁移-融合问题，其依赖于随机行走理论。随机行走的具体细节可以参见文献\[5\]。其基本物理过程可以由下图(Fig
 2.1)描述：
@@ -397,7 +398,7 @@ MCPSCU中扩散体迁移-融合演化示意图。
 
 扩散体与扩散体之间的反应距离同样可以通过MCPSCU中的用户控制文件来设定相应的值(详见下面关于用户输入文件-盒子定义文件的描述)，除此之外，MCPSCU中还提供了扩散体-扩散体之间反应行为、反应产物的控制方法，具体见下面章节关于下面关于用户输入文件-盒子定义文件的描述。
 
-## 4 模型参数设置
+## 4 Model Parameter Settings
 
 如Fig
 1.1所示，MCPSCU中模型参数的设置依赖于两种模式：Ascii形式的主控文件群以及接口程序修改功能。其中Ascii文件内部可以嵌套Tiny
@@ -550,11 +551,11 @@ ANALYSUBCTL"限定符开始，由"&ENDSUBCTL"限定符结束，其中所包含�
 
 统一了扩散系数的输入输出，将扩散系数输入后统一转为3-D形式的扩散系数大小，然后，统一使用形式，如下图所示：
 
-## 5 运行参数选项
+## 5 Program Runtime Parameters
 
-## 6 程序运行模式
+## 6 Program Operation Modes
 
-## 参考资料
+## References
 
 \[1\] L. Zhai, C. Ma, J. Cui, Q. Hou, GPU-based acceleration of Monte
 Carlo simulations for migration-coalescence evolution of gas bubbles in
